@@ -12,10 +12,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Publish
+      - name: Unpack designs
+        run: mkdir -p pub && unzip -o gallery/pack.zip -d pub && ls pub | wc -l
+      - name: Publish (keeps designs the admin added from the app)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          ls -la gallery
           gh release view gallery >/dev/null 2>&1 || gh release create gallery --target "${{ github.sha }}" --title "معرض الواجهات" --notes "واجهات جاهزة لتطبيق مدير الشاشة" --latest=false
-          gh release upload gallery gallery/* --clobber
+          mkdir -p old && (gh release download gallery -p index.json -D old || true)
+          python3 - <<'PY'
+          import json, os
+          new = json.load(open('pub/index.json', encoding='utf-8'))
+          ids = {x['id'] for x in new['items']}
+          if os.path.exists('old/index.json'):
+              old = json.load(open('old/index.json', encoding='utf-8'))
+              keep = [x for x in old.get('items', []) if x['id'] not in ids and x['id'].startswith('u')]
+              new['items'] += keep
+          json.dump(new, open('pub/index.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+          print(len(new['items']), 'designs')
+          PY
+          gh release upload gallery pub/* --clobber
