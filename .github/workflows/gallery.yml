@@ -13,7 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Unpack designs
-        run: mkdir -p pub && unzip -o gallery/pack.zip -d pub && ls pub | wc -l
+        run: |
+          mkdir -p pub && unzip -o gallery/pack.zip -d pub && mv pub/gen_bg.py pub/clubs.json .
+          pip install pillow numpy >/dev/null
+          python3 gen_bg.py clubs.json pub
+          ls pub | wc -l
       - name: Publish (keeps designs the admin added from the app)
         env:
           GH_TOKEN: ${{ github.token }}
