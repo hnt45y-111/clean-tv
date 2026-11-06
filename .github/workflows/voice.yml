@@ -1,0 +1,43 @@
+name: Make Promo Voice
+on:
+  push:
+    paths:
+      - '.github/workflows/voice.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  voice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Make voice lines
+        run: |
+          pip install edge-tts
+          mkdir voice && cd voice
+          cat > lines.txt <<'TXT'
+          تلفزيونك مليان إعلانات؟ وبطيء، ويعلّگ كل شوية؟
+          جرّب مدير الشاشة. تتحكم بتلفزيونك كامل، من موبايلك.
+          بضغطة وحدة، تحجب الإعلانات، وتسرّع الشاشة، وتفرّغ الذاكرة.
+          صمّم واجهة تلفزيونك على كيفك. ثيمات، خلفيات، ألوان. وكل تعديل تشوفه قدامك.
+          وعندك مشاريع جاهزة. تستورد، وتصدّر، وتشارك تصاميمك ويّا أصدقائك.
+          شوف شاشة التلفزيون من موبايلك. صوّرها وسجّلها، واعرض موبايلك عليها.
+          وبعد: ريموت كامل، ملفات، نسخة احتياطية، وتحديثات مباشرة.
+          اشترك هسه! تواصل ويّانا على تيليگرام، أو إنستغرام.
+          TXT
+          i=1
+          while IFS= read -r line; do
+            line="$(echo "$line" | sed 's/^ *//')"
+            [ -z "$line" ] && continue
+            edge-tts --voice ar-IQ-BasselNeural --rate=+4% --text "$line" --write-media "m$i.mp3"
+            edge-tts --voice ar-IQ-RanaNeural --rate=+4% --text "$line" --write-media "f$i.mp3"
+            i=$((i+1))
+          done < lines.txt
+          ls -la
+          zip -q ../voice.zip *.mp3 lines.txt
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "voice-${{ github.run_number }}" voice.zip --repo "${{ github.repository }}" --title "promo voice ${{ github.run_number }}" --notes "voice" --latest=false
