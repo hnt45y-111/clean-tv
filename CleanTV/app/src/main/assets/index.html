@@ -840,6 +840,53 @@
   body.cy-band.cy-glass[data-skin="cyt"] .cy-band-el { background: rgba(255,255,255,calc(.12 * var(--cy-op))); border-color: rgba(255,255,255,.22); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
   body.cy-band.cy-single[data-skin="cyt"] .cy-band-el { width: 4000px; }
 
+
+  /* ---- live scores ticker ---- */
+  #liveTicker { display: none; position: absolute; left: 0; right: 0; bottom: 0; height: 60px; z-index: 40; background: linear-gradient(0deg, rgba(8,9,13,.96), rgba(14,16,22,.9)); border-top: 1px solid rgba(255,255,255,.12); align-items: center; }
+  #liveTicker.on { display: flex; }
+  #liveTicker .lt-badge { flex: none; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 22px; background: #d81f2a; color: #fff; font-size: 24px; font-weight: 800; z-index: 2; }
+  #liveTicker .lt-badge i { width: 12px; height: 12px; border-radius: 50%; background: #fff; animation: ltblink 1.2s infinite; }
+  #liveTicker .lt-win { flex: 1; overflow: hidden; direction: ltr; height: 100%; display: flex; align-items: center; }
+  #liveTicker .lt-run { display: inline-flex; align-items: center; white-space: nowrap; animation: ltrun 40s linear infinite; direction: rtl; }
+  #liveTicker[data-dir="ltr"] .lt-run { animation-name: ltrunr; }
+  #liveTicker .lt-m { display: inline-flex; align-items: center; gap: 14px; font-size: 25px; font-weight: 700; color: #fff; padding: 0 10px; }
+  #liveTicker .lt-lg { color: #ffcf5a; font-size: 21px; }
+  #liveTicker .lt-s { background: #fff; color: #111; border-radius: 8px; padding: 2px 12px; direction: ltr; font-weight: 800; }
+  #liveTicker .lt-m i { font-style: normal; color: #ff6b6b; font-size: 21px; }
+  #liveTicker .lt-sep { color: rgba(255,255,255,.4); padding: 0 18px; font-size: 22px; }
+  @keyframes ltrun { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes ltrunr { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+  @keyframes ltblink { 50% { opacity: .2; } }
+
+  /* ---- makers' looks: the top area is a widget the user picks, the bottom of Samsung shows the coming matches ---- */
+  body.os .hero { display: block !important; position: absolute; z-index: 5; direction: rtl; height: auto; width: 1000px; top: 90px; left: 180px; }
+  body.os .hero > *, body.os #leftcol > * { display: none !important; }
+  body.os[data-osw="clock"] #timeblock, body.os[data-osw="clock"] #timeblock .dates { display: flex !important; }
+  body.os[data-osw]:not([data-osw="clock"]):not([data-osw="none"]) #leftcol { display: flex !important; width: 100%; }
+  body.os[data-osw="wisdom"] #wisdom, body.os[data-osw="news"] #newscard.on, body.os[data-osw="weather"] #weather, body.os[data-osw="count"] #bigcount, body.os[data-osw="club"] #clubcard, body.os[data-osw="music"] #nowPlaying { display: flex !important; }
+  body.os #wisdom, body.os #newscard { width: 100%; align-self: stretch; }
+  body.os[data-osw="weather"] #weather, body.os[data-osw="count"] #bigcount { align-self: flex-start; transform: scale(1.4); transform-origin: right top; }
+  body.os.ltr .hero { text-align: right; }
+  body.os[data-osw="clock"] .clock .hm { font-size: 120px; }
+  body.os .hero #adhanbox, body.os .hero .next-occ, body.os .hero .acts { display: none !important; }
+  body.os[data-osw="clock"] #timeblock { direction: ltr; align-items: flex-start; }
+  body.os[data-osw="clock"] #timeblock .owner, body.os[data-osw="clock"] #timeblock .dates { direction: rtl; }
+  body[data-skin="tizen"] .hero { top: 80px; left: 180px; width: 1080px; }
+  body[data-skin="oneui"] .hero { top: 170px; left: 126px; width: 980px; }
+  body[data-skin="webos"] .hero { top: 140px; left: 110px; width: 900px; }
+  body[data-skin="vidaa"] .hero, body[data-skin="googletv"] .hero { top: 130px; left: 96px; width: 1100px; }
+  body[data-skin="firetv"] .hero, body[data-skin="patchwall"] .hero { top: 160px; left: 120px; width: 1000px; }
+  body[data-skin="androidtv"] .hero, body[data-skin="roku"] .hero, body[data-skin="cyt"] .hero { display: none !important; }
+  body[data-skin="vidaa"] #row-feat, body[data-skin="googletv"] #row-feat { top: 470px; }
+  body[data-skin="googletv"] #row-apps, body[data-skin="firetv"] #row-apps { top: 700px; }
+  body[data-skin="tizen"] #row-ostabs { top: 430px; left: 178px; }
+  body[data-skin="tizen"] #row-ostabs .track { gap: 26px; }
+  body.osmatch[data-skin="tizen"] #row-matches { display: block !important; position: absolute; top: 980px; left: 178px; margin: 0; transform: scale(.56); transform-origin: 0 0; }
+  body.osmatch[data-skin="tizen"] #row-matches .row-title { font-size: 40px; }
+  body.osmatch[data-skin="tizen"] #row-apps { top: 812px; }
+  body.osmatch[data-skin="tizen"] #row-feat { top: 510px; }
+  body.tickeron.os #row-matches { display: none !important; }
+  .osb-av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
   /* anything else the design wants: its own CSS is added last (settings.css) */
 </style>
 <style id="userCss"></style>
@@ -959,6 +1006,7 @@
   </div></div>
 
   <div id="pairBox"><div class="p-t">ربط الموبايل بمدير الشاشات</div><div class="p-code" id="pairCode"></div><div class="p-s" id="pairSub"></div><div id="pairQr"></div></div>
+  <div id="liveTicker"></div>
   <div id="toast"></div>
 </div>
 

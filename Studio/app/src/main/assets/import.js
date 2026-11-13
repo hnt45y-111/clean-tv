@@ -144,25 +144,8 @@ async function importFromZip() {
   catch (e) { unbusy(); if (e.message !== 'CANCEL') toast(errText(e)); }
 }
 
-/* the import sheet: old choices kept, three new ones added */
-designImport = function () {
-  sheet(`<h2>استيراد</h2>
-    <button class="btn pri full" id="imFile">${ic('file')} مشروع من ملف بالموبايل</button><div style="height:10px"></div>
-    <button class="btn sec full" id="imZip">${ic('layers')} واجهات من ملف ZIP</button><div style="height:10px"></div>
-    <label class="f">رابط GitHub لمشروع واجهات، أو رابط ملف مشروع</label><input id="imUrl" class="num" placeholder="https://github.com/…" inputmode="url">
-    <button class="btn sec full" id="imGo" style="margin-top:10px">${ic('save')} جيب من الرابط</button>
-    <button class="btn ghost full" id="imCyt" style="margin-top:10px">واجهات مشروع CleanYourTV (٢٨ واجهة)</button>`);
-  $('#imFile').onclick = () => { closeSheet(); importFile(); };
-  $('#imZip').onclick = () => { closeSheet(); importFromZip(); };
-  $('#imCyt').onclick = () => { closeSheet(); importFromGithub(CYT_REPO); };
-  $('#imGo').onclick = async () => {
-    const u = $('#imUrl').value.trim(); if (!/^https?:\/\//.test(u)) return toast('اكتب رابط صحيح');
-    closeSheet();
-    if (/github\.com\//i.test(u) && !/\/blob\/.*\.json$/i.test(u)) return importFromGithub(u);
-    busy('أنزل المشروع…');
-    try { const t = await run('fetchText', { url: u.replace(/github\.com\/([^/]+)\/([^/]+)\/blob\//, 'raw.githubusercontent.com/$1/$2/') }); unbusy(); openImported(t); } catch (e) { unbusy(); toast(errText(e)); }
-  };
-};
+/* importing is only for a project file made by this app (shared from another screen); other launchers' themes are not imported */
+designImport = function () { importFile(); };
 
 /* ---------------- «واجهات حسب الشركة» for TVs ---------------- */
 const TV_OS = [
@@ -201,12 +184,12 @@ TV_OS.forEach(o => { if (o.id !== 'appletv' && !SKINS.some(s => s[0] === o.id)) 
     _ds.apply(this, arguments);
     const t = document.querySelector('#designBody .tile'); if (!t || t.querySelector('[data-s2]')) return;
     const car = typeof devType === 'function' && devType() === 'car';
-    t.insertAdjacentHTML('beforeend', (car ? '' : `<button data-s2="os">${ic('tv')}<b>واجهات حسب الشركة</b><small>سامسونگ، إل جي، هايسنس، گوگل TV وغيرها</small></button>`) +
-      `<button data-s2="gh">${ic('save')}<b>من GitHub أو ZIP</b><small>واجهات مشاريع ثانية، وواجهات CleanYourTV</small></button>`);
+    if (car) return;
+    t.insertAdjacentHTML('beforeend', `<button data-s2="os">${ic('tv')}<b>واجهات حسب الشركة</b><small>سامسونگ، إل جي، هايسنس، گوگل TV وغيرها</small></button>`);
     t.addEventListener('click', e => {
       const b = e.target.closest('[data-s2]'); if (!b) return;
       e.stopPropagation(); tap();
-      if (b.dataset.s2 === 'os') tvOsSheet(); else designImport();
+      tvOsSheet();
     }, true);
   };
 })();
@@ -217,14 +200,14 @@ const BTN_NAMES = { profile: 'الملف الشخصي', search: 'البحث', am
   live: 'مباشر', multi: 'عرض متعدد', settings: 'الإعدادات', ai: 'المساعد', games: 'الألعاب', inputs: 'المداخل', media: 'الوسائط', wifi: 'الشبكة', movies: 'أفلام',
   shows: 'مسلسلات', library: 'مكتبة', bell: 'الإشعارات', watch: 'ماذا يُعرض / زر «شاهد الآن»', kids: 'أطفال' };
 const OS_BTNS = {
-  tizen: ['profile', 'search', 'ambient', 'apps', 'home', 'live', 'menu', 'shield', 'watch'],
-  oneui: ['profile', 'search', 'multi', 'settings', 'ai', 'home', 'live', 'games', 'ambient', 'apps', 'shield', 'watch'],
-  webos: ['profile', 'search', 'home', 'inputs', 'settings', 'menu', 'watch'],
-  vidaa: ['home', 'apps', 'inputs', 'media', 'search', 'wifi', 'settings', 'menu', 'watch'],
-  googletv: ['search', 'home', 'movies', 'shows', 'apps', 'library', 'bell', 'profile', 'settings', 'menu', 'watch'],
+  tizen: ['profile', 'search', 'ambient', 'apps', 'home', 'live', 'menu', 'shield'],
+  oneui: ['profile', 'search', 'multi', 'settings', 'ai', 'home', 'live', 'games', 'ambient', 'apps', 'shield'],
+  webos: ['profile', 'search', 'home', 'inputs', 'settings', 'menu'],
+  vidaa: ['home', 'apps', 'inputs', 'media', 'search', 'wifi', 'settings', 'menu'],
+  googletv: ['search', 'home', 'movies', 'shows', 'apps', 'library', 'bell', 'profile', 'settings', 'menu'],
   androidtv: ['search', 'inputs', 'wifi', 'settings', 'menu'],
-  firetv: ['profile', 'home', 'search', 'live', 'apps', 'settings', 'menu', 'watch'],
-  roku: ['home', 'watch', 'search', 'live', 'apps', 'settings', 'menu'],
+  firetv: ['profile', 'home', 'search', 'live', 'apps', 'settings', 'menu'],
+  roku: ['home', 'search', 'live', 'apps', 'settings', 'menu'],
   patchwall: ['home', 'movies', 'shows', 'kids', 'apps', 'search', 'inputs', 'settings', 'menu', 'watch']
 };
 const OS_COLORS = [['الأصلي', ''], ['أبيض', '#ffffff'], ['سماوي', '#33d6f5'], ['أزرق', '#18a0fb'], ['وردي', '#ff3d7f'], ['برتقالي', '#ff6900'], ['ذهبي', '#e8b84a'], ['أخضر', '#3ddc84'], ['بنفسجي', '#a855f7'], ['أحمر', '#ff3b3b']];
@@ -242,7 +225,12 @@ function osDetailsHtml(S) {
     <div class="lb" style="margin:12px 0 6px"><span class="sub">شكل أيقونات التطبيقات</span></div>
     ${ch([['حسب الشركة', ''], ['دائرية', 'circle'], ['مربعة ناعمة', 'rounded'], ['مربعة', 'square'], ['عريضة', 'wide'], ['بنر التطبيق', 'banner']], o.shape || '', 'shape')}
     <div class="lb" style="margin:12px 0 6px"><span class="sub">لون التحديد</span></div>${ch(OS_COLORS, o.accent || '', 'accent')}
-    <div class="list" style="margin:10px 0 0">${tg('hero', 'البنر الكبير فوق', o.hero !== false)}${tg('feat', 'صف البطاقات الكبيرة', o.feat !== false)}${S.skin === 'tizen' ? tg('deco', 'صف «متابعة المشاهدة» تحت', o.deco !== false) : ''}</div>
+    <div class="lb" style="margin:12px 0 6px"><span class="sub">الويدجت بأعلى الواجهة</span></div>
+    ${ch([['آية وحديث', 'wisdom'], ['الأخبار', 'news'], ['الساعة والتاريخ', 'clock'], ['الطقس', 'weather'], ['العد التنازلي', 'count'], ['الموسيقى الشغالة', 'music'], ['بدون', 'none']], o.hero === false ? 'none' : (o.heroW || (S.religious === false ? 'news' : 'wisdom')), 'heroW')}
+    <div class="list" style="margin:10px 0 0">${tg('feat', 'صف البطاقات الكبيرة', o.feat !== false)}${S.skin === 'tizen' ? tg('matches', 'المباريات القادمة بالأسفل', o.matches !== false) : ''}</div>
+    <div class="lb" style="margin:12px 0 6px"><span class="sub">صورة الملف الشخصي بالشريط</span></div>
+    <div class="row" style="gap:10px;align-items:center">${o.avatar ? `<img src="${esc(o.avatar)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover">` : ''}<button class="btn sec" style="flex:1" data-oav="pick">${ic('cam')} ${o.avatar ? 'غيّر الصورة' : 'اختار صورة'}</button>${o.avatar ? '<button class="btn ghost" data-oav="del">شيل</button>' : ''}</div>
+    <p class="sub" style="margin-top:10px">زر «مباشر»: أول ضغطة تختار بيه التطبيق ويبقى محفوظ بالشاشة، والضغط المطوّل عليه بالريموت يغيّره.</p>
     <label class="f" style="margin-top:10px">عنوان صف البطاقات</label><input data-ot="featTitle" value="${esc(o.featTitle || '')}" maxlength="30" placeholder="حسب الشركة">
     <label class="f">عنوان صف التطبيقات</label><input data-ot="appsTitle" value="${esc(o.appsTitle || '')}" maxlength="30" placeholder="حسب الشركة">
     ${S.skin === 'roku' ? `<div class="lb" style="margin:12px 0 6px"><span class="sub">عدد التطبيقات بالصف</span></div>${ch([['٣', 3], ['٤', 4], ['٥', 5]], o.grid || 4, 'grid')}` : ''}
@@ -277,7 +265,7 @@ function osPanelWire(box, S) {
   const redo = () => { changed(); live({ settings: S }); designPanel(); };
   const soft = () => { changed(); live({ settings: S }); };
   box.addEventListener('click', e => {
-    const t = e.target.closest('[data-ob],[data-ok],[data-oc],[data-oreset],[data-css]'); if (!t) return;
+    const t = e.target.closest('[data-ob],[data-ok],[data-oc],[data-oreset],[data-css],[data-oav],[data-tk]'); if (!t) return;
     e.stopPropagation(); tap();
     const isCyt = S.skin === 'cyt', O = isCyt ? (S.cyt = S.cyt || {}) : (S.os = S.os || {});
     if (t.dataset.css) {
@@ -286,6 +274,13 @@ function osPanelWire(box, S) {
       soft(); toast(t.dataset.css === 'clear' ? 'انمسح التصميم الخاص' : 'انطبق بالمعاينة'); return;
     }
     if (t.dataset.oreset) { delete S.os; redo(); return; }
+    if (t.dataset.tk) { if (t.dataset.tk === 'on') S.ticker = S.ticker === false; else S.tickerDir = t.dataset.tk; redo(); return; }
+    if (t.dataset.oav) {
+      if (t.dataset.oav === 'del') { delete O.avatar; redo(); return; }
+      busy('اختار صورة…');
+      run('pick', { mode: 'logo' }).then(u => { unbusy(); O.avatar = u; redo(); }).catch(er => { unbusy(); if (er.message !== 'CANCEL') toast(errText(er)); });
+      return;
+    }
     if (t.dataset.ob) { const off = O.barOff = O.barOff || [], i = off.indexOf(t.dataset.ob); if (i >= 0) off.splice(i, 1); else off.push(t.dataset.ob); redo(); return; }
     if (t.dataset.ok) {
       const k = t.dataset.ok, defOn = isCyt ? !['dock_glass', 'single_row', 'cinematic_home', 'app_glow', 'always_show_names', 'uniform_tiles', 'header_white', 'date_below_clock', 'icon_only_buttons', 'icon_only_inputs', 'wifi_status_color', 'fade_rows', 'reduced_motion'].includes(k) : true;
@@ -293,6 +288,7 @@ function osPanelWire(box, S) {
       if (isCyt && k === 'wallpaper') { if (O[k] && (S.bgPack || []).length) delete S.bgMode; else if (!O[k]) S.bgMode = 'palette'; }
       redo(); return;
     }
+    if (t.dataset.oc === 'heroW') { delete O.hero; O.heroW = t.dataset.v; if (O.heroW === 'news') S.news = Object.assign({}, S.news, { on: true }); redo(); return; }
     if (t.dataset.oc) { const k = t.dataset.oc, v = t.dataset.v; if (v === '') delete O[k]; else O[k] = /^\d+$/.test(v) && k !== 'clock_format' ? +v : v; redo(); }
   });
   box.addEventListener('input', e => {
@@ -313,8 +309,17 @@ function osPanelWire(box, S) {
   const _dp = designPanel;
   designPanel = function () {
     _dp.apply(this, arguments);
-    if (!D || D.tab !== 'theme' || (typeof isCarD === 'function' && isCarD())) return;
+    if (!D || (typeof isCarD === 'function' && isCarD())) return;
     const S = D.cfg.settings, p = $('#dPanel'); if (!p) return;
+    if (D.tab === 'set') {
+      const box = document.createElement('div');
+      box.innerHTML = `<div class="panel"><h2>شريط النتائج المباشرة</h2><p class="sub" style="margin-top:-4px">يطلع تحت بالشاشة بس وقت المباريات المباشرة، ويمر بنتيجة كل مباراة شغالة هسه.</p>
+        <div class="list" style="margin:0"><div class="item tap" data-tk="on" style="padding:6px 0;min-height:0"><div class="t"><b>تشغيل الشريط</b></div><div class="toggle ${S.ticker !== false ? 'on' : ''}"></div></div></div>
+        <div class="lb" style="margin:10px 0 6px"><span class="sub">اتجاه الحركة</span></div>
+        <div class="chips"><button class="chip ${S.tickerDir !== 'ltr' ? 'on' : ''}" data-tk="rtl">من اليمين لليسار</button><button class="chip ${S.tickerDir === 'ltr' ? 'on' : ''}" data-tk="ltr">من اليسار لليمين</button></div></div>`;
+      p.insertBefore(box, p.firstChild); osPanelWire(box, S); return;
+    }
+    if (D.tab !== 'theme') return;
     const box = document.createElement('div');
     box.innerHTML = (OS_BTNS[S.skin] ? osDetailsHtml(S) : S.skin === 'cyt' ? cytDetailsHtml(S) : '') + cssHtml(S.css, false);
     p.insertBefore(box, p.children[1] || null);
