@@ -176,10 +176,17 @@ function brandCards(cur) {
   return `<div class="tpl">${BRAND_UI.map(u => { const br = brandOf(u.id);
     return `<button data-bui="${u.id}" style="${cur === u.id ? 'outline:3px solid var(--ac);outline-offset:-3px' : ''}"><div class="sw2" style="background:linear-gradient(135deg,${u.sw[0]} 40%,${u.sw[1]}55);display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-weight:800;letter-spacing:.18em;font-size:13px;direction:ltr">${esc(br.en.toUpperCase())}</span></div><b>واجهة ${esc(br.name)}</b><small>${esc(u.note)}</small></button>`; }).join('')}</div>`;
 }
+/* ready-made screens drawn after the user's pictures (the car page draws them: cfg.scene) */
+const CAR_SCENES = [['teal', 'التيل الليلي', '#090b0d', '#22c3c9'], ['sage', 'المريمية الفاتحة', '#efebe2', '#6f8f63'], ['glass', 'الأبيض الأزرق', '#eef2f6', '#4aa3df'], ['redline', 'الأحمر الرياضي', '#0b0b0c', '#e3202c'],
+  ['neon', 'النيون', '#05061a', '#29e0d5'], ['silver', 'الفضي', '#dfe4ea', '#4f84b8'], ['speed', 'مصمّمة للسرعة', '#0c0c0d', '#e11b22'], ['violet', 'البنفسجي الزجاجي', '#0d0b24', '#a855f7'],
+  ['vintage', 'الكلاسيكي العتيق', '#e8dcbc', '#1f3d2c'], ['cyan', 'العدّاد السماوي', '#06090c', '#19c6e6'], ['arabic', 'العربي', '#070b0e', '#2fe0d0'], ['auto', 'مثل أندرويد أوتو', '#d97a8b', '#e98d35'],
+  ['split', 'خريطة وموسيقى', '#1a1a22', '#8b5cf6'], ['mine', 'لوحة سيارتي', '#17191e', '#8b5cf6']];
+const sceneCards = cur => `<div class="tpl">${CAR_SCENES.map(([id, n, a, b]) => `<button data-csc="${id}" style="${cur === id ? 'outline:3px solid var(--ac);outline-offset:-3px' : ''}"><div class="sw2" style="background:linear-gradient(135deg,${a} 55%,${b})"><i style="background:${b}"></i><i></i></div><b>${esc(n)}</b><small>${cur === id ? 'المختار' : 'نفس الصورة'}</small></button>`).join('')}</div>`;
 function carNew() {
   if (CONN.connected && !devBrand() && !carNew.asked) { carNew.asked = true; return brandSheet(() => carNew()); }
   sheet(`<h2>واجهة سيارة جديدة</h2><p class="sub">اختار واجهة شركة أو قالب، وبعدين غيّر أي شي: الويدجتات والعدّاد والأيقونات والألوان.</p>
     <h2 style="font-size:15px">واجهات الشركات</h2>${brandCards('')}
+    <h2 style="font-size:15px;margin-top:16px">تصاميم من صورك</h2>${sceneCards('')}
     <h2 style="font-size:15px;margin-top:16px">واجهات حديثة</h2>
     <div class="tpl">${CAR_PIC.map(t => { const th = CAR_THEMES.find(x => x[0] === t.c.theme) || CAR_THEMES[0];
       return `<button data-cp="${t.id}"><div class="sw2" style="background:linear-gradient(135deg,${th[2]},${th[3]}88)"><i style="background:${th[3]}"></i><i></i></div><b>${esc(t.name)}</b><small>${esc(t.note)}</small></button>`; }).join('')}</div>
@@ -189,6 +196,8 @@ function carNew() {
   $('#sheetBody').onclick = e => {
     const u = e.target.closest('[data-bui]');
     if (u) { const x = BRAND_UI.find(v => v.id === u.dataset.bui); closeSheet(); show('design'); openDesign({ name: 'واجهة ' + brandOf(x.id).name, from: 'new', cfg: { v: 1, mode: 'car', carcfg: brandCfg(x) } }); return; }
+    const sc = e.target.closest('[data-csc]');
+    if (sc) { const x = CAR_SCENES.find(v => v[0] === sc.dataset.csc); closeSheet(); show('design'); openDesign({ name: 'سيارة ' + x[1], from: 'new', cfg: { v: 1, mode: 'car', carcfg: Object.assign(CAR_DEF(), { scene: x[0] }) } }); return; }
     const cp = e.target.closest('[data-cp]');
     if (cp) { const t = CAR_PIC.find(x => x.id === cp.dataset.cp); closeSheet(); show('design'); openDesign({ name: 'سيارة ' + t.name, from: 'new', cfg: { v: 1, mode: 'car', carcfg: Object.assign(CAR_DEF(), deepCopy(t.c), { tpl: t.id }) } }); return; }
     const b = e.target.closest('[data-ct]'); if (!b) return;
@@ -261,7 +270,9 @@ function carEditorPanels() {
   document.querySelectorAll('#dSeg button').forEach(b => b.classList.toggle('on', b.dataset.tab === D.tab));
   const p = $('#dPanel'), C = CC();
   if (D.tab === 'brand') {
-    p.innerHTML = `<div class="panel"><h2>واجهات الشركات</h2><p class="sub" style="margin-top:-4px">كل واجهة بألوانها وترتيبها وعدّادها وشكل أيقوناتها. تبدّل الشكل وتخلي تطبيقاتك وصورك وإعداداتك.</p>${brandCards(C.bt)}</div>
+    p.innerHTML = `<div class="panel"><h2>تصاميم من صورك</h2><p class="sub" style="margin-top:-4px">نفس الصور، وكل جزء بيها شغّال: السرعة والخريطة والموسيقى والأزرار. غيّر اللون والأزرار والخلفية من «الشكل».</p>${sceneCards(C.scene)}
+        ${C.scene ? `<button class="btn ghost full" id="cScOff" style="margin-top:8px">رجوع للتصميم العادي بالويدجتات</button>` : ''}</div>
+      <div class="panel"><h2>واجهات الشركات</h2><p class="sub" style="margin-top:-4px">كل واجهة بألوانها وترتيبها وعدّادها وشكل أيقوناتها. تبدّل الشكل وتخلي تطبيقاتك وصورك وإعداداتك.</p>${brandCards(C.bt)}</div>
       <div class="panel"><h2>القوالب</h2><p class="sub" style="margin-top:-4px">قوالب عامة بدون ألوان شركة. تتطبق بالمعاينة فوراً.</p>
         <div class="tpl">${CAR_TEMPLATES.map(t => { const th = CAR_THEMES.find(x => x[0] === t.c.theme) || CAR_THEMES[0], on = !C.bt && C.tpl === t.id;
           return `<button data-ctpl="${t.id}" style="${on ? 'outline:3px solid var(--ac);outline-offset:-3px' : ''}"><div class="sw2" style="background:linear-gradient(135deg,${th[2]},${th[3]}66)"><i style="background:${th[3]}"></i><i></i></div><b>${esc(t.name)}</b><small>${on ? 'المختار' : esc(t.note)}</small></button>`; }).join('')}</div></div>
@@ -280,7 +291,13 @@ function carEditorPanels() {
       <div class="panel"><h2>جهة الويدجتات</h2><p class="sub" style="margin-top:-4px">الويدجتات يمين أو يسار التطبيقات.</p>${chips([['يمين', 'right'], ['يسار', 'left']], C.side || 'right', 'cs')}</div>
       <div class="panel"><h2>مكان شريط التطبيقات</h2>${chips(DOCK_POS, carDockPos(C), 'cdp')}</div>`;
   } else if (D.tab === 'theme') {
-    p.innerHTML = `<div class="panel"><h2>ترتيب الواجهة</h2><div class="list" style="margin:0">${CAR_LAYOUTS.map(([k, n, d]) => `<div class="item tap" data-clay="${k}"><div class="t"><b>${n}</b><small>${d}</small></div>${(C.layout || 'carplay') === k ? '<span class="tag">المختار</span>' : ''}</div>`).join('')}</div></div>
+    const scP = C.scene ? `<div class="panel"><h2>هذا التصميم: ${esc((CAR_SCENES.find(x => x[0] === C.scene) || [, ''])[1])}</h2>
+        <label class="f">لون التمييز</label>${swatches(C.accent, 'cac')}
+        <label class="f" style="margin-top:10px">أزرار الشريط</label><div class="chips">${[['maps', 'الملاحة'], ['music', 'الوسائط'], ['phone', 'الهاتف'], ['apps', 'التطبيقات'], ['park', 'السيارة'], ['settings', 'الإعدادات'], ['radio', 'الراديو'], ['bt', 'البلوتوث'], ['camera', 'الكاميرا'], ['mirror', 'ربط الموبايل'], ['climate', 'المناخ'], ['file', 'الملفات']].map(([k, n]) => `<button class="chip ${(C.sceneDock || []).includes(k) ? 'on' : ''}" data-csd="${k}">${n}</button>`).join('')}</div>
+        <p class="sub">${(C.sceneDock || []).length ? 'الأزرار المختارة تطلع بالترتيب اللي اخترته.' : 'ما مختار شي: تطلع أزرار التصميم الأصلية.'}</p>
+        <div class="list" style="margin:6px 0 0">${toggleRow('csbg', 'صوري كخلفية للتصميم', !!C.sceneBg, (C.bgPack || []).length ? '' : 'أضف صور من تبويب «الخلفية» أول')}</div></div>
+      <p class="sub" style="margin:0 4px 10px">الإعدادات تحت تخص التصميم العادي بالويدجتات.</p>` : '';
+    p.innerHTML = scP + `<div class="panel"><h2>ترتيب الواجهة</h2><div class="list" style="margin:0">${CAR_LAYOUTS.map(([k, n, d]) => `<div class="item tap" data-clay="${k}"><div class="t"><b>${n}</b><small>${d}</small></div>${(C.layout || 'carplay') === k ? '<span class="tag">المختار</span>' : ''}</div>`).join('')}</div></div>
       <div class="panel"><h2>شكل الأيقونات</h2>${chips(ICON_STYLES.map(([k, n]) => [n, k]), C.icons || 'squircle', 'cic')}
         <label class="f" style="margin-top:10px">الحجم</label>${chips([['صغير', 's'], ['وسط', 'm'], ['كبير', 'l'], ['كبير جداً', 'xl']], C.isize || 'm', 'cis')}
         <label class="f" style="margin-top:10px">بالصف</label>${chips([['٣', 3], ['٤', 4], ['٥', 5], ['٦', 6]], C.cols || 4, 'ccol')}
@@ -339,7 +356,13 @@ function carEditorPanels() {
           <div class="item tap" data-cv="on"><div class="t"><b>شاشة التوقف</b></div><div class="toggle ${S.on !== false ? 'on' : ''}"></div></div>
           <div class="item tap" data-cv="speed"><div class="t"><b>تبين السرعة</b></div><div class="toggle ${S.speed !== false ? 'on' : ''}"></div></div>
           <div class="item tap" data-cv="music"><div class="t"><b>تبين الأغنية الشغالة</b></div><div class="toggle ${S.music !== false ? 'on' : ''}"></div></div>
-          <div class="item tap" data-cv="overApps"><div class="t"><b>تشتغل فوق التطبيقات الثانية</b></div><div class="toggle ${S.overApps !== false ? 'on' : ''}"></div></div></div>
+          <div class="item tap" data-cv="overApps"><div class="t"><b>تشتغل فوق التطبيقات الثانية</b></div><div class="toggle ${S.overApps !== false ? 'on' : ''}"></div></div>
+          <div class="item tap" data-cv="clock"><div class="t"><b>الساعة</b></div><div class="toggle ${S.clock !== false ? 'on' : ''}"></div></div>
+          <div class="item tap" data-cv2="analog"><div class="t"><b>ساعة بعقارب بدل الأرقام</b></div><div class="toggle ${S.analog ? 'on' : ''}"></div></div>
+          <div class="item tap" data-cv2="occ"><div class="t"><b>ويدجت المناسبة القادمة</b></div><div class="toggle ${S.occ ? 'on' : ''}"></div></div>
+          <div class="item tap" data-cv2="wisdom"><div class="t"><b>ويدجت آية وحديث</b></div><div class="toggle ${S.wisdom ? 'on' : ''}"></div></div>
+          <div class="item tap" data-cv2="photos"><div class="t"><b>خلفية صور بدل الأسود</b><small>${(S.pack || []).length ? (S.pack.length + ' صورة') : 'تستعمل صور الخلفية، أو اختار صور خاصة تحت'}</small></div><div class="toggle ${S.photos ? 'on' : ''}"></div></div></div>
+        <button class="btn sec full" id="cSvPk">${ic('plus')} صور خاصة لشاشة التوقف</button>${(S.pack || []).length ? '<button class="btn ghost full" id="cSvPkClr">شيل صور شاشة التوقف</button>' : ''}
         ${chips([['دقيقة', 1], ['٣ دقايق', 3], ['٥ دقايق', 5], ['١٠ دقايق', 10], ['نص ساعة', 30]], S.min || 5, 'cvm')}
         <button class="btn sec full" id="cSaverPv" style="margin-top:12px">${ic('screen')} معاينة شاشة التوقف</button></div>`;
   }
@@ -384,6 +407,13 @@ function carPanelClick(e) {
   if (t.id === 'cPackAdd') {
     busy('اختار صور من موبايلك…');
     run('pick', { mode: 'bgimages' }).then(l => { unbusy(); C.bgPack = l.concat(C.bgPack || []).slice(0, 15); changed(); carLive(); carEditorPanels(); }).catch(er => { unbusy(); if (er.message !== 'CANCEL') toast(errText(er)); });
+    return;
+  }
+  if (t.id === 'cScOff') { delete C.scene; changed(); carLive(); carEditorPanels(); return; }
+  if (t.id === 'cSvPkClr') { C.saver.pack = []; changed(); carLive(); carEditorPanels(); return; }
+  if (t.id === 'cSvPk') {
+    busy('اختار صور لشاشة التوقف…');
+    run('pick', { mode: 'bgimages' }).then(l => { unbusy(); C.saver = C.saver || {}; C.saver.pack = l.concat(C.saver.pack || []).slice(0, 10); C.saver.photos = true; changed(); carLive(); carEditorPanels(); }).catch(er => { unbusy(); if (er.message !== 'CANCEL') toast(errText(er)); });
     return;
   }
   if (t.id === 'cSaverPv') { pvDirect({ saver: true }); setTimeout(() => pvDirect({ saver: false }), 5000); toast('معاينة ٥ ثواني'); return; }
@@ -469,6 +499,10 @@ function carPanelClick(e) {
   else if (ds.mdel !== undefined) C.maint.splice(+ds.mdel, 1);
   else if (ds.ddel !== undefined) C.dial.splice(+ds.ddel, 1);
   else if (ds.cv) { C.saver = C.saver || {}; C.saver[ds.cv] = C.saver[ds.cv] === false; }
+  else if (ds.cv2) { C.saver = C.saver || {}; C.saver[ds.cv2] = !C.saver[ds.cv2]; }
+  else if (ds.csc) { C.scene = ds.csc; }
+  else if (ds.csd) { const l = C.sceneDock = C.sceneDock || [], i = l.indexOf(ds.csd); if (i >= 0) l.splice(i, 1); else l.push(ds.csd); }
+  else if (ds.csbg) { C.sceneBg = !C.sceneBg; }
   else if (ds.cvm) { C.saver = C.saver || {}; C.saver.min = +ds.cvm; }
   else return;
   tap(); changed(); carLive(); carEditorPanels();
