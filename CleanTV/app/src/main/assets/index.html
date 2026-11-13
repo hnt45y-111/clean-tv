@@ -511,210 +511,338 @@
   body[data-skin="club"] #newscard.on + #nowPlaying, body[data-skin="club"] #clubcard .cc-name { max-width: 1080px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .glass.saverb { background: linear-gradient(160deg, rgba(255,255,255,.22), rgba(255,255,255,.08)); }
   .glass.saverb.focus { background: linear-gradient(160deg, rgba(255,255,255,.95), rgba(255,255,255,.75)); color: #111; }
-  /* ================= v13: smart-TV system looks («واجهات حسب الشركة») ================= */
-  .osrow { display: none; }
-  #oshTabs, #oshRail { display: none; }
-  body.os .osrow { display: block; }
-  body.os #oshTabs, body.os #oshRail { display: flex; position: absolute; z-index: 4; pointer-events: none; }
-  body.os #leftcol, body.os #row-occasions, body.os #row-matches, body.os .owner, body.os .dates, body.os #adhanbox,
-  body.os .next-occ, body.os .acts, body.os #credit { display: none !important; }
-  body.os .hero { position: absolute; top: 0; left: 0; height: 0; }
-  body.os .time-block { position: absolute; top: 40px; left: 96px; z-index: 6; }
-  body.os .clock .hm { font-size: 44px; font-weight: 500; }
-  body.os .clock .ampm { font-size: 22px; }
-  body.os #content section.row { position: absolute; margin: 0; left: 0; }
-  body.os #topbar { top: 30px; gap: 10px; }
-  body.os .glass { width: 56px; height: 56px; }
-  body.os .glass.tvb { width: auto; min-width: 56px; padding: 0 18px; }
-  body.os .glass.tvb .lbl, body.os .glass.tvb { font-size: 18px; }
-  body.os .glass svg { width: 25px; height: 25px; }
-  body.os .glass .lbl { top: 64px; font-size: 17px; }
-  body.os #row-tools { top: auto; bottom: 16px; right: 96px; }
-  body.os .tool { height: 50px; font-size: 18px; padding: 0 18px; background: rgba(255,255,255,.08); }
-  body.os .row-title { font-size: 25px; margin-bottom: 14px; color: rgba(255,255,255,.86); }
+  /* ================= v14: makers' looks with their own bars, and imported CleanYourTV looks ================= */
+  #row-osbar, .osrow, #osHead, #osTitle, #osDeco, #osGlow, #osArt { display: none; }
+  body.os #row-osbar, body.os .osrow, body.os #osDeco { display: block; }
+  body.os #topbar, body.os .hero, body.os #row-occasions, body.os #row-matches, body.os #row-tools, body.os #credit { display: none !important; }
+  body.os { --osac: #ffffff; }
+  body.os.ltr #content { direction: ltr; }
+  body.os.ltr .oc-t, body.os.ltr .oh-t, body.os.ltr .name, body.os.ltr .osb-l, body.os.ltr .osb-tip, body.os.ltr .row-title { unicode-bidi: plaintext; }
+  body.os #content section.row, body.os #row-osbar { position: absolute; margin: 0; }
+  body.os #content { padding: 0; }
+  body.os .track-wrap { margin: 0; padding: 0; }
+  body.os .row-title { font-size: 25px; margin-bottom: 14px; color: rgba(255,255,255,.88); }
   body.os .row-title small { display: none; }
   body.os #row-apps .row-title { display: none; }
-  body.os .track-wrap { margin: 0; padding: 0; }
-  /* hero banner */
+  body.os #row-apps .app .tile, body.os #row-apps .app .tile::after { clip-path: none !important; }
+  body.os #row-apps .app .tile.ic img, body.os #row-apps .app .tile img.custom { width: 58%; height: 58%; object-fit: contain; }
+  body.os #row-apps .app .tile img.custom { width: 100%; height: 100%; object-fit: cover; }
+  body.os #row-apps .app .name { right: -30px; left: -30px; }
+
+  /* the bar */
+  #row-osbar { z-index: 8; }
+  .osb-g { display: flex; align-items: center; }
+  .osb { flex: 0 0 auto; display: grid; place-items: center; position: relative; border-radius: 99px; color: #fff; transition: transform .15s, background .15s, color .15s; }
+  .osb svg { width: 32px; height: 32px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .osb-ic { width: 64px; height: 64px; }
+  .osb-ic img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+  .osb-av { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 25px; font-weight: 800; color: #fff;
+    background: linear-gradient(140deg, #ff8fb1, #c2477e 60%, #6d2a8f); box-shadow: 0 0 0 2px rgba(255,255,255,.75); }
+  .osb-av:only-child { margin: 0; }
+  .item.osb-av, .osb.osb-av { width: 64px; height: 64px; }
+  .osb-tip { position: absolute; top: 74px; white-space: nowrap; font-size: 18px; font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .15s; text-shadow: 0 2px 8px rgba(0,0,0,.85); }
+  .osb.focus .osb-tip { opacity: 1; }
+  .osb-tab, .osb-pill { height: 60px; padding: 0 26px; display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 700; color: rgba(255,255,255,.7); white-space: nowrap; }
+  .osb-tab.on, .osb-pill.on { color: #fff; }
+  .osb-ti svg { width: 26px; height: 26px; stroke: #ff3b3b; }
+  .osb.focus { transform: scale(1.1); z-index: 6; background: var(--osac); color: #10131a; }
+  .osb.focus .osb-av { box-shadow: 0 0 0 4px #fff; }
+  .osb-clk { font-size: 30px; font-weight: 600; color: #fff; padding: 0 18px; white-space: nowrap; direction: ltr; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+
+  /* hero */
   body.os #row-hero .track { display: block; transform: none !important; }
   .ohero { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; text-shadow: 0 2px 14px rgba(0,0,0,.55); background-size: 0 0; }
-  .ohero .oh-k { font-size: 24px; font-weight: 700; color: rgba(255,255,255,.8); letter-spacing: .02em; }
-  .ohero .oh-t { font-size: 92px; font-weight: 800; line-height: 1.12; margin: 4px 0 22px; max-width: 980px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ohero .oh-b { display: inline-flex; align-items: center; gap: 12px; height: 62px; padding: 0 30px; border-radius: 99px; font-size: 25px; font-weight: 700;
-    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); text-shadow: none; transition: background .15s, color .15s; }
-  .ohero .oh-b svg { width: 22px; height: 22px; fill: currentColor; transform: scaleX(-1); }
+  .ohero .oh-k { font-size: 26px; font-weight: 700; color: rgba(255,255,255,.85); }
+  .ohero .oh-t { font-size: 96px; font-weight: 800; line-height: 1.1; margin: 4px 0 22px -30px; padding: 10px 30px 14px; max-width: 1100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ohero .oh-lg { width: 96px; height: 96px; object-fit: contain; border-radius: 22px; margin-bottom: 20px; filter: drop-shadow(0 6px 16px rgba(0,0,0,.5)); }
+  .ohero .oh-b { display: inline-flex; align-items: center; justify-content: center; gap: 12px; height: 66px; padding: 0 34px; border-radius: 99px; font-size: 26px; font-weight: 700;
+    background: rgba(40,42,48,.55); border: 1px solid rgba(255,255,255,.3); text-shadow: none; transition: background .15s, color .15s; }
+  .ohero .oh-b svg { width: 22px; height: 22px; fill: currentColor; }
   .ohero.focus { transform: none; }
-  .ohero.focus .oh-b { background: #fff; color: #0b0d14; box-shadow: 0 10px 30px -8px rgba(0,0,0,.6); }
-  .ohero .oh-dots { display: flex; gap: 10px; margin-top: 26px; }
+  .ohero.focus .oh-b { background: var(--osac); color: #0b0d14; box-shadow: 0 10px 30px -8px rgba(0,0,0,.6); }
+  .ohero .oh-dots { display: flex; gap: 10px; margin-top: 30px; }
   .ohero .oh-dots i { width: 12px; height: 12px; border-radius: 99px; background: rgba(255,255,255,.4); transition: width .3s; }
   .ohero .oh-dots i.on { width: 40px; background: #fff; }
+  body.os #row-ostabs .track { display: flex; gap: 22px; transform: none !important; }
+
   /* cards */
-  body.os #row-feat .track { gap: 20px; }
-  .ocard .oc-img { width: 300px; height: 170px; border-radius: 14px; overflow: hidden; display: grid; place-items: center; position: relative; box-shadow: 0 14px 30px -18px #000; }
+  body.os #row-feat .track { gap: 24px; }
+  .ocard { padding-top: 46px; }
+  .ocard .oc-sec { position: absolute; top: 0; left: 0; font-size: 25px; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,.92); }
+  .ocard .oc-img { width: 320px; height: 183px; border-radius: 14px; overflow: hidden; display: grid; place-items: center; position: relative; box-shadow: 0 14px 30px -18px #000; }
   .ocard .oc-img .oc-bn { width: 100%; height: 100%; object-fit: cover; }
-  .ocard .oc-img .oc-ic { width: 84px; height: 84px; object-fit: contain; }
-  .ocard .oc-t { font-size: 21px; font-weight: 700; margin-top: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; opacity: .75; }
-  .ocard.focus { transform: scale(1.08); }
-  .ocard.focus .oc-img { box-shadow: 0 0 0 4px #fff, 0 22px 40px -16px #000; }
+  .ocard .oc-img .oc-ic { width: 92px; height: 92px; object-fit: contain; }
+  .ocard .oc-lt { font-size: 34px; font-weight: 800; color: #fff; padding: 0 20px; text-align: center; }
+  .ocard .oc-t { font-size: 21px; font-weight: 700; margin-top: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; opacity: 0; }
+  .ocard.focus { transform: scale(1.06); }
+  .ocard.focus .oc-img { box-shadow: 0 0 0 4px var(--osac), 0 22px 40px -16px #000; }
   .ocard.focus .oc-t { opacity: 1; }
-  #oshTabs span { font-size: 26px; font-weight: 700; color: rgba(255,255,255,.62); padding: 10px 24px; border-radius: 99px; }
-  #oshTabs span.on { color: #fff; }
-  #oshRail svg { width: 34px; height: 34px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .oc-tall .oc-img { width: 236px; height: 330px; border-radius: 28px; place-items: start center; padding-top: 70px; }
+  .oc-tall .oc-img .oc-bn { position: absolute; top: 0; left: 0; opacity: .35; }
+  .oc-tall .oc-img .oc-ic { width: 110px; height: 110px; position: relative; }
+  .oc-tall .oc-t { position: absolute; bottom: 26px; left: 22px; right: 22px; margin: 0; font-size: 25px; opacity: 1; text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .oc-poster .oc-img { width: 196px; height: 272px; border-radius: 12px; }
+  .oc-poster .oc-t { max-width: 196px; font-size: 19px; opacity: .8; }
+  #osDeco .od-t { position: absolute; font-size: 24px; font-weight: 700; color: rgba(255,255,255,.9); }
+  #osDeco .od-r { position: absolute; display: flex; gap: 24px; }
+  #osDeco .od-r i { width: 320px; height: 183px; border-radius: 14px; opacity: .85; }
 
-  /* ---- Samsung (Tizen) ---- */
-  body[data-skin="tizen"] .bgshade { background-image: linear-gradient(270deg, rgba(9,11,18,.85) 0%, rgba(9,11,18,.35) 38%, rgba(9,11,18,0) 60%), linear-gradient(0deg, rgba(9,11,18,.98) 0%, rgba(9,11,18,.9) 40%, rgba(9,11,18,.15) 66%, rgba(9,11,18,.3) 100%); }
-  body[data-skin="tizen"] #oshRail { top: 0; bottom: 0; right: 0; width: 112px; flex-direction: column; align-items: center; padding-top: 250px; gap: 38px; background: rgba(8,10,16,.55); }
-  body[data-skin="tizen"] #oshRail span { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 50%; opacity: .7; }
-  body[data-skin="tizen"] #oshRail span.on { background: rgba(255,255,255,.16); opacity: 1; }
-  body[data-skin="tizen"] #row-hero { top: 150px; right: 170px; }
-  body[data-skin="tizen"] .ohero .oh-t { font-size: 100px; }
-  body[data-skin="tizen"] #oshTabs { top: 540px; right: 160px; gap: 8px; }
-  body[data-skin="tizen"] #oshTabs span.on { background: #fff; color: #111; }
-  body[data-skin="tizen"] #row-hero .oh-dots { display: none; }
-  body[data-skin="tizen"] #row-feat { top: 620px; right: 170px; }
-  body[data-skin="tizen"] .ocard .oc-img { width: 280px; height: 158px; border-radius: 12px; }
-  body[data-skin="tizen"] .ocard .oc-t { display: none; }
-  body[data-skin="tizen"] #row-apps { top: 840px; right: 170px; }
-  body[data-skin="tizen"] #row-apps .track { gap: 16px; }
-  body[data-skin="tizen"] #row-apps .app .tile, body[data-skin="tizen"] #row-apps .app .tile::after { width: 120px !important; height: 120px !important; border-radius: 26px !important; clip-path: none !important; }
-  body[data-skin="tizen"] #row-apps .app .tile.ic img, body[data-skin="tizen"] #row-apps .app .tile img.custom { width: 70px; height: 70px; }
-  body[data-skin="tizen"] #row-apps .app .name { top: 128px !important; font-size: 18px; }
-  body[data-skin="tizen"] #row-tools { right: 170px; }
+  /* ---- Samsung Tizen (the first picture): rail on the left, big title, Discover/Live/Apps, Recent and Recommended ---- */
+  body[data-skin="tizen"] { --osac: #ffffff; }
+  body[data-skin="tizen"] .bgshade { background-image: linear-gradient(0deg, #0b0f1a 0%, rgba(11,15,26,.97) 40%, rgba(11,15,26,.35) 58%, rgba(11,15,26,.05) 75%), linear-gradient(90deg, rgba(11,15,26,.5), rgba(11,15,26,0) 30%); }
+  body[data-skin="tizen"] #row-osbar { top: 0; bottom: 0; left: 0; width: 108px; background: rgba(9,12,20,.82); display: flex; flex-direction: column; align-items: center; padding: 150px 0 80px; box-shadow: 1px 0 0 rgba(255,255,255,.06); }
+  body[data-skin="tizen"] .osb-g { flex-direction: column; gap: 26px; }
+  body[data-skin="tizen"] .osb-g2 { margin-top: auto; gap: 18px; }
+  body[data-skin="tizen"] .osb-ic { color: rgba(255,255,255,.85); }
+  body[data-skin="tizen"] .osb-ic.on { color: #33d6f5; }
+  body[data-skin="tizen"] .osb-ic.focus { color: #10131a; }
+  body[data-skin="tizen"] .osb-tip { top: auto; left: 82px; background: rgba(255,255,255,.95); color: #111; text-shadow: none; padding: 8px 16px; border-radius: 10px; }
+  body[data-skin="tizen"] .osb-av { width: 46px; height: 46px; font-size: 21px; }
+  body[data-skin="tizen"] #row-hero { top: 70px; left: 180px; }
+  body[data-skin="tizen"] .ohero { width: 1630px; height: 330px; justify-content: flex-start; padding-top: 20px; position: relative; }
+  body[data-skin="tizen"] .ohero .oh-t { font-size: 190px; font-weight: 900; line-height: 1; letter-spacing: -2px; margin: -10px 0 0 -30px; max-width: 1240px; text-shadow: 0 6px 24px rgba(0,0,0,.45); }
+  body[data-skin="tizen"] .ohero .oh-lg { position: absolute; left: 260px; top: 240px; width: 84px; height: 84px; margin: 0; }
+  body[data-skin="tizen"] .ohero .oh-b { position: absolute; left: 1218px; top: 230px; width: 345px; height: 70px; border-radius: 12px; background: rgba(70,72,78,.55); font-size: 25px; font-weight: 600; }
+  body[data-skin="tizen"] .ohero .oh-b svg { display: none; }
+  body[data-skin="tizen"] #row-ostabs { top: 420px; left: 678px; }
+  body[data-skin="tizen"] #row-ostabs .track { gap: 64px; }
+  body[data-skin="tizen"] #row-ostabs .osb-tab { height: 68px; padding: 0 36px; font-size: 29px; color: #fff; }
+  body[data-skin="tizen"] #row-ostabs .osb-tab.on { background: #fff; color: #111; }
+  body[data-skin="tizen"] #row-ostabs .osb-tab.focus { background: #fff; color: #111; box-shadow: 0 0 0 4px rgba(255,255,255,.45); }
+  body[data-skin="tizen"] #row-feat { top: 528px; left: 178px; }
+  body[data-skin="tizen"] .ocard .oc-sec { font-size: 23px; }
+  body[data-skin="tizen"] #row-apps { top: 832px; left: 178px; }
+  body[data-skin="tizen"] #row-apps .track { gap: 14px; }
+  body[data-skin="tizen"] #row-apps .app .tile, body[data-skin="tizen"] #row-apps .app .tile::after { width: 112px !important; height: 112px !important; border-radius: 16px !important; }
+  body[data-skin="tizen"] #row-apps .app .name { top: 120px !important; font-size: 18px; }
+  body[data-skin="tizen"] #row-apps .item.focus { transform: scale(1.12); }
+  body[data-skin="tizen"] #osDeco .od-t { top: 994px; left: 178px; }
+  body[data-skin="tizen"] #osDeco .od-r { top: 1040px; left: 178px; }
 
-  /* ---- Samsung One UI ---- */
-  body[data-skin="oneui"] .bgshade { background-image: linear-gradient(0deg, rgba(6,8,12,.98) 0%, rgba(6,8,12,.86) 40%, rgba(6,8,12,.05) 64%, rgba(6,8,12,.35) 100%), linear-gradient(270deg, rgba(6,8,12,.6), rgba(6,8,12,0) 46%); }
-  body[data-skin="oneui"] #topbar { background: rgba(18,20,26,.62); border: 1px solid rgba(255,255,255,.14); border-radius: 99px; padding: 8px 18px; width: auto; left: 50%; margin-left: 0; transform: translateX(-50%); }
-  body[data-skin="oneui"] .glass { background: transparent; border-color: transparent; box-shadow: none; }
-  body[data-skin="oneui"] .glass.focus { background: #fff; }
-  body[data-skin="oneui"] #row-hero { top: 170px; right: 120px; }
-  body[data-skin="oneui"] #row-feat { top: 580px; right: 120px; }
-  body[data-skin="oneui"] .ocard .oc-img { width: 330px; height: 186px; border-radius: 20px; }
-  body[data-skin="oneui"] #row-apps { top: 878px; right: 120px; }
-  body[data-skin="oneui"] #row-apps .track { gap: 20px; }
-  body[data-skin="oneui"] #row-apps .app .tile, body[data-skin="oneui"] #row-apps .app .tile::after { width: 96px !important; height: 96px !important; border-radius: 50% !important; clip-path: none !important; }
-  body[data-skin="oneui"] #row-apps .app .tile.ic img, body[data-skin="oneui"] #row-apps .app .tile img.custom { width: 56px; height: 56px; }
-  body[data-skin="oneui"] #row-apps .app .name { top: 104px !important; font-size: 17px; }
-  body[data-skin="oneui"] #row-tools { display: none; }
+  /* ---- Samsung One UI (the second picture): profile and search on the left, floating bar in the middle ---- */
+  body[data-skin="oneui"] .bgshade { background-image: linear-gradient(0deg, rgba(5,7,11,.98) 0%, rgba(5,7,11,.88) 36%, rgba(5,7,11,.1) 58%, rgba(5,7,11,.28) 100%), linear-gradient(90deg, rgba(5,7,11,.6), rgba(5,7,11,0) 42%); }
+  body[data-skin="oneui"] #row-osbar { top: 34px; left: 70px; right: 70px; height: 96px; display: flex; align-items: center; }
+  body[data-skin="oneui"] .osb-g1 { gap: 10px; }
+  body[data-skin="oneui"] .osb-g2 { position: absolute; left: 50%; transform: translateX(-50%); gap: 26px; padding: 10px 30px 30px; border-radius: 99px; background: rgba(36,40,48,.62); border: 1px solid rgba(255,255,255,.12); }
+  body[data-skin="oneui"] .osb-g3 { margin-left: auto; }
+  body[data-skin="oneui"] .osb-g2 .osb-pill { width: 64px; height: 64px; padding: 0; justify-content: center; background: #fff; color: #111; }
+  body[data-skin="oneui"] .osb-g2 .osb-pill .osb-l { position: absolute; top: 66px; font-size: 16px; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+  body[data-skin="oneui"] .osb-g2 .osb-tip { top: 70px; font-size: 16px; }
+  body[data-skin="oneui"] .osb.focus { background: rgba(255,255,255,.92); color: #111; }
+  body[data-skin="oneui"] #row-hero { top: 196px; left: 126px; }
+  body[data-skin="oneui"] .ohero { width: 1000px; height: 290px; justify-content: flex-start; }
+  body[data-skin="oneui"] .ohero .oh-t { font-size: 76px; margin: 0 0 26px; }
+  body[data-skin="oneui"] .ohero .oh-lg { display: none; }
+  body[data-skin="oneui"] .ohero .oh-b { width: 334px; height: 74px; background: rgba(28,30,36,.6); }
+  body[data-skin="oneui"] #row-feat { top: 545px; left: 78px; }
+  body[data-skin="oneui"] #row-feat .track { gap: 40px; }
+  body[data-skin="oneui"] .ocard .oc-img { width: 457px; height: 259px; border-radius: 18px; }
+  body[data-skin="oneui"] .ocard .oc-t { max-width: 457px; }
+  body[data-skin="oneui"] #row-apps { top: 904px; left: 78px; }
+  body[data-skin="oneui"] #row-apps .track { gap: 14px; }
+  body[data-skin="oneui"] #row-apps .app .tile, body[data-skin="oneui"] #row-apps .app .tile::after { width: 110px !important; height: 110px !important; border-radius: 50% !important; }
+  body[data-skin="oneui"] #row-apps .app .name { top: 118px !important; font-size: 17px; }
 
-  /* ---- LG (webOS) ---- */
-  body[data-skin="webos"] .bgshade { background-image: linear-gradient(0deg, rgba(10,8,14,.94) 0%, rgba(10,8,14,.55) 36%, rgba(10,8,14,.1) 62%, rgba(10,8,14,.4) 100%); }
-  body[data-skin="webos"] #row-hero { top: 110px; right: 110px; }
-  body[data-skin="webos"] .ohero .oh-k { font-size: 30px; color: #fff; }
+  /* ---- LG webOS ---- */
+  body[data-skin="webos"] { --osac: #ff3d7f; }
+  body[data-skin="webos"] .bgshade { background-image: linear-gradient(0deg, rgba(10,8,14,.95) 0%, rgba(10,8,14,.55) 36%, rgba(10,8,14,.1) 62%, rgba(10,8,14,.45) 100%); }
+  body[data-skin="webos"] #row-osbar { top: 34px; left: 96px; right: 96px; display: flex; align-items: center; }
+  body[data-skin="webos"] .osb-g1 { gap: 14px; } body[data-skin="webos"] .osb-g2 { margin-left: auto; gap: 14px; }
+  body[data-skin="webos"] .osb-ic.on { background: rgba(255,255,255,.16); }
+  body[data-skin="webos"] .osb.focus { color: #fff; }
+  body[data-skin="webos"] #row-hero { top: 150px; left: 110px; }
+  body[data-skin="webos"] .ohero .oh-k { font-size: 32px; color: #fff; }
   body[data-skin="webos"] .ohero .oh-t { font-size: 64px; margin: 2px 0 16px; }
-  body[data-skin="webos"] .ohero .oh-b { height: 54px; font-size: 22px; }
-  body[data-skin="webos"] .ohero .oh-dots { display: none; }
-  body[data-skin="webos"] #row-feat { top: 400px; right: 110px; }
-  body[data-skin="webos"] #row-feat .row-title { display: none; }
-  body[data-skin="webos"] .ocard .oc-img { width: 236px; height: 330px; border-radius: 28px; place-items: start center; padding-top: 70px; }
-  body[data-skin="webos"] .ocard .oc-img .oc-bn { position: absolute; inset: 0; opacity: .35; }
-  body[data-skin="webos"] .ocard .oc-img .oc-ic { width: 110px; height: 110px; position: relative; }
-  body[data-skin="webos"] .ocard .oc-t { position: absolute; bottom: 26px; right: 22px; left: 22px; margin: 0; font-size: 25px; opacity: 1; text-shadow: 0 2px 8px rgba(0,0,0,.5); }
-  body[data-skin="webos"] #row-apps { top: 820px; right: 110px; }
+  body[data-skin="webos"] .ohero .oh-b { height: 56px; font-size: 22px; }
+  body[data-skin="webos"] .ohero.focus .oh-b { color: #fff; }
+  body[data-skin="webos"] #row-feat { top: 400px; left: 110px; }
+  body[data-skin="webos"] .ocard { padding-top: 0; } body[data-skin="webos"] .ocard .oc-sec { display: none; }
+  body[data-skin="webos"] #row-apps { top: 830px; left: 110px; }
   body[data-skin="webos"] #row-apps .track { gap: 14px; }
-  body[data-skin="webos"] #row-apps .app .tile, body[data-skin="webos"] #row-apps .app .tile::after { width: 176px !important; height: 104px !important; border-radius: 16px !important; clip-path: none !important; }
-  body[data-skin="webos"] #row-apps .app .tile.ic img { width: 60px; height: 60px; }
+  body[data-skin="webos"] #row-apps .app .tile, body[data-skin="webos"] #row-apps .app .tile::after { width: 176px !important; height: 104px !important; border-radius: 16px !important; }
+  body[data-skin="webos"] #row-apps .app.focus .tile { box-shadow: 0 0 0 4px #ff3d7f; }
   body[data-skin="webos"] #row-apps .app .name { top: 112px !important; font-size: 18px; }
 
-  /* ---- Hisense (VIDAA) ---- */
-  body[data-skin="vidaa"] .bgshade { background: rgba(9,14,24,.94); background-image: radial-gradient(60% 50% at 80% 0%, rgba(0,160,255,.14), transparent 70%); }
-  body[data-skin="vidaa"] #oshTabs { top: 38px; right: 96px; gap: 6px; }
-  body[data-skin="vidaa"] #oshTabs span { font-size: 27px; padding: 8px 20px; }
-  body[data-skin="vidaa"] #oshTabs span.on { color: #fff; box-shadow: inset 0 -4px 0 #18a0fb; border-radius: 0; }
-  body[data-skin="vidaa"] #row-hero { top: 128px; right: 96px; left: 96px; }
+  /* ---- Hisense VIDAA ---- */
+  body[data-skin="vidaa"] { --osac: #18a0fb; }
+  body[data-skin="vidaa"] .bgshade { background: rgba(9,14,24,.94); background-image: radial-gradient(60% 50% at 20% 0%, rgba(0,160,255,.14), transparent 70%); }
+  body[data-skin="vidaa"] #row-osbar { top: 30px; left: 96px; right: 96px; display: flex; align-items: center; }
+  body[data-skin="vidaa"] .osb-g2 { margin-left: auto; gap: 8px; }
+  body[data-skin="vidaa"] .osb-tab { border-radius: 0; }
+  body[data-skin="vidaa"] .osb-tab.on { box-shadow: inset 0 -4px 0 #18a0fb; }
+  body[data-skin="vidaa"] .osb-tab.focus { border-radius: 12px; color: #fff; }
+  body[data-skin="vidaa"] .osb-ic.focus { color: #fff; }
+  body[data-skin="vidaa"] #row-hero { top: 128px; left: 96px; }
   body[data-skin="vidaa"] .ohero { width: 1728px; height: 400px; border-radius: 22px; background-size: cover !important; background-position: center; padding: 0 64px 44px; position: relative; overflow: hidden; }
-  body[data-skin="vidaa"] .ohero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(270deg, rgba(5,10,20,.88), rgba(5,10,20,.2) 60%); z-index: -1; }
+  body[data-skin="vidaa"] .ohero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(5,10,20,.88), rgba(5,10,20,.2) 60%); }
   body[data-skin="vidaa"] .ohero > * { position: relative; }
   body[data-skin="vidaa"] .ohero.focus { box-shadow: 0 0 0 4px #18a0fb; }
   body[data-skin="vidaa"] .ohero .oh-t { font-size: 70px; margin-bottom: 18px; }
-  body[data-skin="vidaa"] #row-feat { top: 560px; right: 96px; }
+  body[data-skin="vidaa"] .ohero.focus .oh-b { color: #fff; }
+  body[data-skin="vidaa"] #row-feat { top: 560px; left: 96px; }
   body[data-skin="vidaa"] .ocard .oc-img { width: 266px; height: 150px; }
-  body[data-skin="vidaa"] .ocard .oc-t { display: none; }
-  body[data-skin="vidaa"] .ocard.focus .oc-img { box-shadow: 0 0 0 4px #18a0fb; }
-  body[data-skin="vidaa"] #row-apps { top: 790px; right: 96px; }
+  body[data-skin="vidaa"] #row-apps { top: 820px; left: 96px; }
   body[data-skin="vidaa"] #row-apps .track { gap: 16px; }
-  body[data-skin="vidaa"] #row-apps .app .tile, body[data-skin="vidaa"] #row-apps .app .tile::after { width: 196px !important; height: 110px !important; border-radius: 14px !important; clip-path: none !important; }
+  body[data-skin="vidaa"] #row-apps .app .tile, body[data-skin="vidaa"] #row-apps .app .tile::after { width: 196px !important; height: 110px !important; border-radius: 14px !important; }
   body[data-skin="vidaa"] #row-apps .app .tile.ic { background: #f4f6fa !important; }
-  body[data-skin="vidaa"] #row-apps .app .tile.ic img { width: 66px; height: 66px; }
   body[data-skin="vidaa"] #row-apps .app.focus .tile { box-shadow: 0 0 0 4px #18a0fb; }
   body[data-skin="vidaa"] #row-apps .app .name { top: 118px !important; font-size: 18px; }
 
   /* ---- Google TV ---- */
+  body[data-skin="googletv"] { --osac: #e8eaed; }
   body[data-skin="googletv"] .bgshade { background: rgba(16,18,22,.97); }
-  body[data-skin="googletv"] #oshTabs { top: 38px; right: 96px; gap: 4px; }
-  body[data-skin="googletv"] #oshTabs span { font-size: 25px; padding: 10px 26px; }
-  body[data-skin="googletv"] #oshTabs span.on { background: rgba(255,255,255,.14); }
-  body[data-skin="googletv"] #row-hero { top: 128px; right: 96px; left: 96px; }
+  body[data-skin="googletv"] #row-osbar { top: 30px; left: 96px; right: 96px; display: flex; align-items: center; }
+  body[data-skin="googletv"] .osb-g1 { gap: 6px; } body[data-skin="googletv"] .osb-g2 { margin-left: auto; gap: 10px; }
+  body[data-skin="googletv"] .osb-tab { font-size: 25px; }
+  body[data-skin="googletv"] .osb-tab.on { background: rgba(255,255,255,.14); }
+  body[data-skin="googletv"] #row-hero { top: 128px; left: 96px; }
   body[data-skin="googletv"] .ohero { width: 1728px; height: 500px; border-radius: 30px; background-size: cover !important; background-position: center; padding: 0 70px 50px; position: relative; overflow: hidden; }
-  body[data-skin="googletv"] .ohero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(270deg, rgba(10,12,16,.9) 0%, rgba(10,12,16,.35) 55%, rgba(10,12,16,0) 80%), linear-gradient(0deg, rgba(10,12,16,.6), rgba(10,12,16,0) 50%); z-index: -1; }
+  body[data-skin="googletv"] .ohero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(10,12,16,.9) 0%, rgba(10,12,16,.35) 55%, rgba(10,12,16,0) 80%), linear-gradient(0deg, rgba(10,12,16,.6), rgba(10,12,16,0) 50%); }
   body[data-skin="googletv"] .ohero > * { position: relative; }
   body[data-skin="googletv"] .ohero.focus { box-shadow: 0 0 0 4px #fff; }
   body[data-skin="googletv"] .ohero .oh-t { font-size: 76px; }
-  body[data-skin="googletv"] #row-apps { top: 676px; right: 96px; }
+  body[data-skin="googletv"] #row-apps { top: 676px; left: 96px; }
   body[data-skin="googletv"] #row-apps .row-title { display: flex; }
   body[data-skin="googletv"] #row-apps .track { gap: 22px; }
-  body[data-skin="googletv"] #row-apps .app .tile, body[data-skin="googletv"] #row-apps .app .tile::after { width: 290px !important; height: 163px !important; border-radius: 16px !important; clip-path: none !important; }
+  body[data-skin="googletv"] #row-apps .app .tile, body[data-skin="googletv"] #row-apps .app .tile::after { width: 290px !important; height: 163px !important; border-radius: 16px !important; }
   body[data-skin="googletv"] #row-apps .app .name { top: 172px !important; font-size: 19px; }
 
-  /* ---- Android TV (classic) ---- */
-  body[data-skin="androidtv"] .bgshade { background: rgba(28,32,38,.9); background-image: linear-gradient(0deg, rgba(20,23,28,.6), rgba(20,23,28,0)); }
-  body[data-skin="androidtv"] #oshRail { top: 40px; right: 96px; }
-  body[data-skin="androidtv"] #oshRail span { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: #4285f4; box-shadow: 0 8px 20px -6px rgba(0,0,0,.6); }
-  body[data-skin="androidtv"] #row-apps { top: 200px; right: 96px; }
+  /* ---- Android TV ---- */
+  body[data-skin="androidtv"] .bgshade { background: rgba(28,32,38,.92); }
+  body[data-skin="androidtv"] #row-osbar { top: 40px; left: 96px; right: 96px; display: flex; align-items: center; }
+  body[data-skin="androidtv"] .osb-g1 .osb-ic { width: 76px; height: 76px; background: #4285f4; box-shadow: 0 8px 20px -6px rgba(0,0,0,.6); }
+  body[data-skin="androidtv"] .osb-g2 { margin-left: auto; gap: 8px; }
+  body[data-skin="androidtv"] #row-apps { top: 200px; left: 96px; }
   body[data-skin="androidtv"] #row-apps .row-title { display: flex; }
   body[data-skin="androidtv"] #row-apps .track { gap: 16px; }
-  body[data-skin="androidtv"] #row-apps .app .tile, body[data-skin="androidtv"] #row-apps .app .tile::after { width: 264px !important; height: 148px !important; border-radius: 6px !important; clip-path: none !important; }
+  body[data-skin="androidtv"] #row-apps .app .tile, body[data-skin="androidtv"] #row-apps .app .tile::after { width: 264px !important; height: 148px !important; border-radius: 6px !important; }
   body[data-skin="androidtv"] #row-apps .app .name { top: 156px !important; font-size: 19px; }
-  body[data-skin="androidtv"] #row-feat { top: 520px; right: 96px; }
+  body[data-skin="androidtv"] #row-feat { top: 470px; left: 96px; }
   body[data-skin="androidtv"] .ocard .oc-img { width: 340px; height: 192px; border-radius: 6px; }
 
   /* ---- Fire TV ---- */
-  body[data-skin="firetv"] .bgshade { background-image: linear-gradient(270deg, rgba(14,18,26,.92) 0%, rgba(14,18,26,.4) 40%, rgba(14,18,26,0) 62%), linear-gradient(0deg, rgba(14,18,26,1) 0%, rgba(14,18,26,.95) 36%, rgba(14,18,26,0) 60%); }
-  body[data-skin="firetv"] #oshTabs { top: 38px; right: 96px; gap: 6px; }
-  body[data-skin="firetv"] #oshTabs span { font-size: 25px; }
-  body[data-skin="firetv"] #oshTabs span.on { background: rgba(255,255,255,.92); color: #0e121a; }
-  body[data-skin="firetv"] #row-hero { top: 190px; right: 120px; }
+  body[data-skin="firetv"] { --osac: #ffffff; }
+  body[data-skin="firetv"] .bgshade { background-image: linear-gradient(90deg, rgba(14,18,26,.92) 0%, rgba(14,18,26,.4) 40%, rgba(14,18,26,0) 62%), linear-gradient(0deg, rgba(14,18,26,1) 0%, rgba(14,18,26,.95) 36%, rgba(14,18,26,0) 60%); }
+  body[data-skin="firetv"] #row-osbar { top: 32px; left: 96px; right: 96px; display: flex; align-items: center; }
+  body[data-skin="firetv"] .osb-g1 { gap: 14px; } body[data-skin="firetv"] .osb-g2 { margin-left: auto; }
+  body[data-skin="firetv"] .osb-ic.on { box-shadow: inset 0 -4px 0 #ff9900; border-radius: 12px; }
+  body[data-skin="firetv"] #row-hero { top: 190px; left: 120px; }
   body[data-skin="firetv"] .ohero .oh-b { border-radius: 10px; }
-  body[data-skin="firetv"] #row-apps { top: 680px; right: 96px; }
+  body[data-skin="firetv"] #row-apps { top: 680px; left: 96px; }
   body[data-skin="firetv"] #row-apps .row-title { display: flex; }
   body[data-skin="firetv"] #row-apps .track { gap: 18px; }
-  body[data-skin="firetv"] #row-apps .app .tile, body[data-skin="firetv"] #row-apps .app .tile::after { width: 260px !important; height: 146px !important; border-radius: 10px !important; clip-path: none !important; }
+  body[data-skin="firetv"] #row-apps .app .tile, body[data-skin="firetv"] #row-apps .app .tile::after { width: 260px !important; height: 146px !important; border-radius: 10px !important; }
   body[data-skin="firetv"] #row-apps .app .name { top: 154px !important; font-size: 19px; }
   body[data-skin="firetv"] #row-apps .app.focus .tile { box-shadow: 0 0 0 5px #fff; }
 
-  /* ---- Roku ---- */
+  /* ---- Roku: menu on the left, a grid of apps ---- */
   body[data-skin="roku"] .bgshade { background: linear-gradient(160deg, #6c2fa0 0%, #4b1f74 55%, #2e1047 100%); }
   body[data-skin="roku"] .bgimg { opacity: 0 !important; }
-  body[data-skin="roku"] #oshRail { top: 170px; right: 70px; width: 330px; flex-direction: column; gap: 6px; }
-  body[data-skin="roku"] #oshRail span { font-size: 30px; font-weight: 700; padding: 16px 30px; border-radius: 14px; color: rgba(255,255,255,.75); }
-  body[data-skin="roku"] #oshRail span.on { background: rgba(255,255,255,.16); color: #fff; }
-  body[data-skin="roku"] #row-apps { top: 150px; right: 450px; height: 820px; overflow: hidden; }
-  body[data-skin="roku"] #row-apps .track-wrap { height: 820px; overflow: visible; }
+  body[data-skin="roku"] #row-osbar { top: 150px; bottom: 60px; left: 60px; width: 360px; display: flex; flex-direction: column; }
+  body[data-skin="roku"] .osb-g { flex-direction: column; align-items: stretch; gap: 6px; }
+  body[data-skin="roku"] .osb-g2 { margin-top: auto; }
+  body[data-skin="roku"] .osb-tab { height: 70px; font-size: 30px; border-radius: 14px; padding: 0 30px; }
+  body[data-skin="roku"] .osb-tab.on { background: rgba(255,255,255,.14); color: #fff; }
+  body[data-skin="roku"] .osb.focus { transform: none; background: #fff; color: #4b1f74; }
+  body[data-skin="roku"] #row-apps { top: 150px; left: 450px; height: 860px; overflow: hidden; }
+  body[data-skin="roku"] #row-apps .track-wrap { height: 860px; }
   body[data-skin="roku"] #row-apps .track { display: grid; grid-template-columns: repeat(4, 300px); gap: 26px 22px; padding: 14px; }
-  body[data-skin="roku"] #row-apps .app .tile, body[data-skin="roku"] #row-apps .app .tile::after { width: 300px !important; height: 170px !important; border-radius: 12px !important; clip-path: none !important; }
+  body[data-skin="roku"] #row-apps .app .tile, body[data-skin="roku"] #row-apps .app .tile::after { width: 300px !important; height: 170px !important; border-radius: 12px !important; }
   body[data-skin="roku"] #row-apps .app.focus .tile { box-shadow: 0 0 0 6px #fff; }
   body[data-skin="roku"] #row-apps .item.focus { transform: scale(1.05); }
   body[data-skin="roku"] #row-apps .app .name { display: none; }
-  body[data-skin="roku"] #row-tools { right: 450px; }
 
-  /* ---- Xiaomi (PatchWall) ---- */
-  body[data-skin="patchwall"] .bgshade { background-image: linear-gradient(270deg, rgba(12,12,12,.9) 0%, rgba(12,12,12,.3) 42%, rgba(12,12,12,0) 64%), linear-gradient(0deg, rgba(12,12,12,1) 0%, rgba(12,12,12,.9) 42%, rgba(12,12,12,.1) 64%); }
-  body[data-skin="patchwall"] #oshTabs { top: 38px; right: 96px; gap: 6px; }
-  body[data-skin="patchwall"] #oshTabs span.on { color: #ff6900; }
-  body[data-skin="patchwall"] #row-hero { top: 170px; right: 120px; }
+  /* ---- Xiaomi PatchWall ---- */
+  body[data-skin="patchwall"] { --osac: #ff6900; }
+  body[data-skin="patchwall"] .bgshade { background-image: linear-gradient(90deg, rgba(12,12,12,.9) 0%, rgba(12,12,12,.3) 42%, rgba(12,12,12,0) 64%), linear-gradient(0deg, rgba(12,12,12,1) 0%, rgba(12,12,12,.9) 42%, rgba(12,12,12,.1) 64%); }
+  body[data-skin="patchwall"] #row-osbar { top: 30px; left: 96px; right: 96px; display: flex; align-items: center; }
+  body[data-skin="patchwall"] .osb-g2 { margin-left: auto; gap: 8px; }
+  body[data-skin="patchwall"] .osb-tab.on { color: #ff6900; }
+  body[data-skin="patchwall"] .osb.focus { color: #fff; }
+  body[data-skin="patchwall"] #row-hero { top: 170px; left: 120px; }
   body[data-skin="patchwall"] .ohero .oh-k { color: #ff8a33; }
-  body[data-skin="patchwall"] .ohero.focus .oh-b { background: #ff6900; color: #fff; }
-  body[data-skin="patchwall"] .ohero .oh-dots i.on { background: #ff6900; }
-  body[data-skin="patchwall"] #row-feat { top: 560px; right: 120px; }
-  body[data-skin="patchwall"] .ocard .oc-img { width: 196px; height: 272px; border-radius: 12px; }
-  body[data-skin="patchwall"] .ocard .oc-t { max-width: 196px; font-size: 19px; }
-  body[data-skin="patchwall"] .ocard.focus .oc-img { box-shadow: 0 0 0 4px #ff6900; }
-  body[data-skin="patchwall"] #row-apps { top: 900px; right: 120px; }
+  body[data-skin="patchwall"] .ohero.focus .oh-b { color: #fff; }
+  body[data-skin="patchwall"] #row-feat { top: 500px; left: 120px; }
+  body[data-skin="patchwall"] .ocard .oc-sec { font-size: 23px; }
+  body[data-skin="patchwall"] #row-apps { top: 900px; left: 120px; }
   body[data-skin="patchwall"] #row-apps .track { gap: 16px; }
-  body[data-skin="patchwall"] #row-apps .app .tile, body[data-skin="patchwall"] #row-apps .app .tile::after { width: 88px !important; height: 88px !important; border-radius: 24px !important; clip-path: none !important; }
-  body[data-skin="patchwall"] #row-apps .app .tile.ic img { width: 52px; height: 52px; }
+  body[data-skin="patchwall"] #row-apps .app .tile, body[data-skin="patchwall"] #row-apps .app .tile::after { width: 88px !important; height: 88px !important; border-radius: 24px !important; }
   body[data-skin="patchwall"] #row-apps .app .name { top: 94px !important; font-size: 16px; }
-  body[data-skin="patchwall"] #row-tools { display: none; }
+
+  /* icon shape picked in the phone app wins over the look's own */
+  body.os[data-osshape="circle"] #row-apps .app .tile, body.os[data-osshape="circle"] #row-apps .app .tile::after { width: 120px !important; height: 120px !important; border-radius: 50% !important; }
+  body.os[data-osshape="rounded"] #row-apps .app .tile, body.os[data-osshape="rounded"] #row-apps .app .tile::after { width: 120px !important; height: 120px !important; border-radius: 28px !important; }
+  body.os[data-osshape="square"] #row-apps .app .tile, body.os[data-osshape="square"] #row-apps .app .tile::after { width: 120px !important; height: 120px !important; border-radius: 6px !important; }
+  body.os[data-osshape="wide"] #row-apps .app .tile, body.os[data-osshape="wide"] #row-apps .app .tile::after, body.os[data-osshape="banner"] #row-apps .app .tile, body.os[data-osshape="banner"] #row-apps .app .tile::after { width: 240px !important; height: 135px !important; border-radius: 14px !important; }
+  body.os[data-osshape="circle"] #row-apps .app .name, body.os[data-osshape="rounded"] #row-apps .app .name, body.os[data-osshape="square"] #row-apps .app .name { top: 130px !important; }
+  body.os[data-osshape="wide"] #row-apps .app .name, body.os[data-osshape="banner"] #row-apps .app .name { top: 145px !important; }
+
+  /* ---- CleanYourTV: greeting and clock on the left, pills on the right, a dock band and the grid ---- */
+  body[data-skin="cyt"] { --cy-tw: 394px; --cy-th: 222px; background: var(--cy-bg); }
+  body[data-skin="cyt"] .bgfallback { background: var(--cy-bg); }
+  body[data-skin="cyt"].cy-nobg .bgimg { display: none; }
+  body[data-skin="cyt"] .bgshade { background: rgba(0,0,0,var(--cy-dim)); background-image: var(--cy-sky), linear-gradient(0deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 45%); }
+  body[data-skin="cyt"].cy-nobg .bgshade { background-color: var(--cy-bg); }
+  body[data-skin="cyt"] #osGlow, body[data-skin="cyt"] #osArt, body[data-skin="cyt"] #osHead, body[data-skin="cyt"] #osTitle { display: block; }
+  #osGlow { position: absolute; top: 0; left: 0; right: 0; bottom: 0; transition: background .5s; pointer-events: none; }
+  #osArt { position: absolute; top: 0; left: 0; right: 0; height: 640px; background-size: cover; background-position: center; filter: blur(26px) saturate(1.2); transform: scale(1.15); opacity: 0; transition: opacity .4s;
+    -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 100%); mask-image: linear-gradient(180deg, #000 30%, transparent 100%); }
+  body[data-skin="cyt"].cy-cine #osGlow { background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55) 55%, rgba(0,0,0,.85)) !important; }
+  #osHead { position: absolute; top: 62px; left: 120px; z-index: 6; direction: rtl; text-align: left; }
+  #osHead .cy-g { font-size: 27px; font-weight: 600; color: rgba(255,255,255,.72); margin-bottom: 6px; direction: rtl; display: inline-block; }
+  #osHead .cy-row { display: flex; align-items: center; gap: 30px; direction: ltr; }
+  #osHead .cy-row.below { flex-direction: column; align-items: flex-start; gap: 6px; }
+  #osHead .cy-row.below .cy-div { display: none; }
+  #osHead .cy-clk { font-size: 112px; font-weight: 300; line-height: 1.05; letter-spacing: -2px; color: #fff; }
+  #osHead .cy-clk small { font-size: 34px; font-weight: 500; margin-left: 12px; letter-spacing: 0; }
+  #osHead .cy-div { width: 2px; height: 76px; background: rgba(255,255,255,.3); }
+  #osHead .cy-date { display: flex; flex-direction: column; gap: 4px; font-size: 30px; color: rgba(255,255,255,.72); direction: rtl; text-align: right; }
+  body.cy-white #osHead .cy-date, body.cy-white #osHead .cy-g { color: #fff; }
+  body[data-skin="cyt"] #row-osbar { top: 120px; right: 110px; left: auto; display: flex; z-index: 8; }
+  body[data-skin="cyt"] .osb-g2 { gap: 18px; }
+  body[data-skin="cyt"] .osb-ic, body[data-skin="cyt"] .osb-pill { height: 78px; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.28); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+  body[data-skin="cyt"] .osb-ic { width: 78px; }
+  body[data-skin="cyt"] .osb-pill { padding: 0 34px; font-size: 27px; font-weight: 600; }
+  body[data-skin="cyt"] .osb.focus { background: rgba(255,255,255,.95); color: #111; transform: scale(1.06); }
+  body[data-skin="cyt"] .osb.wok svg { stroke: #3ddc84; } body[data-skin="cyt"] .osb.woff svg { stroke: #ff5a5a; }
+  body[data-skin="cyt"] .osb-tip { top: 90px; }
+  #osTitle { position: absolute; top: 400px; left: 140px; z-index: 6; }
+  #osTitle .cy-t { font-size: 100px; font-weight: 500; color: #fff; line-height: 1.1; unicode-bidi: plaintext; text-shadow: 0 4px 22px rgba(0,0,0,.4); }
+  #osTitle .cy-last { font-size: 24px; color: rgba(255,255,255,.7); margin-top: 6px; }
+  #osTitle .cy-dots { display: flex; gap: 8px; margin-top: 18px; }
+  #osTitle .cy-dots i { width: 10px; height: 10px; border-radius: 9px; background: rgba(255,255,255,.4); transition: width .25s; }
+  #osTitle .cy-dots i.on { width: 36px; background: #fff; }
+  body.cy-notitle #osTitle { display: none !important; }
+  body[data-skin="cyt"] #row-apps { top: 640px; left: 120px; right: 120px; height: 440px; overflow: visible; }
+  body.cy-fade[data-skin="cyt"] #row-apps .track-wrap { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 60px); mask-image: linear-gradient(180deg, transparent 0, #000 60px); }
+  body[data-skin="cyt"] #row-apps .track { display: grid; grid-template-columns: repeat(var(--cy-cols), var(--cy-tw)); gap: 52px 36px; position: relative; }
+  body.cy-single[data-skin="cyt"] #row-apps .track { display: flex; gap: 36px; }
+  body[data-skin="cyt"] #row-apps .app .tile, body[data-skin="cyt"] #row-apps .app .tile::after { width: var(--cy-tw) !important; height: var(--cy-th) !important; border-radius: 18px !important; }
+  body[data-skin="cyt"] #row-apps .app .tile { background: #20232b; }
+  body[data-skin="cyt"] #row-apps .app .tile.ic img { width: 34%; height: 50%; }
+  body[data-skin="cyt"] #row-apps .app .name { top: calc(var(--cy-th) + 12px) !important; font-size: 23px; font-weight: 500; }
+  body[data-skin="cyt"]:not(.cy-names) #row-apps .app .name { display: none; }
+  body.cy-names[data-skin="cyt"] #row-apps .app .name { opacity: .55; }
+  body.cy-names[data-skin="cyt"] #row-apps .app.focus .name { opacity: 1; }
+  body[data-skin="cyt"] #row-apps .item.focus { transform: scale(1.08); }
+  body.cy-calm[data-skin="cyt"] .item, body.cy-calm[data-skin="cyt"] .track { transition-timing-function: ease-out !important; transition-duration: .12s !important; }
+  /* the focus highlight: glass (sheen, rim and glow), rim alone, or halo */
+  body[data-skin="cyt"] #row-apps .app.focus .tile { box-shadow: 0 0 0 4px rgba(255,255,255,.92), 0 0 34px 4px var(--cy-glowc, rgba(255,255,255,.28)), 0 26px 50px -18px #000; }
+  body[data-skin="cyt"] #row-apps .app.focus .tile::after { opacity: 1; background: linear-gradient(170deg, rgba(255,255,255,.4) 0%, rgba(255,255,255,.08) 38%, rgba(255,255,255,0) 60%); }
+  body.cy-rim[data-skin="cyt"] #row-apps .app.focus .tile { box-shadow: 0 0 0 4px #fff; }
+  body.cy-rim[data-skin="cyt"] #row-apps .app.focus .tile::after { opacity: 0; }
+  body.cy-halo[data-skin="cyt"] #row-apps .app.focus .tile { box-shadow: 0 0 0 4px #fff, 0 0 46px 10px var(--cy-glowc, rgba(255,255,255,.4)); }
+  body.cy-halo[data-skin="cyt"] #row-apps .app.focus .tile::after { opacity: 0; }
+  /* the dock band behind the first row */
+  .cy-band-el { display: none; }
+  body.cy-band[data-skin="cyt"] .cy-band-el { display: block; position: absolute; top: -22px; left: -26px; height: calc(var(--cy-th) + 44px); border-radius: 30px; pointer-events: none;
+    width: calc(var(--cy-tw) * var(--cy-cols) + 36px * (var(--cy-cols) - 1) + 52px); background: rgba(16,17,21,var(--cy-op)); border: 1.5px solid rgba(255,255,255,.1); box-shadow: 0 30px 60px -30px #000; }
+  body.cy-band.cy-glass[data-skin="cyt"] .cy-band-el { background: rgba(255,255,255,calc(.12 * var(--cy-op))); border-color: rgba(255,255,255,.22); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  body.cy-band.cy-single[data-skin="cyt"] .cy-band-el { width: 4000px; }
+
+  /* anything else the design wants: its own CSS is added last (settings.css) */
 </style>
+<style id="userCss"></style>
 </head>
 <body>
 <div id="stage">
@@ -723,9 +851,11 @@
   <div class="bgimg" id="bgB"></div>
   <div id="clubBg"></div>
   <div class="bgshade"></div>
-  <div id="oshTabs"></div><div id="oshRail"></div>
+  <div id="osGlow"></div><div id="osArt"></div>
 
   <div id="content">
+    <nav class="row osrow" id="row-osbar"></nav>
+    <div id="osHead"></div><div id="osTitle"></div><div id="osDeco"></div>
     <nav id="topbar" class="row" data-edit="topbar"></nav>
 
     <section class="hero">
@@ -754,8 +884,9 @@
       </div>
     </section>
 
-    <section class="row osrow" id="row-hero"><div class="track-wrap"><div class="track" id="oshHero"></div></div></section>
-    <section class="row osrow" id="row-feat"><div class="row-title" id="oshFeatT"></div><div class="track-wrap"><div class="track" id="oshFeat"></div></div></section>
+    <section class="row osrow" id="row-hero"><div class="track-wrap"><div class="track" id="osHero"></div></div></section>
+    <section class="row osrow" id="row-ostabs"><div class="track" id="osTabs"></div></section>
+    <section class="row osrow" id="row-feat"><div class="track-wrap"><div class="track" id="osFeat"></div></div></section>
     <section class="row" id="row-apps" data-edit="row-apps">
       <div class="row-title">التطبيقات <small id="apps-hint"></small></div>
       <div class="track-wrap"><div class="track" id="apps"></div></div>

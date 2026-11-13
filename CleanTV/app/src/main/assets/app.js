@@ -638,6 +638,7 @@
   }
   function launchApp2(pkg) {
     if (!kidsBeforeLaunch()) return;
+    pushRecent(pkg);
     if (HAS_ANDROID) { if (!A.launch(pkg)) toast('ما گدرت أفتح هذا التطبيق'); } else toast('فتح: ' + pkg);
   }
   function shade(hex, f) {
@@ -647,12 +648,15 @@
   }
   function renderApps() {
     var shp = (layout['row-apps'] || {}).shape || 'circle', iconShape = ['rounded', 'rect', 'pill', 'wide'].indexOf(shp) < 0;
+    /* imported CleanYourTV looks show the apps' TV banners (or, with uniform_tiles, the icon on a tinted card) */
+    if (settings.skin === 'cyt') iconShape = !!cytCfg().uniform_tiles;
+    else if (osSkin() && osCfg().shape) iconShape = osCfg().shape !== 'banner';
     $('apps').innerHTML = visibleApps().map(function (a) {
       var isHidden = mode === 'kidsel' ? kids.apps.indexOf(a.pkg) < 0 : hidden.indexOf(a.pkg) >= 0, inner;
       if (customIcons[a.pkg]) inner = '<div class="tile"><img class="custom" src="' + esc(customIcons[a.pkg]) + '" alt=""></div>';
       else if (a.banner && !(iconShape && a.icon)) inner = '<div class="tile"><img class="banner" src="' + a.banner + '" alt=""></div>';
       else inner = '<div class="tile ic" style="background:linear-gradient(145deg,' + shade(a.color, 1.05) + ',' + shade(a.color, .45) + ')">' + (a.icon ? '<img src="' + a.icon + '" alt="">' : '') + '</div>';
-      return '<div class="item app' + (isHidden ? ' hidden-app' : '') + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + inner + '<span class="badge">' + (mode === 'kidsel' ? 'غير مسموح' : 'مخفي') + '</span><div class="name">' + esc(a.label) + '</div></div>';
+      return '<div class="item app' + (isHidden ? ' hidden-app' : '') + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + inner + '<span class="badge">' + (mode === 'kidsel' ? 'غير مسموح' : 'مخفي') + '</span><div class="name">' + esc(appName(a)) + '</div></div>';
     }).join('') || '<div class="item empty-card" data-kind="none">جاري تحميل التطبيقات…</div>';
     $('apps-hint').textContent = mode === 'move' ? 'وضع الترتيب: OK على التطبيق، حرّكه بالأسهم، وOK للتثبيت' : mode === 'hide' ? 'وضع الإخفاء: OK على التطبيق حتى تخفيه أو ترجعه'
       : mode === 'kidsel' ? 'تطبيقات الأطفال: OK حتى تسمح أو تمنع · رجوع للحفظ' : mode === 'icon' ? 'تغيير الأيقونة: اختار التطبيق واضغط OK · رجوع للخروج'
@@ -662,63 +666,273 @@
   }
   function saveOrder() { order = apps.map(function (a) { return a.pkg; }); save('appOrder', order); }
 
-  // ---------- Smart-TV system looks («واجهات حسب الشركة»: Samsung, LG, VIDAA, Google TV…) ----------
-  /* Each look is a skin over the same home: a hero banner (the featured app on the wallpaper), a row of large cards and the
-     apps row, styled after that maker's screen. Names are text only, no logos. */
+  // ---------- Smart-TV system looks («واجهات حسب الشركة») and imported launchers (CleanYourTV) ----------
+  /* Each look replaces the whole home: the old top bar is hidden and the maker's own bar takes its place (a side rail on
+     Samsung Tizen and Roku, a floating bar on One UI, tabs on Google TV, VIDAA, Fire TV and PatchWall). Every button in it
+     works. Layout runs left-to-right like the makers' screens; names stay Arabic. Text only, no logos.
+     settings.os lets the phone app change any part: hidden buttons, labels, colours, icon shape, rows. */
+  var OSI = {
+    home: '<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>',
+    apps: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>',
+    petal: '<svg viewBox="0 0 24 24"><path d="M12 12C9.5 7 4 6.5 4 10.5S9 14 12 12zM12 12c5-2.5 5.5-8 1.5-8S10 9 12 12zM12 12c2.5 5 8 5.5 8 1.5S15 10 12 12zM12 12c-5 2.5-5.5 8-1.5 8S14 15 12 12z"/></svg>',
+    live: '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8 3l4 4 4-4"/></svg>',
+    onair: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg>',
+    ambient: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7.5 14.5c1.8-3.2 7.2-3.2 9 0M12 3v5"/></svg>',
+    multi: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg>',
+    game: '<svg viewBox="0 0 24 24"><path d="M6.5 8h11A4.5 4.5 0 0 1 22 12.5v1a3 3 0 0 1-5.4 1.8L15 13.5H9l-1.6 1.8A3 3 0 0 1 2 13.5v-1A4.5 4.5 0 0 1 6.5 8z"/><path d="M7 10.5v3M5.5 12h3"/></svg>',
+    spark: '<svg viewBox="0 0 24 24"><path d="M11 3l1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg>',
+    shield: '<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.6-3.4 8.1-8 9-4.6-.9-8-4.4-8-9V6z"/><path d="M12 9v4"/><circle cx="12" cy="16" r=".4"/></svg>',
+    menu: '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    bell: '<svg viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>',
+    mic: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>',
+    media: '<svg viewBox="0 0 24 24"><path d="M3 6.5h6l2 2h10V19H3z"/></svg>',
+    movie: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9.5h18M8 5v4.5M16 5v4.5"/></svg>',
+    kids: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>',
+    music: '<svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
+    hub: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><rect x="7" y="12" width="10" height="8" rx="1.5"/><path d="M10 16h4"/></svg>'
+  };
+  /* item kinds: ic = round icon (its name shows when focused), tab = text, pill = icon and text, av = profile, sp = space,
+     clk = clock. on = the page the screen is on. Each bar is a list of groups placed by the look's CSS. */
+  function I(id, ic, l, on) { return { t: 'ic', id: id, ic: ic, l: l, on: on }; }
+  function T(id, l, on, ic) { return { t: 'tab', id: id, l: l, on: on, ic: ic }; }
+  function P(id, ic, l, on) { return { t: 'pill', id: id, ic: ic, l: l, on: on }; }
+  var AV = { t: 'av', id: 'profile', l: 'الملف الشخصي' }, CLK = { t: 'clk' };
   var OS = {
-    tizen:     { tabs: ['اكتشف', 'مباشر', 'التطبيقات'], rail: ['search', 'home', 'apps', 'settings'], feat: 'مقترحة لك', kick: 'مميّز اليوم', btn: 'شاهد الآن' },
-    oneui:     { tabs: [], rail: [], feat: 'يُعرض الآن', kick: 'لك', btn: 'شاهد الآن' },
-    webos:     { tabs: [], rail: [], feat: 'بطاقاتي', kick: 'greet', btn: 'افتح' },
-    vidaa:     { tabs: ['الرئيسية', 'التطبيقات', 'المداخل', 'الوسائط'], rail: [], feat: 'المفضلة', kick: 'مختار لك', btn: 'افتح' },
-    googletv:  { tabs: ['لك', 'أفلام', 'مسلسلات', 'تطبيقات', 'مكتبة'], rail: [], feat: '', apps: 'تطبيقاتك', kick: 'مقترح', btn: 'افتح', nofeat: 1 },
-    androidtv: { tabs: [], rail: ['search'], feat: 'القنوات', apps: 'التطبيقات المفضلة', nohero: 1 },
-    firetv:    { tabs: ['الرئيسية', 'البحث', 'مباشر', 'تطبيقاتي'], rail: [], feat: '', apps: 'تطبيقاتك وقنواتك', kick: 'مميّز', btn: 'افتح', nofeat: 1 },
-    roku:      { tabs: [], rail: [], menu: ['الرئيسية', 'ماذا يُعرض', 'البحث', 'البث المباشر', 'الإعدادات'], grid: 4, nohero: 1, nofeat: 1 },
-    patchwall: { tabs: ['الرئيسية', 'أفلام', 'مسلسلات', 'أطفال', 'تطبيقات'], rail: [], feat: 'مختارات', kick: 'الأكثر مشاهدة', btn: 'افتح' }
+    tizen: { rail: 1, bar: [[AV, I('search', 'search', 'البحث'), I('ambient', 'ambient', 'وضع الجمال'), I('apps', 'petal', 'التطبيقات'), I('home', 'home', 'الرئيسية', 1)], [I('menu', 'menu', 'القائمة'), I('shield', 'shield', 'حماية الأطفال')]],
+      tabs: [T('home', 'اكتشف', 1), T('live', 'مباشر', 0, 'onair'), T('apps', 'التطبيقات')], secs: [['الأخيرة', 1], ['مقترحة لك', 99]], kick: 'logo', btn: 'شاهد الآن', deco: 'متابعة المشاهدة' },
+    oneui: { bar: [[AV, I('search', 'search', 'البحث'), I('multi', 'multi', 'عرض متعدد'), I('settings', 'settings', 'الإعدادات')],
+        [I('ai', 'spark', 'المساعد'), P('home', 'home', 'لك', 1), I('live', 'live', 'التلفزيون المباشر'), I('games', 'game', 'الألعاب'), I('ambient', 'ambient', 'وضع الجمال'), I('apps', 'apps', 'التطبيقات')], [I('shield', 'shield', 'حماية الأطفال')]],
+      secs: [['يُعرض الآن', 1], ['مقترح لك', 99]], kick: 'logo', btn: 'شاهد الآن', dots: 1 },
+    webos: { bar: [[AV, I('search', 'search', 'البحث'), I('home', 'home', 'الرئيسية', 1), I('inputs', 'hub', 'لوحة المنزل')], [I('settings', 'settings', 'الإعدادات'), I('menu', 'menu', 'القائمة'), CLK]],
+      secs: [['بطاقاتي', 99]], kick: 'greet', btn: 'افتح', cards: 'tall' },
+    vidaa: { bar: [[T('home', 'الرئيسية', 1), T('apps', 'التطبيقات'), T('inputs', 'المداخل'), T('media', 'الوسائط')], [I('search', 'search', 'البحث'), I('wifi', 'wifi', 'الشبكة'), I('settings', 'settings', 'الإعدادات'), I('menu', 'menu', 'القائمة'), CLK]],
+      secs: [['المفضلة', 99]], kick: 'مختار لك', btn: 'افتح' },
+    googletv: { bar: [[I('search', 'search', 'البحث'), T('home', 'لك', 1), T('movies', 'أفلام'), T('shows', 'مسلسلات'), T('apps', 'تطبيقات'), T('library', 'مكتبة')], [I('bell', 'bell', 'الإشعارات'), AV, I('settings', 'settings', 'الإعدادات'), I('menu', 'menu', 'القائمة'), CLK]],
+      nofeat: 1, apps: 'تطبيقاتك', kick: 'مقترح', btn: 'افتح' },
+    androidtv: { bar: [[I('search', 'mic', 'البحث')], [CLK, I('inputs', 'input', 'المداخل'), I('wifi', 'wifi', 'الشبكة'), I('settings', 'settings', 'الإعدادات'), I('menu', 'menu', 'القائمة')]],
+      secs: [['القنوات', 99]], apps: 'التطبيقات المفضلة', nohero: 1 },
+    firetv: { bar: [[AV, I('home', 'home', 'الرئيسية', 1), I('search', 'search', 'البحث'), I('live', 'live', 'مباشر'), I('apps', 'apps', 'تطبيقاتي'), I('settings', 'settings', 'الإعدادات'), I('menu', 'menu', 'القائمة')], [CLK]],
+      nofeat: 1, apps: 'تطبيقاتك وقنواتك', kick: 'مميّز', btn: 'افتح' },
+    roku: { rail: 1, bar: [[T('home', 'الرئيسية', 1), T('watch', 'ماذا يُعرض'), T('search', 'البحث'), T('live', 'البث المباشر'), T('apps', 'متجر القنوات'), T('settings', 'الإعدادات')], [T('menu', 'خيارات ✱')]],
+      grid: 4, nohero: 1, nofeat: 1, clock: 1 },
+    patchwall: { bar: [[T('home', 'الرئيسية', 1), T('movies', 'أفلام'), T('shows', 'مسلسلات'), T('kids', 'أطفال'), T('apps', 'تطبيقات')], [I('search', 'search', 'البحث'), I('inputs', 'input', 'المداخل'), I('settings', 'settings', 'الإعدادات'), I('menu', 'menu', 'القائمة'), CLK]],
+      secs: [['مختارات', 99]], kick: 'الأكثر مشاهدة', btn: 'افتح', cards: 'poster' },
+    cyt: { cyt: 1, nohero: 1, nofeat: 1 }
   };
   var heroI = 0;
   function osSkin() { return OS[settings.skin] ? settings.skin : null; }
-  function osGrid() { var k = osSkin(); return k && OS[k].grid ? OS[k].grid : 0; }
-  function greetWord() { var h = new Date(Date.now() + 3 * 3600000).getUTCHours(); return h < 12 ? 'صباح الخير' : h < 18 ? 'نهارك سعيد' : 'مساء الخير'; }
-  function cardHtml(a, cls) {
+  function osCfg() { return settings.os || {}; }
+  function cytCfg() { return settings.cyt || {}; }
+  function osLtr() { var k = osSkin(); return !!k && osCfg().rtl !== true; }
+  function osGrid() {
+    var k = osSkin(); if (!k) return 0;
+    if (k === 'cyt') { var c = cytCfg(); return c.single_row ? 0 : Math.max(1, Math.min(8, +c.columns || 4)); }
+    return +osCfg().grid || OS[k].grid || 0;
+  }
+  function appName(a) { return (settings.appLabels && settings.appLabels[a.pkg]) || a.label; }
+  function greetWord() { var h = new Date(Date.now() + 3 * 3600000).getUTCHours(); return h < 5 ? 'مساء الخير' : h < 12 ? 'صباح الخير' : h < 17 ? 'نهارك سعيد' : 'مساء الخير'; }
+  function recentApps() { return load('recentApps', []) || []; }
+  function pushRecent(pkg) { var l = recentApps().filter(function (p) { return p !== pkg; }); l.unshift(pkg); try { localStorage.setItem('recentApps', JSON.stringify(l.slice(0, 12))); } catch (e) {} }
+  function cardHtml(a, cls, sec) {
     var art = customIcons[a.pkg] ? '<img class="oc-ic" src="' + esc(customIcons[a.pkg]) + '" alt="">'
-      : a.banner ? '<img class="oc-bn" src="' + a.banner + '" alt="">' : a.icon ? '<img class="oc-ic" src="' + a.icon + '" alt="">' : '';
-    return '<div class="item app ' + cls + '" data-kind="app" data-pkg="' + esc(a.pkg) + '"><div class="oc-img" style="background:linear-gradient(145deg,' + shade(a.color, 1.12) + ',' + shade(a.color, .42) + ')">' + art + '</div><div class="oc-t">' + esc(a.label) + '</div></div>';
+      : a.banner ? '<img class="oc-bn" src="' + a.banner + '" alt="">' : a.icon ? '<img class="oc-ic" src="' + a.icon + '" alt="">' : '<span class="oc-lt">' + esc(appName(a)) + '</span>';
+    return '<div class="item app ' + cls + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + (sec ? '<div class="oc-sec">' + esc(sec) + '</div>' : '') +
+      '<div class="oc-img" style="background:linear-gradient(145deg,' + shade(a.color, 1.12) + ',' + shade(a.color, .42) + ')">' + art + '</div><div class="oc-t">' + esc(appName(a)) + '</div></div>';
+  }
+  function osItem(it) {
+    var oc = osCfg(), lab = (oc.labels && oc.labels[it.id]) || it.l || '';
+    if (it.t === 'clk') return '<span class="osb-clk" data-oclk></span>';
+    if (it.id && (oc.barOff || []).indexOf(it.id) >= 0) return '';
+    var on = oc.page ? oc.page === it.id : it.on;
+    var inner = it.t === 'av' ? '<span class="osb-av">' + esc((settings.owner || 'م').trim().charAt(0)) + '</span>' : it.t === 'tab' ? '' : (OSI[it.ic] || ICONS[it.ic] || '');
+    if (it.t === 'tab') inner = '<span class="osb-l">' + esc(lab) + '</span>' + (it.ic ? '<i class="osb-ti">' + (OSI[it.ic] || '') + '</i>' : '');
+    else if (it.t === 'pill') inner += '<span class="osb-l">' + esc(lab) + '</span>';
+    else inner += '<span class="osb-tip">' + esc(lab) + '</span>';
+    return '<div class="item osb osb-' + it.t + (on ? ' on' : '') + '" data-kind="osb" data-id="' + it.id + '">' + inner + '</div>';
+  }
+  function cytBar() {
+    var c = cytCfg(), g = [], io = c.icon_only_buttons, online = navigator.onLine !== false;
+    (c.top_bar_apps || []).forEach(function (p) {
+      var a = null; for (var i = 0; i < apps.length; i++) if (apps[i].pkg === p) a = apps[i];
+      if (a) g.push('<div class="item app osb osb-ic osb-app" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + (customIcons[a.pkg] || a.icon ? '<img src="' + esc(customIcons[a.pkg] || a.icon) + '" alt="">' : '') + '<span class="osb-tip">' + esc(appName(a)) + '</span></div>');
+    });
+    var it = function (id, ic, l, round) { return osItem(round ? I(id, ic, l) : P(id, ic, l)); };
+    if (c.show_inputs_pill !== false && (IS_TV || PREVIEW)) g.push(it('inputs', 'input', 'المداخل', c.icon_only_inputs));
+    if (c.show_network_pill !== false) g.push(it('wifi', 'wifi', online ? 'متصل' : 'غير متصل', io).replace('osb ', 'osb' + (c.wifi_status_color ? online ? ' wok' : ' woff' : '') + ' '));
+    if (c.app_library && c.library_button) g.push(it('library', 'apps', 'مكتبة التطبيقات', true));
+    if (c.top_menu) g.push(it('menu', 'settings', 'القائمة', true));
+    else g.push(it('settings', 'settings', 'الإعدادات', io));
+    g.push(it('menu', 'menu', 'القائمة', true));
+    return '<div class="osb-g osb-g2">' + g.join('') + '</div>';
   }
   function renderOs() {
-    var k = osSkin(), o = k ? OS[k] : null, b = document.body;
+    var k = osSkin(), o = k ? OS[k] : null, b = document.body, oc = osCfg(), bar = $('row-osbar');
     b.classList.toggle('os', !!k);
-    if (o && o.grid) b.setAttribute('data-grid', String(o.grid)); else b.removeAttribute('data-grid');
-    if (!k) { $('oshTabs').innerHTML = ''; $('oshRail').innerHTML = ''; $('oshHero').innerHTML = ''; $('oshFeat').innerHTML = ''; return; }
+    b.classList.toggle('ltr', osLtr());
+    if (o && o.rail) bar.classList.add('vrow'); else bar.classList.remove('vrow');
+    var gr = osGrid(); if (gr) b.setAttribute('data-grid', String(gr)); else b.removeAttribute('data-grid');
+    b.setAttribute('data-osshape', oc.shape || '');
+    var st = b.style;
+    if (oc.accent) st.setProperty('--osac', oc.accent); else st.removeProperty('--osac');
+    if (!k) { ['row-osbar', 'osHero', 'osTabs', 'osFeat', 'osHead', 'osTitle', 'osDeco'].forEach(function (id) { $(id).innerHTML = ''; }); $('osGlow').style.background = ''; $('osArt').style.backgroundImage = ''; cytLook(null); return; }
     var vis = visibleApps().filter(function (a) { return a.pkg; });
-    var hero = !o.nohero && vis.length ? vis[heroI % Math.min(5, vis.length)] : null;
-    $('row-hero').style.display = hero ? '' : 'none';
-    $('row-feat').style.display = o.nofeat || !vis.length ? 'none' : '';
-    if (hero) {
-      var n = Math.min(5, vis.length), dots = '';
-      for (var i = 0; i < n; i++) dots += '<i' + (i === heroI % n ? ' class="on"' : '') + '></i>';
-      $('oshHero').innerHTML = '<div class="item app ohero" data-kind="app" data-pkg="' + esc(hero.pkg) + '"><div class="oh-k">' + esc(o.kick === 'greet' ? greetWord() : o.kick || '') + '</div>' +
-        '<div class="oh-t">' + esc(hero.label) + '</div><div class="oh-b"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>' + esc(o.btn || 'افتح') + '</div><div class="oh-dots">' + dots + '</div></div>';
-      paintHero();
-    } else $('oshHero').innerHTML = '';
-    $('oshFeatT').textContent = o.feat || '';
-    $('oshFeat').innerHTML = vis.slice(0, 8).map(function (a) { return cardHtml(a, 'ocard'); }).join('');
-    $('oshTabs').innerHTML = (o.tabs || []).map(function (t, i) { return '<span' + (i === 0 ? ' class="on"' : '') + '>' + t + '</span>'; }).join('');
-    $('oshRail').innerHTML = o.menu ? o.menu.map(function (t, i) { return '<span' + (i === 0 ? ' class="on"' : '') + '>' + t + '</span>'; }).join('')
-      : (o.rail || []).map(function (ic, i) { var nm = ic === 'home' ? '<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>' : ic === 'apps' ? '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>' : (ICONS[ic] || '');
-        return '<span' + (ic === 'home' ? ' class="on"' : '') + '>' + nm + '</span>'; }).join('');
+    if (o.cyt) { ['row-hero', 'row-ostabs', 'row-feat'].forEach(function (id) { $(id).style.display = 'none'; }); bar.innerHTML = cytBar(); cytLook(cytCfg()); renderCytHead(); $('osHero').innerHTML = ''; $('osFeat').innerHTML = ''; $('osTabs').innerHTML = ''; $('osDeco').innerHTML = ''; }
+    else {
+      cytLook(null); $('osHead').innerHTML = ''; $('osTitle').innerHTML = '';
+      bar.innerHTML = o.bar.map(function (g, i) { return '<div class="osb-g osb-g' + (i + 1) + '">' + g.map(osItem).join('') + '</div>'; }).join('');
+      $('osTabs').innerHTML = (o.tabs || []).map(osItem).join('');
+      var heroOn = !o.nohero && oc.hero !== false, hero = heroOn && vis.length ? vis[heroI % Math.min(5, vis.length)] : null;
+      $('row-hero').style.display = hero ? '' : 'none';
+      $('row-ostabs').style.display = o.tabs && hero ? '' : 'none';
+      $('row-feat').style.display = o.nofeat || oc.feat === false || !vis.length ? 'none' : '';
+      if (hero) {
+        var n = Math.min(5, vis.length), dots = '', kick = o.kick === 'greet' ? greetWord() : o.kick === 'logo' ? '' : o.kick || '';
+        for (var i = 0; i < n; i++) dots += '<i' + (i === heroI % n ? ' class="on"' : '') + '></i>';
+        var logo = o.kick === 'logo' ? (customIcons[hero.pkg] || hero.icon ? '<img class="oh-lg" src="' + esc(customIcons[hero.pkg] || hero.icon) + '" alt="">' : '') : '';
+        $('osHero').innerHTML = '<div class="item app ohero" data-kind="app" data-pkg="' + esc(hero.pkg) + '">' + (kick ? '<div class="oh-k">' + esc(kick) + '</div>' : '') +
+          '<div class="oh-t">' + esc(appName(hero)) + '</div>' + logo + '<div class="oh-b"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>' + esc((oc.labels && oc.labels.watch) || o.btn || 'افتح') + '</div>' + (o.dots ? '<div class="oh-dots">' + dots + '</div>' : '') + '</div>';
+      } else $('osHero').innerHTML = '';
+      /* cards: the apps opened last first («الأخيرة»), then the rest */
+      var rec = recentApps(), byPkg = {}; vis.forEach(function (a) { byPkg[a.pkg] = a; });
+      var cards = rec.map(function (p) { return byPkg[p]; }).filter(Boolean); vis.forEach(function (a) { if (cards.indexOf(a) < 0) cards.push(a); });
+      var secs = oc.featTitle ? [[oc.featTitle, 99]] : o.secs || [['', 99]], si = 0, left = secs[0][1];
+      $('osFeat').innerHTML = cards.slice(0, 9).map(function (a, i) {
+        var lab = ''; if (i === 0) lab = secs[0][0]; else if (left <= 0 && si + 1 < secs.length) { si++; left = secs[si][1]; lab = secs[si][0]; }
+        left--; return cardHtml(a, 'ocard' + (o.cards ? ' oc-' + o.cards : ''), lab);
+      }).join('');
+      $('osDeco').innerHTML = o.deco && oc.deco !== false ? '<div class="od-t">' + esc(o.deco) + '</div><div class="od-r">' + cards.slice(2, 8).map(function (a) { return '<i style="background:linear-gradient(145deg,' + shade(a.color, 1.1) + ',' + shade(a.color, .4) + ')"></i>'; }).join('') + '</div>' : '';
+    }
     var at = document.querySelector('#row-apps .row-title');
-    if (at && at.firstChild) at.firstChild.nodeValue = (o.apps || 'التطبيقات') + ' ';
+    if (at && at.firstChild) at.firstChild.nodeValue = (oc.appsTitle || o.apps || 'التطبيقات') + ' ';
+    paintHero(); osClock();
+    if (!bar.dataset.ri || bar.dataset.k !== k) { bar.dataset.k = k; bar.dataset.ri = '1'; if (typeof nav !== 'undefined') nav.railHome(); }
   }
   function paintHero() {
-    var h = document.querySelector('#oshHero .ohero'); if (!h) return;
+    var h = document.querySelector('#osHero .ohero'); if (!h) return;
     h.style.backgroundImage = bgCur ? 'url("' + bgCur + '")' : '';
   }
+  function osClock() {
+    var hm = $('hm') ? $('hm').textContent : '', ap = $('ampm') ? $('ampm').textContent : '';
+    qa('[data-oclk]').forEach(function (e) { e.textContent = hm + (ap ? ' ' + ap : ''); });
+    var ch = $('cytClock'); if (ch) renderCytHead();
+  }
+  setInterval(function () { if (osSkin()) osClock(); }, 15000);
   setInterval(function () {
-    if (!osSkin() || layer !== 'main' || (typeof nav !== 'undefined' && nav.row() === qa('#content .row').indexOf($('row-hero')))) return;
+    var k = osSkin(); if (!k || OS[k].nohero || layer !== 'main' || (typeof nav !== 'undefined' && nav.row() === qa('#content .row').indexOf($('row-hero')))) return;
     heroI++; renderOs(); if (typeof nav !== 'undefined') nav.refresh();
   }, 14000);
 
+  /* ---- CleanYourTV look: greeting and clock, pills on the right, the dock band and the app grid under it ---- */
+  function renderCytHead() {
+    var c = cytCfg(), now = new Date(Date.now() + 3 * 3600000);
+    var h = now.getUTCHours(), m = now.getUTCMinutes(), f12 = c.clock_format === '12' || (c.clock_format !== '24' && settings.clock24 !== true);
+    var hh = f12 ? (h % 12 || 12) : h, t = hh + ':' + (m < 10 ? '0' : '') + m, ap = f12 ? (h < 12 ? 'ص' : 'م') : '';
+    var days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'], mons = ['كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول'];
+    var nm = c.greeting_name || '', gw = (c.greeting || greetWord()) + (nm ? '، ' + nm : '');
+    $('osHead').innerHTML = (c.show_greeting === false ? '' : '<div class="cy-g">' + esc(gw) + '</div>') +
+      '<div class="cy-row' + (c.date_below_clock ? ' below' : '') + '"><div class="cy-clk" id="cytClock">' + t + (ap ? '<small>' + ap + '</small>' : '') + '</div><i class="cy-div"></i>' +
+      '<div class="cy-date"><span>' + days[now.getUTCDay()] + '</span><span>' + now.getUTCDate() + ' ' + mons[now.getUTCMonth()] + '</span></div></div>';
+  }
+  function skyColor() {
+    var h = new Date(Date.now() + 3 * 3600000).getUTCHours();
+    return h < 5 ? '#0b1640' : h < 7 ? '#6b4a8a' : h < 10 ? '#3f86c8' : h < 16 ? '#2b78c2' : h < 18 ? '#d9824a' : h < 20 ? '#5a3a7a' : '#0b1640';
+  }
+  function cytLook(c) {
+    var b = document.body, st = b.style, on = !!c;
+    ['cy-band', 'cy-glass', 'cy-names', 'cy-glow', 'cy-cine', 'cy-calm', 'cy-white', 'cy-fade', 'cy-single', 'cy-rim', 'cy-halo', 'cy-notitle', 'cy-nobg'].forEach(function (x) { b.classList.remove(x); });
+    if (!on) { ['--cy-cols', '--cy-bg', '--cy-dim', '--cy-op', '--cy-sky'].forEach(function (x) { st.removeProperty(x); }); return; }
+    var cols = c.single_row ? 0 : Math.max(1, Math.min(8, +c.columns || 4));
+    st.setProperty('--cy-cols', String(cols || 5));
+    st.setProperty('--cy-bg', /^#[0-9a-f]{6}$/i.test(c.background_color || '') ? c.background_color : '#000000');
+    st.setProperty('--cy-dim', String(Math.max(0, Math.min(90, +c.wallpaper_dim || 0)) / 100));
+    st.setProperty('--cy-op', String(Math.max(30, Math.min(100, c.dock_opacity == null ? 100 : +c.dock_opacity)) / 100));
+    var sky = Math.max(0, Math.min(100, +c.sky_intensity || 0)) / 100;
+    st.setProperty('--cy-sky', sky ? 'linear-gradient(180deg,' + hexA(skyColor(), sky) + ' 0%,' + hexA(skyColor(), sky * .35) + ' 55%, rgba(0,0,0,0) 100%)' : 'none');
+    b.classList.toggle('cy-band', c.dock_band !== false && c.dock_row !== false);
+    b.classList.toggle('cy-glass', !!c.dock_glass);
+    b.classList.toggle('cy-names', !!c.always_show_names);
+    b.classList.toggle('cy-glow', c.ambient_glow !== false && !c.cinematic_home);
+    b.classList.toggle('cy-cine', !!c.cinematic_home);
+    b.classList.toggle('cy-calm', !!c.reduced_motion || c.focus_overshoot === false);
+    b.classList.toggle('cy-white', !!c.header_white);
+    b.classList.toggle('cy-fade', !!c.fade_rows);
+    b.classList.toggle('cy-single', !cols);
+    b.classList.toggle('cy-rim', c.glass_style === 'rim');
+    b.classList.toggle('cy-halo', c.glass_style === 'halo');
+    b.classList.toggle('cy-notitle', c.dock_title === false && !c.cinematic_home);
+    b.classList.toggle('cy-nobg', c.wallpaper === false);
+    var tw = cols ? Math.floor((1680 - 36 * (cols - 1)) / cols) : 330;
+    st.setProperty('--cy-tw', tw + 'px'); st.setProperty('--cy-th', Math.round(tw * (cols >= 6 ? .6 : .5625)) + 'px');
+    var band = $('apps').querySelector('.cy-band-el');
+    if (!band) $('apps').insertAdjacentHTML('afterbegin', '<div class="cy-band-el"></div>');
+  }
+  function hexA(h, a) { var c = hexRgb(h); return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+  /* the focused app colours the glow, the big name above the dock and the cinematic shelf */
+  function osFocus(el) {
+    if (!el || settings.skin !== 'cyt') return;
+    var c = cytCfg(), pkg = el.getAttribute('data-pkg'), a = null;
+    for (var i = 0; i < apps.length; i++) if (apps[i].pkg === pkg) a = apps[i];
+    var inDock = el.parentNode === $('apps') && (osGrid() ? qa('.item', $('apps')).indexOf(el) < osGrid() : true);
+    $('osTitle').innerHTML = a && inDock ? '<div class="cy-t">' + esc(appName(a)) + '</div>' + (c.cinematic_home ? '<div class="cy-last">آخر ما فتحته</div>' : '') +
+      ((c.cinematic_home && c.cinematic_dots !== false) || c.dock_title !== false ? '<div class="cy-dots">' + qa('.item', $('apps')).slice(0, Math.min(osGrid() || 6, 8)).map(function (x) { return '<i' + (x === el ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' : '') : '';
+    var col = a && a.color ? a.color : '#3a4256';
+    if (c.ambient_glow !== false && !c.cinematic_home) $('osGlow').style.background = c.glow_style === 'horizon' ? 'linear-gradient(180deg,' + hexA(col, .75) + ' 0%,' + hexA(col, .25) + ' 35%,rgba(0,0,0,0) 70%)'
+      : 'radial-gradient(42% 55% at 36% 30%,' + hexA(col, .85) + ' 0%,' + hexA(col, .3) + ' 45%,rgba(0,0,0,0) 75%)';
+    else $('osGlow').style.background = '';
+    var art = $('osArt');
+    if (c.cinematic_home && a) { art.style.backgroundImage = a.banner || customIcons[a.pkg] || a.icon ? 'url("' + (customIcons[a.pkg] || a.banner || a.icon) + '")' : ''; art.style.backgroundColor = col; art.style.opacity = String((c.cinematic_art == null ? 50 : +c.cinematic_art) / 100); }
+    else { art.style.backgroundImage = ''; art.style.opacity = '0'; }
+    if (c.app_glow) el.style.setProperty('--cy-glowc', hexA(col, .9)); else el.style.removeProperty('--cy-glowc');
+  }
+
+  /* ---- what each button in the makers' bars does ---- */
+  var RE_VIDEO = /netflix|shahid|prime|amazon|disney|osn|youtube|vodu|starz|weyyak|watchit|tod|hbo|wbd|pluto|apple|kodi|vlc|iptv|smarttube|tv\.|video|movie|film/i;
+  function openAppsList(title, re) {
+    var all = visibleApps().filter(function (a) { return a.pkg; }), l = re ? all.filter(function (a) { return re.test(a.pkg + ' ' + a.label); }) : all;
+    if (!l.length) l = all;
+    openList(title, 'اختار التطبيق واضغط OK · رجوع للإغلاق', function () {
+      return l.map(function (a) { return { label: appName(a), value: '', act: function (k) { if (k !== 'ok') return; closeModal(); launchApp(a.pkg); return false; } }; });
+    });
+  }
+  function liveApp() { for (var i = 0; i < apps.length; i++) if (/tvcenter|\.android\.tv$|livetv|live\.tv|tvplayer|\.tv\.tuner|iptv|channels/i.test(apps[i].pkg)) return apps[i].pkg; return null; }
+  function openOsMenu() {
+    var rows = [
+      ['خلفية الشاشة', function () { openPicker(); }], ['الثيمات والألوان', function () { openThemes(); }], ['إعدادات الواجهة', function () { openSettings(); }],
+      ['تعديل الشاشة', function () { openEdit(); }], ['ترتيب التطبيقات', function () { setMode('move'); nav.goId('row-apps'); }], ['إخفاء التطبيقات', function () { setMode('hide'); nav.goId('row-apps'); }],
+      ['تغيير أيقونة تطبيق', function () { setMode('icon'); nav.goId('row-apps'); }], ['وضع الأطفال', function () { toggleKids(); }],
+      ['شاشة التوقف', function () { if (!PREVIEW) startSaver(); }], ['الطاقة', function () { openPower(); }], ['إعدادات الجهاز', function () { if (HAS_ANDROID) A.openSettings(); }],
+      ['تحديث', function () { toast('جاري التحديث…'); loadApps(true); showBg(); }]
+    ];
+    if (settings.religious !== false) rows.splice(7, 0, ['القرآن الكريم', function () { openQuran(); }]);
+    openList('القائمة', 'اختار واضغط OK · رجوع للإغلاق', function () {
+      return rows.map(function (r) { return { label: r[0], value: '', act: function (k) { if (k !== 'ok') return; closeModal(); r[1](); return false; } }; });
+    });
+  }
+  function osAct(id) {
+    if (id === 'home') { nav.home(); return; }
+    if (id === 'search' || id === 'ai') return openSearch();
+    if (id === 'settings') { if (HAS_ANDROID) A.openSettings(); else toast('إعدادات الجهاز'); return; }
+    if (id === 'profile') return openSettings();
+    if (id === 'menu') return openOsMenu();
+    if (id === 'apps' || id === 'library') return openAppsList('كل التطبيقات', null);
+    if (id === 'games') return openAppsList('الألعاب', /game|xbox|geforce|boosteroid|steam|moonlight|luna|play\.games|pubg|fifa|emulat/i);
+    if (id === 'movies' || id === 'shows' || id === 'watch') return openAppsList(id === 'shows' ? 'المسلسلات' : id === 'watch' ? 'ماذا يُعرض' : 'الأفلام', RE_VIDEO);
+    if (id === 'kids') return openAppsList('الأطفال', /kids|spacetoon|cartoon|baby|junior|toon|disney/i);
+    if (id === 'media') return openAppsList('الوسائط', /file|gallery|photo|music|player|vlc|kodi|media|explorer|documents/i);
+    if (id === 'music') return openAppsList('الموسيقى', /music|spotify|anghami|deezer|audio|radio|sound/i);
+    if (id === 'inputs' || id === 'live') {
+      if (HAS_ANDROID && IS_TV && id === 'inputs') return tvAction('tvinput');
+      var lp = liveApp(); if (lp) return launchApp(lp);
+      if (HAS_ANDROID && IS_TV) return tvAction('tvinput');
+      return toast('ماكو تلفزيون مباشر بهالجهاز');
+    }
+    if (id === 'ambient') { if (!PREVIEW) startSaver(); else toast('شاشة التوقف'); return; }
+    if (id === 'multi') return openPicker();
+    if (id === 'wifi') { if (HAS_ANDROID) A.openWifi(); else toast('الواي فاي'); return; }
+    if (id === 'shield') return toggleKids();
+    if (id === 'bell') return toast(settings.owner ? 'أهلاً ' + settings.owner + '، ماكو إشعارات جديدة' : 'ماكو إشعارات جديدة');
+    if (id === 'power') return openPower();
+  }
 
   // ---------- Icons ----------
   var ICONS = {
@@ -1154,6 +1368,9 @@
     var b = document.body, sk = settings.skin || 'classic', st = b.style;
     if (sk === 'classic') b.removeAttribute('data-skin'); else b.setAttribute('data-skin', sk);
     if (typeof customIcons !== 'undefined') renderOs();
+    /* a design can carry its own CSS (imported launchers, or written in the phone app) and it is applied last */
+    var uc = $('userCss'), css = typeof settings.css === 'string' ? settings.css.slice(0, 60000) : '';
+    if (uc && uc.textContent !== css) uc.textContent = css;
     if (settings.variant) b.setAttribute('data-variant', settings.variant); else b.removeAttribute('data-variant');
     var p = settings.palette;
     b.classList.toggle('pal', !!p);
@@ -1570,13 +1787,24 @@
       rowEls.forEach(function (re, i) { re.classList.toggle('row-active', i === r); });
       if (moving && el.dataset.pkg === moving) el.classList.add('moving');
       if (r > 0) scrollTrack(r);
+      osFocus(el);
       scrollPage();
     }
     function scrollTrack(row) {
       var track = rowEls[row].querySelector('.track'); if (!track) return;
       var list = items(row); if (!list.length) return;
-      if (row === AR && osGrid()) { var ge = list[idx[row]]; track.style.transform = 'translateY(' + -Math.max(0, ge.offsetTop - 210) + 'px)'; return; }
-      var el = list[idx[row]], maxVisible = 1920 - 96 * 2 - 60, far = track.offsetWidth - el.offsetLeft;
+      if (row === AR && osGrid()) {
+        var ge = list[idx[row]], gy;
+        if (settings.skin === 'cyt') { var rh = ge.offsetHeight + 40, ri = Math.floor(idx[row] / osGrid()); gy = ri * rh; }
+        else gy = Math.max(0, ge.offsetTop - 210);
+        track.style.transform = 'translateY(' + -gy + 'px)'; return;
+      }
+      var el = list[idx[row]];
+      if (osLtr()) {
+        var room = 1920 - rowEls[row].offsetLeft - 90, over = el.offsetLeft + el.offsetWidth - room;
+        track.style.transform = 'translateX(' + -Math.max(0, over) + 'px)'; return;
+      }
+      var maxVisible = 1920 - 96 * 2 - 60, far = track.offsetWidth - el.offsetLeft;
       track.style.transform = 'translateX(' + (far > maxVisible ? far - maxVisible : 0) + 'px)';
     }
     function scrollPage() {
@@ -1587,9 +1815,32 @@
     }
     function centerX(el) { var b = el.getBoundingClientRect(); return b.left + b.width / 2; }
     function rowVisible(i) { var e = rowEls[i]; return e && e.offsetParent !== null && !e.hasAttribute('data-hidden'); }
+    /* a maker's side rail (Samsung Tizen, Roku) is reached sideways, never by up and down */
+    function isRail(i) { return !!rowEls[i] && rowEls[i].classList.contains('vrow') && rowVisible(i); }
+    function railRow() { for (var i = 0; i < rowEls.length; i++) if (isRail(i)) return i; return -1; }
+    var lastR = null;
+    function toRail() { var R = railRow(); if (R < 0) return; lastR = r; r = R; apply(); }
+    function leaveRail() {
+      var t = lastR != null && rowVisible(lastR) && !isRail(lastR) ? lastR : AR;
+      if (!rowVisible(t)) { for (var i = 0; i < rowEls.length; i++) if (rowVisible(i) && !isRail(i)) { t = i; break; } }
+      goRow(t);
+    }
+    function railHome() { var R = rowEls.indexOf($('row-osbar')); if (R < 0) return; var l = items(R); for (var i = 0; i < l.length; i++) if (l[i].classList.contains('on')) idx[R] = i; }
+    function arrow(k) {
+      var ltr = osLtr(), fwd = ltr ? 'ArrowRight' : 'ArrowLeft';
+      if (isRail(r)) {
+        if (k === 'ArrowUp') moveH(-1); else if (k === 'ArrowDown') moveH(1); else if (k === fwd) leaveRail();
+        return;
+      }
+      if (k === 'ArrowUp') { if (!moving && !gridMove(-1)) goRow(r - 1); return; }
+      if (k === 'ArrowDown') { if (!moving && !gridMove(1)) goRow(r + 1); return; }
+      var dir = k === fwd ? 1 : -1;
+      if (dir < 0 && !moving && railRow() >= 0 && (idx[r] === 0 || (osGrid() && r === AR && idx[r] % osGrid() === 0))) { toRail(); return; }
+      moveH(dir);
+    }
     function goRow(newR, forceIdx) {
       var dir = newR < r ? -1 : 1;
-      while (newR >= 0 && newR < rowEls.length && !rowVisible(newR)) newR += dir;
+      while (newR >= 0 && newR < rowEls.length && (!rowVisible(newR) || isRail(newR) || (osSkin() && !items(newR).length))) newR += dir;
       if (newR < 0 || newR >= rowEls.length) return;
       var from = cur(), list = items(newR); if (!list.length) return;
       if (forceIdx != null) idx[newR] = forceIdx;
@@ -1615,6 +1866,7 @@
         if (mode === 'kidsel') { var q = kids.apps.indexOf(pkg); if (q >= 0) kids.apps.splice(q, 1); else kids.apps.push(pkg); saveKids(); renderApps(); return; }
         if (mode === 'icon') { openPicker(pkg); return; }
         launchApp(pkg);
+      } else if (kind === 'osb') { osAct(id);
       } else if (kind === 'top') {
         if (id === 'search') openSearch();
         else if (id === 'settings') { if (HAS_ANDROID) A.openSettings(); }
@@ -1657,7 +1909,7 @@
       r = homeRow(); idx[r] = 0; apply();
     }
     return { refresh: apply, goRow: goRow, back: back, moveH: moveH, ok: ok, row: function () { return r; }, moving: function () { return moving; },
-      appsRow: function () { return AR; }, goId: goId, gridMove: gridMove, home: function () { moving = null; if (mode !== 'normal') setMode('normal'); r = homeRow(); idx[r] = 0; apply(); } };
+      appsRow: function () { return AR; }, goId: goId, gridMove: gridMove, arrow: arrow, railHome: railHome, home: function () { moving = null; if (mode !== 'normal') setMode('normal'); r = homeRow(); idx[r] = 0; apply(); } };
   })();
 
   function keyName(e) {
@@ -1679,10 +1931,7 @@
     if (layer === 'search') return searchKey(k);
     if (layer === 'quran') return quranKey(k);
     if (layer === 'pin') return pinKey(k);
-    if (k === 'ArrowRight') nav.moveH(-1);
-    else if (k === 'ArrowLeft') nav.moveH(1);
-    else if (k === 'ArrowUp') { if (!nav.moving() && !nav.gridMove(-1)) nav.goRow(nav.row() - 1); }
-    else if (k === 'ArrowDown') { if (!nav.moving() && !nav.gridMove(1)) nav.goRow(nav.row() + 1); }
+    if (k.indexOf('Arrow') === 0) nav.arrow(k);
     else if (k === 'ok') nav.ok();
     else if (k === 'back') nav.back();
   }
