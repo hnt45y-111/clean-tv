@@ -32,7 +32,7 @@ const dataBytes = u => { const b = atob(u.slice(u.indexOf(',') + 1)), a = new Ui
 /* key codes the app uses → the launcher server's key names */
 const D_KEYS = { 19: 'up', 20: 'down', 21: 'left', 22: 'right', 23: 'ok', 66: 'ok', 4: 'back', 3: 'home', 82: 'menu', 26: 'power', 85: 'play', 126: 'play', 127: 'play', 87: 'next', 88: 'prev', 86: 'stop',
   164: 'mute', 24: 'vup', 25: 'vdn', 166: 'chup', 167: 'chdn', 176: 'settings', 84: 'search' };
-const D_LOCAL = new Set(['gallery', 'fetchText', 'ghPublish', 'ghDelete', 'ghCheck', 'dl', 'saveText', 'release', 'selfUpdate', 'capture', 'voice', 'appDetails', 'connect', 'pair', 'ai', 'httpPost', 'tele', 'policyPut', 'usbConnect', 'usbClose', 'tetherSettings', 'usbCancel', 'usbTcpip', 'aiKey', 'zipTheme']);
+const D_LOCAL = new Set(['gallery', 'fetchText', 'ghPublish', 'ghDelete', 'ghCheck', 'dl', 'saveText', 'release', 'selfUpdate', 'capture', 'voice', 'appDetails', 'connect', 'pair', 'ai', 'httpPost', 'tele', 'policyPut', 'usbConnect', 'usbClose', 'tetherSettings', 'usbCancel', 'usbTcpip', 'aiKey', 'zipTheme', 'zipIcons']);
 let D_LAST_SENT = null;
 const D_OPS = {
   status: async () => CONN,

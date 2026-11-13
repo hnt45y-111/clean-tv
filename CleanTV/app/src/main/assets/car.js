@@ -557,6 +557,9 @@
     st.setProperty('--fs', String((+cfg.fs || 100) / 100));
     st.setProperty('--bgo', String(1 - (+cfg.bgDim || 45) / 100));
     txt('own', cfg.owner || 'مدير الشاشات');
+    /* the design's own CSS (imported or written in the phone app) goes last, so it can change anything */
+    var uc = document.getElementById('userCss'), css = typeof cfg.css === 'string' ? cfg.css.slice(0, 60000) : '';
+    if (uc && uc.textContent !== css) uc.textContent = css;
     renderBrand();
     b.classList.toggle('hasvol', !!cfg.volBtns);
     b.classList.toggle('night', isNight());

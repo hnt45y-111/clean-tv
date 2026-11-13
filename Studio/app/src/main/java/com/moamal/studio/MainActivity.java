@@ -378,6 +378,7 @@ public class MainActivity extends Activity {
             }
             case "fetchText": return httpText(a.getString("url"));
             case "zipTheme": prog("أجهّز صور الواجهة…"); return ZipThemes.images(a.optString("path"), a.optInt("max", 20));
+            case "zipIcons": prog("أجهّز أيقونات الواجهة…"); return ZipThemes.icons(a.optString("path"), a.optInt("max", 120));
             case "ai": return GeminiService.generate(this, a.getString("system"), a.getString("prompt"));
             case "aiKey": { String k = a.optString("key", "").trim(); if (k.isEmpty()) kv(this).edit().remove("geminiKey").apply(); else kv(this).edit().putString("geminiKey", k).apply(); return true; }
             case "httpPost": return httpPost(a.getString("url"), a.getString("body"), a.optString("type", "text/plain"));
