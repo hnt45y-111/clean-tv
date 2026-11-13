@@ -1,0 +1,20 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.msm.auto'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.msm.auto'
+        minSdk 26
+        targetSdk 34
+        versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
+        versionName '1.' + (project.hasProperty('buildNum') ? project.property('buildNum').toString() : '0')
+    }
+    signingConfigs {
+        fixed { storeFile file('auto.keystore'); storePassword 'msmauto1'; keyAlias 'auto'; keyPassword 'msmauto1' }
+    }
+    buildTypes { debug { signingConfig signingConfigs.fixed } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+dependencies {
+    implementation 'androidx.car.app:app:1.4.0'
+}

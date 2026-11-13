@@ -1,0 +1,29 @@
+plugins {
+    id 'com.android.application'
+}
+android {
+    namespace 'com.cleantv.launcher'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.cleantv.launcher'
+        minSdk 24
+        targetSdk 34
+        versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 4)
+        versionName '4.0'
+    }
+    signingConfigs {
+        fixed {
+            storeFile file('cleantv.keystore')
+            storePassword 'cleantv123'
+            keyAlias 'cleantv'
+            keyPassword 'cleantv123'
+        }
+    }
+    buildTypes {
+        debug { signingConfig signingConfigs.fixed }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
