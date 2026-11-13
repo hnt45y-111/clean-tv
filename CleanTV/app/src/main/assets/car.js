@@ -585,7 +585,8 @@
     else if (k === 'music') h = '<div class="mu" data-med><div class="art" data-art></div><div class="tx"><b data-mt>ماكو شي شغّال</b><span data-ma></span><div class="pg"><i data-mpg></i></div>' +
       '<div class="ctl"><button data-mc="prev">' + P.prev + '</button><button class="pp" data-mc="toggle" data-mpp>' + P.play + '</button><button data-mc="next">' + P.next + '</button></div></div></div>';
     else if (k === 'climate') h = '<div class="cl"><div><b data-temp>—</b><small data-wx>الطقس</small></div><i></i><div class="fan">' + sic('fan') + '<b>' + (o.fan || '٢') + '</b><small>تلقائي</small></div>' + (o.car ? '<div class="carimg">' + sic('park') + '</div>' : '') + '</div>';
-    else if (k === 'dock' || k === 'rail' || k === 'grid') h = (o.keys || cfg.sceneDock || ['maps', 'music', 'phone', 'apps', 'park']).map(function (d) { var x = SDOCK[d] || DOCK[d] || [d, 'apps']; return '<button data-sdock="' + d + '">' + '<i>' + sic(x[1]) + '</i>' + (o.nolabel ? '' : '<span>' + x[0] + '</span>') + '</button>'; }).join('');
+    else if (k === 'dock' || k === 'rail' || k === 'grid') { var mainDock = !sPart.dockDone; sPart.dockDone = true;
+      h = (mainDock && cfg.sceneDock && cfg.sceneDock.length ? cfg.sceneDock : o.keys || ['maps', 'music', 'phone', 'apps', 'park']).map(function (d) { var x = SDOCK[d] || DOCK[d] || [d, 'apps']; return '<button data-sdock="' + d + '">' + '<i>' + sic(x[1]) + '</i>' + (o.nolabel ? '' : '<span>' + x[0] + '</span>') + '</button>'; }).join(''); }
     else if (k === 'apps') h = carApps().slice(0, o.n || 6).map(function (a) { return '<button data-pkg="' + esc(a.pkg) + '">' + (a.icon ? '<img src="' + esc(a.icon) + '" alt="">' : '<i>' + sic(a.kind === 'maps' ? 'maps' : a.kind === 'music' ? 'music' : 'apps') + '</i>') + '</button>'; }).join('');
     else if (k === 'set') h = '<button data-sdock="settings">' + sic('settings') + (o.label ? '<span>' + o.label + '</span>' : '') + '</button>';
     else if (k === 'stats') h = (o.rows || ['trip', 'alt', 'wx', 'pr']).map(function (r) {
@@ -638,6 +639,7 @@
     document.body.setAttribute('data-scene', sc ? cfg.scene : '');
     if (!box) return;
     if (!sc) { box.innerHTML = ''; return; }
+    sPart.dockDone = false;
     box.innerHTML = '<div class="sc" id="scb">' + sc.map(sPart).join('') + '</div>';
     document.body.classList.toggle('scbg', !!cfg.sceneBg && (cfg.bgPack || []).length > 0);
     fitScene(); paintLive();
