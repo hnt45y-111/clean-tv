@@ -4,8 +4,8 @@
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  var COLS = 4, st = { f: 'grid', ci: 0, gi: 0, list: [] };
-  var CATS = [['all', 'كل القنوات'], ['news', 'أخبار'], ['sport', 'رياضة'], ['quran', 'قرآن ومرجعيات'], ['iq', 'قنوات عراقية']];
+  var COLS = 4, st = { f: 'grid', ci: 0, gi: 0, list: [], off: 0 };
+  var CATS = [['all', 'كل القنوات'], ['news', 'أخبار'], ['sport', 'رياضة'], ['movies', 'أفلام ومسلسلات'], ['ent', 'منوعات وترفيه'], ['mbc', 'باقة MBC المجانية'], ['kids', 'أطفال'], ['quran', 'قرآن ومرجعيات'], ['iq', 'قنوات عراقية']];
   function cats() {
     var l = CATS.map(function (c) { return { id: c[0], n: c[1], kind: 'cat' }; });
     var seen = {};
@@ -16,10 +16,13 @@
   function filter(cid) {
     var all = window.CHANNELS || [];
     if (cid === 'all') return all;
-    if (cid === 'news' || cid === 'sport' || cid === 'quran') return all.filter(function (c) { return c.g === cid; });
+    if (cid === 'mbc') return all.filter(function (c) { return c.p === 'mbc'; });
+    if (cid === 'news' || cid === 'sport' || cid === 'quran' || cid === 'movies' || cid === 'ent' || cid === 'kids') return all.filter(function (c) { return c.g === cid; });
     return all.filter(function (c) { return c.c === cid; });
   }
   function grpName(code) { var g = (window.CH_GROUPS || []).filter(function (x) { return x[0] === code; })[0]; return g ? g[1] : ''; }
+  var GN = { news: 'أخبار', sport: 'رياضة', movies: 'أفلام', ent: 'منوعات', kids: 'أطفال', quran: 'قرآن' };
+  function subOf(c) { return grpName(c.c) + (GN[c.g] ? ' · ' + GN[c.g] : ''); }
   function hue(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
   function draw() {
     var cs = cats(), cid = cs[st.ci].id;
@@ -29,23 +32,29 @@
     for (var q = from; q < Math.min(cs.length, from + 8); q++) html += '<div class="lv-cat' + (q === st.ci ? ' on' : '') + (st.f === 'cat' && q === st.ci ? ' focus' : '') + '">' + esc(cs[q].n) + '</div>';
     $('lvCats').innerHTML = html;
     $('lvGrid').innerHTML = st.list.length ? st.list.map(function (c, i) {
-      var tint = 'hsl(' + hue(c.n) + ',28%,24%)';
-      return '<div class="lv-ch' + (st.f === 'grid' && i === st.gi ? ' focus' : '') + '"><div class="lv-art" style="background:' + tint + '"><b>' + esc(c.n.charAt(0) === 'ا' && c.n.charAt(1) === 'ل' ? c.n.slice(2, 4) : c.n.slice(0, 2)) + '</b></div>' +
-        '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(grpName(c.c)) + (c.g === 'news' ? ' · أخبار' : c.g === 'sport' ? ' · رياضة' : c.g === 'quran' ? ' · قرآن' : '') + '</div></div></div>';
+      var tint = 'hsl(' + hue(c.n) + ',28%,24%)', ini = c.n.replace(/^ال/, '').replace(/\s/g, '').slice(0, 2);
+      var logo = c.i ? '<img class="lv-img" src="logos/' + esc(c.i) + '.png" alt="" onerror="this.parentNode.removeChild(this)">' : '';
+      return '<div class="lv-ch' + (st.f === 'grid' && i === st.gi ? ' focus' : '') + '"><div class="lv-art" style="background:' + tint + '"><b>' + esc(ini) + '</b>' + logo + '</div>' +
+        '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(subOf(c)) + '</div></div></div>';
     }).join('') : '<div class="lv-empty">ماكو قنوات بهذا القسم</div>';
-    var f = document.querySelector('#lvGrid .focus');
-    var g = $('lvGrid'); if (f) { var top = f.offsetTop - 120; g.style.transform = 'translateY(' + (-Math.max(0, top)) + 'px)'; } else g.style.transform = '';
+    var f = document.querySelector('#lvGrid .focus'), wrap = $('lvGridWrap');
+    if (f && wrap) {
+      var H = wrap.clientHeight, t = f.offsetTop, h = f.offsetHeight, o = st.off;
+      if (t - o < 12) o = Math.max(0, t - 12); else if (t + h - o > H - 12) o = t + h - H + 12;
+      st.off = o;
+    } else st.off = 0;
+    $('lvGrid').style.transform = 'translateY(' + (-st.off) + 'px)';
     $('lvCount').textContent = st.list.length + ' قناة';
   }
   function play() {
     if (!st.list.length) return;
-    var payload = JSON.stringify(st.list.map(function (c) { return { n: c.n, u: c.u }; }));
+    var payload = JSON.stringify(st.list.map(function (c) { return { n: c.n, u: c.u, i: c.i || '', s: subOf(c) }; }));
     if (window.Android && window.Android.playLive) window.Android.playLive(payload, st.gi);
     else if (window.toastMsg) window.toastMsg('التشغيل يحتاج الشاشة نفسها');
   }
   var Live = {
     open: function () {
-      st.f = 'grid'; st.ci = 0; st.gi = 0;
+      st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0;
       document.getElementById('liveModal').classList.add('on');
       if (window.__setLayer) window.__setLayer('live');
       draw();
@@ -54,8 +63,8 @@
       var cs = cats();
       if (k === 'back') { if (window.__closeLive) window.__closeLive(); return; }
       if (st.f === 'cat') {
-        if (k === 'ArrowUp') { st.ci = Math.max(0, st.ci - 1); st.gi = 0; }
-        else if (k === 'ArrowDown') { st.ci = Math.min(cs.length - 1, st.ci + 1); st.gi = 0; }
+        if (k === 'ArrowUp') { st.ci = Math.max(0, st.ci - 1); st.gi = 0; st.off = 0; }
+        else if (k === 'ArrowDown') { st.ci = Math.min(cs.length - 1, st.ci + 1); st.gi = 0; st.off = 0; }
         else if (k === 'ArrowLeft' || k === 'ok') { if (st.list.length) st.f = 'grid'; }
       } else {
         if (k === 'ArrowRight') { if (st.gi % COLS === 0) st.f = 'cat'; else st.gi--; }
