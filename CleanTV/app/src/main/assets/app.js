@@ -1558,7 +1558,7 @@
     if (!on) { t.innerHTML = ''; return; }
     var one = liveList.map(function (m) {
       var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
-      return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><i>' + nf.format(+m.hs || 0) + '</i><u></u><i>' + nf.format(+m.as || 0) + '</i></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
+      return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>' + nf.format(+m.hs || 0) + '</b><u></u><b>' + nf.format(+m.as || 0) + '</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
     }).join('<span class="lt-sep"></span>') + '<span class="lt-sep"></span>';
     t.setAttribute('data-dir', settings.tickerDir === 'ltr' ? 'ltr' : 'rtl');
     t.innerHTML = '<div class="lt-badge"><i></i>مباشر</div><div class="lt-win"><div class="lt-run" style="animation-duration:' + Math.max(24, liveList.length * 12) + 's">' + one + one + '</div></div>';
