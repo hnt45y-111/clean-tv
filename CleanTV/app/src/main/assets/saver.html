@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @font-face { font-family: 'Tajawal'; font-weight: 300; src: url('fonts/Tajawal-Light.ttf'); }
+  @font-face { font-family: 'Tajawal'; font-weight: 500; src: url('fonts/Tajawal-Medium.ttf'); }
+  @font-face { font-family: 'Tajawal'; font-weight: 800; src: url('fonts/Tajawal-ExtraBold.ttf'); }
+  @font-face { font-family: 'Amiri'; font-weight: 400; src: url('fonts/Amiri-Regular.ttf'); }
+  @font-face { font-family: 'Amiri'; font-weight: 700; src: url('fonts/Amiri-Bold.ttf'); }
+  @font-face { font-family: 'Kufi'; font-weight: 400 700; src: url('fonts/ReemKufi.ttf'); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Tajawal', sans-serif; cursor: none; color: #fff; }
+  #stage { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; background: #000; }
+
+  /* background + effects */
+  .bg { position: absolute; top:-4%;right:-4%;bottom:-4%;left:-4%; background: center/cover no-repeat; opacity: 0; transition: opacity var(--fade, 2.5s) ease; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+  .bg.on { opacity: 1; }
+  body[data-fx="kenburns"] .bg.on { animation: kb var(--kb, 40s) ease-in-out infinite alternate; }
+  body[data-fx="kenburns"] .bg.on.alt { animation-name: kb2; }
+  @keyframes kb { from { transform: scale(1) translate3d(0, 0, 0); } to { transform: scale(1.08) translate3d(-1.5%, -1%, 0); } }
+  @keyframes kb2 { from { transform: scale(1.07) translate3d(1%, .8%, 0); } to { transform: scale(1) translate3d(-.8%, 0, 0); } }
+  body[data-fx="slide"] .bg { transition: opacity 1.6s ease, transform 1.6s ease; transform: translateX(6%); }
+  body[data-fx="slide"] .bg.on { transform: none; }
+  body[data-fx="zoom"] .bg { transition: opacity 2s ease, transform 2.4s ease; transform: scale(1.18); }
+  body[data-fx="zoom"] .bg.on { transform: scale(1.02); }
+  body[data-fx="none"] .bg { transition: none; }
+  body[data-bg="blur"] .bg { filter: blur(26px) saturate(1.2); }
+  #grad { position: absolute; top:0;right:0;bottom:0;left:0; display: none; background: linear-gradient(120deg, var(--g1), var(--g2), var(--g3)); background-size: 300% 300%; animation: gr 24s ease infinite; }
+  body[data-bg="gradient"] #grad { display: block; }
+  body[data-bg="gradient"] .bg, body[data-bg="black"] .bg { display: none; }
+  @keyframes gr { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  .dim { position: absolute; top:0;right:0;bottom:0;left:0; background: rgba(0,0,0,.55); }
+
+  /* clock: fixed in a corner, never moves */
+  #sk { position: absolute; transform-origin: var(--ko, left bottom); transform: scale(var(--cs, 1)); text-align: left; direction: ltr; }
+  body[data-cpos="bl"] #sk { left: 96px; bottom: 76px; --ko: left bottom; }
+  body[data-cpos="br"] #sk { right: 96px; bottom: 76px; --ko: right bottom; text-align: right; }
+  body[data-cpos="tl"] #sk { left: 96px; top: 70px; --ko: left top; }
+  body[data-cpos="tr"] #sk { right: 96px; top: 70px; --ko: right top; text-align: right; }
+  body[data-cpos="center"] #sk { left: 0; right: 0; top: 330px; --ko: center center; text-align: center; }
+  #sk .t { font-weight: 300; font-size: 210px; line-height: .95; letter-spacing: -2px; text-shadow: 0 6px 40px rgba(0,0,0,.45); white-space: nowrap; }
+  #sk .t { display: flex; align-items: baseline; gap: 22px; }
+  body[data-cpos="br"] #sk .t, body[data-cpos="tr"] #sk .t { justify-content: flex-end; }
+  body[data-cpos="center"] #sk .t { justify-content: center; }
+  #sk .t .hm { unicode-bidi: isolate; direction: ltr; }
+  #sk .t small { font-size: .26em; font-weight: 500; letter-spacing: 0; opacity: .75; }
+  #sk .dd { direction: rtl; font-size: 38px; font-weight: 500; opacity: .85; margin-top: 10px; text-shadow: 0 3px 18px rgba(0,0,0,.6); }
+  #sk .hh { direction: rtl; font-size: 32px; opacity: .7; margin-top: 4px; color: var(--acc, #f6dc9b); }
+  body[data-cpos="bl"] #sk .dd, body[data-cpos="bl"] #sk .hh, body[data-cpos="tl"] #sk .dd, body[data-cpos="tl"] #sk .hh { text-align: left; }
+  body[data-clock="bold"] #sk .t { font-weight: 800; font-size: 200px; }
+  body[data-clock="serif"] #sk .t { font-family: 'Amiri', serif; font-weight: 400; font-size: 240px; letter-spacing: 0; }
+  body[data-clock="kufi"] #sk .t { font-family: 'Kufi', sans-serif; font-size: 200px; }
+  body[data-clock="minimal"] #sk .t { font-size: 120px; font-weight: 500; }
+  body[data-clock="glass"] #sk { padding: 26px 44px 30px; border-radius: 40px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+  body[data-clock="glass"] #sk .t { font-size: 170px; font-weight: 500; }
+  #sk .an { display: none; width: 300px; height: 300px; }
+  body[data-clock="analog"] #sk .an { display: block; }
+  body[data-clock="analog"] #sk .t { display: none; }
+  body[data-cpos="center"] #sk .an { margin: 0 auto; }
+  body[data-cpos="br"] #sk .an, body[data-cpos="tr"] #sk .an { margin-inline-start: auto; }
+  body.nodate #sk .dd, body.nohijri #sk .hh { display: none; }
+
+  /* the little card: club news / religious photos / news */
+  .card { position: absolute; width: 540px; transform-origin: var(--qo, right bottom); border-radius: 34px; overflow: hidden;
+    background: rgba(12,14,20,.62); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 30px 80px -30px rgba(0,0,0,.8); display: none; }
+  .card.on { display: block; }
+  .card[data-pos="br"] { right: 96px; bottom: 76px; --qo: right bottom; }
+  .card[data-pos="tr"] { right: 96px; top: 70px; --qo: right top; }
+  .card[data-pos="tl"] { left: 96px; top: 70px; --qo: left top; }
+  .card[data-pos="bl"] { left: 96px; bottom: 76px; --qo: left bottom; }
+  .card[data-pos="tc"] { left: 690px; top: 70px; --qo: center top; }
+  .card[data-pos="bc"] { left: 690px; bottom: 76px; --qo: center bottom; }
+  .card[data-pos="mr"] { right: 96px; top: 300px; --qo: right center; }
+  .card[data-pos="ml"] { left: 96px; top: 300px; --qo: left center; }
+  .card .hd { display: flex; align-items: center; gap: 16px; padding: 22px 26px 12px; }
+  .card .hd img { width: 58px; height: 58px; object-fit: contain; }
+  .card .hd .lg { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--acc2, rgba(255,255,255,.14)); font-size: 30px; }
+  .card .hd b { font-size: 30px; font-weight: 800; display: block; line-height: 1.15; }
+  .card .hd small { font-size: 21px; opacity: .65; }
+  .card .panes { position: relative; height: 330px; }
+  .card .pane { position: absolute; top:0;right:0;bottom:0;left:0; opacity: 0; transform: translateY(18px); transition: opacity .9s ease, transform .9s ease; padding: 6px 26px 0; }
+  .card .pane.on { opacity: 1; transform: none; }
+  .card .pic { position: absolute; top:0;right:0;bottom:0;left:0; background: center/cover no-repeat #111; }
+  .card .pic::after { content: ''; position: absolute; top:0;right:0;bottom:0;left:0; background: linear-gradient(0deg, rgba(0,0,0,.88) 0%, rgba(0,0,0,.25) 55%, transparent); }
+  .card .pane .cap { position: absolute; left: 26px; right: 26px; bottom: 22px; font-size: 27px; font-weight: 500; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .pane .cap small { display: block; font-size: 19px; opacity: .65; margin-top: 4px; }
+  .card .lbl { font-size: 22px; opacity: .65; margin-bottom: 14px; }
+  .card .vs { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: center; }
+  .card .vs .tm { flex: 1; } .card .vs .tm img { width: 92px; height: 92px; object-fit: contain; } .card .vs .tm b { display: block; font-size: 24px; margin-top: 8px; }
+  .card .vs .mid { font-size: 66px; font-weight: 800; direction: ltr; min-width: 150px; }
+  .card .vs .mid.when { font-size: 26px; font-weight: 500; line-height: 1.4; direction: rtl; }
+  .card .goals { margin-top: 14px; font-size: 21px; line-height: 1.6; opacity: .9; max-height: 104px; overflow: hidden; }
+  .card .goals i { font-style: normal; opacity: .6; }
+  .card .quote { font-family: 'Amiri', serif; font-size: 34px; line-height: 1.7; }
+  .card .quote small { display: block; font-family: 'Tajawal'; font-size: 20px; opacity: .6; margin-top: 8px; }
+  .card .ft { display: flex; gap: 8px; justify-content: center; padding: 14px 0 18px; }
+  .card .ft i { width: 9px; height: 9px; border-radius: 9px; background: rgba(255,255,255,.3); transition: all .4s; }
+  .card .ft i.on { width: 28px; background: var(--acc, #fff); }
+
+  #pvSel { position: fixed; z-index: 9999; pointer-events: none; border: 3px solid #3ee0ff; border-radius: 12px; display: none; box-shadow: 0 0 0 4px rgba(62,224,255,.28), 0 0 34px rgba(62,224,255,.55); }
+  #pvSel span { position: absolute; top: -26px; right: -3px; background: #3ee0ff; color: #001018; font: 700 13px Tajawal, sans-serif; padding: 4px 10px; border-radius: 8px 8px 0 0; white-space: nowrap; }
+
+  /* car */
+  #car { display: none; position: absolute; top:0;right:0;bottom:0;left:0; background: #000; color: #fff; }
+  body.car #car { display: block; } body.car #sk, body.car .card, body.car .bg, body.car .dim, body.car #grad { display: none !important; }
+  #car .ct { position: absolute; top: 120px; left: 0; right: 0; text-align: center; font-size: 250px; font-weight: 500; direction: ltr; line-height: 1; color: rgba(255,255,255,.9); }
+  #car .cd { position: absolute; top: 400px; left: 0; right: 0; text-align: center; font-size: 40px; color: rgba(255,255,255,.55); }
+  #car .sp { position: absolute; bottom: 120px; right: 140px; text-align: center; }
+  #car .sp b { display: block; font-size: 170px; font-weight: 500; line-height: 1; direction: ltr; color: #fff; }
+  #car .sp span { font-size: 34px; color: rgba(255,255,255,.5); }
+  #car .mu { position: absolute; bottom: 130px; left: 140px; display: flex; align-items: center; gap: 34px; max-width: 1000px; direction: rtl; }
+  #car .mu img { width: 190px; height: 190px; border-radius: 26px; object-fit: cover; background: #111; }
+  #car .mu .t { font-size: 52px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 760px; }
+  #car .mu .r { font-size: 34px; color: rgba(255,255,255,.55); margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 760px; }
+</style>
+</head>
+<body data-cpos="bl" data-kpos="br" data-fx="kenburns" data-bg="design" data-clock="big">
+<div id="stage">
+  <div id="grad"></div><div class="bg" id="b1"></div><div class="bg" id="b2"></div><div class="dim"></div>
+  <div id="car"><div class="ct" id="cc"></div><div class="cd" id="ccd"></div>
+    <div class="sp" id="csp"><b id="ckmh">٠</b><span>كم/ساعة</span></div>
+    <div class="mu" id="cmu"><img id="cart" alt=""><div><div class="t" id="ctt"></div><div class="r" id="car2"></div></div></div></div>
+  <div id="sk" data-sedit="sclock">
+    <svg class="an" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
+      <g id="ticks"></g><line id="ah" x1="50" y1="50" x2="50" y2="27" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+      <line id="am" x1="50" y1="50" x2="50" y2="14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="50" cy="50" r="2.6" fill="var(--acc, #f6dc9b)"/></svg>
+    <div class="t" id="tt"></div><div class="dd" id="dd"></div><div class="hh" id="hh"></div>
+  </div>
+  <div id="cards"></div>
+</div>
+<script src="data.js"></script>
+<script src="faith.js"></script>
+<script>
+(function () {
+  'use strict';
+  var TZ = 'Asia/Baghdad', DAY = 86400000;
+  var PREVIEW = /[?&]preview=1/.test(location.search), INLINE = /[?&]inline=1/.test(location.search);
+  var PD = null; try { if (PREVIEW) PD = window.parent.__PREVIEW_DATA || null; } catch (e) {}
+  function load(k, d) {
+    if (PD && PD.cfg && (k in PD.cfg || k === 'settings')) { var x = PD.cfg[k]; return x == null ? d : JSON.parse(JSON.stringify(x)); }
+    try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; }
+  }
+  function store(k, v) { if (PREVIEW) return; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function $(i) { return document.getElementById(i); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var st = $('stage');
+  function fit() { var s = Math.min(innerWidth / 1920, innerHeight / 1080); st.style.transform = 'scale(' + s + ')'; st.style.left = ((innerWidth - 1920 * s) / 2) + 'px'; st.style.top = ((innerHeight - 1080 * s) / 2) + 'px'; place(); }
+  addEventListener('resize', fit);
+
+  // ---------- fetching (TV bridge, the launcher page around us, or the phone app's preview) ----------
+  var cbN = 0, cbs = {};
+  window.__cb = function (id, t) { var f = cbs[id]; delete cbs[id]; if (f) f(t); };
+  function getText(url) {
+    try { if (window.Android && Android.fetchAsync) return new Promise(function (r) { var id = 's' + (++cbN); cbs[id] = r; Android.fetchAsync(url, id); }); } catch (e) {}
+    try { if (window.parent !== window && window.parent.__saverFetch) return window.parent.__saverFetch(url); } catch (e) {}
+    try { if (window.parent !== window && window.parent.__pvFetch) return window.parent.__pvFetch(url); } catch (e) {}
+    return fetch(url).then(function (r) { return r.text(); }).catch(function () { return ''; });
+  }
+  function getJSON(url) { return getText(url).then(function (t) { try { return t ? JSON.parse(t) : null; } catch (e) { return null; } }); }
+
+  // ---------- settings ----------
+  var set, sv, F, carc, off, CARDS = [];
+  // the screensaver can hold several cards (news, club, faith), each in its own place; old designs kept one card in sv.card / sv.kpos
+  function cardList() {
+    var l = sv.cards && sv.cards.length != null ? sv.cards : (sv.card === 'none' ? [] : [{ k: sv.card || 'auto', pos: sv.kpos === sv.cpos ? (sv.cpos === 'br' ? 'bl' : 'br') : (sv.kpos || 'br') }]);
+    return l.slice(0, 3).map(function (c) { return { k: c.k || 'auto', pos: c.pos || 'br', x: +c.x || 0, y: +c.y || 0 }; });
+  }
+  function readCfg() {
+    set = load('settings', {}) || {};
+    sv = Object.assign({ bg: set.saverStyle === 'black' || set.saverStyle === 'clock' ? 'black' : 'design', fx: 'kenburns', every: 60, dim: 40, clock: 'big', csize: 100, cpos: 'bl',
+      h24: false, latin: false, date: true, hijri: true, card: set.saverStyle === 'clock' || set.saverStyle === 'black' ? 'none' : 'auto', kpos: 'br', ksize: 100, pack: [] }, set.saver || {});
+    F = window.FAITH || { rel: 'muslim', sect: 'shia', muslim: true };
+    off = load('hijriOffset', 0) || 0;
+    carc = !PREVIEW && load('isCar', false) ? (load('carcfg', {}) || {}) : null;
+    var b = document.body;
+    b.classList.toggle('car', !!carc);
+    b.setAttribute('data-bg', sv.bg); b.setAttribute('data-fx', sv.fx); b.setAttribute('data-clock', sv.clock);
+    b.setAttribute('data-cpos', sv.cpos);
+    CARDS = cardList();
+    b.classList.toggle('nodate', sv.date === false); b.classList.toggle('nohijri', sv.hijri === false || !F.muslim);
+    var r = document.documentElement.style;
+    var dm = Math.max(0, Math.min(.9, (sv.dim == null ? 40 : sv.dim) / 100)), dl = document.querySelector('.dim');
+    if (dl) dl.style.background = 'linear-gradient(0deg, rgba(0,0,0,' + Math.min(.97, dm + .25).toFixed(2) + ') 0%, rgba(0,0,0,' + dm.toFixed(2) + ') 45%, rgba(0,0,0,' + Math.max(0, dm - .1).toFixed(2) + ') 100%)';
+    r.setProperty('--cs', String((sv.csize || 100) / 100)); r.setProperty('--ks', String((sv.ksize || 100) / 100));
+    r.setProperty('--kb', Math.max(20, (sv.every || 60) * 1.2) + 's');
+    var p = set.palette || {}, acc = p.b && p.b !== '#ffffff' ? p.b : p.a || '#f6dc9b';
+    r.setProperty('--acc', acc); r.setProperty('--acc2', p.a || 'rgba(255,255,255,.14)');
+    r.setProperty('--g1', p.c || '#0b1020'); r.setProperty('--g2', p.a || '#3a2a6b'); r.setProperty('--g3', '#05060a');
+  }
+
+  // ---------- clock ----------
+  function fmtT() { return new Intl.DateTimeFormat((sv.latin ? 'en-US' : 'ar-IQ-u-nu-arab'), { hour: 'numeric', minute: '2-digit', hour12: !sv.h24, timeZone: TZ }); }
+  var fG = function () { return new Intl.DateTimeFormat(sv.latin ? 'ar-IQ-u-nu-latn' : 'ar-IQ-u-nu-arab', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ }); };
+  var cal = 'islamic-umalqura'; try { new Intl.DateTimeFormat('ar-u-ca-islamic-umalqura'); } catch (e) { cal = 'islamic'; }
+  function ticks() { var g = ''; for (var i = 0; i < 12; i++) { var a = i * 30 * Math.PI / 180; g += '<line x1="' + (50 + 41 * Math.sin(a)) + '" y1="' + (50 - 41 * Math.cos(a)) + '" x2="' + (50 + 45 * Math.sin(a)) + '" y2="' + (50 - 45 * Math.cos(a)) + '" stroke="rgba(255,255,255,.7)" stroke-width="' + (i % 3 ? 1 : 2) + '"/>'; } $('ticks').innerHTML = g; }
+  function tick() {
+    var n = new Date(), h = '', m = '', ap = '';
+    fmtT().formatToParts(n).forEach(function (x) { if (x.type === 'hour') h = x.value; if (x.type === 'minute') m = x.value; if (x.type === 'dayPeriod') ap = x.value; });
+    var apx = /PM|م/.test(ap) ? 'مساءً' : 'صباحاً';
+    $('tt').innerHTML = '<span class="hm">' + esc(h + ':' + m) + '</span>' + (ap && !sv.h24 ? '<small>' + apx + '</small>' : '');
+    $('dd').textContent = fG().format(n);
+    $('hh').textContent = new Intl.DateTimeFormat('ar-u-ca-' + cal + (sv.latin ? '-nu-latn' : '-nu-arab'), { day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ }).format(new Date(n.getTime() + off * DAY)).replace(/\s*هـ\s*$/, '') + ' هـ';
+    var b = new Date(n.getTime() + 3 * 3600000), hh = b.getUTCHours() % 12, mm = b.getUTCMinutes();
+    $('ah').setAttribute('transform', 'rotate(' + (hh * 30 + mm / 2) + ' 50 50)'); $('am').setAttribute('transform', 'rotate(' + (mm * 6) + ' 50 50)');
+  }
+
+  // ---------- background ----------
+  var list = [], cur = '', flip = false, bgT = null;
+  function bgList() {
+    if (sv.bg === 'pack' && sv.pack && sv.pack.length) return sv.pack.slice();
+    if (set.bgPack && set.bgPack.length && set.bgMode !== 'palette') return set.bgPack.slice();
+    if (PREVIEW && PD && PD.bg && PD.bg.length) return PD.bg.map(function (u) { return u; });
+    var l = load('bgListCache', []);
+    if (!l || !l.length) { try { l = JSON.parse(Android.listBgAssets()); } catch (e) { l = []; } }
+    return l || [];
+  }
+  function showBg(force) {
+    if (sv.bg === 'black' || sv.bg === 'gradient' || !list.length) return;
+    var pinned = load('bgPinned', null);
+    var u = sv.bg === 'design' && pinned ? pinned : list[Math.floor(Date.now() / ((sv.every || 60) * 1000)) % list.length];
+    if (!u || (u === cur && !force)) return; cur = u;
+    var img = new Image();
+    img.onload = function () { var a = $(flip ? 'b1' : 'b2'), b = $(flip ? 'b2' : 'b1'); flip = !flip; a.style.backgroundImage = 'url("' + u + '")'; a.classList.toggle('alt', flip); a.classList.remove('on'); void a.offsetWidth; a.classList.add('on'); b.classList.remove('on'); };
+    img.src = u;
+  }
+
+  // ---------- the card ----------
+  var LEAGUE = { 86: 'esp.1', 83: 'esp.1', 1068: 'esp.1', 364: 'eng.1', 382: 'eng.1', 360: 'eng.1', 359: 'eng.1', 363: 'eng.1', 367: 'eng.1', 132: 'ger.1', 124: 'ger.1', 160: 'fra.1', 111: 'ita.1', 110: 'ita.1', 103: 'ita.1', 114: 'ita.1' };
+  var INST = [];
+  function cardType(k) {
+    k = k || 'auto';
+    if (k !== 'auto') return k;
+    if (set.skin === 'club' && set.team && set.team.ids) return 'club';
+    if (F.rel !== 'none' && set.religious !== false) return 'faith';
+    return 'news';
+  }
+  function kEvery() { return Math.max(5, +sv.kevery || 10) * 1000; }
+  function drawCard(inst, head, items) {
+    if (!inst.alive) return;
+    var c = inst.el;
+    if (!items.length && PREVIEW) items = ['<div class="quote" style="font-family:Tajawal;font-size:28px">هنا تطلع البطاقة<small>تمتلي بالأخبار والصور والمباريات من تكون الشاشة على الإنترنت</small></div>'];
+    if (!items.length) { c.classList.remove('on'); return; }
+    var keep = inst.items && inst.items.length === items.length ? inst.pi % items.length : 0;
+    inst.items = items; inst.pi = keep;
+    c.innerHTML = '<div class="hd">' + head + '</div><div class="panes">' + items.map(function (h, i) { return '<div class="pane' + (i === keep ? ' on' : '') + '">' + h + '</div>'; }).join('') + '</div>' +
+      '<div class="ft">' + (items.length > 1 ? items.map(function (h, i) { return '<i class="' + (i === keep ? 'on' : '') + '"></i>'; }).join('') : '') + '</div>';
+    c.classList.add('on');
+    place();
+  }
+  function stepCards() {
+    INST.forEach(function (inst) {
+      var ps = inst.el.querySelectorAll('.pane'), ds = inst.el.querySelectorAll('.ft i');
+      if (ps.length < 2) return;
+      ps[inst.pi % ps.length].classList.remove('on'); if (ds[inst.pi % ps.length]) ds[inst.pi % ps.length].classList.remove('on');
+      inst.pi = (inst.pi + 1) % ps.length; ps[inst.pi].classList.add('on'); if (ds[inst.pi]) ds[inst.pi].classList.add('on');
+    });
+  }
+  function relDays(d) { var x = Math.round((d - Date.now()) / 3600000); return x < 1 ? 'بعد شوية' : x < 24 ? 'بعد ' + nfa(x) + ' ساعة' : 'بعد ' + nfa(Math.round(x / 24)) + ' يوم'; }
+  var NF = new Intl.NumberFormat('ar-IQ-u-nu-arab'); function nfa(n) { return sv.latin ? String(n) : NF.format(n); }
+  function picPane(img, cap, sub) { return '<div class="pic" style="background-image:url(&quot;' + esc(img) + '&quot;)"></div><div class="cap">' + esc(cap) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>'; }
+  function teamHtml(t) { return '<div class="tm">' + (t.logo ? '<img src="' + esc(t.logo) + '" alt="">' : '') + '<b>' + esc(t.name) + '</b></div>'; }
+
+  function clubCard(inst) {
+    var t = set.team || {}, id = t.ids && t.ids[0];
+    if (!id) return newsCard(inst);
+    var cache = load('saverClub_' + id, null);
+    var next = ((load('matchesCache_' + t.ids.join('_'), { list: [] }) || {}).list || []).filter(function (m) { return Date.parse(m.date) > Date.now() - 2 * 3600000; })[0];
+    function render(c) {
+      var logo = c && c.logo, head = (logo ? '<img src="' + esc(logo) + '" alt="">' : '<div class="lg">⚽</div>') + '<div><b>' + esc(t.name || 'فريقي') + '</b><small>' + esc(t.nick || 'أخبار النادي') + '</small></div>';
+      var items = [];
+      if (next) items.push('<div class="lbl">المباراة الجاية · ' + esc(next.league || '') + '</div><div class="vs">' + teamHtml(next.home) + '<div class="mid when">' + esc(relDays(Date.parse(next.date))) + '<br><small style="opacity:.7">' +
+        esc(new Intl.DateTimeFormat('ar-IQ-u-nu-arab', { weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: TZ }).format(new Date(next.date))) + '</small></div>' + teamHtml(next.away) + '</div>');
+      if (c && c.last) {
+        var L = c.last;
+        items.push('<div class="lbl">آخر مباراة</div><div class="vs">' + teamHtml(L.home) + '<div class="mid">' + esc(nfa(L.home.score) + ' - ' + nfa(L.away.score)) + '</div>' + teamHtml(L.away) + '</div>' +
+          (L.goals && L.goals.length ? '<div class="goals">' + L.goals.slice(0, 4).map(function (g) { return '⚽ ' + esc(g.by) + ' <i>' + esc(g.min) + '</i>' + (g.assist ? ' <i>· صناعة ' + esc(g.assist) + '</i>' : ''); }).join('<br>') + '</div>' : ''));
+      }
+      ((c && c.news) || []).slice(0, 6).forEach(function (n) { items.push(picPane(n.img, n.h, n.d)); });
+      drawCard(inst, head, items);
+    }
+    render(cache);
+    if (cache && Date.now() - cache.t < 30 * 60000) return;
+    var lg = LEAGUE[id] || (next && next.slug) || 'all', out = { t: Date.now(), logo: cache && cache.logo, last: cache && cache.last, news: cache && cache.news || [] };
+    getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + lg + '/teams/' + id + '/schedule').then(function (j) {
+      if (!j) return null;
+      if (j.team && j.team.logo) out.logo = j.team.logo;
+      var post = (j.events || []).filter(function (e) { var s = e.competitions && e.competitions[0] && e.competitions[0].status; return s && s.type && s.type.state === 'post'; })
+        .sort(function (a, b) { return Date.parse(b.date) - Date.parse(a.date); })[0];
+      if (!post) return null;
+      return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + (post.league && post.league.slug || lg) + '/summary?event=' + post.id).then(function (s) {
+        var c = s && s.header && s.header.competitions && s.header.competitions[0]; if (!c) return;
+        var AR = load('teamAr', {}) || {}; var tm = function (x) { var T = x.team || {}; return { name: AR[T.displayName] || T.displayName || '', logo: T.logos && T.logos[0] && T.logos[0].href || '', score: x.score || '0' }; };
+        var home = c.competitors.filter(function (x) { return x.homeAway === 'home'; })[0] || c.competitors[0], away = c.competitors.filter(function (x) { return x.homeAway === 'away'; })[0] || c.competitors[1];
+        out.last = { home: tm(home), away: tm(away), goals: (s.keyEvents || []).filter(function (k) { return k.scoringPlay; }).map(function (k) {
+          var p = k.participants || []; return { by: p[0] && p[0].athlete ? p[0].athlete.displayName : '', assist: p[1] && p[1].athlete ? p[1].athlete.displayName : '', min: k.clock ? k.clock.displayValue : '' }; }) };
+      });
+    }).then(function () {
+      return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + lg + '/news?team=' + id + '&limit=8');
+    }).then(function (n) {
+      if (n && n.articles) out.news = n.articles.filter(function (a) { return a.images && a.images[0]; }).slice(0, 6).map(function (a) { return { h: a.headline, img: a.images[0].url, d: a.published ? new Intl.DateTimeFormat('ar-IQ-u-nu-arab', { day: 'numeric', month: 'long', timeZone: TZ }).format(new Date(a.published)) : '' }; });
+      store('saverClub_' + id, out); if (inst.alive) render(out);
+    }).catch(function () {});
+  }
+
+  var FAITH_CATS = { 'muslim-shia': ['Imam_Husayn_Shrine', 'Al_Abbas_Mosque', 'Imam_Ali_Mosque', 'Al-Kadhimiya_Mosque'], 'muslim-sunni': ['Masjid_al-Haram', 'Al-Masjid_an-Nabawi', 'Kaaba'],
+    christian: ['Churches_in_Iraq', 'Church_interiors'], sabian: ['Mandaeism', 'Mandaeans'] };
+  function faithCard(inst) {
+    var key = F.rel === 'muslim' ? 'muslim-' + F.sect : F.rel, cats = FAITH_CATS[key];
+    var W = (window.WISDOM || []).slice(), title = F.rel === 'christian' ? 'كلمة اليوم' : F.rel === 'sabian' ? 'من المندائية' : F.shia ? 'آية وحديث' : 'آية وذكر';
+    var occ = null;
+    try {
+      var hm = {}, today = new Date();
+      for (var i = 0; i < 390; i++) { var d = new Date(today.getTime() + i * DAY), p = new Intl.DateTimeFormat('en-u-ca-' + cal + '-nu-latn', { day: 'numeric', month: 'numeric', timeZone: TZ }).formatToParts(new Date(d.getTime() + off * DAY)), m = 0, dd = 0;
+        p.forEach(function (x) { if (x.type === 'month') m = +x.value; if (x.type === 'day') dd = +x.value; }); var k = m + '-' + dd; if (!(k in hm)) hm[k] = i; }
+      (window.OCCASIONS || []).forEach(function (o) { var x = hm[o[0] + '-' + o[1]]; if (x != null && (!occ || x < occ.i)) occ = { i: x, n: o[2] }; });
+      (window.GREG_OCC || []).forEach(function (o) { var x = Math.round((o.date - Date.now()) / DAY); if (x >= 0 && (!occ || x < occ.i)) occ = { i: x, n: o.name }; });
+    } catch (e) {}
+    var lgo = F.rel === 'christian' ? '✝' : F.rel === 'sabian' ? '☀' : '☪';
+    var head = '<div class="lg">' + lgo + '</div><div><b>' + esc(title) + '</b><small>' + esc(occ ? (occ.i === 0 ? 'اليوم: ' : 'باقي ' + nfa(occ.i) + ' يوم على ') + occ.n : (F.rel === 'christian' ? 'من الكتاب المقدس' : '')) + '</small></div>';
+    var start = Math.floor(Date.now() / 600000);
+    var quotes = W.length ? [0, 1].map(function (k) { var w = W[(start + k) % W.length]; return '<div class="quote">' + (w[2] === 'ayah' ? '﴿ ' + esc(w[0]) + ' ﴾' : '« ' + esc(w[0]) + ' »') + '<small>' + esc(w[1]) + '</small></div>'; }) : [];
+    var imgs = load('saverFaith_' + key, null);
+    function render() {
+      var items = [], pics = (imgs && imgs.list) || [];
+      quotes.forEach(function (q, k) { items.push(q); if (pics.length) items.push(picPane(pics[(start + k) % pics.length], '', '')); });
+      if (pics.length > 2) items.push(picPane(pics[(start + 2) % pics.length], '', ''));
+      drawCard(inst, head, items);
+    }
+    render();
+    if (!cats || (imgs && Date.now() - imgs.t < 3 * DAY)) return;
+    Promise.all(cats.map(function (c) { return getJSON('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=categorymembers&gcmtype=file&gcmlimit=40&gcmtitle=Category:' + encodeURIComponent(c) + '&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=900'); }))
+      .then(function (rs) {
+        var l = [];
+        rs.forEach(function (j) { Object.keys((j && j.query && j.query.pages) || {}).forEach(function (k) { var ii = j.query.pages[k].imageinfo && j.query.pages[k].imageinfo[0]; if (ii && /jpe?g/i.test(ii.mime || '') && ii.width > ii.height) l.push(ii.thumburl || ii.url); }); });
+        if (l.length) { imgs = { t: Date.now(), list: l.slice(0, 30) }; store('saverFaith_' + key, imgs); if (inst.alive) render(); }
+      }).catch(function () {});
+  }
+
+  function newsCard(inst) {
+    var cache = load('saverNews', null), team = set.team && set.team.name;
+    function render(c) {
+      var items = ((c && c.items) || []).slice(0, 6).map(function (n) { return n.img ? picPane(n.img, n.t, n.d) : '<div class="quote" style="font-family:Tajawal;font-size:30px">' + esc(n.t) + '<small>' + esc(n.d) + '</small></div>'; });
+      drawCard(inst, '<div class="lg">📰</div><div><b>آخر الأخبار</b><small>بي بي سي عربي</small></div>', items);
+    }
+    render(cache);
+    if (cache && Date.now() - cache.t < 30 * 60000) return;
+    getText('https://feeds.bbci.co.uk/arabic/rss.xml').then(function (x) {
+      if (!x) return;
+      var doc = new DOMParser().parseFromString(x, 'text/xml'), out = [];
+      Array.prototype.forEach.call(doc.getElementsByTagName('item'), function (it) {
+        var t = (it.getElementsByTagName('title')[0] || {}).textContent || '', th = it.getElementsByTagName('media:thumbnail')[0] || it.getElementsByTagName('thumbnail')[0];
+        var d = (it.getElementsByTagName('pubDate')[0] || {}).textContent || '';
+        out.push({ t: t.trim(), img: th ? th.getAttribute('url').replace(/\/\d+\//, '/800/') : '', d: d ? new Intl.DateTimeFormat('ar-IQ-u-nu-arab', { day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: TZ }).format(new Date(d)) : '' });
+      });
+      if (team) out.sort(function (a, b) { return (b.t.indexOf(team) >= 0) - (a.t.indexOf(team) >= 0); });
+      if (out.length) { var c = { t: Date.now(), items: out.slice(0, 8) }; store('saverNews', c); if (inst.alive) render(c); }
+    }).catch(function () {});
+  }
+  var stepT = null;
+  function buildCard() {
+    INST.forEach(function (i) { i.alive = false; });
+    var box = $('cards'); box.innerHTML = ''; INST = [];
+    var ks = (sv.ksize || 100) / 100;
+    CARDS.forEach(function (c, n) {
+      var el = document.createElement('div'); el.className = 'card'; el.setAttribute('data-sedit', 'scard'); el.setAttribute('data-ci', String(n)); el.setAttribute('data-pos', c.pos);
+      el.style.transform = 'translate(' + c.x + 'px,' + c.y + 'px) scale(' + ks + ')'; el.style.webkitTransform = el.style.transform;
+      box.appendChild(el);
+      var inst = { el: el, alive: true, pi: 0, items: null, kind: cardType(c.k) };
+      INST.push(inst);
+      if (inst.kind === 'none') return;
+      try { if (inst.kind === 'club') clubCard(inst); else if (inst.kind === 'faith') faithCard(inst); else newsCard(inst); } catch (e) {}
+    });
+    clearInterval(stepT); stepT = setInterval(stepCards, kEvery());
+    place();
+  }
+  // ---------- preview selection frame ----------
+  var selId = null;
+  function place() {
+    var box = $('pvSel'); if (!PREVIEW) return;
+    if (!box) { box = document.createElement('div'); box.id = 'pvSel'; box.appendChild(document.createElement('span')); document.body.appendChild(box); }
+    var el = selId && document.querySelector('[data-sedit="' + selId + '"]'), r = el && el.getBoundingClientRect();
+    if (!r || !r.width) { box.style.display = 'none'; return; }
+    box.style.display = 'block'; box.style.left = (r.left - 8) + 'px'; box.style.top = (r.top - 8) + 'px'; box.style.width = (r.width + 16) + 'px'; box.style.height = (r.height + 16) + 'px';
+    box.firstChild.textContent = '✎ ' + (selId === 'sclock' ? 'الساعة والتاريخ' : selId === 'scard' ? 'البطاقات' : 'الخلفية');
+  }
+  if (PREVIEW) document.addEventListener('click', function (e) {
+    var el = e.target.closest && e.target.closest('[data-sedit]');
+    try { window.parent.__previewSelect && window.parent.__previewSelect(el ? el.getAttribute('data-sedit') : 'sbg'); } catch (er) {}
+  }, true);
+  window.__live = function (o) {
+    if (o.settings) { try { PD = window.parent.__PREVIEW_DATA || PD; } catch (e) {} readCfg(); list = bgList(); showBg(true); buildCard(); tick(); }
+    if (o.select !== undefined) { selId = o.select; setTimeout(place, 50); }
+  };
+
+  // ---------- car screens ----------
+  function carTick() {
+    var n = new Date(), h = '', m = '';
+    new Intl.DateTimeFormat('ar-IQ-u-nu-arab', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: TZ }).formatToParts(n).forEach(function (x) { if (x.type === 'hour') h = x.value; if (x.type === 'minute') m = x.value; });
+    $('cc').textContent = h + ':' + m; $('ccd').textContent = fG().format(n);
+    var s2 = (carc && carc.saver) || {};
+    try { var l = JSON.parse(Android.loc()); $('csp').style.display = s2.speed === false || !l.ok ? 'none' : ''; if (l.ok) $('ckmh').textContent = NF.format(l.kmh || 0); } catch (e) { $('csp').style.display = 'none'; }
+    try {
+      var md = JSON.parse(Android.media()), mu = $('cmu');
+      if (s2.music === false || !md.ok || !md.title) mu.style.display = 'none';
+      else { mu.style.display = ''; $('ctt').textContent = md.title; $('car2').textContent = [md.artist, md.app].filter(Boolean).join(' · '); var im = $('cart'); if (md.art) { im.src = md.art; im.style.display = ''; } else im.style.display = 'none'; }
+    } catch (e) { $('cmu').style.display = 'none'; }
+  }
+
+  // ---------- start ----------
+  readCfg(); fit(); ticks();
+  if (carc) { carTick(); setInterval(carTick, 1000); return; }
+  list = bgList(); tick(); showBg(true); buildCard();
+  setInterval(tick, 5000);
+  setInterval(function () { showBg(false); }, 4000);
+  setInterval(buildCard, 15 * 60000);
+})();
+</script>
+</body>
+</html>

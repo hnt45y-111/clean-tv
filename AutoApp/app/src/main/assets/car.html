@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>مدير الشاشات أوتو</title>
+<style>
+@font-face{font-family:Plex;src:url(fonts/PlexArabic-Regular.ttf);font-weight:400}
+@font-face{font-family:Plex;src:url(fonts/PlexArabic-SemiBold.ttf);font-weight:600}
+@font-face{font-family:Plex;src:url(fonts/PlexArabic-Bold.ttf);font-weight:700 800}
+@font-face{font-family:Alx;src:url(fonts/Alexandria.ttf);font-weight:100 900}
+@font-face{font-family:Mono;src:url(fonts/PlexMono-Medium.ttf)}
+@font-face{font-family:Tj;src:url(fonts/Tajawal-Regular.ttf);font-weight:400}
+@font-face{font-family:Tj;src:url(fonts/Tajawal-Bold.ttf);font-weight:700 900}
+:root{--ac:#D6B47A;--ink:#F3EEE4;--mute:#A3A5B1;--bg:#0B0C10;--panel:rgba(255,255,255,.06);--line:rgba(255,255,255,.1);--r:3.2vmin;--fd:Alx;--shade:.45;
+  --pt:0px;--pr:0px;--pb:0px;--pl:0px}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Plex,Tj,sans-serif;
+  -webkit-user-select:none;user-select:none}
+#wall{position:fixed;inset:0;background-size:cover;background-position:center;transition:opacity .6s}
+#shade{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,calc(var(--shade)*.6)),rgba(0,0,0,var(--shade)))}
+#app{position:fixed;inset:0;padding:calc(var(--pt) + 2.6vmin) calc(var(--pr) + 2.6vmin) calc(var(--pb) + 2.6vmin) calc(var(--pl) + 2.6vmin);
+  display:grid;gap:2.4vmin}
+#app.flip{direction:ltr}#app.flip>*{direction:rtl}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  position:relative;overflow:hidden;min-width:0;min-height:0;animation:in .7s cubic-bezier(.2,.8,.2,1) both}
+.card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.16s}
+@keyframes in{from{opacity:0;transform:translateY(2.4vmin) scale(.98)}}
+/* layouts by screen shape */
+body.wide #app{grid-template-columns:1.05fr 1.25fr 1.35fr;grid-template-areas:"clock media tiles"}
+body.land #app{grid-template-columns:1fr 1.2fr;grid-template-rows:1.15fr 1fr;grid-template-areas:"clock media" "clock tiles"}
+body.port #app{grid-template-rows:auto auto 1fr;grid-template-areas:"clock" "media" "tiles"}
+#clock{grid-area:clock;padding:3.4vmin;display:flex;flex-direction:column;justify-content:space-between}
+#media{grid-area:media;padding:3vmin;display:flex;gap:3vmin;align-items:center}
+#tiles{grid-area:tiles;padding:2.6vmin;display:flex;flex-direction:column}
+body.port #media{min-height:28vmin}
+body.port #clock{flex-direction:row;align-items:flex-end;flex-wrap:wrap;gap:2vmin}
+
+.greet{font:600 3.2vmin Plex;color:var(--mute)}
+.time{font-family:var(--fd);font-weight:800;font-size:17vmin;line-height:1;letter-spacing:-.3vmin;color:var(--ink);font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
+body.wide .time{font-size:19vmin}
+body.port .time{font-size:15vmin}
+.time small{font-size:.28em;font-weight:600;color:var(--ac);letter-spacing:0;margin-inline-start:1vmin}
+.st-digital .time{font-family:Mono;font-weight:500;letter-spacing:-.6vmin}
+.st-minimal .time{font-weight:200;letter-spacing:0}
+.date{font:600 3.4vmin Plex;color:var(--ink);opacity:.85;margin-top:1.2vmin}
+.chips{display:flex;gap:1.4vmin;flex-wrap:wrap;margin-top:2vmin}
+.chip{display:flex;align-items:center;gap:1vmin;padding:1.1vmin 2vmin;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid var(--line);
+  font:700 3vmin Plex;white-space:nowrap}
+.chip svg{width:3.4vmin;height:3.4vmin}
+.chip b{font-family:var(--fd);font-weight:700;direction:ltr}
+.spd{display:flex;align-items:baseline;gap:1vmin}
+.spd b{font:800 9vmin var(--fd);color:var(--ac);line-height:1}
+.spd span{font:600 2.8vmin Plex;color:var(--mute)}
+.brand{font:700 2.6vmin Alx;letter-spacing:.8vmin;color:var(--ac);opacity:.9;text-transform:uppercase;direction:ltr;text-align:right}
+
+svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.art{width:30vmin;height:30vmin;flex:none;border-radius:calc(var(--r)*.8);background:rgba(255,255,255,.07) center/cover;display:grid;place-items:center;
+  box-shadow:0 2vmin 5vmin rgba(0,0,0,.35)}
+.art svg{width:11vmin;height:11vmin;color:var(--ac);opacity:.8}
+body.land .art,body.port .art{width:24vmin;height:24vmin}
+.mi{flex:1;min-width:0;display:flex;flex-direction:column;gap:.6vmin}
+.mapp{font:700 2.5vmin Plex;color:var(--ac)}
+.mt{font:800 4.6vmin Plex;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ma{font:600 3.2vmin Plex;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:.8vmin;border-radius:9px;background:rgba(255,255,255,.12);margin-top:1.6vmin;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac);border-radius:9px;transition:width 1s linear}
+.ctl{display:flex;gap:2vmin;margin-top:2vmin;direction:ltr;justify-content:flex-end}
+.ctl button{width:10vmin;height:10vmin;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:var(--ink);display:grid;place-items:center}
+.ctl button.pp{background:var(--ac);color:var(--bg);width:12vmin;height:12vmin}
+.ctl svg{width:4.6vmin;height:4.6vmin}
+.hint{font:600 3.2vmin Plex;color:var(--mute);line-height:1.6}
+
+.th{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.6vmin}
+.th b{font:700 3vmin Plex;color:var(--mute)}
+.pg{display:flex;gap:1.2vmin}
+.pg button{width:8vmin;height:6.4vmin;border-radius:2vmin;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font:700 3.4vmin Plex}
+.grid{flex:1;display:grid;gap:1.8vmin;min-height:0}
+.tile{border-radius:calc(var(--r)*.75);background:rgba(255,255,255,.06);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:1.2vmin;padding:1.2vmin;min-width:0;min-height:0;transition:transform .15s}
+.tile .ic{width:11vmin;height:11vmin;border-radius:3vmin;display:grid;place-items:center;background:color-mix(in srgb,var(--ac) 18%,transparent);color:var(--ac);
+  background-size:cover;background-position:center}
+.tile .ic svg{width:6vmin;height:6vmin}
+.tile span{font:700 2.9vmin Plex;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tile.down{transform:scale(.94)}
+.empty{flex:1;display:grid;place-items:center;text-align:center}
+
+#ripple{position:fixed;width:12vmin;height:12vmin;border-radius:50%;background:var(--ac);opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.2)}
+#ripple.go{animation:rip .45s ease-out}
+@keyframes rip{from{opacity:.35;transform:translate(-50%,-50%) scale(.2)}to{opacity:0;transform:translate(-50%,-50%) scale(1.6)}}
+#lock{position:fixed;inset:0;display:none;place-items:center;text-align:center;background:var(--bg);z-index:9}
+#lock.on{display:grid}
+#lock h1{font:800 6vmin Alx;margin:3vmin 0 1vmin}
+#lock p{font:600 3.4vmin Plex;color:var(--mute);margin:0}
+#toast{position:fixed;left:50%;bottom:calc(var(--pb) + 4vmin);transform:translateX(-50%) translateY(3vmin);opacity:0;background:rgba(15,15,20,.92);border:1px solid var(--line);
+  padding:1.6vmin 3.4vmin;border-radius:99px;font:700 3vmin Plex;transition:.3s;white-space:nowrap}
+#toast.on{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body class="wide">
+<div id="wall"></div><div id="shade"></div>
+<div id="app">
+  <section class="card" id="clock"></section>
+  <section class="card" id="media"></section>
+  <section class="card" id="tiles"></section>
+</div>
+<div id="ripple"></div>
+<div id="toast"></div>
+<div id="lock"><div>
+  <svg viewBox="0 0 64 64" width="120" height="120" style="width:22vmin;height:22vmin"><defs><linearGradient id="lg" x1="8" y1="56" x2="56" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9C7A44"/><stop offset=".5" stop-color="#D6B47A"/><stop offset="1" stop-color="#F0DDB2"/></linearGradient></defs><path d="M40,8H22A14,14 0,0 0,8 22v20a14,14 0,0 0,14 14h20a14,14 0,0 0,14 -14V30" fill="none" stroke="url(#lg)" stroke-width="4.5" stroke-linecap="round"/><circle cx="31" cy="34" r="11" fill="none" stroke="#D6B47A" stroke-width="4"/><path d="M20.5,32.5h7M34.5,32.5h7M31,37v8" stroke="#D6B47A" stroke-width="4" stroke-linecap="round"/><circle cx="31" cy="34" r="2.8" fill="#E9CF98"/><circle cx="50" cy="14" r="5" fill="#E9CF98"/></svg>
+  <h1>مدير الشاشات أوتو</h1><p>فعّل التطبيق من موبايلك حتى تطلع واجهتك هنا</p></div></div>
+<script src="tpl.js"></script>
+<script src="dash.js"></script>
+</body>
+</html>

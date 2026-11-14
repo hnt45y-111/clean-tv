@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>هوائي</title>
+<style>
+  @font-face { font-family: 'Kufi'; font-weight: 400 700; src: url('fonts/ReemKufi.ttf'); }
+  @font-face { font-family: 'Plex'; font-weight: 400; src: url('fonts/PlexArabic-Regular.ttf'); }
+  @font-face { font-family: 'Plex'; font-weight: 600; src: url('fonts/PlexArabic-SemiBold.ttf'); }
+  :root { --bg:#15181B; --panel:#23282D; --panel2:#2A3036; --ink:#EFE7D4; --ink-2:rgba(239,231,212,.8); --ink-3:rgba(239,231,212,.56); --cu:#D9822B; --cu2:#E8A25E; --line:#3A4046; --green:#6FB59A; --red:#C8402F; --r1:16px; --r2:8px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+  input, select { user-select: text; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'Plex', 'Tajawal', system-ui, sans-serif; min-height: 100%; overflow-x: hidden; }
+  body { padding: 14px 16px 104px; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 8px 2px 16px; gap: 12px; }
+  .logo { width: 52px; height: 52px; flex: none; }
+  .mk .mf { fill: var(--ink); } .mk .ms { stroke: var(--ink); } .mk .mscr { fill: var(--bg); } .mk .mdot { fill: var(--cu); }
+  .brand { flex: 1; font-family: 'Kufi', sans-serif; font-size: 30px; font-weight: 700; color: var(--ink); line-height: 1.05; }
+  .brand small { display: block; font-family: 'Plex', sans-serif; font-size: 13px; font-weight: 400; color: var(--ink-3); margin-top: 4px; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--line); padding: 7px 12px; border-radius: var(--r2); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red); }
+  .dot.on { background: var(--green); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r1); padding: 16px; margin-bottom: 14px; }
+  h2 { font-family: 'Kufi', sans-serif; font-size: 18px; color: var(--ink); font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  h2::before { content: ''; width: 4px; height: 18px; border-radius: 0; background: var(--cu); }
+  .hidden { display: none !important; }
+  button { font-family: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: var(--r2); padding: 12px 14px; font-size: 16px; font-weight: 600; transition: transform .1s; }
+  button:active { transform: scale(.96); }
+  .gold { background: var(--cu); color: #15181B; border-color: transparent; }
+  input, select { font-family: inherit; width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r2); color: var(--ink); font-size: 17px; padding: 13px 14px; outline: none; }
+  input:focus { border-color: var(--cu); }
+  select option { background: #23282D; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .grow { flex: 1; }
+  .muted { color: var(--ink-3); font-size: 14px; line-height: 1.7; }
+  .tv { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--r1); background: var(--panel2); border: 1px solid var(--line); margin-top: 10px; }
+  .tv .ic { width: 46px; height: 46px; border-radius: var(--r2); background: rgba(217,130,43,.16); display: grid; place-items: center; font-size: 22px; }
+  .tv b { display: block; font-size: 17px; } .tv span { font-size: 13px; color: var(--ink-3); direction: ltr; }
+  .spin { width: 18px; height: 18px; border: 2px solid var(--line); border-top-color: var(--cu); border-radius: 50%; animation: sp 1s linear infinite; display: inline-block; vertical-align: middle; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .code { font-size: 34px; text-align: center; letter-spacing: 10px; direction: ltr; font-weight: 700; font-family: 'Kufi', sans-serif; }
+  .touch { height: 230px; border-radius: var(--r1); background: var(--panel2); border: 1px solid var(--line); position: relative; overflow: hidden; touch-action: none; display: grid; place-items: center; color: var(--ink-3); font-size: 15px; text-align: center; padding: 20px; }
+  .touch .ripple { position: absolute; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; border: 3px solid var(--cu); animation: rp .5s ease-out both; pointer-events: none; }
+  @keyframes rp { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 14px auto 0; }
+  .pad button { height: 64px; font-size: 24px; border-radius: var(--r1); }
+  .pad .ok { width: 64px; justify-self: center; background: var(--cu); color: #15181B; font-size: 18px; border-radius: var(--r1); }
+  .pad .blank { visibility: hidden; }
+  .bar { display: flex; gap: 10px; margin-top: 12px; }
+  .bar button { flex: 1; }
+  .seg { display: flex; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r2); padding: 4px; margin-bottom: 12px; }
+  .seg button { flex: 1; background: none; border: none; padding: 8px; font-size: 14px; color: var(--ink-3); }
+  .seg button.on { background: var(--panel2); color: var(--ink); }
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+  .keys button { padding: 12px 4px; font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .ni { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 10px; }
+  .app { text-align: center; font-size: 12px; color: var(--ink-2); line-height: 1.3; }
+  .app img { width: 58px; height: 58px; border-radius: var(--r2); object-fit: cover; display: block; margin: 0 auto 7px; background: var(--panel2); border: 1px solid var(--line); }
+  .app:active img { transform: scale(.9); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 9px 14px; border-radius: var(--r2); font-size: 14px; }
+  .chip.on { background: var(--cu); color: #15181B; border-color: transparent; }
+  .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .theme { padding: 12px 6px; border-radius: var(--r2); font-size: 13px; text-align: center; }
+  .theme.on { outline: 2px solid var(--cu); }
+  .list .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 2px; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .list .item:last-child { border-bottom: none; }
+  .list .item span { color: var(--ink-3); font-size: 13px; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: var(--panel); border-top: 3px solid var(--cu); padding: 8px 6px calc(10px + env(safe-area-inset-bottom)); z-index: 5; }
+  nav button { flex: 1; background: none; border: none; font-size: 12px; color: var(--ink-3); padding: 4px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  nav button.on { color: var(--cu2); }
+  #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--ink); color: #15181B; padding: 12px 18px; border-radius: var(--r2); font-weight: 600; font-size: 14px; opacity: 0; transition: .25s; pointer-events: none; z-index: 9; }
+  #toast.on { opacity: 1; transform: translateX(-50%); }
+</style>
+</head>
+<body>
+<header>
+  <svg class="logo mk" viewBox="0 0 100 100" aria-hidden="true"><path class="mf" d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z"/><path class="mf" d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z"/><rect class="mf" x="8" y="34" width="84" height="58" rx="12"/><rect class="mscr" x="15" y="41" width="70" height="44" rx="5"/><path class="ms" d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" fill="none" stroke-width="2.6"/><path class="ms" d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" fill="none" stroke-width="2.6"/><path class="ms" d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" fill="none" stroke-width="2.6"/><circle class="mdot" cx="50" cy="63" r="2.2"/><rect class="mf" x="20" y="92" width="8" height="4"/><rect class="mf" x="72" y="92" width="8" height="4"/></svg><div class="brand">هوائي<small id="tvName">جاري البحث عن التلفاز…</small></div>
+  <div class="status"><span class="dot" id="dot"></span><span id="conn">غير متصل</span></div>
+</header>
+
+<!-- 1) find the TV -->
+<section id="findView" class="hidden">
+  <div class="card">
+    <h2>البحث عن التلفاز</h2>
+    <p class="muted"><span class="spin"></span> &nbsp;تأكد إن الموبايل والتلفاز على نفس الواي فاي.</p>
+    <div id="found"></div>
+  </div>
+  <div class="card">
+    <h2>أو اكتب العنوان بيدك</h2>
+    <p class="muted">تلگاه بالتلفاز: إعدادات الواجهة ← الموبايل ← عنوان التحكم</p>
+    <div class="row" style="margin-top:10px"><input id="manualIp" placeholder="10.116.1.142" inputmode="decimal" dir="ltr"><button class="gold" id="manualGo">اتصال</button></div>
+  </div>
+</section>
+
+<!-- 2) pair -->
+<section id="pairView" class="hidden">
+  <div class="card">
+    <h2>ربط الموبايل</h2>
+    <p class="muted">اضغط «اطلب رمز» وراح يطلع رمز من ٦ أرقام على شاشة التلفاز، اكتبه هنا.</p>
+    <div class="row" style="margin-top:12px"><button class="gold grow" id="askCode">اطلب رمز</button></div>
+    <div style="margin-top:12px"><input id="codeIn" class="code" inputmode="numeric" maxlength="6" placeholder="••••••"></div>
+    <div class="row" style="margin-top:12px"><button class="gold grow" id="pairBtn">ربط</button><button id="otherTv">تلفاز ثاني</button></div>
+  </div>
+</section>
+
+<!-- 3) main -->
+<main id="mainView" class="hidden">
+  <section data-tab="remote">
+    <div class="card">
+      <div class="seg"><button class="on" data-mode="touch">لوحة اللمس</button><button data-mode="pad">الأسهم</button></div>
+      <div class="touch" id="touch">اسحب بإصبعك للتنقل · اضغط مرة لـ OK</div>
+      <div class="pad hidden" id="pad">
+        <button class="blank"></button><button data-k="up">▲</button><button class="blank"></button>
+        <button data-k="right">▶</button><button class="ok" data-k="ok">OK</button><button data-k="left">◀</button>
+        <button class="blank"></button><button data-k="down">▼</button><button class="blank"></button>
+      </div>
+      <div class="bar"><button data-k="back">رجوع</button><button data-k="home">الرئيسية</button></div>
+      <div class="keys"><button data-k="vdn"><svg class="ni" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 10a3 3 0 0 1 0 4"/></svg>صوت −</button><button data-k="vup"><svg class="ni" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 10a3 3 0 0 1 0 4M18.5 7.5a7 7 0 0 1 0 9"/></svg>صوت +</button><button data-k="mute"><svg class="ni" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>كتم</button><button data-k="power"><svg class="ni" viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></svg>الطاقة</button><button data-k="prev"><svg class="ni" viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg>السابق</button><button data-k="play"><svg class="ni" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>تشغيل / إيقاف</button><button data-k="next"><svg class="ni" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg>التالي</button><button data-k="settings"><svg class="ni" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>الإعدادات</button></div>
+    </div>
+    <div class="card"><h2>قنواتي والمباريات</h2><div class="row"><button class="gold grow" id="openLive">فتح قنواتي على التلفاز</button></div>
+      <div class="row" style="margin-top:10px"><button class="grow" id="tickOn">تشغيل شريط النتائج</button><button class="grow" id="tickOff">إيقافه</button></div>
+      <p class="muted" style="margin-top:8px">داخل القناة: أسهم فوق وتحت تبدّل القناة، ورجوع يطلعك.</p></div>
+    <div class="card">
+      <h2>الكتابة والبحث</h2>
+      <div class="row"><input id="textIn" placeholder="اكتب وينكتب على التلفاز…"><button class="gold" id="sendText">إرسال</button></div>
+    </div>
+  </section>
+
+  <section data-tab="apps" class="hidden">
+    <div class="card"><h2>التطبيقات</h2><div class="apps" id="apps"><p class="muted"><span class="spin"></span></p></div></div>
+  </section>
+
+  <section data-tab="look" class="hidden">
+    <div class="card"><h2>الثيم</h2><div class="themes" id="themes"></div></div>
+    <div class="card"><h2>مصادر الخلفيات</h2><div class="chips" id="srcChips"></div>
+      <h2 style="margin-top:16px">وقت تبديل الصورة</h2><select id="intSel"></select>
+      <div class="row" style="margin-top:12px"><button class="grow" id="bgNext">الصورة التالية ⟵</button></div>
+    </div>
+    <div class="card"><h2>صورة من معرض الموبايل</h2>
+      <input type="file" id="fileIn" accept="image/*" class="hidden">
+      <div class="row"><button class="gold grow" id="upPin">رفع وتثبيتها خلفية</button><button class="grow" id="upAdd">إضافة للمجموعة</button></div>
+    </div>
+  </section>
+
+  <section data-tab="quran" class="hidden">
+    <div class="card"><h2>القرآن الكريم · المنشاوي</h2><select id="surahSel"></select>
+      <div class="row" style="margin-top:12px"><button class="gold grow" id="playSurah">▶ تشغيل</button><button id="toggleQ">⏯</button><button id="stopQ">⏹</button></div>
+    </div>
+    <div class="card"><h2>الأذان</h2><div class="muted" id="adhanTxt"></div>
+      <div class="row" style="margin-top:12px"><button class="grow" id="stopAdhan">⏹ إيقاف الأذان</button></div>
+    </div>
+  </section>
+
+  <section data-tab="more" class="hidden">
+    <div class="card"><h2>الإشعارات</h2>
+      <div class="list" id="alertsList"></div>
+      <p class="muted" style="margin-top:8px">الإشعارات تتحدث كل ما تفتح التطبيق وهو متصل بالتلفاز.</p>
+    </div>
+    <div class="card"><h2>وضع الأطفال</h2><div class="muted" id="kidsTxt"></div></div>
+    <div class="card"><h2>التطبيق</h2>
+      <div class="list">
+        <div class="item">التلفاز المتصل <span id="tvUrl" dir="ltr"></span></div>
+        <div class="item">نسخة التطبيق <span id="appVer"></span></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="grow" id="checkUpd">فحص التحديثات</button><button class="grow" id="forget">تلفاز ثاني</button></div>
+    </div>
+  </section>
+</main>
+
+<nav id="nav" class="hidden">
+  <button data-go="remote" class="on"><svg class="ni" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="3"/><circle cx="12" cy="8" r="2"/><path d="M10 14h4M10 17h4"/></svg>الريموت</button>
+  <button data-go="apps"><svg class="ni" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>التطبيقات</button>
+  <button data-go="look"><svg class="ni" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A4.6 4.6 0 0 0 22 10c0-3.9-4.5-7-10-7z"/><circle cx="7.5" cy="10.5" r="1.2"/><circle cx="10.5" cy="7" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/></svg>الشكل</button>
+  <button data-go="quran"><svg class="ni" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V4.5"/><path d="M9 7h7M9 11h5"/></svg>القرآن</button>
+  <button data-go="more"><svg class="ni" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>المزيد</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+(function () {
+  var N = window.Native;
+  var $ = function (id) { return document.getElementById(id); };
+  var base = localStorage.getItem('tvBase') || '', token = localStorage.getItem('tvToken') || '', st = {};
+  var nf = new Intl.NumberFormat('ar-IQ-u-nu-arab');
+  function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove('on'); }, 2300); }
+  function buzz(ms) { try { N && N.vibrate(ms || 12); } catch (e) {} }
+  function view(id) { ['findView', 'pairView', 'mainView'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); $('nav').classList.toggle('hidden', id !== 'mainView'); }
+  function setConn(on, name) { $('dot').classList.toggle('on', on); $('conn').textContent = on ? 'متصل' : 'غير متصل'; if (name) $('tvName').textContent = name; }
+  function api(path, body, raw) {
+    var opt = { method: body !== undefined ? 'POST' : 'GET', headers: { 'X-Token': token } };
+    if (body !== undefined) { opt.body = raw ? body : JSON.stringify(body); if (!raw) opt.headers['Content-Type'] = 'application/json'; }
+    return fetch(base + '/api/' + path, opt).then(function (r) { if (r.status === 401) { view('pairView'); throw new Error('auth'); } return r.json(); });
+  }
+  var cbs = {}, cbn = 0;
+  window.__cb = function (id, t) { var f = cbs[id]; delete cbs[id]; if (f) f(t); };
+
+  // ---------- finding the TV ----------
+  var foundMap = {};
+  function startFind() {
+    view('findView'); setConn(false, 'جاري البحث عن التلفاز…'); $('found').innerHTML = ''; foundMap = {};
+    if (N) N.discover();
+  }
+  window.onTvFound = function (name, url) {
+    if (foundMap[url]) return; foundMap[url] = 1;
+    var d = document.createElement('div'); d.className = 'tv';
+    d.innerHTML = '<div class="ic">📺</div><div class="grow"><b></b><span></span></div><button class="gold">اتصال</button>';
+    d.querySelector('b').textContent = name; d.querySelector('span').textContent = url.replace('http://', '');
+    d.onclick = function () { connect(url); };
+    $('found').appendChild(d); buzz(20);
+    if (Object.keys(foundMap).length === 1 && !base) connect(url);
+  };
+  window.onDiscoverError = function () { toast('البحث التلقائي ما اشتغل، اكتب العنوان بيدك'); };
+  $('manualGo').onclick = function () { var v = $('manualIp').value.trim(); if (!v) return; if (v.indexOf(':') < 0) v += ':8686'; connect('http://' + v.replace(/^https?:\/\//, '')); };
+  function connect(url) {
+    base = url; localStorage.setItem('tvBase', base);
+    fetch(base + '/api/info', { headers: { 'X-Token': token } }).then(function (r) { return r.json(); }).then(function (j) {
+      if (N) N.stopDiscover();
+      setConn(false, j.name || 'مدير الشاشات');
+      if (j.paired) { showMain(); } else view('pairView');
+    }).catch(function () { toast('ما گدرت أوصل للتلفاز'); startFind(); });
+  }
+
+  // ---------- pairing ----------
+  $('askCode').onclick = function () { buzz(); fetch(base + '/api/pair/start').then(function () { toast('باوع على شاشة التلفاز'); $('codeIn').focus(); }).catch(function () { toast('ما گدرت أوصل للتلفاز'); }); };
+  $('pairBtn').onclick = function () {
+    fetch(base + '/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: $('codeIn').value.trim() }) })
+      .then(function (r) { return r.json(); }).then(function (j) { if (j.token) { token = j.token; localStorage.setItem('tvToken', token); buzz(40); toast('تم الربط ✅'); showMain(); } else toast('الرمز غلط أو انتهى'); })
+      .catch(function () { toast('ما گدرت أوصل للتلفاز'); });
+  };
+  $('codeIn').addEventListener('input', function () { if (this.value.length === 6) $('pairBtn').onclick(); });
+  $('otherTv').onclick = $('forget').onclick = function () { localStorage.removeItem('tvBase'); base = ''; startFind(); };
+  function showMain() { view('mainView'); setConn(true); $('tvUrl').textContent = base.replace('http://', ''); refresh(); }
+
+  // ---------- remote ----------
+  function key(k) { buzz(k === 'ok' ? 25 : 10); api('key', { k: k }).catch(function () {}); }
+  $('openLive').onclick = function () { buzz(); api('cmd', { type: 'live' }).then(function () { toast('اشتغلت قنواتي على التلفاز'); }); };
+  $('tickOn').onclick = function () { buzz(); api('cmd', { type: 'ticker', value: true }).then(function () { toast('شريط النتائج شغّال'); }); };
+  $('tickOff').onclick = function () { buzz(); api('cmd', { type: 'ticker', value: false }).then(function () { toast('وقف شريط النتائج'); }); };
+  document.querySelectorAll('[data-k]').forEach(function (b) { b.addEventListener('click', function () { key(b.getAttribute('data-k')); }); });
+  document.querySelectorAll('[data-mode]').forEach(function (b) {
+    b.onclick = function () {
+      document.querySelectorAll('[data-mode]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      var t = b.getAttribute('data-mode') === 'touch'; $('touch').classList.toggle('hidden', !t); $('pad').classList.toggle('hidden', t);
+      localStorage.setItem('padMode', b.getAttribute('data-mode'));
+    };
+  });
+  if (localStorage.getItem('padMode') === 'pad') document.querySelector('[data-mode="pad"]').onclick();
+  (function () {
+    var el = $('touch'), sx = 0, sy = 0, lx = 0, ly = 0, moved = false, STEP = 48;
+    function ripple(x, y) { var r = document.createElement('div'); r.className = 'ripple'; var b = el.getBoundingClientRect(); r.style.left = (x - b.left) + 'px'; r.style.top = (y - b.top) + 'px'; el.appendChild(r); setTimeout(function () { r.remove(); }, 460); }
+    el.addEventListener('touchstart', function (e) { var t = e.touches[0]; sx = lx = t.clientX; sy = ly = t.clientY; moved = false; e.preventDefault(); }, { passive: false });
+    el.addEventListener('touchmove', function (e) {
+      var t = e.touches[0], dx = t.clientX - lx, dy = t.clientY - ly;
+      if (Math.abs(dx) > STEP || Math.abs(dy) > STEP) {
+        moved = true;
+        if (Math.abs(dx) > Math.abs(dy)) key(dx > 0 ? 'right' : 'left'); else key(dy > 0 ? 'down' : 'up');
+        lx = t.clientX; ly = t.clientY; ripple(t.clientX, t.clientY);
+      }
+      e.preventDefault();
+    }, { passive: false });
+    el.addEventListener('touchend', function (e) { if (!moved && Math.abs(lx - sx) < 12 && Math.abs(ly - sy) < 12) { ripple(sx, sy); key('ok'); } e.preventDefault(); }, { passive: false });
+  })();
+  $('sendText').onclick = function () { var v = $('textIn').value; if (!v) return; buzz(); api('text', { text: v, submit: true }).then(function (j) { toast(j.ok ? 'انرسل ✅' : 'افتح خانة بحث بالتلفاز أول'); if (j.ok) $('textIn').value = ''; }).catch(function () {}); };
+  $('textIn').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('sendText').onclick(); });
+
+  // ---------- tabs ----------
+  document.querySelectorAll('[data-go]').forEach(function (b) {
+    b.onclick = function () {
+      buzz(8);
+      document.querySelectorAll('[data-go]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      document.querySelectorAll('[data-tab]').forEach(function (s) { s.classList.toggle('hidden', s.getAttribute('data-tab') !== b.getAttribute('data-go')); });
+      if (b.getAttribute('data-go') === 'apps') loadApps();
+      if (b.getAttribute('data-go') !== 'remote') refresh();
+      scrollTo(0, 0);
+    };
+  });
+  window.onBack = function () { var cur = document.querySelector('[data-go].on'); if (!$('mainView').classList.contains('hidden') && cur && cur.getAttribute('data-go') !== 'remote') { document.querySelector('[data-go="remote"]').onclick(); return true; } return false; };
+
+  var appsLoaded = false;
+  function loadApps() {
+    if (appsLoaded) return;
+    api('apps').then(function (list) {
+      appsLoaded = true; $('apps').innerHTML = '';
+      list.forEach(function (a) {
+        var d = document.createElement('div'); d.className = 'app';
+        d.innerHTML = '<img alt=""><span></span>'; d.querySelector('img').src = a.icon || a.banner || ''; d.querySelector('span').textContent = a.label;
+        d.onclick = function () { buzz(20); api('launch', { pkg: a.pkg }).then(function () { toast('فتحت ' + a.label); }); };
+        $('apps').appendChild(d);
+      });
+    }).catch(function () {});
+  }
+
+  // ---------- state ----------
+  var nfHour = new Intl.DateTimeFormat('ar-IQ-u-nu-arab', { weekday: 'long', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Baghdad' });
+  function refresh() {
+    api('state').then(function (s) {
+      st = s || {}; setConn(true);
+      var th = $('themes'); th.innerHTML = '';
+      (st.themes || []).forEach(function (t) {
+        var b = document.createElement('button'); b.className = 'theme' + (t[0] === st.theme ? ' on' : ''); b.textContent = t[1];
+        b.onclick = function () { buzz(); st.theme = t[0]; document.querySelectorAll('.theme').forEach(function (x) { x.classList.toggle('on', x === b); }); api('cmd', { type: 'theme', value: t[0] }); };
+        th.appendChild(b);
+      });
+      var ch = $('srcChips'); ch.innerHTML = '';
+      (st.sources || []).forEach(function (src) {
+        var b = document.createElement('button'); b.className = 'chip' + ((st.bgSources || []).indexOf(src[0]) >= 0 ? ' on' : ''); b.textContent = src[1];
+        b.onclick = function () {
+          var cur = (st.bgSources || []).slice(), i = cur.indexOf(src[0]);
+          if (i >= 0) { if (cur.length > 1) cur.splice(i, 1); else { toast('لازم يبقى مصدر واحد'); return; } } else cur.push(src[0]);
+          st.bgSources = cur; b.classList.toggle('on', cur.indexOf(src[0]) >= 0); buzz(); api('cmd', { type: 'bgSources', value: cur });
+        };
+        ch.appendChild(b);
+      });
+      var is = $('intSel'); is.innerHTML = '';
+      (st.intervals || []).forEach(function (sec) { var o = new Option(sec < 60 ? nf.format(sec) + ' ثانية' : nf.format(sec / 60) + ' دقيقة', sec); if (sec === st.bgInterval) o.selected = true; is.add(o); });
+      var ss = $('surahSel'); if (!ss.options.length) (st.surahs || []).forEach(function (n, i) { ss.add(new Option(nf.format(i + 1) + ' · سورة ' + n, i)); });
+      $('adhanTxt').textContent = st.adhan || '';
+      // notifications
+      var alerts = (st.alerts || []).slice();
+      if (st.kids && st.kids.endAt && st.kids.endAt > Date.now()) alerts.push({ at: st.kids.endAt, title: 'انتهى وقت مشاهدة مؤمل 🌙', sub: 'التلفاز رجع للواجهة الرئيسية' });
+      if (N) N.scheduleAlerts(JSON.stringify(alerts));
+      $('alertsList').innerHTML = alerts.filter(function (a) { return a.at > Date.now(); }).slice(0, 8).map(function (a) {
+        return '<div class="item">' + esc(a.title) + '<span>' + nfHour.format(new Date(a.at)) + '</span></div>';
+      }).join('') || '<p class="muted">ماكو تنبيهات قادمة</p>';
+      var k = st.kids || {};
+      $('kidsTxt').textContent = k.on ? ('وضع الأطفال شغّال' + (k.remaining != null ? ' · باقي ' + nf.format(k.remaining) + ' دقيقة اليوم' : '')) : 'وضع الأطفال متوقف';
+    }).catch(function () { setConn(false); });
+  }
+  function esc(s) { return String(s || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  $('intSel').onchange = function () { api('cmd', { type: 'bgInterval', value: +this.value }); toast('تم'); };
+  $('bgNext').onclick = function () { buzz(); api('cmd', { type: 'bgNext' }); };
+  $('playSurah').onclick = function () { buzz(); api('cmd', { type: 'surah', value: +$('surahSel').value }).then(function () { toast('جاري التشغيل على التلفاز'); }); };
+  $('toggleQ').onclick = function () { buzz(); api('cmd', { type: 'quran', value: 'toggle' }); };
+  $('stopQ').onclick = function () { buzz(); api('cmd', { type: 'quran', value: 'stop' }); };
+  $('stopAdhan').onclick = function () { buzz(); api('adhan/stop', {}).then(function () { toast('توقف الأذان'); }); };
+
+  // ---------- photo upload ----------
+  var pinUpload = true;
+  $('upPin').onclick = function () { pinUpload = true; $('fileIn').click(); };
+  $('upAdd').onclick = function () { pinUpload = false; $('fileIn').click(); };
+  $('fileIn').onchange = function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    toast('جاري الرفع…');
+    var img = new Image(), url = URL.createObjectURL(f);
+    img.onload = function () {
+      var w = img.width, h = img.height, m = Math.min(1, 1920 / Math.max(w, h));
+      var c = document.createElement('canvas'); c.width = Math.round(w * m); c.height = Math.round(h * m);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(function (blob) { api('upload' + (pinUpload ? '?pin=1' : ''), blob, true).then(function () { buzz(40); toast('وصلت الصورة للتلفاز ✅'); }).catch(function () { toast('فشل الرفع'); }); URL.revokeObjectURL(url); }, 'image/jpeg', .88);
+    };
+    img.src = url; this.value = '';
+  };
+
+  // ---------- self update ----------
+  var upd = null;
+  function checkUpdate(manual) {
+    if (!N) return;
+    var id = 'u' + (++cbn);
+    cbs[id] = function (t) {
+      var list = []; try { list = JSON.parse(t) || []; } catch (e) {}
+      var rel = list.filter(function (r) { return /^phone-\d+/.test(r.tag_name || ''); })[0];
+      if (!rel) { if (manual) toast('ما گدرت أفحص التحديث'); return; }
+      var n = parseInt(rel.tag_name.replace(/\D/g, ''), 10), asset = (rel.assets || []).filter(function (a) { return /\.apk$/.test(a.name); })[0];
+      if (asset && n > N.version()) { upd = asset.browser_download_url; $('checkUpd').textContent = '⬇ تثبيت التحديث الجديد'; $('checkUpd').classList.add('gold'); if (manual || localStorage.getItem('updSeen') !== String(n)) { localStorage.setItem('updSeen', String(n)); toast('أكو تحديث جديد للتطبيق ✨'); } }
+      else if (manual) toast('عندك آخر نسخة ✅');
+    };
+    N.checkUpdate(id);
+  }
+  $('checkUpd').onclick = function () { if (upd) { toast('جاري تنزيل التحديث…'); N.installUpdate(upd); } else checkUpdate(true); };
+  window.onUpdateStatus = function (s) { toast(s === 'permission' ? 'اسمح للتطبيق بتثبيت التحديثات، وارجع اضغط مرة ثانية' : 'فشل التحديث'); };
+  if (N) $('appVer').textContent = nf.format(N.version());
+
+  window.onAppResume = function () { if (!$('mainView').classList.contains('hidden')) refresh(); };
+
+  // ---------- start ----------
+  if (base) connect(base); else startFind();
+  setTimeout(function () { checkUpdate(false); }, 4000);
+  setInterval(function () { if (!$('mainView').classList.contains('hidden') && !document.hidden) refresh(); }, 30000);
+})();
+</script>
+</body>
+</html>

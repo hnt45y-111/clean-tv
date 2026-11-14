@@ -1,0 +1,25 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.cleantv.remote'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.cleantv.remote'
+        minSdk 26
+        targetSdk 34
+        versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
+        versionName '5.0'
+    }
+    signingConfigs {
+        fixed {
+            storeFile file('remote.keystore')
+            storePassword 'moamal123'
+            keyAlias 'remote'
+            keyPassword 'moamal123'
+        }
+    }
+    buildTypes { debug { signingConfig signingConfigs.fixed } }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

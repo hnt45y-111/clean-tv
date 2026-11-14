@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#07080c">
+<title>مدير الشاشات</title>
+<style>
+  @font-face { font-family: 'Tajawal'; font-weight: 400; src: url('/fonts/Tajawal-Regular.ttf'); }
+  @font-face { font-family: 'Tajawal'; font-weight: 700; src: url('/fonts/Tajawal-Bold.ttf'); }
+  @font-face { font-family: 'Tajawal'; font-weight: 800; src: url('/fonts/Tajawal-ExtraBold.ttf'); }
+  :root { --bg:#07080c; --ink:#fbf7ee; --ink-2:rgba(251,247,238,.74); --ink-3:rgba(251,247,238,.48); --gold:#e9c46a; --gold-2:#f6dc9b;
+    --green:#5fd39a; --red:#e05a5a; --card:rgba(255,255,255,.06); --card-2:rgba(255,255,255,.1); --line:rgba(255,255,255,.12); }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'Tajawal', system-ui, sans-serif; min-height: 100%; }
+  body { background: radial-gradient(80% 50% at 80% 0%, #2b2414 0%, transparent 70%), radial-gradient(70% 50% at 10% 100%, #0f2a24 0%, transparent 70%), var(--bg); background-attachment: fixed; padding: 16px 16px 90px; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 6px 2px 14px; }
+  .brand { font-size: 24px; font-weight: 800; color: var(--gold-2); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); display: inline-block; margin-inline-start: 8px; }
+  .dot.on { background: var(--green); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 16px; margin-bottom: 14px; }
+  h2 { font-size: 17px; color: var(--ink-2); font-weight: 700; margin-bottom: 12px; }
+  .hidden { display: none !important; }
+  button { font-family: inherit; color: var(--ink); background: var(--card-2); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; font-size: 16px; font-weight: 700; }
+  button:active { transform: scale(.96); }
+  .gold { background: var(--gold); color: #111; border-color: transparent; }
+  input { font-family: inherit; width: 100%; background: rgba(255,255,255,.08); border: 1px solid var(--line); border-radius: 16px; color: var(--ink); font-size: 18px; padding: 12px 14px; outline: none; }
+  input:focus { border-color: var(--gold); }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 320px; margin: 0 auto; }
+  .pad button { height: 70px; font-size: 26px; border-radius: 20px; background: linear-gradient(160deg, rgba(255,255,255,.18), rgba(255,255,255,.05)); }
+  .pad .ok { border-radius: 50%; background: var(--gold); color: #111; font-size: 20px; }
+  .pad .blank { visibility: hidden; }
+  .bar { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+  .bar button { flex: 1; max-width: 150px; }
+  .apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .app { text-align: center; font-size: 12px; color: var(--ink-2); }
+  .app img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 6px; background: #1b2130; border: 1px solid var(--line); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 9px 14px; border-radius: 999px; font-size: 14px; }
+  .chip.on { background: var(--gold); color: #111; border-color: transparent; }
+  select { width: 100%; font-family: inherit; font-size: 16px; background: rgba(255,255,255,.08); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 11px; }
+  select option { background: #111; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: rgba(10,12,18,.92); border-top: 1px solid var(--line); padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); }
+  nav button { flex: 1; background: none; border: none; font-size: 13px; color: var(--ink-3); padding: 6px 0; }
+  nav button b { display: block; font-size: 22px; margin-bottom: 2px; }
+  nav button.on { color: var(--gold-2); }
+  #toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(16,18,26,.96); border: 1px solid var(--line); padding: 12px 20px; border-radius: 16px; font-size: 15px; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
+  #toast.on { opacity: 1; }
+  .code { font-size: 32px; text-align: center; letter-spacing: 8px; direction: ltr; }
+  .muted { color: var(--ink-3); font-size: 14px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<header><div class="brand">مدير الشاشات</div><div class="muted" id="conn">غير متصل<span class="dot" id="dot"></span></div></header>
+
+<section id="pairView" class="card hidden">
+  <h2>ربط الموبايل بالتلفزيون</h2>
+  <p class="muted">اضغط «اطلب رمز»، وراح يطلع رمز من ٦ أرقام على شاشة التلفزيون. اكتبه هنا.</p>
+  <div class="row" style="margin-top:12px"><button class="gold" id="askCode" style="flex:1">اطلب رمز</button></div>
+  <div style="margin-top:12px"><input id="codeIn" class="code" inputmode="numeric" maxlength="6" placeholder="------"></div>
+  <div class="row" style="margin-top:12px"><button class="gold" id="pairBtn" style="flex:1">ربط</button></div>
+</section>
+
+<main id="mainView" class="hidden">
+  <section data-tab="remote">
+    <div class="card">
+      <div class="pad">
+        <button class="blank"></button><button data-k="up">▲</button><button class="blank"></button>
+        <button data-k="right">▶</button><button class="ok" data-k="ok">OK</button><button data-k="left">◀</button>
+        <button class="blank"></button><button data-k="down">▼</button><button class="blank"></button>
+      </div>
+      <div class="bar"><button data-k="back">↩ رجوع</button><button data-k="home">⌂ الرئيسية</button></div>
+    </div>
+    <div class="card">
+      <h2>الكتابة والبحث</h2>
+      <div class="row"><input id="textIn" placeholder="اكتب هنا وينكتب على التلفزيون…"><button class="gold" id="sendText">إرسال</button></div>
+      <p class="muted" style="margin-top:8px">إذا إنت على الشاشة الرئيسية يفتح البحث، وإذا بتطبيق ثاني ينكتب بخانة البحث مالته.</p>
+    </div>
+  </section>
+
+  <section data-tab="apps" class="hidden">
+    <div class="card"><h2>التطبيقات</h2><div class="apps" id="apps"></div></div>
+  </section>
+
+  <section data-tab="look" class="hidden">
+    <div class="card"><h2>الثيم</h2><select id="themeSel"></select></div>
+    <div class="card"><h2>مصادر الخلفيات (تگدر تختار أكثر من واحد)</h2><div class="chips" id="srcChips"></div>
+      <h2 style="margin-top:14px">وقت تبديل الصورة</h2><select id="intSel"></select>
+      <div class="row" style="margin-top:12px"><button id="bgNext" style="flex:1">الصورة التالية ⟵</button></div>
+    </div>
+    <div class="card"><h2>رفع صورة من الموبايل</h2>
+      <input type="file" id="fileIn" accept="image/*" class="hidden">
+      <div class="row"><button class="gold" id="upPin" style="flex:1">رفع وتثبيتها خلفية</button><button id="upAdd" style="flex:1">رفع للمجموعة</button></div>
+    </div>
+  </section>
+
+  <section data-tab="quran" class="hidden">
+    <div class="card"><h2>القرآن الكريم · المنشاوي</h2><select id="surahSel"></select>
+      <div class="row" style="margin-top:12px"><button class="gold" id="playSurah" style="flex:1">▶ تشغيل</button><button id="toggleQ" style="flex:1">⏯</button><button id="stopQ" style="flex:1">⏹</button></div>
+    </div>
+    <div class="card"><h2>الأذان</h2><div class="muted" id="adhanTxt"></div>
+      <div class="row" style="margin-top:12px"><button id="stopAdhan" style="flex:1">⏹ إيقاف الأذان</button></div>
+    </div>
+  </section>
+</main>
+
+<nav id="nav" class="hidden">
+  <button data-go="remote" class="on"><b>🎮</b>الريموت</button>
+  <button data-go="apps"><b>📺</b>التطبيقات</button>
+  <button data-go="look"><b>🎨</b>الشكل</button>
+  <button data-go="quran"><b>📖</b>القرآن</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+(function () {
+  var BASE = window.TV_BASE || '';               // the phone app sets this to http://<tv-ip>:8686
+  var token = localStorage.getItem('tvToken') || '';
+  var $ = function (id) { return document.getElementById(id); };
+  function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove('on'); }, 2200); }
+  function api(path, body, raw) {
+    var opt = { method: body !== undefined ? 'POST' : 'GET', headers: { 'X-Token': token } };
+    if (body !== undefined) { opt.body = raw ? body : JSON.stringify(body); if (!raw) opt.headers['Content-Type'] = 'application/json'; }
+    return fetch(BASE + '/api/' + path, opt).then(function (r) { if (r.status === 401) { showPair(); throw new Error('auth'); } return r.json(); });
+  }
+  function vibrate() { try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} }
+  function showPair() { $('pairView').classList.remove('hidden'); $('mainView').classList.add('hidden'); $('nav').classList.add('hidden'); setConn(false); }
+  function showMain() { $('pairView').classList.add('hidden'); $('mainView').classList.remove('hidden'); $('nav').classList.remove('hidden'); setConn(true); refresh(); }
+  function setConn(on) { $('dot').classList.toggle('on', on); $('conn').firstChild.textContent = on ? 'متصل' : 'غير متصل'; }
+
+  $('askCode').onclick = function () { fetch(BASE + '/api/pair/start').then(function () { toast('باوع على شاشة التلفزيون'); }).catch(function () { toast('ما گدرت أوصل للتلفزيون'); }); };
+  $('pairBtn').onclick = function () {
+    fetch(BASE + '/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: $('codeIn').value.trim() }) })
+      .then(function (r) { return r.json(); }).then(function (j) { if (j.token) { token = j.token; localStorage.setItem('tvToken', token); toast('تم الربط ✅'); showMain(); } else toast('الرمز غلط'); })
+      .catch(function () { toast('ما گدرت أوصل للتلفزيون'); });
+  };
+
+  document.querySelectorAll('[data-k]').forEach(function (b) { b.addEventListener('click', function () { vibrate(); api('key', { k: b.getAttribute('data-k') }).catch(function () {}); }); });
+  $('sendText').onclick = function () { var v = $('textIn').value; if (!v) return; api('text', { text: v, submit: true }).then(function (j) { toast(j.ok ? 'انرسل ✅' : 'افتح خانة بحث بالتلفزيون أول'); }).catch(function () {}); };
+  $('textIn').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('sendText').onclick(); });
+
+  document.querySelectorAll('[data-go]').forEach(function (b) {
+    b.onclick = function () {
+      document.querySelectorAll('[data-go]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      document.querySelectorAll('[data-tab]').forEach(function (s) { s.classList.toggle('hidden', s.getAttribute('data-tab') !== b.getAttribute('data-go')); });
+      if (b.getAttribute('data-go') === 'apps' && !$('apps').children.length) loadApps();
+    };
+  });
+
+  function loadApps() {
+    api('apps').then(function (list) {
+      $('apps').innerHTML = '';
+      list.forEach(function (a) {
+        var d = document.createElement('div'); d.className = 'app';
+        d.innerHTML = '<img alt="">' + '<span></span>'; d.querySelector('img').src = a.icon || a.banner || ''; d.querySelector('span').textContent = a.label;
+        d.onclick = function () { vibrate(); api('launch', { pkg: a.pkg }).then(function () { toast('فتحت ' + a.label); }); };
+        $('apps').appendChild(d);
+      });
+    }).catch(function () {});
+  }
+
+  var st = {};
+  function refresh() {
+    api('state').then(function (s) {
+      st = s || {};
+      var ts = $('themeSel'); ts.innerHTML = '';
+      (st.themes || []).forEach(function (t) { var o = new Option(t[1], t[0]); if (t[0] === st.theme) o.selected = true; ts.add(o); });
+      var ch = $('srcChips'); ch.innerHTML = '';
+      (st.sources || []).forEach(function (src) {
+        var b = document.createElement('button'); b.className = 'chip' + ((st.bgSources || []).indexOf(src[0]) >= 0 ? ' on' : ''); b.textContent = src[1];
+        b.onclick = function () {
+          var cur = (st.bgSources || []).slice(), i = cur.indexOf(src[0]);
+          if (i >= 0) { if (cur.length > 1) cur.splice(i, 1); } else cur.push(src[0]);
+          st.bgSources = cur; b.classList.toggle('on', cur.indexOf(src[0]) >= 0);
+          api('cmd', { type: 'bgSources', value: cur });
+        };
+        ch.appendChild(b);
+      });
+      var is = $('intSel'); is.innerHTML = '';
+      (st.intervals || []).forEach(function (sec) { var o = new Option(sec < 60 ? sec + ' ثانية' : (sec / 60) + ' دقيقة', sec); if (sec === st.bgInterval) o.selected = true; is.add(o); });
+      var ss = $('surahSel'); if (!ss.options.length) (st.surahs || []).forEach(function (n, i) { ss.add(new Option((i + 1) + ' - سورة ' + n, i)); });
+      $('adhanTxt').textContent = st.adhan || '';
+      setConn(true);
+    }).catch(function () { setConn(false); });
+  }
+  $('themeSel').onchange = function () { api('cmd', { type: 'theme', value: this.value }).then(function () { toast('تغيّر الثيم'); }); };
+  $('intSel').onchange = function () { api('cmd', { type: 'bgInterval', value: +this.value }); };
+  $('bgNext').onclick = function () { api('cmd', { type: 'bgNext' }); };
+  $('playSurah').onclick = function () { api('cmd', { type: 'surah', value: +$('surahSel').value }).then(function () { toast('جاري التشغيل'); }); };
+  $('toggleQ').onclick = function () { api('cmd', { type: 'quran', value: 'toggle' }); };
+  $('stopQ').onclick = function () { api('cmd', { type: 'quran', value: 'stop' }); };
+  $('stopAdhan').onclick = function () { api('adhan/stop', {}); };
+
+  var pinUpload = true;
+  $('upPin').onclick = function () { pinUpload = true; $('fileIn').click(); };
+  $('upAdd').onclick = function () { pinUpload = false; $('fileIn').click(); };
+  $('fileIn').onchange = function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    toast('جاري الرفع…');
+    // shrink big photos before sending
+    var img = new Image(), url = URL.createObjectURL(f);
+    img.onload = function () {
+      var w = img.width, h = img.height, m = 1920 / Math.max(w, h); if (m > 1) m = 1;
+      var c = document.createElement('canvas'); c.width = Math.round(w * m); c.height = Math.round(h * m);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(function (blob) {
+        api('upload' + (pinUpload ? '?pin=1' : ''), blob, true).then(function () { toast('وصلت الصورة للتلفزيون ✅'); }).catch(function () { toast('فشل الرفع'); });
+        URL.revokeObjectURL(url);
+      }, 'image/jpeg', .88);
+    };
+    img.src = url; this.value = '';
+  };
+
+  var urlCode = (location.search.match(/[?&]code=(\d{6})/) || [])[1];
+  fetch(BASE + '/api/info', { headers: { 'X-Token': token } }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.paired) showMain();
+      else { showPair(); if (urlCode) { $('codeIn').value = urlCode; $('pairBtn').onclick(); } }
+    })
+    .catch(function () { showPair(); toast('ما گدرت أوصل للتلفزيون'); });
+  setInterval(function () { if (!$('mainView').classList.contains('hidden')) refresh(); }, 30000);
+})();
+</script>
+</body>
+</html>

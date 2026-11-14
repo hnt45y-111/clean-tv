@@ -1,0 +1,10 @@
+*/app/build/
+*/.gradle/
+*/build/
+Studio/launcher_src/
+Studio/launcher_src_tools/
+Studio/app/src/main/assets/launcher/
+AutoApp/app/src/main/assets/fonts/
+CleanTV/app/src/main/assets/fonts/
+CleanTV/app/src/main/assets/bg/
+CleanTV/app/src/main/assets/qrcode.js
