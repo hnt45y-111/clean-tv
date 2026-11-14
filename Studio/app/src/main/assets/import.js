@@ -265,7 +265,7 @@ function osPanelWire(box, S) {
   const redo = () => { changed(); live({ settings: S }); designPanel(); };
   const soft = () => { changed(); live({ settings: S }); };
   box.addEventListener('click', e => {
-    const t = e.target.closest('[data-ob],[data-ok],[data-oc],[data-oreset],[data-css],[data-oav],[data-tk]'); if (!t) return;
+    const t = e.target.closest('[data-ob],[data-ok],[data-oc],[data-oreset],[data-css],[data-oav],[data-tk],[data-ttm]'); if (!t) return;
     e.stopPropagation(); tap();
     const isCyt = S.skin === 'cyt', O = isCyt ? (S.cyt = S.cyt || {}) : (S.os = S.os || {});
     if (t.dataset.css) {
@@ -274,6 +274,9 @@ function osPanelWire(box, S) {
       soft(); toast(t.dataset.css === 'clear' ? 'انمسح التصميم الخاص' : 'انطبق بالمعاينة'); return;
     }
     if (t.dataset.oreset) { delete S.os; redo(); return; }
+    if (t.dataset.ttm) { S.tickerTeams = (S.tickerTeams || []).filter(x => String(x) !== t.dataset.ttm); redo(); return; }
+    if (t.dataset.tk === 'clear') { delete S.tickerTeams; redo(); return; }
+    if (t.dataset.tk === 'pick') { tickerTeamsSheet(S, redo); return; }
     if (t.dataset.tk) { if (t.dataset.tk === 'on') S.ticker = S.ticker === false; else S.tickerDir = t.dataset.tk; redo(); return; }
     if (t.dataset.oav) {
       if (t.dataset.oav === 'del') { delete O.avatar; redo(); return; }
@@ -316,7 +319,11 @@ function osPanelWire(box, S) {
       box.innerHTML = `<div class="panel"><h2>شريط النتائج المباشرة</h2><p class="sub" style="margin-top:-4px">يطلع تحت بالشاشة بس وقت المباريات المباشرة، ويمر بنتيجة كل مباراة شغالة هسه.</p>
         <div class="list" style="margin:0"><div class="item tap" data-tk="on" style="padding:6px 0;min-height:0"><div class="t"><b>تشغيل الشريط</b></div><div class="toggle ${S.ticker !== false ? 'on' : ''}"></div></div></div>
         <div class="lb" style="margin:10px 0 6px"><span class="sub">اتجاه الحركة</span></div>
-        <div class="chips"><button class="chip ${S.tickerDir !== 'ltr' ? 'on' : ''}" data-tk="rtl">من اليمين لليسار</button><button class="chip ${S.tickerDir === 'ltr' ? 'on' : ''}" data-tk="ltr">من اليسار لليمين</button></div></div>`;
+        <div class="chips"><button class="chip ${S.tickerDir !== 'ltr' ? 'on' : ''}" data-tk="rtl">من اليمين لليسار</button><button class="chip ${S.tickerDir === 'ltr' ? 'on' : ''}" data-tk="ltr">من اليسار لليمين</button></div>
+        <div class="lb" style="margin:12px 0 6px"><span class="sub">الفرق اللي تظهر مبارياتها</span></div>
+        <p class="sub" style="margin-top:-2px">${(S.tickerTeams || []).length ? 'مختار ' + S.tickerTeams.length + ' فريق. الشريط يبين بس مبارياتهم.' : 'ما مختار شي: الشريط يبين كل المباريات المباشرة.'}</p>
+        <div class="chips">${(S.tickerTeams || []).map(id => { const c = CLUBS.find(x => x.ids[0] === id); return c ? `<button class="chip on" data-ttm="${id}">${esc(c.name)} ×</button>` : ''; }).join('')}</div>
+        <button class="btn sec full" data-tk="pick" style="margin-top:8px">${ic('layers')} اختار الفرق والأندية</button>${(S.tickerTeams || []).length ? `<button class="btn ghost full" data-tk="clear">شيل الاختيار (كل المباريات)</button>` : ''}</div>`;
       p.insertBefore(box, p.firstChild); osPanelWire(box, S); return;
     }
     if (D.tab !== 'theme') return;
@@ -343,3 +350,17 @@ function osPanelWire(box, S) {
     };
   }
 })();
+
+/* choose the teams whose live matches the ticker shows (the ids are ESPN team ids) */
+function tickerTeamsSheet(S, done) {
+  const sel = new Set((S.tickerTeams || []).map(String));
+  const groups = {}; CLUBS.forEach(c => (groups[c.lg] = groups[c.lg] || []).push(c));
+  sheet(`<h2>فرق الشريط</h2><p class="sub">اضغط على الفريق حتى تضيفه أو تشيله. تگدر تختار أي عدد.</p>
+    ${Object.entries(groups).map(([lg, l]) => `<div class="sub" style="margin:8px 2px">${esc(lg === 'العراق' ? 'أندية العراق' : lg)}</div><div class="chips">${l.map(c => `<button class="chip ${sel.has(String(c.ids[0])) ? 'on' : ''}" data-tid="${c.ids[0]}">${esc(c.name)}</button>`).join('')}</div>`).join('')}
+    <button class="btn pri full" id="ttOk" style="margin-top:14px">تم</button>`);
+  $('#sheetBody').onclick = e => {
+    const b = e.target.closest('[data-tid]');
+    if (b) { tap(); const id = b.dataset.tid; if (sel.has(id)) sel.delete(id); else sel.add(id); b.classList.toggle('on', sel.has(id)); return; }
+    if (e.target.closest('#ttOk')) { S.tickerTeams = [...sel].map(Number); closeSheet(); changed(); live({ settings: S }); done(); }
+  };
+}

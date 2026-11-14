@@ -899,6 +899,35 @@
   #brandMark { position: absolute; top: 34px; left: 96px; width: 72px; height: 72px; z-index: 7; opacity: .95; }
   body.os #brandMark, body[data-skin="cyt"] #brandMark { display: none; }
   body.tickeron #liveTicker { bottom: 22px; }
+
+  /* ---- «قنواتي» ---- */
+  #liveModal { background: #15181B; direction: rtl; font-family: var(--font); }
+  #lvHead { position: absolute; top: 48px; right: 96px; display: flex; align-items: center; gap: 24px; }
+  #lvHead svg { width: 84px; height: 84px; }
+  #lvHead .lv-t { font-family: var(--kufi); font-weight: 700; font-size: 64px; line-height: 1; }
+  #lvHead .lv-st { font-size: 26px; color: var(--ink-3); margin-top: 8px; }
+  #lvCats { position: absolute; top: 200px; right: 96px; width: 360px; bottom: 120px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+  .lv-cat { font-size: 30px; font-weight: 600; padding: 16px 24px; border-radius: 8px; color: var(--ink-2); border: 2px solid transparent; }
+  .lv-cat.on { background: #23282D; color: var(--ink); box-shadow: inset -6px 0 0 #D9822B; }
+  .lv-cat.focus { border-color: #D9822B; background: #2A3036; }
+  #lvGridWrap { position: absolute; top: 200px; right: 520px; left: 96px; bottom: 100px; overflow: hidden; }
+  #lvGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; transition: transform .25s ease-out; }
+  .lv-ch { display: flex; align-items: center; gap: 20px; padding: 18px; border-radius: 16px; background: #23282D; border: 1px solid rgba(184,189,194,.22); min-height: 132px; }
+  .lv-ch.focus { box-shadow: 0 0 0 6px #15181B, 0 0 0 12px #D9822B; background: #2A3036; position: relative; z-index: 2; }
+  .lv-art { flex: none; width: 96px; height: 96px; border-radius: 8px; display: grid; place-items: center; }
+  .lv-art b { font-family: var(--kufi); font-size: 40px; color: #EFE7D4; }
+  .lv-n { font-size: 30px; font-weight: 700; line-height: 1.25; } .lv-s { font-size: 21px; color: var(--ink-3); margin-top: 6px; }
+  .lv-empty { grid-column: 1 / -1; font-size: 32px; color: var(--ink-3); padding: 60px; text-align: center; }
+  #lvHint { position: absolute; bottom: 44px; right: 96px; left: 96px; font-size: 22px; color: var(--ink-3); }
+  /* ---- live scores ticker (identity) ---- */
+  #liveTicker { height: 64px; background: #15181B; border-top: 2px solid #B8BDC2; }
+  #liveTicker .lt-badge { background: #C8402F; border-radius: 0; font-family: var(--kufi); font-size: 28px; padding: 0 28px; }
+  #liveTicker .lt-m { gap: 16px; font-size: 27px; font-weight: 600; padding: 0 6px; }
+  #liveTicker .lt-lg { color: #E8A25E; font-size: 22px; font-weight: 600; }
+  #liveTicker .lt-s { display: inline-flex; align-items: center; gap: 8px; background: #EFE7D4; color: #15181B; border-radius: 8px; padding: 2px 14px; font-family: var(--kufi); font-weight: 700; font-size: 28px; direction: ltr; }
+  #liveTicker .lt-s i { font-style: normal; } #liveTicker .lt-s u { width: 10px; height: 3px; background: #15181B; opacity: .6; }
+  #liveTicker .lt-m em { font-style: normal; color: #E8A25E; font-size: 22px; }
+  #liveTicker .lt-sep { display: inline-block; width: 2px; height: 32px; background: rgba(184,189,194,.4); margin: 0 26px; }
   /* anything else the design wants: its own CSS is added last (settings.css) */
 </style>
 <style id="userCss"></style>
@@ -1018,6 +1047,7 @@
   </div></div>
 
   <div id="pairBox"><div class="p-t">ربط الموبايل بمدير الشاشات</div><div class="p-code" id="pairCode"></div><div class="p-s" id="pairSub"></div><div id="pairQr"></div></div>
+  <div class="modal" id="liveModal"><div id="lvHead"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg><div><div class="lv-t">قنواتي</div><div class="lv-st">بث مباشر مجاني بدون اشتراك · <span id="lvCount"></span></div></div></div><div id="lvCats"></div><div id="lvGridWrap"><div id="lvGrid"></div></div><div id="lvHint">OK تشغيل · الأسهم للتنقل · داخل القناة: فوق وتحت للتنقل بين القنوات · رجوع للخروج</div></div>
   <div id="liveTicker"></div>
   <div id="brandStrip"></div>
   <svg id="brandMark" viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg>
@@ -1026,6 +1056,8 @@
 
 <script src="qrcode.js"></script>
 <script src="data.js"></script>
+<script src="channels.js"></script>
+<script src="live.js"></script>
 <script src="pray.js"></script>
 <script src="faith.js"></script>
 <script src="app.js"></script>

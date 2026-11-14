@@ -446,6 +446,13 @@ public class MainActivity extends Activity {
             return appsDirty;
         }
 
+        /** «قنواتي»: plays one of the channels in the list (native player, so every kind of stream works) */
+        @JavascriptInterface
+        public void playLive(String json, int index) {
+            Intent i = new Intent(MainActivity.this, LiveActivity.class).putExtra("list", json).putExtra("idx", index);
+            startActivity(i);
+        }
+
         @JavascriptInterface
         public boolean launch(String pkg) {
             if (pkg != null && pkg.contains("/")) return startComp(MainActivity.this, pkg);

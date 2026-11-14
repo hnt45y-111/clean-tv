@@ -78,7 +78,7 @@ function howToCar() {
 }
 
 /* ============================================================ car designs */
-const CAR_THEMES = [['signature', 'توقيع مدير الشاشة', '#0B0C10', '#D6B47A'], ['sport', 'السبورت الأحمر', '#0b0b0e', '#ff3b3b'], ['carbon', 'الكاربون', '#0e1013', '#2ee6d6'], ['neon', 'النيون', '#07051a', '#8b5cff'],
+const CAR_THEMES = [['identity', 'الهوية (حبر ونحاس)', '#15181B', '#D9822B'], ['signature', 'توقيع مدير الشاشة', '#0B0C10', '#D6B47A'], ['sport', 'السبورت الأحمر', '#0b0b0e', '#ff3b3b'], ['carbon', 'الكاربون', '#0e1013', '#2ee6d6'], ['neon', 'النيون', '#07051a', '#8b5cff'],
   ['luxury', 'الفخامة الذهبية', '#070605', '#d4a64a'], ['ocean', 'المحيط', '#03101c', '#22c3ee'], ['forest', 'الغابة', '#04110b', '#34d399'], ['white', 'الأبيض النظيف', '#eef1f6', '#2563eb'],
   ['teal', 'الفيروزي', '#03090f', '#19d3c5'], ['redline', 'الأحمر الرياضي', '#050505', '#ff1f3d'], ['frost', 'الزجاج الأبيض', '#e6ebf1', '#3b82f6'], ['leather', 'الجلد الأحمر', '#140d0b', '#e0242f'],
   ['aurora', 'الشفق النيون', '#07051f', '#22d3ee'], ['sage', 'الكريمي الأخضر', '#efede4', '#5f8f5a'], ['violet', 'البنفسجي', '#1c0a33', '#c084fc'], ['blush', 'الوردي', '#3a1d3f', '#ffb4c6'], ['graphite', 'الرمادي الداكن', '#121317', '#8b5cf6']];
@@ -136,7 +136,7 @@ const BRAND_UI = [
   { id: 'landrover', note: 'أخضر هادئ ورمادي، فخم وبسيط', sw: ['#050706', '#64a87c'],
     c: { bt: 'landrover', dockPos: 'bottom', layout: 'mbux', icons: 'outline', cards: 'glass', dockStyle: 'line', rad: 1.2, widgets: [{ t: 'speed', style: 'needle' }, { t: 'media' }, { t: 'compass' }, { t: 'weather' }] } }
 ];
-const CAR_DEF = () => ({ theme: 'signature', bt: '', side: 'right', wlayout: 'split', cols: 4, owner: 'مدير الشاشات', night: 'auto', layout: 'carplay',
+const CAR_DEF = () => ({ theme: 'identity', bt: '', side: 'right', wlayout: 'split', cols: 4, owner: 'مدير الشاشات', night: 'auto', layout: 'carplay',
   icons: 'squircle', isize: 'm', labels: 'on', tilebg: 'off', cards: 'glass', cop: 8, rad: 3, fs: 100, dockStyle: 'bar', apphd: 'on',
   widgets: [{ t: 'speed', l: true, style: 'ring' }, { t: 'media', l: true }], apps: [], dock: ['home', 'maps', 'music', 'phone', 'mirror', 'apps'],
   volBtns: true, volPos: 'left', brand: devBrand(), alert: { on: true, city: 60, hw: 120, sound: true }, drive: { on: true, kmh: 20 }, maint: [], dial: [],

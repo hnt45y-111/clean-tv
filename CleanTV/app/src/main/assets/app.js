@@ -580,9 +580,12 @@
   // ---------- Apps ----------
   var DEFAULT_ORDER = ['com.google.android.youtube.tv','com.netflix.ninja','net.mbc.shahid.tv','com.disney.disneyplus','com.vodu.tv','tv.app1001.androidtv','com.todtv.tod','com.spotify.tv.android','com.google.android.youtube.tvmusic','iq.qicard.tv.prod','com.android.vending'];
   var apps = [], order = load('appOrder', null), hidden = load('appHidden', []), mode = 'normal';
+  var LIVE_PKG = '__live';
+  var LIVE_APP = { pkg: LIVE_PKG, label: 'قنواتي', color: '#D9822B', icon: 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z' fill='#EFE7D4'/><path d='M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z' fill='#EFE7D4'/><rect x='8' y='34' width='84' height='58' rx='12' fill='#EFE7D4'/><rect x='15' y='41' width='70' height='44' rx='5' fill='#B5681F'/><path d='M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><path d='M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><path d='M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><circle cx='50' cy='63' r='2.2' fill='#D9822B'/><rect x='20' y='92' width='8' height='4' fill='#EFE7D4'/><rect x='72' y='92' width='8' height='4' fill='#EFE7D4'/></svg>") };
   function sortApps(list) {
     var ord = order || DEFAULT_ORDER;
-    function rank(p) { var i = ord.indexOf(p); return i < 0 ? 999 : i; }
+    if (!list.some(function (a) { return a.pkg === LIVE_PKG; })) list.push(LIVE_APP);
+    function rank(p) { var i = ord.indexOf(p); return i < 0 ? (p === LIVE_PKG ? -1 : 999) : i; }
     return list.sort(function (a, b) { return rank(a.pkg) - rank(b.pkg) || a.label.localeCompare(b.label, 'ar'); });
   }
   var DEMO_FALLBACK = [['يوتيوب', '#e50914'], ['نتفلكس', '#b20710'], ['شاهد', '#1fb36a'], ['المتجر', '#01875f'], ['ديزني', '#113ccf'], ['سبوتيفاي', '#1db954'], ['الملفات', '#5b6b8c'], ['الإعدادات', '#607d8b'], ['كودي', '#17b2e7'], ['VLC', '#ff8800']];
@@ -639,6 +642,7 @@
     launchApp2(pkg);
   }
   function launchApp2(pkg) {
+    if (pkg === LIVE_PKG) { if (window.Live) window.Live.open(); return; }
     if (!kidsBeforeLaunch()) return;
     pushRecent(pkg);
     if (HAS_ANDROID) { if (!A.launch(pkg)) toast('ما گدرت أفتح هذا التطبيق'); } else toast('فتح: ' + pkg);
@@ -899,7 +903,7 @@
   function liveApp() { for (var i = 0; i < apps.length; i++) if (/tvcenter|\.android\.tv$|livetv|live\.tv|tvplayer|\.tv\.tuner|iptv|channels/i.test(apps[i].pkg)) return apps[i].pkg; return null; }
   function openOsMenu() {
     var rows = [
-      ['خلفية الشاشة', function () { openPicker(); }], ['الثيمات والألوان', function () { openThemes(); }], ['إعدادات الواجهة', function () { openSettings(); }],
+      ['قنواتي: البث المباشر المجاني', function () { window.Live.open(); }], ['خلفية الشاشة', function () { openPicker(); }], ['الثيمات والألوان', function () { openThemes(); }], ['إعدادات الواجهة', function () { openSettings(); }],
       ['تعديل الشاشة', function () { openEdit(); }], ['ترتيب التطبيقات', function () { setMode('move'); nav.goId('row-apps'); }], ['إخفاء التطبيقات', function () { setMode('hide'); nav.goId('row-apps'); }],
       ['تغيير أيقونة تطبيق', function () { setMode('icon'); nav.goId('row-apps'); }], ['وضع الأطفال', function () { toggleKids(); }],
       ['شاشة التوقف', function () { if (!PREVIEW) startSaver(); }], ['الطاقة', function () { openPower(); }], ['إعدادات الجهاز', function () { if (HAS_ANDROID) A.openSettings(); }],
@@ -913,8 +917,8 @@
   }
   function pickLiveApp(open) {
     var all = visibleApps().filter(function (a) { return a.pkg; }), cur = load('osLiveApp', null);
-    openList('تطبيق زر «مباشر»', 'اختار التطبيق مرة وحدة ويبقى محفوظ · اضغط مطوّل على الزر حتى تغيّره', function () {
-      return all.map(function (a) { return { label: appName(a), value: a.pkg === cur ? '✅' : '', act: function (k) { if (k !== 'ok') return; try { localStorage.setItem('osLiveApp', JSON.stringify(a.pkg)); } catch (e) {} closeModal(); toast('صار زر «مباشر» يفتح ' + appName(a)); if (open) launchApp(a.pkg); return false; } }; });
+    openList('تطبيق زر «مباشر»', 'الافتراضي «قنواتي». اختار تطبيق ثاني وينحفظ · اضغط مطوّل على الزر حتى تغيّره', function () {
+      return all.filter(function (a) { return a.pkg !== LIVE_PKG; }).map(function (a) { return { label: appName(a), value: a.pkg === cur ? '✅' : '', act: function (k) { if (k !== 'ok') return; try { localStorage.setItem('osLiveApp', JSON.stringify(a.pkg)); } catch (e) {} closeModal(); toast('صار زر «مباشر» يفتح ' + appName(a)); if (open) launchApp(a.pkg); return false; } }; });
     });
   }
   function osLong(el) {
@@ -936,7 +940,7 @@
       /* «مباشر» opens the app the user picked once (saved on this screen); hold OK on it to pick another */
       var lv = load('osLiveApp', null);
       if (lv && apps.some(function (a) { return a.pkg === lv; })) return launchApp(lv);
-      return pickLiveApp(true);
+      return window.Live.open();
     }
     if (id === 'inputs') {
       if (HAS_ANDROID && IS_TV && id === 'inputs') return tvAction('tvinput');
@@ -988,11 +992,11 @@
   var TOP_TOOLS = {
     saver: ['شاشة التوقف', 'moon', 1], search: ['البحث', 'search'], settings: ['إعدادات الجهاز', 'settings'], wifi: ['الواي فاي', 'wifi'],
     net: ['الشبكة', 'net'], bt: ['البلوتوث', 'bt'], mem: ['تنظيف الذاكرة', 'broom'], mute: ['كتم الصوت', 'mute'], sleep: ['مؤقت النوم', 'timer'],
-    edit: ['تعديل الشاشة', 'edit'], power: ['الطاقة', 'power'], tvpic: ['الصورة', 'picture', 1], tvsound: ['الصوت', 'sound', 1], tvdim: ['تعتيم', 'dim', 1]
+    channels: ['قنواتي', 'picture'], edit: ['تعديل الشاشة', 'edit'], power: ['الطاقة', 'power'], tvpic: ['الصورة', 'picture', 1], tvsound: ['الصوت', 'sound', 1], tvdim: ['تعتيم', 'dim', 1]
   };
   function topToolList() {
     var l = settings.topTools && settings.topTools.length ? settings.topTools.slice() : null;
-    if (!l) { l = ['saver', 'search', 'settings', 'wifi', 'edit', 'power']; if (tvShortcutsOn()) l = ['tvpic', 'tvsound', 'sleep', 'tvdim'].concat(l); }
+    if (!l) { l = ['channels', 'saver', 'search', 'settings', 'wifi', 'edit', 'power']; if (tvShortcutsOn()) l = ['tvpic', 'tvsound', 'sleep', 'tvdim'].concat(l); }
     return l.filter(function (id) { return TOP_TOOLS[id] && !(id === 'saver' && settings.saverOn === false); });
   }
   function inputsOn() { var m = settings.inputsBtn || 'auto'; return m === 'on' || (m === 'auto' && tvShortcutsOn()); }
@@ -1476,6 +1480,8 @@
       else if (c.type === 'saverApps') { settings.saverApps = !!c.value; saveSettings(); }
       else if (c.type === 'paired') toast('تم ربط الموبايل ✅', 4000);
       else if (c.type === 'update') checkUpdate(true);
+      else if (c.type === 'live') { if (window.Live) window.Live.open(); }
+      else if (c.type === 'ticker') { settings.ticker = !!c.value; saveSettings(); refreshLive(); toast(c.value ? 'اشتغل شريط النتائج' : 'وقف شريط النتائج'); }
       else if (c.type === 'toast') toast(String(c.value || ''), 6000);
     } catch (e) {}
     publishState();
@@ -1515,30 +1521,31 @@
     try { A.scheduleAlarms(JSON.stringify(list)); } catch (e) {}
   }
 
-  // ---------- Live scores ticker: shows only while matches are being played, with the score of every live match ----------
-  var LIVE_LG = ['eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1', 'uefa.champions', 'uefa.europa', 'uefa.europa.conf', 'ksa.1', 'irq.1', 'egy.1', 'qat.1', 'uae.1',
-    'afc.champions', 'fifa.world', 'fifa.worldq.afc', 'uefa.nations', 'fifa.friendly', 'por.1', 'ned.1', 'tur.1', 'bra.1', 'arg.1', 'all'];
-  var LG_AR = { 'English Premier League': 'الدوري الإنجليزي', 'Premier League': 'الدوري الإنجليزي', 'Spanish LALIGA': 'الدوري الإسباني', 'LALIGA': 'الدوري الإسباني', 'Italian Serie A': 'الدوري الإيطالي',
-    'German Bundesliga': 'الدوري الألماني', 'French Ligue 1': 'الدوري الفرنسي', 'UEFA Champions League': 'دوري أبطال أوروبا', 'UEFA Europa League': 'الدوري الأوروبي',
-    'Saudi Pro League': 'الدوري السعودي', 'Iraqi Premier League': 'الدوري العراقي', 'Egyptian Premier League': 'الدوري المصري', 'AFC Champions League Elite': 'أبطال آسيا', 'FIFA World Cup': 'كأس العالم' };
+  // ---------- Live scores ticker: shows only while matches are on; Arabic names; optional list of chosen teams ----------
+  var LIVE_LG = [['eng.1', 'الدوري الإنجليزي'], ['esp.1', 'الدوري الإسباني'], ['ita.1', 'الدوري الإيطالي'], ['ger.1', 'الدوري الألماني'], ['fra.1', 'الدوري الفرنسي'],
+    ['uefa.champions', 'دوري أبطال أوروبا'], ['uefa.europa', 'الدوري الأوروبي'], ['uefa.europa.conf', 'دوري المؤتمر'], ['ksa.1', 'الدوري السعودي'], ['qat.1', 'دوري نجوم قطر'],
+    ['uae.1', 'دوري الإمارات'], ['egy.1', 'الدوري المصري'], ['irq.1', 'الدوري العراقي'], ['afc.champions', 'دوري أبطال آسيا'], ['fifa.world', 'كأس العالم'], ['fifa.worldq.afc', 'تصفيات آسيا'],
+    ['fifa.friendly', 'مباراة ودية'], ['uefa.nations', 'دوري الأمم'], ['por.1', 'الدوري البرتغالي'], ['ned.1', 'الدوري الهولندي'], ['tur.1', 'الدوري التركي'], ['bra.1', 'الدوري البرازيلي'], ['arg.1', 'الدوري الأرجنتيني']];
   var liveList = [];
   function refreshLive() {
     if (settings.ticker === false) { liveList = []; renderTicker(); return; }
-    if (PREVIEW) { liveList = [{ lg: 'الدوري الإنجليزي', h: 'ليفربول', hs: '2', a: 'تشيلسي', as: '1', clk: "67'" }, { lg: 'الدوري الإسباني', h: 'ريال مدريد', hs: '0', a: 'برشلونة', as: '0', clk: "12'" }]; renderTicker(); return; }
-    Promise.all(LIVE_LG.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l + '/scoreboard'); })).then(function (res) {
+    if (PREVIEW) { liveList = [{ lg: 'الدوري الإنجليزي', h: 'ليفربول', hs: '2', a: 'تشيلسي', as: '1', clk: '67' }, { lg: 'الدوري الإسباني', h: 'ريال مدريد', hs: '0', a: 'برشلونة', as: '0', clk: '12' }, { lg: 'دوري أبطال أوروبا', h: 'بايرن ميونخ', hs: '1', a: 'آرسنال', as: '1', clk: 'HT' }]; renderTicker(); return; }
+    var want = {}, any = false; (settings.tickerTeams || []).forEach(function (id) { want[String(id)] = 1; any = true; });
+    Promise.all(LIVE_LG.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l[0] + '/scoreboard').then(function (j) { return { j: j, lg: l[1] }; }); })).then(function (res) {
       var seen = {}, out = [];
-      res.forEach(function (j) {
-        if (!j || !j.events) return;
-        var lgName = (j.leagues && j.leagues[0] && j.leagues[0].name) || '';
-        j.events.forEach(function (e) {
+      res.forEach(function (r) {
+        if (!r.j || !r.j.events) return;
+        r.j.events.forEach(function (e) {
           var c = e.competitions && e.competitions[0], st = (e.status && e.status.type) || {};
           if (!c || !c.competitors || st.state !== 'in' || seen[e.id]) return;
-          seen[e.id] = 1;
           var h = c.competitors.filter(function (x) { return x.homeAway === 'home'; })[0] || c.competitors[0], a = c.competitors.filter(function (x) { return x.homeAway === 'away'; })[0] || c.competitors[1];
           if (!h || !a) return;
-          var nm = function (x) { var t = x.team || {}; return NAMES[t.displayName] || t.shortDisplayName || t.displayName || ''; };
+          if (any && !want[String((h.team || {}).id)] && !want[String((a.team || {}).id)]) return;
+          seen[e.id] = 1;
+          var nm = function (x) { var t = x.team || {}; return NAMES[t.displayName] || NAMES[t.shortDisplayName] || t.shortDisplayName || t.displayName || ''; };
           var sc = function (x) { var v = x.score && (x.score.displayValue != null ? x.score.displayValue : x.score); return v == null ? '0' : String(v); };
-          out.push({ lg: LG_AR[lgName] || (lgName === 'All' ? '' : lgName), h: nm(h), hs: sc(h), a: nm(a), as: sc(a), clk: (e.status && e.status.displayClock) || st.shortDetail || '' });
+          var detail = (e.status && (e.status.displayClock || st.shortDetail)) || '', clk = /half/i.test(st.detail || '') || /^HT$/i.test(st.shortDetail || '') ? 'HT' : String(parseInt(detail, 10) || '');
+          out.push({ lg: r.lg, h: nm(h), hs: sc(h), a: nm(a), as: sc(a), clk: clk });
         });
       });
       liveList = out; renderTicker();
@@ -1550,10 +1557,11 @@
     t.classList.toggle('on', on); document.body.classList.toggle('tickeron', on);
     if (!on) { t.innerHTML = ''; return; }
     var one = liveList.map(function (m) {
-      return '<span class="lt-m">' + (m.lg ? '<b class="lt-lg">' + esc(m.lg) + '</b>' : '') + '<span>' + esc(m.h) + '</span><span class="lt-s">' + esc(m.hs) + ' - ' + esc(m.as) + '</span><span>' + esc(m.a) + '</span><i>' + esc(m.clk) + '</i></span>';
-    }).join('<span class="lt-sep">•</span>') + '<span class="lt-sep">•</span>';
+      var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
+      return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><i>' + nf.format(+m.hs || 0) + '</i><u></u><i>' + nf.format(+m.as || 0) + '</i></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
+    }).join('<span class="lt-sep"></span>') + '<span class="lt-sep"></span>';
     t.setAttribute('data-dir', settings.tickerDir === 'ltr' ? 'ltr' : 'rtl');
-    t.innerHTML = '<div class="lt-badge"><i></i>مباشر</div><div class="lt-win"><div class="lt-run" style="animation-duration:' + Math.max(22, liveList.length * 14) + 's">' + one + one + '</div></div>';
+    t.innerHTML = '<div class="lt-badge"><i></i>مباشر</div><div class="lt-win"><div class="lt-run" style="animation-duration:' + Math.max(24, liveList.length * 12) + 's">' + one + one + '</div></div>';
   }
   setTimeout(refreshLive, 3000);
   setInterval(function () { if (!PREVIEW) refreshLive(); }, 90000);
@@ -1833,6 +1841,8 @@
 
   // ---------- Main focus navigation ----------
   var layer = 'main';
+  window.__setLayer = function (l) { layer = l; };
+  window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   var nav = (function () {
     var rowEls = qa('#content .row');
     var AR = rowEls.indexOf(document.getElementById('row-apps'));
@@ -1935,6 +1945,7 @@
         else if (id === 'settings') { if (HAS_ANDROID) A.openSettings(); }
         else if (id === 'wifi') { if (HAS_ANDROID) A.openWifi(); }
         else if (id === 'edit') openEdit();
+        else if (id === 'channels') { if (window.Live) window.Live.open(); }
         else if (id === 'power') openPower();
         else if (id === 'saver') { if (!PREVIEW) startSaver(); }
         else if (id === 'bt') { if (HAS_ANDROID && A.openBluetooth) A.openBluetooth(); }
@@ -1987,6 +1998,7 @@
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
     clickSound(); if (k === 'ok') pressFx();
+    if (layer === 'live') return window.Live.key(k);
     if (layer === 'bg') return pickerKey(k);
     if (layer === 'power') return powerKey(k);
     if (layer === 'edit') return editKey(k);

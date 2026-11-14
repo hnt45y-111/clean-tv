@@ -20,7 +20,7 @@
   function assign(t) { for (var i = 1; i < arguments.length; i++) { var s = arguments[i]; if (s) for (var k in s) if (has(s, k)) t[k] = s[k]; } return t; }
 
   var DEF = {
-    theme: 'signature', bt: '', side: 'right', wlayout: 'split', cols: 4, owner: 'مدير الشاشات', night: 'auto', layout: 'carplay',
+    theme: 'identity', bt: '', side: 'right', wlayout: 'split', cols: 4, owner: 'مدير الشاشات', night: 'auto', layout: 'carplay',
     icons: 'squircle', isize: 'm', labels: 'on', tilebg: 'off', cards: 'glass', cop: 8, rad: 3, fs: 100, dockStyle: 'bar', apphd: 'on',
     widgets: [{ t: 'speed', l: true, style: 'ring' }, { t: 'media', l: true }],
     apps: [], dock: ['home', 'maps', 'music', 'phone', 'mirror', 'apps'], volBtns: true, volPos: 'left', brand: null,

@@ -282,6 +282,11 @@
   body[data-bt="ford"] { --ac: #2a6bd1; --ac2: #7fb0ff; --bg1: #03060c; --bg2: #0d1b33; --glow1: rgba(42,107,209,.25); --glow2: rgba(127,176,255,.06); --hfw: 700; --r: 2.2vh; }
   body[data-bt="landrover"] { --ac: #64a87c; --ac2: #c9d8cd; --bg1: #050706; --bg2: #141a16; --glow1: rgba(100,168,124,.16); --glow2: rgba(255,255,255,.04); --hfw: 400; --ls: .2em; --r: 1.2vh; }
   /* the app's own signature look: obsidian, champagne, signal blue */
+  /* identity: ink, copper and a chrome line, flat (no glow) */
+  body[data-ct="identity"] { --ac: #D9822B; --ac2: #E8A25E; --bg1: #15181B; --bg2: #15181B; --glow1: rgba(0,0,0,0); --glow2: rgba(0,0,0,0); --r: 2.2vh; --ink: #EFE7D4; --mute: rgba(239,231,212,.6); --card: #23282D; --cardb: rgba(184,189,194,.28); --line: rgba(184,189,194,.22); }
+  body[data-ct="identity"] .w { background: #23282D !important; border-color: rgba(184,189,194,.28); box-shadow: none !important; }
+  body[data-ct="identity"] #dock button.home, body[data-ct="identity"] .mctl button.pp, body[data-ct="identity"] .dial button i { color: #15181B; }
+  body[data-ct="identity"] #app::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: .9vh; background: #D9822B; box-shadow: 0 -.35vh 0 #B8BDC2; }
   body[data-ct="signature"] { --ac: #D6B47A; --ac2: #F0DDB2; --bg1: #0B0C10; --bg2: #1A1D26; --glow1: rgba(214,180,122,.14); --glow2: rgba(110,155,255,.07);
      --card: rgba(255,255,255,.045); --cardb: #2A2E3A; --line: #2A2E3A; --ink: #F3EEE4; --mute: rgba(243,238,228,.62); }
   body[data-ct="signature"] #dock button.home, body[data-ct="signature"] .mctl button.pp, body[data-ct="signature"] .dial button i { color: #0B0C10; }

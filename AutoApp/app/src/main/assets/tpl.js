@@ -1,5 +1,6 @@
 /* Shared by the car screen (car.html) and the phone app (index.html): ready designs, backgrounds and the config cleaner. */
 const WALLS = {
+  ident:  '#15181B',
   gold:   'radial-gradient(70% 90% at 85% 0%,#3a2d17 0,transparent 60%),radial-gradient(60% 80% at 0% 100%,#1b1a24 0,transparent 60%),linear-gradient(160deg,#14110c,#0B0C10)',
   aurora: 'radial-gradient(60% 80% at 15% 10%,#2b3f8f 0,transparent 60%),radial-gradient(55% 70% at 90% 90%,#5b2a86 0,transparent 60%),radial-gradient(40% 50% at 70% 20%,#1d6f8a 0,transparent 60%),#090b14',
   carbon: 'repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 6px,transparent 6px 12px),radial-gradient(70% 90% at 100% 0%,#4a0f12 0,transparent 60%),linear-gradient(160deg,#121214,#050506)',
@@ -14,9 +15,10 @@ const WALLS = {
   violetx:'radial-gradient(70% 90% at 80% 10%,#6d28d9 0,transparent 60%),radial-gradient(60% 70% at 0% 100%,#be185d 0,transparent 60%),#12061f',
   blushx: 'linear-gradient(180deg,#e98aa4 0%,#b8607e 36%,#3a1d3f 74%,#1c0f22 100%)'
 };
-const WALL_NAMES = { gold: 'ذهبي', aurora: 'شفق', carbon: 'كاربون', desert: 'صحراء', mint: 'نعناعي', pearl: 'لؤلؤي', night: 'ليل', rose: 'وردي', tealx: 'فيروزي', redx: 'رياضي', frostx: 'زجاجي', violetx: 'بنفسجي', blushx: 'غروب' };
+const WALL_NAMES = { ident: 'حبر بغداد', gold: 'ذهبي', aurora: 'شفق', carbon: 'كاربون', desert: 'صحراء', mint: 'نعناعي', pearl: 'لؤلؤي', night: 'ليل', rose: 'وردي', tealx: 'فيروزي', redx: 'رياضي', frostx: 'زجاجي', violetx: 'بنفسجي', blushx: 'غروب' };
 
 const TEMPLATES = [
+  { id: 'ident', name: 'الهوية', theme: { ac: '#D9822B', bg: '#15181B', ink: '#EFE7D4', mute: '#A9AFA6', panel: 'rgba(239,231,212,.07)', font: 'Alx', radius: 2.2 }, wall: { type: 'preset', id: 'ident' }, clock: 'big', shade: 0 },
   { id: 'gold', name: 'ذهبي هادئ', theme: { ac: '#D6B47A', bg: '#0B0C10', ink: '#F3EEE4', mute: '#A3A5B1', panel: 'rgba(255,255,255,.06)', font: 'Alx', radius: 3.2 }, wall: { type: 'preset', id: 'gold' }, clock: 'big', shade: .2 },
   { id: 'aurora', name: 'زجاج الليل', theme: { ac: '#9DBBFF', bg: '#090b14', ink: '#F2F4FF', mute: '#A9B0CC', panel: 'rgba(255,255,255,.09)', font: 'Alx', radius: 4 }, wall: { type: 'preset', id: 'aurora' }, clock: 'minimal', shade: .15 },
   { id: 'sport', name: 'رياضي', theme: { ac: '#FF4D4D', bg: '#060607', ink: '#F5F5F5', mute: '#A0A0A6', panel: 'rgba(255,255,255,.05)', font: 'Alx', radius: 1.4 }, wall: { type: 'preset', id: 'carbon' }, clock: 'digital', shade: .1 },

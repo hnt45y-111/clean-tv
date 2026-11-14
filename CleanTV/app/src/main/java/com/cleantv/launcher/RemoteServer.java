@@ -428,7 +428,7 @@ public class RemoteServer extends Thread {
                 return "{\"ok\":true}".getBytes(StandardCharsets.UTF_8);
             case "cmd": {
                 String t = b.optString("type");
-                String allowed = ",theme,bgSources,bgInterval,bgNext,surah,quran,clickSound,saverApps,update,toast,";
+                String allowed = ",theme,bgSources,bgInterval,bgNext,surah,quran,clickSound,saverApps,update,toast,live,ticker,";
                 if (!allowed.contains("," + t + ",")) return null;
                 MainActivity.js("window.remoteCmd && window.remoteCmd(" + b.toString() + ")");
                 return "{\"ok\":true}".getBytes(StandardCharsets.UTF_8);

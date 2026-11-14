@@ -244,12 +244,12 @@ function frameWin() { const f = $('#pvf'); return f && f.contentWindow; }
 let pvReloadT = null;
 /* Every change shows in the preview: quick changes go straight to the page, and the page is then
    rebuilt from the full design so nothing is left behind (club, theme, widgets, backgrounds…). */
-const TOP_TOOLS_ST = [['saver', 'شاشة التوقف'], ['search', 'البحث'], ['settings', 'إعدادات الجهاز'], ['wifi', 'الواي فاي'], ['net', 'الشبكة'], ['bt', 'البلوتوث'],
+const TOP_TOOLS_ST = [['channels', 'قنواتي'], ['saver', 'شاشة التوقف'], ['search', 'البحث'], ['settings', 'إعدادات الجهاز'], ['wifi', 'الواي فاي'], ['net', 'الشبكة'], ['bt', 'البلوتوث'],
   ['mem', 'تنظيف الذاكرة'], ['mute', 'كتم الصوت'], ['sleep', 'مؤقت النوم'], ['edit', 'تعديل الشاشة'], ['power', 'الطاقة'], ['tvpic', 'الصورة'], ['tvsound', 'الصوت'], ['tvdim', 'تعتيم']];
 function topTools() {
   const S = D.cfg.settings;
   if (S.topTools && S.topTools.length) return S.topTools;
-  const l = ['saver', 'search', 'settings', 'wifi', 'edit', 'power'];
+  const l = ['channels', 'saver', 'search', 'settings', 'wifi', 'edit', 'power'];
   return INFO && INFO.isTv && S.tvCtl !== 'off' ? ['tvpic', 'tvsound', 'sleep', 'tvdim'].concat(l) : l;
 }
 function live(o) {
