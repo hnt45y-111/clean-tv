@@ -585,11 +585,13 @@
     function rank(p) { var i = ord.indexOf(p); return i < 0 ? 999 : i; }
     return list.sort(function (a, b) { return rank(a.pkg) - rank(b.pkg) || a.label.localeCompare(b.label, 'ar'); });
   }
+  var DEMO_FALLBACK = [['يوتيوب', '#e50914'], ['نتفلكس', '#b20710'], ['شاهد', '#1fb36a'], ['المتجر', '#01875f'], ['ديزني', '#113ccf'], ['سبوتيفاي', '#1db954'], ['الملفات', '#5b6b8c'], ['الإعدادات', '#607d8b'], ['كودي', '#17b2e7'], ['VLC', '#ff8800']];
   function loadApps(force) {
     if (HAS_ANDROID) {
       if (!force && apps.length && !A.appsChanged()) return;
       bridgeAsync('getAppsAsync').then(function (t) { var l = []; try { l = JSON.parse(t) || []; } catch (e) {} l.forEach(arLabel); apps = sortApps(l); renderApps(); });
     } else if (window.__DEMO_APPS) { apps = sortApps(window.__DEMO_APPS.slice().map(arLabel)); renderApps(); }
+    else if (PREVIEW) { apps = sortApps(DEMO_FALLBACK.map(function (n, i) { return arLabel({ pkg: 'demo.' + i, label: n[0], color: n[1] }); })); renderApps(); }
   }
   var AR_PKG = {
     'com.google.android.youtube.tv': 'يوتيوب', 'com.google.android.youtube.tvkids': 'يوتيوب أطفال', 'com.google.android.youtube.tvmusic': 'يوتيوب ميوزك',
@@ -647,7 +649,7 @@
     return 'rgb(' + c(r) + ',' + c(g) + ',' + c(b) + ')';
   }
   function renderApps() {
-    var shp = (layout['row-apps'] || {}).shape || 'circle', iconShape = ['rounded', 'rect', 'pill', 'wide'].indexOf(shp) < 0;
+    var shp = (layout['row-apps'] || {}).shape || 'rounded', iconShape = ['rounded', 'rect', 'pill', 'wide'].indexOf(shp) < 0;
     /* imported CleanYourTV looks show the apps' TV banners (or, with uniform_tiles, the icon on a tinted card) */
     if (settings.skin === 'cyt') iconShape = !!cytCfg().uniform_tiles;
     else if (osSkin() && osCfg().shape) iconShape = osCfg().shape !== 'banner';
@@ -655,7 +657,7 @@
       var isHidden = mode === 'kidsel' ? kids.apps.indexOf(a.pkg) < 0 : hidden.indexOf(a.pkg) >= 0, inner;
       if (customIcons[a.pkg]) inner = '<div class="tile"><img class="custom" src="' + esc(customIcons[a.pkg]) + '" alt=""></div>';
       else if (a.banner && !(iconShape && a.icon)) inner = '<div class="tile"><img class="banner" src="' + a.banner + '" alt=""></div>';
-      else inner = '<div class="tile ic" style="background:linear-gradient(145deg,' + shade(a.color, 1.05) + ',' + shade(a.color, .45) + ')">' + (a.icon ? '<img src="' + a.icon + '" alt="">' : '') + '</div>';
+      else inner = '<div class="tile ic" style="background:' + shade(a.color, .62) + '">' + (a.icon ? '<img src="' + a.icon + '" alt="">' : '') + '</div>';
       return '<div class="item app' + (isHidden ? ' hidden-app' : '') + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + inner + '<span class="badge">' + (mode === 'kidsel' ? 'غير مسموح' : 'مخفي') + '</span><div class="name">' + esc(appName(a)) + '</div></div>';
     }).join('') || '<div class="item empty-card" data-kind="none">جاري تحميل التطبيقات…</div>';
     $('apps-hint').textContent = mode === 'move' ? 'وضع الترتيب: OK على التطبيق، حرّكه بالأسهم، وOK للتثبيت' : mode === 'hide' ? 'وضع الإخفاء: OK على التطبيق حتى تخفيه أو ترجعه'
@@ -737,7 +739,7 @@
     var art = customIcons[a.pkg] ? '<img class="oc-ic" src="' + esc(customIcons[a.pkg]) + '" alt="">'
       : a.banner ? '<img class="oc-bn" src="' + a.banner + '" alt="">' : a.icon ? '<img class="oc-ic" src="' + a.icon + '" alt="">' : '<span class="oc-lt">' + esc(appName(a)) + '</span>';
     return '<div class="item app ' + cls + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + (sec ? '<div class="oc-sec">' + esc(sec) + '</div>' : '') +
-      '<div class="oc-img" style="background:linear-gradient(145deg,' + shade(a.color, 1.12) + ',' + shade(a.color, .42) + ')">' + art + '</div><div class="oc-t">' + esc(appName(a)) + '</div></div>';
+      '<div class="oc-img" style="background:' + shade(a.color, .62) + '">' + art + '</div><div class="oc-t">' + esc(appName(a)) + '</div></div>';
   }
   function osItem(it) {
     var oc = osCfg(), lab = (oc.labels && oc.labels[it.id]) || it.l || '';
@@ -804,7 +806,7 @@
         var lab = ''; if (i === 0) lab = secs[0][0]; else if (left <= 0 && si + 1 < secs.length) { si++; left = secs[si][1]; lab = secs[si][0]; }
         left--; return cardHtml(a, 'ocard' + (o.cards ? ' oc-' + o.cards : ''), lab);
       }).join('');
-      $('osDeco').innerHTML = false ? '<div class="od-t">' + esc(o.deco) + '</div><div class="od-r">' + cards.slice(2, 8).map(function (a) { return '<i style="background:linear-gradient(145deg,' + shade(a.color, 1.1) + ',' + shade(a.color, .4) + ')"></i>'; }).join('') + '</div>' : '';
+      $('osDeco').innerHTML = false ? '<div class="od-t">' + esc(o.deco) + '</div><div class="od-r">' + cards.slice(2, 8).map(function (a) { return '<i style="background:' + shade(a.color, .62) + '"></i>'; }).join('') + '</div>' : '';
     }
     var at = document.querySelector('#row-apps .row-title');
     if (at && at.firstChild) at.firstChild.nodeValue = (oc.appsTitle || o.apps || 'التطبيقات') + ' ';
@@ -1178,7 +1180,7 @@
       attr('data-bg', bg ? '1' : ''); el.style.setProperty('--eb', bg);
       attr('data-hidden', L.hidden ? '1' : '');
       attr('data-view', L.view || '');
-      if (e[0] === 'row-apps') { el.setAttribute('data-shape', L.shape || 'circle'); attr('data-shapeset', L.shape ? '1' : ''); attr('data-radius', ''); }
+      if (e[0] === 'row-apps') { el.setAttribute('data-shape', L.shape || 'rounded'); attr('data-shapeset', L.shape ? '1' : ''); attr('data-radius', ''); }
       else { attr('data-radius', L.shape && RADIUS[L.shape] ? '1' : ''); el.style.setProperty('--er', RADIUS[L.shape] || ''); }
     });
     clampLayout(); try { fitTopbar(); } catch (e) {}
@@ -1819,7 +1821,7 @@
         { label: 'لون النص', value: nameOf(COLORS, l.color), act: function (k) { l.color = nextOf(COLORS, l.color, d(k)); applyLayout(); } },
         { label: 'لون الخلفية', value: nameOf(BGS, l.bg), act: function (k) { l.bg = nextOf(BGS, l.bg, d(k)); if (l.bg && l.alpha == null) l.alpha = 50; applyLayout(); } },
         { label: 'شفافية الخلفية', value: nf.format(l.alpha == null ? 50 : l.alpha) + '٪', act: function (k) { var a = l.alpha == null ? 50 : l.alpha; l.alpha = Math.max(0, Math.min(100, a + (d(k) > 0 ? 10 : -10))); if (!l.bg) l.bg = '0,0,0'; applyLayout(); } },
-        { label: id === 'row-apps' ? 'شكل الأيقونات' : 'الشكل', value: id === 'row-apps' ? nameOf(APP_SHAPES, l.shape || 'circle') : nameOf(SHAPES, l.shape), act: function (k) { if (id === 'row-apps') { l.shape = nextOf(APP_SHAPES, l.shape || 'circle', d(k)); applyLayout(); renderApps(); } else { l.shape = nextOf(SHAPES, l.shape, d(k)); applyLayout(); } } },
+        { label: id === 'row-apps' ? 'شكل الأيقونات' : 'الشكل', value: id === 'row-apps' ? nameOf(APP_SHAPES, l.shape || 'rounded') : nameOf(SHAPES, l.shape), act: function (k) { if (id === 'row-apps') { l.shape = nextOf(APP_SHAPES, l.shape || 'circle', d(k)); applyLayout(); renderApps(); } else { l.shape = nextOf(SHAPES, l.shape, d(k)); applyLayout(); } } },
         { label: 'طريقة العرض', value: nameOf(viewsFor(id), l.view), act: function (k) { l.view = nextOf(viewsFor(id), l.view, d(k)); applyLayout(); nav.refresh(); } },
         { label: l.hidden ? 'إظهار العنصر' : 'إخفاء العنصر', value: l.hidden ? 'مخفي' : 'ظاهر', act: function () { l.hidden = !l.hidden; applyLayout(); } }
       ];
@@ -2086,10 +2088,13 @@
   };
   if (PREVIEW) window.addEventListener('resize', function () { showSel(undefined, EDITABLES, function (i) { return '[data-edit="' + i + '"]'; }); });
   window.__editables = EDITABLES;
+  if (PREVIEW) window.addEventListener('message', function (e) {
+    try { var d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; if (d && d.__live) window.__live(d.__live); } catch (x) {}
+  });
   if (PREVIEW) {
     document.addEventListener('click', function (e) {
       var el = e.target.closest && e.target.closest('[data-edit]');
-      try { if (window.parent && window.parent.__previewSelect) window.parent.__previewSelect(el ? el.getAttribute('data-edit') : null); } catch (er) {}
+      try { if (window.parent && window.parent.__previewSelect) window.parent.__previewSelect(el ? el.getAttribute('data-edit') : null); } catch (er) { try { window.parent.postMessage({ __sel: el ? el.getAttribute('data-edit') : null }, '*'); } catch (e2) {} }
     }, true);
   }
   window.__test = { startSaver: startSaver, openPicker: openPicker, openPower: openPower, openEdit: openEdit, openSettings: openSettings, openSearch: openSearch, openQuran: openQuran, openStyle: function () { openElementStyle('row-apps', 'صف التطبيقات'); } };

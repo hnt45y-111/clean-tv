@@ -781,7 +781,7 @@
   document.addEventListener('click', function (e) {
     if (PREVIEW) {
       var ed = e.target.closest('[data-cedit]');
-      try { if (window.parent.__previewSelect) window.parent.__previewSelect(ed ? ed.getAttribute('data-cedit') : null); } catch (er) {}
+      try { if (window.parent.__previewSelect) window.parent.__previewSelect(ed ? ed.getAttribute('data-cedit') : null); } catch (er) { try { window.parent.postMessage({ __sel: ed ? ed.getAttribute('data-cedit') : null }, '*'); } catch (e2) {} }
       return;
     }
     if (touch()) return;
@@ -840,6 +840,10 @@
     showSel(o.select, CE, selFn);
     setTimeout(function () { showSel(undefined, CE, selFn); }, 350);
   };
+
+  if (PREVIEW) window.addEventListener('message', function (e) {
+    try { var d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; if (d && d.__live) window.__live(d.__live); } catch (x) {}
+  });
 
   // ---------- pairing with the phone ----------
   var pairT;

@@ -43,8 +43,15 @@ public class CastService extends Service {
     private HandlerThread ht;
     private volatile Socket sock;
     private volatile DataOutputStream out;
-    private volatile boolean sending;
     private long lastFrame;
+    /* newest encoded picture waits here; the sender thread always takes the newest and older ones are dropped, so the picture on the TV never lags behind */
+    private final java.util.concurrent.atomic.AtomicReference<byte[]> pending = new java.util.concurrent.atomic.AtomicReference<>();
+    private final Object wake = new Object();
+    private volatile boolean run;
+    private volatile int quality = 60;
+    private volatile long sendMs = 20;
+    private Bitmap shared;
+    private final ByteArrayOutputStream jpgBuf = new ByteArrayOutputStream(160 * 1024);
 
     static String token = null;
 
@@ -102,8 +109,11 @@ public class CastService extends Service {
             Socket s = new Socket();
             s.connect(new InetSocketAddress(host, 8687), 6000);
             s.setTcpNoDelay(true);
+            s.setSendBufferSize(96 * 1024);
             sock = s;
-            out = new DataOutputStream(new java.io.BufferedOutputStream(s.getOutputStream(), 256 * 1024));
+            out = new DataOutputStream(new java.io.BufferedOutputStream(s.getOutputStream(), 64 * 1024));
+            run = true;
+            new Thread(this::sendLoop, "cast-send").start();
             stage = "streaming";
             // open the viewer on the TV through ADB too, in case the TV blocks it from starting by itself
             new Thread(() -> {
@@ -125,9 +135,9 @@ public class CastService extends Service {
         DisplayMetrics dm = new DisplayMetrics();
         ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(dm);
         int w = dm.widthPixels, hgt = dm.heightPixels;
-        float sc = Math.min(1f, 1280f / Math.max(w, hgt));
+        float sc = Math.min(1f, 1152f / Math.max(w, hgt));
         int ow = Math.round(w * sc / 2) * 2, oh = Math.round(hgt * sc / 2) * 2;
-        reader = ImageReader.newInstance(ow, oh, PixelFormat.RGBA_8888, 2);
+        reader = ImageReader.newInstance(ow, oh, PixelFormat.RGBA_8888, 3);
         reader.setOnImageAvailableListener(r -> frame(r, ow, oh), h);
         vd = mp.createVirtualDisplay("moamal-cast", ow, oh, dm.densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, reader.getSurface(), null, h);
     }
@@ -137,44 +147,62 @@ public class CastService extends Service {
         try { img = r.acquireLatestImage(); } catch (Throwable t) { return; }
         if (img == null) return;
         long now = System.currentTimeMillis();
-        if (sending || now - lastFrame < 80) { img.close(); return; }
+        /* up to ~30 pictures a second; if the network is slow the interval grows by itself */
+        long gap = Math.max(33, Math.min(160, sendMs + 8));
+        if (now - lastFrame < gap) { img.close(); return; }
         lastFrame = now;
         try {
             Image.Plane p = img.getPlanes()[0];
             ByteBuffer buf = p.getBuffer();
             int rowPad = p.getRowStride() - p.getPixelStride() * w;
-            Bitmap bm = Bitmap.createBitmap(w + rowPad / p.getPixelStride(), h, Bitmap.Config.ARGB_8888);
-            bm.copyPixelsFromBuffer(buf);
+            int bw = w + rowPad / p.getPixelStride();
+            if (shared == null || shared.getWidth() != bw || shared.getHeight() != h) { if (shared != null) shared.recycle(); shared = Bitmap.createBitmap(bw, h, Bitmap.Config.ARGB_8888); }
+            shared.copyPixelsFromBuffer(buf);
             img.close();
-            Bitmap crop = rowPad == 0 ? bm : Bitmap.createBitmap(bm, 0, 0, w, h);
-            ByteArrayOutputStream o = new ByteArrayOutputStream(120 * 1024);
-            crop.compress(Bitmap.CompressFormat.JPEG, 60, o);
-            if (crop != bm) crop.recycle();
-            bm.recycle();
-            send(o.toByteArray());
+            jpgBuf.reset();
+            Bitmap src = rowPad == 0 ? shared : Bitmap.createBitmap(shared, 0, 0, w, h);
+            src.compress(Bitmap.CompressFormat.JPEG, quality, jpgBuf);
+            if (src != shared) src.recycle();
+            pending.set(jpgBuf.toByteArray());
+            synchronized (wake) { wake.notify(); }
         } catch (Throwable t) {
             try { img.close(); } catch (Throwable ignored) { }
         }
     }
 
-    private void send(byte[] jpg) {
-        DataOutputStream d = out;
-        if (d == null) return;
-        sending = true;
-        try {
-            d.writeInt(jpg.length);
-            d.write(jpg);
-            d.flush();
-            frames++;
-        } catch (Throwable t) {
-            error = "انقطع العرض";
-            stopSelf();
-        } finally { sending = false; }
+    /** writes the newest picture; measures how long the network takes and trades quality for speed when it is slow */
+    private void sendLoop() {
+        while (run) {
+            byte[] jpg = pending.getAndSet(null);
+            if (jpg == null) {
+                synchronized (wake) { try { wake.wait(200); } catch (InterruptedException e) { return; } }
+                continue;
+            }
+            DataOutputStream d = out;
+            if (d == null) continue;
+            long t0 = System.nanoTime();
+            try {
+                d.writeInt(jpg.length);
+                d.write(jpg);
+                d.flush();
+                frames++;
+            } catch (Throwable t) {
+                error = "انقطع العرض";
+                stopSelf();
+                return;
+            }
+            long ms = (System.nanoTime() - t0) / 1000000L;
+            sendMs = (sendMs * 3 + ms) / 4;
+            if (sendMs > 70 && quality > 38) quality -= 4;
+            else if (sendMs < 25 && quality < 68) quality += 2;
+        }
     }
 
     @Override
     public void onDestroy() {
         on = false;
+        run = false;
+        synchronized (wake) { wake.notifyAll(); }
         stage = "";
         try { if (vd != null) vd.release(); } catch (Throwable ignored) { }
         try { if (reader != null) reader.close(); } catch (Throwable ignored) { }

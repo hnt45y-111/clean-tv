@@ -220,6 +220,7 @@ async function loadPreview(frame) {
   window.__PREVIEW_DATA = { apps, bg, tv: !!(INFO && INFO.isTv), cfg: deepCopy(D.cfg) };
   frame.src = 'launcher/index.html?preview=1&t=' + Date.now();
 }
+window.addEventListener('message', e => { const d = e.data; if (d && typeof d === 'object' && '__sel' in d && window.__previewSelect) window.__previewSelect(d.__sel); });
 window.__previewSelect = id => {
   if (!D || !id || id === D.sel) return;
   tap(); D.sel = id; D.tab = 'el'; designPanel(); live({ select: id });
@@ -255,7 +256,9 @@ function live(o) {
   /* the page in the frame reads the design from here, so it always gets the latest one (no stale template after a quick change) */
   try { if (D && window.__PREVIEW_DATA && !(typeof isCarD === 'function' && isCarD())) window.__PREVIEW_DATA.cfg = deepCopy(D.cfg); } catch (e) {}
   if (o && D && o.settings === D.cfg.settings) o = Object.assign({}, o, { full: true });
-  try { const w = frameWin(); if (w && w.__live) w.__live(o); } catch (e) {}
+  try { const w = frameWin(); if (w && w.__live) w.__live(o); } catch (e) {
+    try { const f = $('#pvf'); if (f && f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ __live: o }), '*'); } catch (e2) {}
+  }
   const keys = Object.keys(o || {}).filter(k => k !== 'select');
   if (!keys.length) return;
   const quick = keys.every(k => k === 'layout');

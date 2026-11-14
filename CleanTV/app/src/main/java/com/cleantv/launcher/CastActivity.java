@@ -26,8 +26,14 @@ public class CastActivity extends Activity {
         if (last != null) img.setImageBitmap(last);
     }
 
+    private volatile Bitmap next;
+    private final java.util.concurrent.atomic.AtomicBoolean queued = new java.util.concurrent.atomic.AtomicBoolean();
+
     void show(final Bitmap bm) {
-        runOnUiThread(new Runnable() { public void run() { img.setImageBitmap(bm); } });
+        next = bm;
+        if (queued.compareAndSet(false, true)) {
+            runOnUiThread(new Runnable() { public void run() { queued.set(false); Bitmap b = next; if (b != null) img.setImageBitmap(b); img.invalidate(); } });
+        }
     }
 
     @Override

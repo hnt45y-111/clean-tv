@@ -10,6 +10,7 @@
 @font-face{font-family:Plex;src:url(launcher/fonts/PlexArabic-SemiBold.ttf);font-weight:600}
 @font-face{font-family:Plex;src:url(launcher/fonts/PlexArabic-Bold.ttf);font-weight:700 800}
 @font-face{font-family:Alx;src:url(launcher/fonts/Alexandria.ttf);font-weight:100 900}
+@font-face{font-family:Kufi;src:url(launcher/fonts/ReemKufi.ttf);font-weight:400 700}
 @font-face{font-family:PlexMono;src:url(launcher/fonts/PlexMono-Medium.ttf);font-weight:500}
 @font-face{font-family:Tj;src:url(launcher/fonts/Tajawal-Regular.ttf);font-weight:400}
 @font-face{font-family:Tj;src:url(launcher/fonts/Tajawal-Medium.ttf);font-weight:500}
@@ -372,6 +373,27 @@ nav.tabs button.on::after{width:22px}
 .report2 div{display:flex;justify-content:space-between;align-items:center;background:var(--panel2);border-radius:14px;padding:12px 14px;font-size:14px}
 .report2 span{color:var(--mute)}.report2 b{font-size:16px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== identity v1: ink / ivory / copper / chrome. Flat colours, R16 / R8 / R4 corners, Reem Kufi headings ===== */
+:root{--ac:#D9822B;--ac2:#E8A25E;--ac3:#B5681F;--act:#E8A25E;--sig:#B8BDC2;--live:#D9822B;--warn:#D9822B;--bad:#C8402F;--ok:#6FB59A;
+  --bg:#15181B;--bg2:#1A1E22;--panel:#23282D;--panel2:#2A3036;--line:#3A4046;--line2:#454C53;--ink:#EFE7D4;--mute:#A9AFA6;--onac:#15181B;
+  --r1:16px;--r2:8px;--r3:4px;--grad:#D9822B;--fd:Kufi,Alx,Plex,Tj,system-ui,sans-serif}
+body.light{--bg:#EFE7D4;--bg2:#E8DFC8;--panel:#F6F0E1;--panel2:#E2D8C0;--line:#CFC4A8;--line2:#BFB394;--ink:#15181B;--mute:#5C5F58;--onac:#15181B;--act:#A8601A;--ac:#D9822B;--sig:#1F6F6B}
+body::before{display:none}
+h1,h2,h3,.top h1,.brand h1{font-family:var(--fd)}
+.btn.pri,.pc-ic,.hero-ic{box-shadow:none}
+.dot.on{box-shadow:none}
+.hero{background:var(--panel)}.hero::after,.tv::before{display:none}
+.phead{background:var(--panel)}
+.btn.sm,.iconbtn,.chip,.tag{border-radius:var(--r2)}
+.iconbtn{border-radius:var(--r2)}
+#toast{border-radius:var(--r2);box-shadow:none}
+.sheet{border-radius:var(--r1) var(--r1) 0 0}
+nav.tabs{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--panel);border-top:3px solid var(--ac);border-radius:var(--r1)}
+.btn:focus-visible,.chip:focus-visible,.item.tap:focus-visible,.iconbtn:focus-visible,nav.tabs button:focus-visible{box-shadow:0 0 0 3px var(--ac)}
+.panel,.list,.tv,.gcard,.tile button,.tpl button,.ms,.acts button,.pcard{box-shadow:none}
+.mk .mf{fill:var(--ink)}.mk .ms{stroke:var(--ink)}.mk .mscr{fill:var(--bg)}.mk .mdot{fill:var(--ac)}
+.logo{width:92px;height:92px}
 </style>
 </head>
 <body>
@@ -380,7 +402,7 @@ nav.tabs button.on::after{width:22px}
 <section class="screen" id="login">
   <div class="scroll">
     <div class="brand">
-      <div class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#9C7A44"/><stop offset=".55" stop-color="#D6B47A"/><stop offset="1" stop-color="#F0DDB2"/></linearGradient></defs><path d="M40 8H22A14 14 0 0 0 8 22v20a14 14 0 0 0 14 14h20a14 14 0 0 0 14-14V30" fill="none" stroke="url(#lg)" stroke-width="4.5" stroke-linecap="round"/><path d="M21 41a12 12 0 0 1 12-12" fill="none" stroke="url(#lg)" stroke-width="4.5" stroke-linecap="round"/><circle cx="50" cy="14" r="5" fill="#D6B47A"/></svg></div>
+      <div class="logo"><svg class="mk" viewBox="0 0 100 100" aria-hidden="true"><path class="mf" d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z"/><path class="mf" d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z"/><rect class="mf" x="8" y="34" width="84" height="58" rx="12"/><rect class="mscr" x="15" y="41" width="70" height="44" rx="5"/><path class="ms" d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" fill="none" stroke-width="2.6"/><path class="ms" d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" fill="none" stroke-width="2.6"/><path class="ms" d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" fill="none" stroke-width="2.6"/><circle class="mdot" cx="50" cy="63" r="2.2"/><rect class="mf" x="20" y="92" width="8" height="4"/><rect class="mf" x="72" y="92" width="8" height="4"/></svg></div>
       <h1>مدير الشاشة</h1><div class="en">SCREEN MANAGER</div>
       <p>تحكّم هادئ بكل شاشة: التلفزيون والسيارة والموبايل، من مكان واحد.</p>
     </div>

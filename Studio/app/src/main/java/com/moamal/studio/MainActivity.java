@@ -82,6 +82,11 @@ public class MainActivity extends Activity {
             }
         });
         web.setWebChromeClient(new WebChromeClient());
+        /* the live preview is an iframe of the launcher pages: both must be able to read each other (same app, local files only) */
+        android.webkit.WebSettings ws = web.getSettings();
+        ws.setAllowFileAccess(true);
+        ws.setAllowFileAccessFromFileURLs(true);
+        ws.setAllowUniversalAccessFromFileURLs(true);
         web.addJavascriptInterface(new Bridge(), "A");
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");

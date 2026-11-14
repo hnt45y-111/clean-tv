@@ -216,7 +216,10 @@ function carLive() {
   pvDirect({ carcfg: c });
   if (D && D.sel) setTimeout(() => pvDirect({ select: D.sel }), 60);
 }
-function pvDirect(o) { try { const w = frameWin(); if (w && w.__live) w.__live(o); } catch (e) {} }
+function pvDirect(o) {
+  try { const w = frameWin(); if (w && w.__live) { w.__live(o); return; } } catch (e) { }
+  try { const f = $('#pvf'); if (f && f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ __live: o }), '*'); } catch (e) { }
+}
 async function carPreviewApps() {
   if (!CONN.connected) return null;
   try { const l = await tvAppList(); return l && l.length ? l : null; } catch (e) { return null; }
@@ -234,6 +237,7 @@ async function carLoadPreview(frame) {
     });
   }
   const demo = [['com.google.android.apps.maps', 'خرائط گوگل'], ['com.waze', 'ويز'], ['com.syu.bt/.BtMusic', 'BT Music'], ['com.spotify.music', 'سبوتيفاي'], ['com.syu.radio', 'راديو'], ['com.syu.bt', 'اتصال'], ['com.zjinnova.zlink', 'زي لينك'], ['com.syu.camera', 'كاميرا'], ['com.google.android.youtube', 'يوتيوب'], ['com.android.settings', 'إعدادات']].map(([pkg, label]) => ({ pkg, label, cls: pkg.includes('/') ? pkg.split('/')[1] : undefined }));
+  try { localStorage.setItem('carcfg', JSON.stringify(CC())); } catch (e) { }
   window.__PREVIEW_DATA = { cfg: { carcfg: deepCopy(CC()) }, apps: carAppsCache || demo, carlog: carLogCache ? Object.assign({ odoBase: 0, done: {} }, carLogCache, { odo: carLogCache.odo || 0 }) : undefined };
   frame.src = 'launcher/car.html?preview=1&t=' + Date.now();
 }

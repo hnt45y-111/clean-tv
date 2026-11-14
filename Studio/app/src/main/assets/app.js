@@ -80,16 +80,16 @@ const errText = e => {
 const fmtDate = ms => new Date(ms).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' });
 
 /* ============================================================ theme */
-const ACCENTS = [['#D6B47A', 'شمباني'], ['#C9CED6', 'بلاتيني'], ['#C08B5C', 'برونزي'], ['#E07A8F', 'ياقوتي'], ['#5CC6A0', 'زمردي'], ['#6E9BFF', 'أزرق ليلي']];
+const ACCENTS = [['#D9822B', 'نحاسي (الهوية)'], ['#1F6F6B', 'فيروزي'], ['#B8BDC2', 'كروم'], ['#EFE7D4', 'عاجي'], ['#C8402F', 'أحمر البث']];
 function applyTheme() {
-  if (!kv('themeV3', 0)) { const o = kv('theme', null); if (o) { o.ac = ACCENTS[0][0]; kvSet('theme', o); } kvSet('themeV3', 1); }
+  if (!kv('themeV4', 0)) { const o = kv('theme', null); if (o) { o.ac = ACCENTS[0][0]; kvSet('theme', o); } kvSet('themeV4', 1); }
   const th = kv('theme', { dark: true, ac: ACCENTS[0][0] });
   document.body.classList.toggle('light', !th.dark);
   const R = document.documentElement.style;
   R.setProperty('--ac', th.ac); R.setProperty('--act', th.ac);
   /* mixed in JS: older phone WebViews drop color-mix(), which used to wipe the buttons and cards after changing the colour */
-  R.setProperty('--grad', `linear-gradient(120deg,${mixHex(th.ac, '#000000', .62)},${th.ac} 55%,${mixHex(th.ac, '#ffffff', .55)})`);
-  try { B.bars(th.dark, th.dark ? '#0B0C10' : '#F5F2EC'); } catch (e) {}
+  R.setProperty('--grad', th.ac);
+  try { B.bars(th.dark, th.dark ? '#15181B' : '#EFE7D4'); } catch (e) {}
   cmFallback();
 }
 function hexRgb3(h) { h = String(h || '#888888').replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h.slice(0, 6), 16) || 0; return [n >> 16, (n >> 8) & 255, n & 255]; }
