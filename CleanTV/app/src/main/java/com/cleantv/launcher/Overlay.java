@@ -127,4 +127,76 @@ public class Overlay {
             }
         });
     }
+
+    // ---------- scores strip above other apps (optional, chosen in the app) ----------
+    private static View strip;
+    private static TextView stripBadge, stripText;
+    private static String[] stripPages = new String[0];
+    private static String stripBadgeTxt = "";
+    private static boolean stripOn = false;
+    private static int stripIdx = 0, stripTick = 0;
+    private static boolean stripLoop = false;
+
+    /** The page tells us what the strip should say; it is drawn only while another app is in front. */
+    static void setStrip(final Context ctx, final boolean on, final String badge, final String[] pages) {
+        final Context c = ctx.getApplicationContext();
+        H.post(new Runnable() {
+            @Override
+            public void run() {
+                stripOn = on && pages != null && pages.length > 0;
+                stripPages = pages == null ? new String[0] : pages;
+                stripBadgeTxt = badge == null ? "" : badge;
+                if (stripIdx >= stripPages.length) stripIdx = 0;
+                if (stripOn && !stripLoop) { stripLoop = true; H.post(new Runnable() { @Override public void run() { stripStep(c); } }); }
+                else if (!stripOn) hideStrip(c);
+                else paintStrip();
+            }
+        });
+    }
+
+    private static void stripStep(Context c) {
+        if (!stripOn) { stripLoop = false; hideStrip(c); return; }
+        boolean want = !MainActivity.foreground && allowed(c);
+        if (want) {
+            if (strip == null) showStrip(c);
+            if (++stripTick >= 5) { stripTick = 0; stripIdx = (stripIdx + 1) % stripPages.length; }
+            paintStrip();
+        } else hideStrip(c);
+        final Context cc = c;
+        H.postDelayed(new Runnable() { @Override public void run() { stripStep(cc); } }, 1500);
+    }
+
+    private static void paintStrip() {
+        if (strip == null || stripPages.length == 0) return;
+        stripBadge.setText(stripBadgeTxt);
+        stripText.setText(stripPages[Math.min(stripIdx, stripPages.length - 1)]);
+    }
+
+    private static void showStrip(Context c) {
+        try {
+            LinearLayout row = new LinearLayout(c);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            row.setBackgroundColor(Color.argb(238, 21, 24, 27));
+            TextView b = text(c, "", 17, Color.WHITE, true);
+            b.setBackgroundColor(Color.rgb(200, 64, 47));
+            b.setPadding(dp(c, 18), dp(c, 8), dp(c, 18), dp(c, 8));
+            TextView t = text(c, "", 19, Color.rgb(239, 231, 212), true);
+            t.setSingleLine(true);
+            t.setPadding(dp(c, 16), dp(c, 8), dp(c, 16), dp(c, 8));
+            row.addView(b);
+            row.addView(t, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            WindowManager.LayoutParams p = params(Gravity.BOTTOM, 0);
+            p.width = WindowManager.LayoutParams.MATCH_PARENT;
+            ((WindowManager) c.getSystemService(Context.WINDOW_SERVICE)).addView(row, p);
+            strip = row; stripBadge = b; stripText = t;
+        } catch (Throwable ignored) { strip = null; }
+    }
+
+    private static void hideStrip(Context c) {
+        if (strip == null) return;
+        try { ((WindowManager) c.getSystemService(Context.WINDOW_SERVICE)).removeView(strip); } catch (Throwable ignored) { }
+        strip = null; stripBadge = null; stripText = null;
+    }
 }
