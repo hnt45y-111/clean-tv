@@ -1408,6 +1408,7 @@
     b.setAttribute('data-faith', F.rel + (F.rel === 'muslim' ? '-' + F.sect : ''));
     var ot = document.querySelector('#row-occasions .row-title');
     if (ot) ot.innerHTML = F.rel === 'christian' ? 'الأعياد والمناسبات المسيحية <small>حسب التقويم الميلادي</small>' : F.rel === 'muslim' && F.sect === 'sunni' ? 'المناسبات الإسلامية <small>حسب التقويم الهجري</small>' : F.rel === 'muslim' ? 'مناسبات أهل البيت (ع) <small>المواليد والوفيات والمناسبات الدينية</small>' : 'المناسبات';
+    try { applyTickerBox(); } catch (e) {}
     var ow = document.querySelector('#timeblock .owner'); if (ow) ow.textContent = (settings.owner && settings.owner.indexOf('مؤمل') < 0 ? settings.owner : '') || 'مدير الشاشات';
 
     var mt = document.querySelector('#row-matches .row-title');
@@ -1473,7 +1474,7 @@
         if (c.pin) { bgPinned = c.path; save('bgPinned', c.path); setBg(c.path); } else showBg();
         toast('وصلت صورة جديدة من الموبايل وصارت خلفية 📱');
       }
-      else if (c.type === 'search') { openSearch(); $('searchInput').value = c.value || ''; doSearch(); }
+      else if (c.type === 'search') { if (layer === 'live' && window.Live && window.Live.search) { window.Live.search(c.value || ''); return; } openSearch(); $('searchInput').value = c.value || ''; doSearch(); }
       else if (c.type === 'surah') playSurah(+c.value || 0);
       else if (c.type === 'quran') { if (c.value === 'stop') { A.quranStop(); qm.playing = -1; } else A.quranToggle(); renderNowPlaying(); }
       else if (c.type === 'clickSound') { settings.clickSound = !!c.value; saveSettings(); }
@@ -1534,7 +1535,7 @@
   var TKL_NAME = {}; TKL.forEach(function (l) { TKL_NAME[l[0]] = l[1]; });
   /* team names are matched in a simplified form so that "Manchester United FC" and "manchester united" are the same */
   function nn(x) { return String(x || '').toLowerCase().replace(/\b(fc|cf|afc|sc|ac|club|de futbol)\b/g, '').replace(/[^a-z0-9\u0600-\u06ff]/g, ''); }
-  var liveList = [], liveNews = [], liveNote = '';
+  var liveList = [], liveNews = [], liveNote = '', tkStat = 'لسه ما تحدّث';
   var favUp = { at: 0, key: '', list: [] };   /* upcoming matches of the chosen teams / leagues (looked up again every 30 minutes) */
   var sportNews = { at: 0, key: '', list: [] };
   function espnDay(ms) { var d = new Date(ms); return d.getUTCFullYear() + ('0' + (d.getUTCMonth() + 1)).slice(-2) + ('0' + d.getUTCDate()).slice(-2); }
@@ -1617,6 +1618,7 @@
       });
       soon.sort(function (x, y) { return x.at - y.at; });
       var done = function (up, news) {
+        tkStat = 'مباشر ' + out.length + ' · قادمة ' + up.length + ' · أخبار ' + (news || []).length + ' · مصادر النتائج ' + got + '/' + slugs.length;
         /* chosen teams / leagues: what is on now, then their next matches. nothing chosen: what is on now, else what starts soon */
         liveList = sel.any ? out.concat(up.filter(function (m) { return m.at > Date.now() - 6e4; }).slice(0, 8)) : (out.length ? out : soon.slice(0, 8));
         liveNews = news || [];
@@ -1646,17 +1648,27 @@
     var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
     return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>' + nf.format(+m.hs || 0) + '</b><u></u><b>' + nf.format(+m.as || 0) + '</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
   }
-  /* what the strip says, page by page: matches two at a time (live first), then one sports headline per page */
+  /* what the strip says, page by page: matches two at a time, then one sports headline per page. The order is the user's choice:
+     news -> live matches -> nearest matches of the chosen teams (the default). */
+  var TK_ORDERS = [['nlu', 'أخبار ← مباشر ← قادمة'], ['lun', 'مباشر ← قادمة ← أخبار'], ['lnu', 'مباشر ← أخبار ← قادمة'], ['lu', 'مباريات فقط'], ['n', 'أخبار فقط'], ['l', 'المباشر فقط']];
   function tickerPages() {
-    var pages = [], plain = [];
-    for (var q = 0; q < liveList.length; q += 2) {
-      var two = liveList.slice(q, q + 2), live = two.some(function (m) { return !m.pre; }), badge = live ? 'مباشر' : 'مباريات قادمة';
-      pages.push({ badge: badge, html: two.map(matchHtml).join('<span class="lt-sep"></span>') });
-      plain.push(badge + '\t' + two.map(plainOf).join('   │   '));
+    var pages = [], plain = [], order = settings.tickerOrder || 'nlu';
+    var liveM = liveList.filter(function (m) { return !m.pre; }), nextM = liveList.filter(function (m) { return m.pre; });
+    function matchPages(list, badge) {
+      for (var q = 0; q < list.length; q += 2) {
+        var two = list.slice(q, q + 2);
+        pages.push({ badge: badge, html: two.map(matchHtml).join('<span class="lt-sep"></span>') });
+        plain.push(badge + '\t' + two.map(plainOf).join('   │   '));
+      }
     }
-    liveNews.forEach(function (t) {
-      pages.push({ badge: 'أخبار رياضية', html: '<span class="lt-m"><span class="lt-news">' + esc(t) + '</span></span>' });
-      plain.push('أخبار رياضية\t' + t);
+    function newsPages() {
+      liveNews.forEach(function (t) {
+        pages.push({ badge: 'أخبار رياضية', html: '<span class="lt-m"><span class="lt-news">' + esc(t) + '</span></span>' });
+        plain.push('أخبار رياضية\t' + t);
+      });
+    }
+    order.split('').forEach(function (c) {
+      if (c === 'n') newsPages(); else if (c === 'l') matchPages(liveM, 'مباشر'); else if (c === 'u') matchPages(nextM, 'مباريات قادمة');
     });
     if (!pages.length && liveNote) { pages.push({ badge: 'النتائج', html: '<span class="lt-m"><em>' + esc(liveNote) + '</em></span>' }); }
     return { pages: pages, plain: plain };
@@ -1665,7 +1677,18 @@
     if (!HAS_ANDROID || !A.tickerOverlay) return;
     try { A.tickerOverlay(!!(on && settings.tickerApps === true && plain.length), plain.length ? plain[0].split('\t')[0] : '', plain.join('\n')); } catch (e) {}
   }
+  /* size, position and trimming of the strip (all chosen by the user): width in %, side, height, distance from the bottom, text size, corner radius */
+  function applyTickerBox() {
+    var t = $('liveTicker'); if (!t) return;
+    var num = function (v, d, lo, hi) { v = +v; if (!isFinite(v) || v === 0 && d !== 0) v = d; return Math.max(lo, Math.min(hi, v)); };
+    var w = num(settings.tickerW, 100, 30, 100), h = num(settings.tickerH, 64, 40, 140), y = settings.tickerY == null ? 0 : Math.max(0, Math.min(400, +settings.tickerY || 0)), fs = num(settings.tickerFs, 100, 60, 180), r = settings.tickerR == null ? 0 : Math.max(0, Math.min(50, +settings.tickerR || 0));
+    var al = settings.tickerAlign || 'center', gap = 100 - w, left = al === 'left' ? 0 : al === 'right' ? gap : gap / 2;
+    t.style.left = left + '%'; t.style.right = (gap - left) + '%'; t.style.height = h + 'px'; t.style.bottom = (22 + y) + 'px';
+    t.style.borderRadius = r + 'px'; t.style.overflow = 'hidden';
+    t.style.setProperty('--tkz', String(fs / 100));
+  }
   function renderTicker() {
+    applyTickerBox();
     var t = $('liveTicker'); if (!t) return;
     var tp = tickerPages(), on = settings.ticker !== false && tp.pages.length > 0;
     t.classList.toggle('on', on); document.body.classList.toggle('tickeron', on);
@@ -1733,6 +1756,14 @@
           settings.tickerApps = settings.tickerApps !== true; saveSettings(); renderTicker();
         } },
         { label: 'أخبار رياضية بالشريط', value: settings.tickerNews === false ? 'متوقفة' : 'شغّالة', act: function () { settings.tickerNews = settings.tickerNews === false; saveSettings(); sportNews.at = 0; refreshLive(); } },
+        { label: 'محتوى الشريط وترتيبه', value: (TK_ORDERS.filter(function (o) { return o[0] === (settings.tickerOrder || 'nlu'); })[0] || TK_ORDERS[0])[1], act: function (k) { settings.tickerOrder = cycle(TK_ORDERS.map(function (o) { return o[0]; }), settings.tickerOrder || 'nlu', k === 'ArrowRight' ? -1 : 1); saveSettings(); renderTicker(); } },
+        { label: 'عرض الشريط', value: nf.format(settings.tickerW || 100) + '٪', act: function (k) { settings.tickerW = cycle([40, 50, 60, 70, 80, 90, 100], settings.tickerW || 100, k === 'ArrowRight' ? -1 : 1); saveSettings(); renderTicker(); } },
+        { label: 'مكان الشريط', value: { left: 'يسار', center: 'وسط', right: 'يمين' }[settings.tickerAlign || 'center'], act: function (k) { settings.tickerAlign = cycle(['left', 'center', 'right'], settings.tickerAlign || 'center', k === 'ArrowRight' ? -1 : 1); saveSettings(); renderTicker(); } },
+        { label: 'ارتفاع الشريط', value: nf.format(settings.tickerH || 64), act: function (k) { settings.tickerH = cycle([44, 52, 64, 76, 88, 100, 120], settings.tickerH || 64, k === 'ArrowRight' ? -1 : 1); saveSettings(); renderTicker(); } },
+        { label: 'بعد الشريط عن الأسفل', value: nf.format(settings.tickerY || 0), act: function (k) { settings.tickerY = cycle([0, 20, 40, 80, 120, 200, 300], settings.tickerY || 0, k === 'ArrowRight' ? -1 : 1); saveSettings(); renderTicker(); } },
+        { label: 'حجم خط الشريط', value: nf.format(settings.tickerFs || 100) + '٪', act: function (k) { settings.tickerFs = cycle([70, 80, 90, 100, 120, 140, 160], settings.tickerFs || 100, k === 'ArrowRight' ? -1 : 1); saveSettings(); renderTicker(); } },
+        { label: 'استدارة زوايا الشريط', value: nf.format(settings.tickerR || 0), act: function (k) { settings.tickerR = cycle([0, 8, 16, 24, 32, 40], settings.tickerR || 0, k === 'ArrowRight' ? -1 : 1); saveSettings(); renderTicker(); } },
+        { label: 'حالة الشريط', value: tkStat, act: function () { refreshLive(); toast('جاري تحديث الشريط…'); } },
         { label: 'اتجاه شريط النتائج', value: settings.tickerDir === 'ltr' ? 'من اليسار لليمين' : 'من اليمين لليسار', act: function () { settings.tickerDir = settings.tickerDir === 'ltr' ? 'rtl' : 'ltr'; saveSettings(); renderTicker(); } },
         { label: 'مصادر الخلفيات ووقت التبديل', value: intervalText(settings.bgInterval || 300), act: function () { closeModal(); openBgSources(); return false; } },
         { label: 'شاشة التوقف بعد', value: nf.format(settings.saverMin || 10) + ' دقايق', act: function (k) { settings.saverMin = cycle([5, 10, 15, 20, 30], settings.saverMin || 10, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },

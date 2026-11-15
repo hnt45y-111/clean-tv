@@ -72,6 +72,8 @@ public class LiveActivity extends Activity {
     private FrameLayout root;
     private SurfaceView sv;
     private WebView yt;
+    private String ytWatch;
+    private boolean ytFell;
     private LinearLayout listPanel;
     private ListView fList, cList;
     private BaseAdapter fAd, cAd;
@@ -499,7 +501,14 @@ public class LiveActivity extends Activity {
         WebSettings ws = yt.getSettings();
         ws.setJavaScriptEnabled(true); ws.setDomStorageEnabled(true); ws.setMediaPlaybackRequiresUserGesture(false);
         ws.setUserAgentString("Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36");
-        yt.setWebViewClient(new WebViewClient());
+        yt.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView v, String url) {
+                if (ytFell) { for (int i = 1; i <= 4; i++) h.postDelayed(new Runnable() { public void run() { if (yt != null) yt.evaluateJavascript("var v=document.querySelector('video');if(v){v.muted=false;v.play();}", null); } }, i * 1800L); }
+            }
+        });
+        yt.addJavascriptInterface(new Object() {
+            @android.webkit.JavascriptInterface public void fail() { h.post(new Runnable() { public void run() { ytFallback(); } }); }
+        }, "YtB");
         root.addView(yt, 1, new FrameLayout.LayoutParams(-1, -1));
     }
 
@@ -531,7 +540,24 @@ public class LiveActivity extends Activity {
         return null;
     }
 
+    /** the normal YouTube page of the same video / live channel: used when the owner does not allow the embedded player (error 152) */
+    private static String ytWatchOf(String url) {
+        Matcher m = Pattern.compile("(?:[?&]v=|youtu\\.be/|/live/|/embed/|/shorts/)([\\w-]{11})").matcher(url);
+        if (m.find()) return "https://m.youtube.com/watch?v=" + m.group(1);
+        m = Pattern.compile("/channel/(UC[\\w-]{22})").matcher(url);
+        if (m.find()) return "https://m.youtube.com/channel/" + m.group(1) + "/live";
+        return url.replace("://www.youtube.com", "://m.youtube.com");
+    }
+
+    private void ytFallback() {
+        if (yt == null || ytWatch == null || ytFell) return;
+        ytFell = true;
+        yt.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
+        yt.loadUrl(ytWatch);
+    }
+
     private void playYT(final String url, final int forIdx) {
+        ytWatch = ytWatchOf(url); ytFell = false;
         if (player != null) player.stop();
         qualV.setText("YouTube");
         new Thread(new Runnable() { public void run() {
@@ -541,7 +567,12 @@ public class LiveActivity extends Activity {
                 if (src == null) { state.setText("ما گدرت أشغّل رابط يوتيوب هذا داخل البرنامج"); showPanel(8000); return; }
                 ensureYT();
                 yt.setVisibility(View.VISIBLE);
-                String html = "<!doctype html><html><body style=\"margin:0;background:#000\"><iframe src=\"" + src + "\" allow=\"autoplay; encrypted-media; fullscreen\" allowfullscreen frameborder=\"0\" style=\"position:fixed;left:0;top:0;width:100%;height:100%;border:0\"></iframe></body></html>";
+                String api = src + (src.contains("?") ? "&" : "?") + "enablejsapi=1&origin=https://www.youtube.com";
+                String html = "<!doctype html><html><body style=\"margin:0;background:#000\"><iframe id=\"f\" src=\"" + api + "\" allow=\"autoplay; encrypted-media; fullscreen\" allowfullscreen frameborder=\"0\" style=\"position:fixed;left:0;top:0;width:100%;height:100%;border:0\"></iframe>"
+                        + "<script>var f=document.getElementById('f');function L(){try{f.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*');f.contentWindow.postMessage(JSON.stringify({event:'command',func:'addEventListener',args:['onError']}),'*');}catch(e){}}"
+                        + "f.onload=function(){L();setTimeout(L,1200);setTimeout(L,3000);};"
+                        + "window.addEventListener('message',function(e){try{var d=typeof e.data==='string'?JSON.parse(e.data):e.data;if(d&&(d.event==='onError'||(d.info&&d.info.errorCode)||(d.event==='infoDelivery'&&d.info&&d.info.playerState===-1&&false))){YtB.fail();}}catch(x){}});"
+                        + "setTimeout(function(){L();},800);</script></body></html>";
                 yt.loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null);
                 state.setText("");
                 h.removeCallbacks(hide); h.postDelayed(hide, 5000);

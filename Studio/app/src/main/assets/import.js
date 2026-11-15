@@ -264,8 +264,13 @@ function cssHtml(css, car) {
 function osPanelWire(box, S) {
   const redo = () => { changed(); live({ settings: S }); designPanel(); };
   const soft = () => { changed(); live({ settings: S }); };
+  box.addEventListener('input', e => {
+    const r = e.target.closest('[data-tkr]'); if (!r) return;
+    S[r.dataset.tkr] = +r.value; const o = $('#tkv_' + r.dataset.tkr); if (o) o.textContent = r.value + (r.dataset.u || '');
+    soft();
+  });
   box.addEventListener('click', e => {
-    const t = e.target.closest('[data-ob],[data-ok],[data-oc],[data-oreset],[data-css],[data-oav],[data-tk],[data-ttm]'); if (!t) return;
+    const t = e.target.closest('[data-ob],[data-ok],[data-oc],[data-oreset],[data-css],[data-oav],[data-tk],[data-ttm],[data-tko],[data-tka]'); if (!t) return;
     e.stopPropagation(); tap();
     const isCyt = S.skin === 'cyt', O = isCyt ? (S.cyt = S.cyt || {}) : (S.os = S.os || {});
     if (t.dataset.css) {
@@ -275,6 +280,8 @@ function osPanelWire(box, S) {
     }
     if (t.dataset.oreset) { delete S.os; redo(); return; }
     if (t.dataset.ttm) { S.tickerTeams = (S.tickerTeams || []).filter(x => String(x) !== t.dataset.ttm); tkNames(S); redo(); return; }
+    if (t.dataset.tko) { S.tickerOrder = t.dataset.tko; redo(); return; }
+    if (t.dataset.tka) { S.tickerAlign = t.dataset.tka; redo(); return; }
     if (t.dataset.tlg) { S.tickerLeagues = (S.tickerLeagues || []).filter(x => x !== t.dataset.tlg); if (!S.tickerLeagues.length) delete S.tickerLeagues; redo(); return; }
     if (t.dataset.tk === 'clear') { delete S.tickerTeams; delete S.tickerNames; redo(); return; }
     if (t.dataset.tk === 'clearL') { delete S.tickerLeagues; redo(); return; }
@@ -332,6 +339,11 @@ function osPanelWire(box, S) {
         <div class="lb" style="margin:14px 0 6px"><span class="sub">الدوريات والكؤوس (تطلع مبارياتها المباشرة والقادمة)</span></div>
         <div class="chips">${(S.tickerLeagues || []).map(sl => { const l = TK_LG.find(x => x[0] === sl); return l ? `<button class="chip on" data-tlg="${esc(sl)}">${esc(l[1])} ×</button>` : ''; }).join('')}</div>
         <button class="btn sec full" data-tk="leagues" style="margin-top:8px">${ic('layers')} اختار دوريات وكؤوس</button>${(S.tickerLeagues || []).length ? `<button class="btn ghost full" data-tk="clearL">شيل الدوريات</button>` : ''}
+        <div class="lb" style="margin:14px 0 6px"><span class="sub">شنو يطلع بالشريط وبأي ترتيب</span></div>
+        <div class="chips">${TK_ORDERS.map(([id, n]) => `<button class="chip ${(S.tickerOrder || 'nlu') === id ? 'on' : ''}" data-tko="${id}">${esc(n)}</button>`).join('')}</div>
+        <div class="lb" style="margin:14px 0 6px"><span class="sub">حجم الشريط ومكانه (ينطبق بالمعاينة)</span></div>
+        ${[['tickerW', 'العرض', 30, 100, 5, 100, '٪'], ['tickerH', 'الارتفاع', 40, 140, 4, 64, ''], ['tickerY', 'البعد عن الأسفل', 0, 400, 10, 0, ''], ['tickerFs', 'حجم الخط', 60, 180, 10, 100, '٪'], ['tickerR', 'استدارة الزوايا', 0, 50, 2, 0, '']].map(([k, n, lo, hi, st, d, u]) => `<div class="ctl"><div class="lb"><span>${n}</span><b id="tkv_${k}">${S[k] != null ? S[k] : d}${u}</b></div><input type="range" min="${lo}" max="${hi}" step="${st}" value="${S[k] != null ? S[k] : d}" data-tkr="${k}" data-u="${u}"></div>`).join('')}
+        <div class="chips" style="margin-top:6px">${[['left', 'يسار'], ['center', 'وسط'], ['right', 'يمين']].map(([v, n]) => `<button class="chip ${(S.tickerAlign || 'center') === v ? 'on' : ''}" data-tka="${v}">${n}</button>`).join('')}</div>
         <div class="list" style="margin:14px 0 0"><div class="item tap" data-tk="news" style="padding:6px 0;min-height:0"><div class="t"><b>أخبار رياضية بالشريط</b><small>عناوين عربية عن فرقك ودورياتك تمر بنفس الشريط</small></div><div class="toggle ${S.tickerNews !== false ? 'on' : ''}"></div></div></div></div>`;
       p.insertBefore(box, p.firstChild); osPanelWire(box, S);
       const my = document.createElement('div');
@@ -401,6 +413,7 @@ const TK_LG = [
   ['afc.champions', 'دوري أبطال آسيا', 'قارية'], ['caf.champions', 'دوري أبطال أفريقيا', 'قارية'], ['conmebol.libertadores', 'كوبا ليبرتادوريس', 'قارية'], ['fifa.cwc', 'كأس العالم للأندية', 'قارية'],
   ['fifa.world', 'كأس العالم', 'منتخبات'], ['fifa.worldq.afc', 'تصفيات آسيا لكأس العالم', 'منتخبات'], ['fifa.worldq.uefa', 'تصفيات أوروبا لكأس العالم', 'منتخبات'], ['fifa.worldq.caf', 'تصفيات أفريقيا لكأس العالم', 'منتخبات'], ['fifa.worldq.conmebol', 'تصفيات أمريكا الجنوبية', 'منتخبات'], ['afc.asian.cup', 'كأس آسيا', 'منتخبات'], ['uefa.euro', 'كأس أمم أوروبا', 'منتخبات'], ['conmebol.america', 'كوبا أمريكا', 'منتخبات'], ['caf.nations', 'كأس الأمم الأفريقية', 'منتخبات'], ['uefa.nations', 'دوري الأمم الأوروبية', 'منتخبات'], ['fifa.friendly', 'المباريات الودية الدولية', 'منتخبات']
 ];
+const TK_ORDERS = [['nlu', 'أخبار ← مباشر ← قادمة'], ['lun', 'مباشر ← قادمة ← أخبار'], ['lnu', 'مباشر ← أخبار ← قادمة'], ['lu', 'مباريات فقط'], ['n', 'أخبار فقط'], ['l', 'المباشر فقط']];
 /* the Arabic names of the chosen teams go along, they are the search words of the sports headlines */
 function tkNames(S) { const names = (S.tickerTeams || []).map(id => (TK_ALL.find(x => x.key === String(id)) || {}).name).filter(Boolean); if (names.length) S.tickerNames = names; else delete S.tickerNames; }
 
