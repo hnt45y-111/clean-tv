@@ -31,6 +31,7 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.VideoSize;
 import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.datasource.HttpDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 
@@ -193,12 +194,28 @@ public class LiveActivity extends Activity {
             }
             @Override public void onPlayerError(PlaybackException e) {
                 failed++;
-                state.setText("هذي القناة ما اشتغلت الآن. جرّب قناة ثانية بالأسهم");
+                state.setText("هذي القناة ما اشتغلت الآن (" + why(e) + "). جرّب قناة ثانية بالأسهم");
                 showPanel(8000);
                 if (failed < 2) h.postDelayed(new Runnable() { public void run() { play(idx); } }, 2500);
             }
         });
         play(idx);
+    }
+
+    /** the reason in a few words, so that a channel that does not play can be told apart: blocked, gone, no internet... */
+    private static String why(PlaybackException e) {
+        Throwable c = e.getCause();
+        while (c != null) {
+            if (c instanceof HttpDataSource.InvalidResponseCodeException) {
+                int code = ((HttpDataSource.InvalidResponseCodeException) c).responseCode;
+                return code == 403 || code == 451 ? "الخادم رفض الطلب " + code + "، غالباً محجوبة خارج بلدها" : code == 404 || code == 410 ? "الرابط ما عاد موجود " + code : "رد الخادم " + code;
+            }
+            if (c instanceof java.net.UnknownHostException) return "ما لگيت عنوان الخادم";
+            if (c instanceof java.net.SocketTimeoutException) return "الخادم تأخر بالرد";
+            if (c instanceof javax.net.ssl.SSLException) return "مشكلة شهادة الأمان";
+            c = c.getCause();
+        }
+        return e.getErrorCodeName();
     }
 
     private void loadRemoteLogo(final String url, final int forIdx) {
