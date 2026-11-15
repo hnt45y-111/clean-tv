@@ -251,7 +251,7 @@ public class RemoteServer extends Thread {
                 o.put("brand", android.os.Build.BRAND).put("model", android.os.Build.MODEL).put("android", android.os.Build.VERSION.RELEASE)
                         .put("sdk", android.os.Build.VERSION.SDK_INT).put("isTv", TvControls.isTv(ctx)).put("mode", prefs().getString("mode", "tv"))
                         .put("a11y", PowerService.instance != null).put("overlay", Overlay.allowed(ctx)).put("fg", PowerService.foregroundPkg)
-                        .put("launcherFg", MainActivity.foreground);
+                        .put("launcherFg", MainActivity.foreground).put("lastCrash", prefs().getString("lastCrashKept", ""));
                 try { o.put("version", ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0).versionCode); } catch (Throwable ignored) { }
                 return o.toString().getBytes(StandardCharsets.UTF_8);
             }

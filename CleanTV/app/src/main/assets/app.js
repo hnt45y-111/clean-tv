@@ -1550,22 +1550,33 @@
         });
       });
       soon.sort(function (x, y) { return x.at - y.at; });
-      liveList = out.length ? out : soon.slice(0, 12); renderTicker();
+      liveList = out.length ? out : soon.slice(0, 8); renderTicker();
     });
+  }
+  var tk = { sig: '', pages: [], i: 0, t: 0 };
+  function tickPage() {
+    var r = document.querySelector('#liveTicker .lt-run'); if (!r || !tk.pages.length) return;
+    r.innerHTML = tk.pages[tk.i % tk.pages.length]; r.classList.toggle('b', tk.i % 2 === 1); tk.i++;
   }
   function renderTicker() {
     var t = $('liveTicker'); if (!t) return;
     var on = settings.ticker !== false && liveList.length > 0;
     t.classList.toggle('on', on); document.body.classList.toggle('tickeron', on);
-    if (!on) { t.innerHTML = ''; return; }
+    if (!on) { clearInterval(tk.t); tk = { sig: '', pages: [], i: 0, t: 0 }; t.innerHTML = ''; return; }
     var pre = !!liveList[0].pre;
-    var one = liveList.map(function (m) {
+    var items = liveList.map(function (m) {
       if (m.pre) { var d = new Date(m.at), tm = d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }), same = d.toDateString() === new Date().toDateString(); return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>ضد</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + (same ? 'اليوم' : 'باچر') + ' ' + tm + '</em></span>'; }
       var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
       return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>' + nf.format(+m.hs || 0) + '</b><u></u><b>' + nf.format(+m.as || 0) + '</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
-    }).join('<span class="lt-sep"></span>') + '<span class="lt-sep"></span>';
-    t.setAttribute('data-dir', settings.tickerDir === 'ltr' ? 'ltr' : 'rtl');
-    t.innerHTML = '<div class="lt-badge"><i></i>' + (pre ? 'مباريات قادمة' : 'مباشر') + '</div><div class="lt-win"><div class="lt-run" style="animation-duration:' + Math.max(24, liveList.length * 12) + 's">' + one + one + '</div></div>';
+    });
+    var dir = settings.tickerDir === 'ltr' ? 'ltr' : 'rtl', sig = dir + (pre ? 'p' : 'l') + items.join('');
+    if (sig === tk.sig) return;   /* nothing changed: leave what is on screen alone */
+    var pages = []; for (var q = 0; q < items.length; q += 2) pages.push(items.slice(q, q + 2).join('<span class="lt-sep"></span>'));
+    clearInterval(tk.t); tk = { sig: sig, pages: pages, i: 0, t: 0 };
+    t.setAttribute('data-dir', dir);
+    t.innerHTML = '<div class="lt-badge"><i></i>' + (pre ? 'مباريات قادمة' : 'مباشر') + '</div><div class="lt-win"><div class="lt-run"></div></div>';
+    tickPage();
+    if (pages.length > 1) tk.t = setInterval(tickPage, 7000);
   }
   setTimeout(refreshLive, 3000);
   setInterval(function () { if (!PREVIEW) refreshLive(); }, 90000);
@@ -2060,6 +2071,8 @@
   renderBigCount(); renderActs(); applyKids(); refreshNews(false); applyLayout();
   loadBackgrounds(); loadApps(true); refreshMatches(false); refreshWeather(false); scheduleAll();
   if (!PREVIEW) setTimeout(function () { checkUpdate(false); }, 20000);
+  /* if the interface had to restart, say why (so the cause can be read off the screen) */
+  if (HAS_ANDROID && A.lastCrash) setTimeout(function () { try { var c = A.lastCrash(); if (c) { var k = c.indexOf('|'); toast('الواجهة أعادت التشغيل بسبب: ' + c.slice(k + 1, k + 220), 20000); } } catch (e) {} }, 6000);
   setTimeout(pushConfig, 3000);
   setInterval(function () { checkUpdate(false); }, 6 * 3600000);
   setInterval(function () { refreshWeather(false); renderNowPlaying(); renderBigCount(); renderActs(); }, 60000);
