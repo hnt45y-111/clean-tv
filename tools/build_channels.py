@@ -115,8 +115,33 @@ T = [
  ('تلفزيون الحصاد', 'tn', 'ent', '', 'tn', r'^Elyssa TV', r'elyssatv\.com'),
  ('ميدي 1 تيفي', 'ma', 'news', '', 'ma', r'^Medi 1 TV Arabic \(1080p\)$', r'easybroadcast'),
  ('الهداف الجزائرية', 'dz', 'sport', '', 'dz', r'^El-Heddaf', r'elheddaftv\.com'),
+ # added on request (third-party hosted ones included: the owner chose them)
+ ('الجزيرة 2', 'qa', 'news', '', 'qa', r'^Al Jazeera 2 \(1080p\)', r'thehlive\.com'),
+ ('الجزيرة مباشر 24', 'qa', 'news', '', 'qa', r'^Al Jazeera Mubasher 24', r'getaj\.net'),
+ ('الجزيرة مباشر 2', 'qa', 'news', '', 'qa', r'^Al Jazeera Mubasher Broadcast 2', r'getaj\.net'),
+ ('المشهد', 'ae', 'news', '', 'ae', r'^Al Mashhad', r'amagi\.tv'),
+ ('العربي', 'qa', 'news', '', 'qa', r'^Al Araby TV \(1080p\)', r'kwikmotion\.com'),
+ ('العربي 2', 'qa', 'news', '', 'qa', r'^Al Araby TV 2', r'kwikmotion\.com'),
+ ('الشرقية نيوز', 'iq', 'news', '', 'iq', r'^Al Sharqiya News', r'indexforce\.com'),
+ ('الشرق ديسكفري', 'sa', 'docs', '', 'sa', r'^Asharq Discovery', r'itworkscdn\.net'),
+ ('الشرق الوثائقية', 'sa', 'docs', '', 'sa', r'^Asharq Documentary', r'itworkscdn\.net'),
+ ('السعودية الثقافية', 'sa', 'docs', '', 'sa', r'^Saudi Thaqafiya', r'edgenextcdn\.net'),
+ ('فلسطين التعليمية', 'ps', 'docs', '', 'ps', r'^Palestine Edu', r'furrera\.ps'),
+ ('كربلاء الوثائقية', 'iq', 'docs', 'karbala', 'iq', r'^Karbala Documentary', r'ktvlive\.online'),
+ ('روتانا سينما', 'sa', 'movies', '', 'sa', r'^Rotana Cinema KSA', r'hibridcdn\.net'),
+ ('روتانا كلاسيك', 'sa', 'ent', '', 'sa', r'^Rotana Classic', r'hibridcdn\.net'),
+ ('روتانا كوميدي', 'sa', 'ent', '', 'sa', r'^Rotana Comedy', r'hibridcdn\.net'),
+ ('روتانا دراما', 'sa', 'movies', '', 'sa', r'^Rotana Drama', r'hibridcdn\.net'),
+ ('روتانا خليجية', 'sa', 'ent', '', 'sa', r'^Rotana Khalijia', r'hibridcdn\.net'),
+ ('روتانا كليب', 'sa', 'ent', '', 'sa', r'^Rotana Clip', r'hibridcdn\.net'),
+ ('روتانا موسيقى', 'sa', 'ent', '', 'sa', r'^Rotana Music', r'hibridcdn\.net'),
+ ('باب الحارة', 'sa', 'movies', '', 'sa', r'^Bab Al Hara', r'edgenextcdn\.net'),
+ ('مرايا', 'sa', 'movies', '', 'sa', r'^Maraya', r'edgenextcdn\.net'),
+ ('فيروز', 'sa', 'ent', '', 'sa', r'^Fairuz', r'edgenextcdn\.net'),
+ ('طرب', 'sa', 'ent', '', 'sa', r'^Tarab', r'edgenextcdn\.net'),
+ ('بيغ تايم بلس', 'sa', 'ent', '', 'sa', r'^Big Time Plus', r'edgenextcdn\.net'),
 ]
-GROUPS = [('iq', 'العراق'), ('sa', 'السعودية'), ('ae', 'الإمارات'), ('qa', 'قطر'), ('kw', 'الكويت'), ('om', 'عُمان'), ('bh', 'البحرين'), ('jo', 'الأردن'), ('lb', 'لبنان'), ('eg', 'مصر'), ('ma', 'المغرب'), ('dz', 'الجزائر'), ('tn', 'تونس'), ('ly', 'ليبيا'), ('int', 'دولية')]
+GROUPS = [('iq', 'العراق'), ('sa', 'السعودية'), ('ae', 'الإمارات'), ('qa', 'قطر'), ('kw', 'الكويت'), ('om', 'عُمان'), ('bh', 'البحرين'), ('jo', 'الأردن'), ('lb', 'لبنان'), ('ps', 'فلسطين'), ('eg', 'مصر'), ('ma', 'المغرب'), ('dz', 'الجزائر'), ('tn', 'تونس'), ('ly', 'ليبيا'), ('int', 'دولية')]
 logos = {}
 if os.path.exists(LOGOS):
     for r in csv.DictReader(open(LOGOS, encoding='utf-8')):

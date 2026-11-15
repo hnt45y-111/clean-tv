@@ -1,5 +1,5 @@
 /* free channels from the broadcasters' own streams (built by tools/build_channels.py) */
-window.CH_GROUPS = [["iq", "العراق"], ["sa", "السعودية"], ["ae", "الإمارات"], ["qa", "قطر"], ["kw", "الكويت"], ["om", "عُمان"], ["bh", "البحرين"], ["jo", "الأردن"], ["lb", "لبنان"], ["eg", "مصر"], ["ma", "المغرب"], ["dz", "الجزائر"], ["tn", "تونس"], ["ly", "ليبيا"], ["int", "دولية"]];
+window.CH_GROUPS = [["iq", "العراق"], ["sa", "السعودية"], ["ae", "الإمارات"], ["qa", "قطر"], ["kw", "الكويت"], ["om", "عُمان"], ["bh", "البحرين"], ["jo", "الأردن"], ["lb", "لبنان"], ["ps", "فلسطين"], ["eg", "مصر"], ["ma", "المغرب"], ["dz", "الجزائر"], ["tn", "تونس"], ["ly", "ليبيا"], ["int", "دولية"]];
 window.CHANNELS = [{"n":"الجزيرة","c":"qa","g":"news","u":"https://live-hls-v3-aja.getaj.net/AJA-V3/index.m3u8","i":"AlJazeera.qa"},
 {"n":"الجزيرة مباشر","c":"qa","g":"news","u":"https://live-hls-apps-ajm-fa.getaj.net/AJM/index.m3u8","i":"AlJazeeraMubasher.qa"},
 {"n":"العربية","c":"ae","g":"news","u":"https://live.alarabiya.net/alarabiapublish/alarabiya.smil/playlist.m3u8","i":"Alarabiya.ae"},
@@ -84,4 +84,28 @@ window.CHANNELS = [{"n":"الجزيرة","c":"qa","g":"news","u":"https://live-h
 {"n":"الوطنية 1 التونسية","c":"tn","g":"ent","u":"https://sw1.tanitweb.net/TunisiaTV/_definst_/watania1/chunklist.m3u8","i":"ElWatania1.tn"},
 {"n":"تلفزيون الحصاد","c":"tn","g":"ent","u":"https://tv.elyssatv.com/live/master.m3u8","i":"ElyssaTV.tn"},
 {"n":"ميدي 1 تيفي","c":"ma","g":"news","u":"https://cdn.live.easybroadcast.io/abr_corp/83_medi1tv-arabic_g90v4ec/playlist.m3u8","i":"Medi1TVArabic.ma"},
-{"n":"الهداف الجزائرية","c":"dz","g":"sport","u":"https://live.elheddaftv.com:8081/elheddaftv/index.m3u8","i":"ElHeddafTV.dz"}];
+{"n":"الهداف الجزائرية","c":"dz","g":"sport","u":"https://live.elheddaftv.com:8081/elheddaftv/index.m3u8","i":"ElHeddafTV.dz"},
+{"n":"الجزيرة 2","c":"qa","g":"news","u":"https://live-hls-web-aja2-gcp.thehlive.com/AJA2/index.m3u8","i":"AlJazeera2.qa"},
+{"n":"الجزيرة مباشر 24","c":"qa","g":"news","u":"https://live-hls-apps-ajm24-fa.getaj.net/AJM24/index.m3u8","i":"AlJazeeraMubasher24.qa"},
+{"n":"الجزيرة مباشر 2","c":"qa","g":"news","u":"https://live-hls-apps-ajm2-fa.getaj.net/AJM2/index.m3u8","i":"AlJazeeraMubasherBroadcast2.qa"},
+{"n":"المشهد","c":"ae","g":"news","u":"https://amg30483-amg30483c23-amgplt0794.playout.now3.amagi.tv/ts-ap-s1-n1/playlist/amg30483-amg30483c23-amgplt0794/playlist.m3u8?ads.appname=[APP_NAME]&ads.appstoreurl=[APP_STOREURL]&ads.appversion=[APP_VERSION]&ads.bundleid=[APP_BUNDLE]&ads.coppa=0&ads.country=[COUNTRY]&ads.deviceid=[DEVICE_ID]&ads.devicemake=[DEVICE_MAKE]&ads.devicemodel=[DEVICE_MODEL]&ads.devicetype=[DEVICE_TYPE]&ads.donotsell=[DNS]&ads.fck=[FCK]&ads.gdpr=[GDPR]&ads.gdprconsent=[GDPR_CONSENT]&ads.givn=[NONCE]&ads.ic=[IC]&ads.ifa=[IFA]&ads.ifatype=[IFA_TYPE]&ads.ip=[IP]&ads.lat=[LMT]&ads.network_name=[networkname]&ads.targetad=[TARGETAD_ALLOWED]&ads.ua=[UA]&ads.usprivacy=[US_PRIVACY]&ads.viewsize=[VIEWSIZE]","i":"AlMashhad.ae"},
+{"n":"العربي","c":"qa","g":"news","u":"https://live.kwikmotion.com/alaraby1live/alaraby_abr/playlist.m3u8","i":"AlArabyTV.qa"},
+{"n":"العربي 2","c":"qa","g":"news","u":"https://live.kwikmotion.com/alaraby2live/alaraby2.smil/playlist.m3u8","i":"AlArabyTV2.qa"},
+{"n":"الشرقية نيوز","c":"iq","g":"news","u":"https://indexforce.com/newshighres/mystream/playlist.m3u8","i":"AlSharqiyaNews.iq"},
+{"n":"الشرق ديسكفري","c":"sa","g":"docs","u":"https://svs.itworkscdn.net/asharqdiscoverylive/asharqd.smil/playlist_dvr.m3u8","i":"AsharqDiscovery.sa"},
+{"n":"الشرق الوثائقية","c":"sa","g":"docs","u":"https://svs.itworkscdn.net/asharqdocumentarylive/asharqdocumentary.smil/playlist_dvr.m3u8","i":"AsharqDocumentary.sa"},
+{"n":"السعودية الثقافية","c":"sa","g":"docs","u":"https://shd-gcp-live.edgenextcdn.net/live/bitmovin-thaqafeyyah/28c0d2a20dbf1dc049ce15d3973f494b/index.m3u8","i":"SaudiThaqafiyaTV.sa"},
+{"n":"فلسطين التعليمية","c":"ps","g":"docs","u":"https://pbc.furrera.ps/PalestineEDU/index.m3u8","i":"PalestineEdu.ps"},
+{"n":"كربلاء الوثائقية","c":"iq","g":"docs","u":"https://ktvlive.online/stream/hls/ch3.m3u8","p":"karbala","i":"KarbalaDocumentary.iq"},
+{"n":"روتانا سينما","c":"sa","g":"movies","u":"https://rotana.hibridcdn.net/rotananet/cinema_net-7Y83PP5adWixDF93/playlist.m3u8","r":"https://rotana.net/","i":"RotanaCinemaKSA.sa"},
+{"n":"روتانا كلاسيك","c":"sa","g":"ent","u":"https://rotana.hibridcdn.net/rotananet/classical_net-7Y83PP5adWixDF93/playlist.m3u8","r":"https://rotana.net/","i":"RotanaClassic.sa"},
+{"n":"روتانا كوميدي","c":"sa","g":"ent","u":"https://rotana.hibridcdn.net/rotananet/comedy_net-7Y83PP5adWixDF93/playlist.m3u8","r":"https://rotana.net/","i":"RotanaComedy.sa"},
+{"n":"روتانا دراما","c":"sa","g":"movies","u":"https://rotana.hibridcdn.net/rotananet/drama_net-7Y83PP5adWixDF93/playlist.m3u8","r":"https://rotana.net/","i":"RotanaDrama.sa"},
+{"n":"روتانا خليجية","c":"sa","g":"ent","u":"https://rotana.hibridcdn.net/rotananet/khaleejiya_net-7Y83PP5adWixDF93/playlist.m3u8","r":"https://rotana.net/","i":"RotanaKhalijia.sa"},
+{"n":"روتانا كليب","c":"sa","g":"ent","u":"https://rotana.hibridcdn.net/rotananet/clip_net-7Y83PP5adWixDF93/playlist.m3u8","r":"https://rotana.net/","i":"RotanaClip.sa"},
+{"n":"روتانا موسيقى","c":"sa","g":"ent","u":"https://rotana.hibridcdn.net/rotananet/music_net-7Y83PP5adWixDF93/playlist.m3u8","r":"https://rotana.net/","i":"RotanaMusic.sa"},
+{"n":"باب الحارة","c":"sa","g":"movies","u":"https://shd-amg-fast.edgenextcdn.net/tx010/playlist.m3u8","i":"BabAlHara.sa"},
+{"n":"مرايا","c":"sa","g":"movies","u":"https://shd-amg-fast.edgenextcdn.net/tx008/playlist.m3u8","i":"Maraya.sa"},
+{"n":"فيروز","c":"sa","g":"ent","u":"https://shd-amg-fast.edgenextcdn.net/tx029/playlist.m3u8","i":"Fairuz.sa"},
+{"n":"طرب","c":"sa","g":"ent","u":"https://shd-amg-fast.edgenextcdn.net/tx002/playlist.m3u8","i":"Tarab.sa"},
+{"n":"بيغ تايم بلس","c":"sa","g":"ent","u":"https://shd-gcp-live.edgenextcdn.net/live/bitmovin-big-time-plus/924283f994779a311c1389698ff7e736/index.m3u8","i":"BigTimePlus.sa"}];
