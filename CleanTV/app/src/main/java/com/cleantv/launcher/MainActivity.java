@@ -115,9 +115,32 @@ public class MainActivity extends Activity {
         }
     };
 
+    /** Keeps the reason of the last failure so it can be shown on the screen and to the phone app. */
+    static void noteCrash(Context c, String what) {
+        try { Media.prefs(c).edit().putString("lastCrash", System.currentTimeMillis() + "|" + what).commit(); } catch (Throwable ignored) { }
+    }
+    private static boolean crashHook = false;
+    private void hookCrashes() {
+        if (crashHook) return;
+        crashHook = true;
+        final Thread.UncaughtExceptionHandler old = Thread.getDefaultUncaughtExceptionHandler();
+        final Context app = getApplicationContext();
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            try {
+                Throwable r = e; while (r.getCause() != null) r = r.getCause();
+                StringBuilder sb = new StringBuilder(String.valueOf(r));
+                StackTraceElement[] st = r.getStackTrace();
+                for (int i = 0; i < st.length && i < 4; i++) sb.append(" @ ").append(st[i].getClassName().replace("com.cleantv.launcher.", "")).append('.').append(st[i].getMethodName()).append(':').append(st[i].getLineNumber());
+                noteCrash(app, sb.toString());
+            } catch (Throwable ignored) { }
+            if (old != null) old.uncaughtException(t, e);
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        hookCrashes();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         web = new WebView(this);
@@ -135,9 +158,18 @@ public class MainActivity extends Activity {
         s.setAllowFileAccessFromFileURLs(true);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
-        if (Build.VERSION.SDK_INT >= 23) s.setOffscreenPreRaster(true);
 
-        web.setWebViewClient(new WebViewClient());
+        web.setWebViewClient(new WebViewClient() {
+            /* the page's own process died (usually out of memory): note why and start the screen again instead of the whole app dying */
+            @Override
+            public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail d) {
+                boolean crashed = Build.VERSION.SDK_INT >= 26 && d != null && d.didCrash();
+                noteCrash(MainActivity.this, crashed ? "page process crashed" : "page process killed (memory)");
+                try { ((android.view.ViewGroup) v.getParent()).removeView(v); v.destroy(); } catch (Throwable ignored) { }
+                recreate();
+                return true;
+            }
+        });
         web.setWebChromeClient(new WebChromeClient());
         web.addJavascriptInterface(new Bridge(), "Android");
         setContentView(web);
@@ -564,6 +596,14 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void writeConfig(String json) { Media.prefs(MainActivity.this).edit().putString("cfgJson", json).apply(); }
+
+        /** "time|reason" of the last failure, once. */
+        @JavascriptInterface
+        public String lastCrash() {
+            String v = Media.prefs(MainActivity.this).getString("lastCrash", "");
+            if (v.length() > 0) Media.prefs(MainActivity.this).edit().remove("lastCrash").putString("lastCrashKept", v).apply();
+            return v;
+        }
 
         @JavascriptInterface
         public String pendingConfig() {
