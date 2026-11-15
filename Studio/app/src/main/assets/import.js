@@ -274,9 +274,13 @@ function osPanelWire(box, S) {
       soft(); toast(t.dataset.css === 'clear' ? 'انمسح التصميم الخاص' : 'انطبق بالمعاينة'); return;
     }
     if (t.dataset.oreset) { delete S.os; redo(); return; }
-    if (t.dataset.ttm) { S.tickerTeams = (S.tickerTeams || []).filter(x => String(x) !== t.dataset.ttm); redo(); return; }
-    if (t.dataset.tk === 'clear') { delete S.tickerTeams; redo(); return; }
+    if (t.dataset.ttm) { S.tickerTeams = (S.tickerTeams || []).filter(x => String(x) !== t.dataset.ttm); tkNames(S); redo(); return; }
+    if (t.dataset.tlg) { S.tickerLeagues = (S.tickerLeagues || []).filter(x => x !== t.dataset.tlg); if (!S.tickerLeagues.length) delete S.tickerLeagues; redo(); return; }
+    if (t.dataset.tk === 'clear') { delete S.tickerTeams; delete S.tickerNames; redo(); return; }
+    if (t.dataset.tk === 'clearL') { delete S.tickerLeagues; redo(); return; }
     if (t.dataset.tk === 'pick') { tickerTeamsSheet(S, redo); return; }
+    if (t.dataset.tk === 'leagues') { tickerLeaguesSheet(S, redo); return; }
+    if (t.dataset.tk === 'news') { S.tickerNews = S.tickerNews === false; redo(); return; }
     if (t.dataset.tk) { if (t.dataset.tk === 'on') S.ticker = S.ticker === false; else if (t.dataset.tk === 'apps') S.tickerApps = S.tickerApps !== true; else S.tickerDir = t.dataset.tk; redo(); return; }
     if (t.dataset.oav) {
       if (t.dataset.oav === 'del') { delete O.avatar; redo(); return; }
@@ -323,8 +327,12 @@ function osPanelWire(box, S) {
         <div class="chips"><button class="chip ${S.tickerDir !== 'ltr' ? 'on' : ''}" data-tk="rtl">من اليمين لليسار</button><button class="chip ${S.tickerDir === 'ltr' ? 'on' : ''}" data-tk="ltr">من اليسار لليمين</button></div>
         <div class="lb" style="margin:12px 0 6px"><span class="sub">الفرق اللي تظهر مبارياتها</span></div>
         <p class="sub" style="margin-top:-2px">${(S.tickerTeams || []).length ? 'مختار ' + S.tickerTeams.length + ' فريق. الشريط يبين بس مبارياتهم.' : 'ما مختار شي: الشريط يبين كل المباريات المباشرة.'}</p>
-        <div class="chips">${(S.tickerTeams || []).map(id => { const c = CLUBS.find(x => x.ids[0] === id); return c ? `<button class="chip on" data-ttm="${id}">${esc(c.name)} ×</button>` : ''; }).join('')}</div>
-        <button class="btn sec full" data-tk="pick" style="margin-top:8px">${ic('layers')} اختار الفرق والأندية</button>${(S.tickerTeams || []).length ? `<button class="btn ghost full" data-tk="clear">شيل الاختيار (كل المباريات)</button>` : ''}</div>`;
+        <div class="chips">${(S.tickerTeams || []).map(id => { const c = TK_ALL.find(x => x.key === String(id)); return c ? `<button class="chip on" data-ttm="${esc(String(id))}">${esc(c.name)} ×</button>` : ''; }).join('')}</div>
+        <button class="btn sec full" data-tk="pick" style="margin-top:8px">${ic('layers')} اختار الفرق والمنتخبات</button>${(S.tickerTeams || []).length ? `<button class="btn ghost full" data-tk="clear">شيل الفرق</button>` : ''}
+        <div class="lb" style="margin:14px 0 6px"><span class="sub">الدوريات والكؤوس (تطلع مبارياتها المباشرة والقادمة)</span></div>
+        <div class="chips">${(S.tickerLeagues || []).map(sl => { const l = TK_LG.find(x => x[0] === sl); return l ? `<button class="chip on" data-tlg="${esc(sl)}">${esc(l[1])} ×</button>` : ''; }).join('')}</div>
+        <button class="btn sec full" data-tk="leagues" style="margin-top:8px">${ic('layers')} اختار دوريات وكؤوس</button>${(S.tickerLeagues || []).length ? `<button class="btn ghost full" data-tk="clearL">شيل الدوريات</button>` : ''}
+        <div class="list" style="margin:14px 0 0"><div class="item tap" data-tk="news" style="padding:6px 0;min-height:0"><div class="t"><b>أخبار رياضية بالشريط</b><small>عناوين عربية عن فرقك ودورياتك تمر بنفس الشريط</small></div><div class="toggle ${S.tickerNews !== false ? 'on' : ''}"></div></div></div></div>`;
       p.insertBefore(box, p.firstChild); osPanelWire(box, S);
       const my = document.createElement('div');
       const cnt = (S.myM3u || '').split(/\r?\n/).filter(l => /^https?:/i.test(l.trim())).length;
@@ -365,16 +373,61 @@ function osPanelWire(box, S) {
   }
 })();
 
-/* choose the teams whose live matches the ticker shows (the ids are ESPN team ids) */
+/* Clubs, national teams and leagues the strip can follow. The clubs above carry their score-service ids; every other team is matched by its English name
+   (key "n:" + the name in lower case without spaces or "FC"), which is also how the TV matches them. */
+const TK_NN = x => String(x || '').toLowerCase().replace(/\b(fc|cf|afc|sc|ac|club|de futbol)\b/g, '').replace(/[^a-z0-9\u0600-\u06ff]/g, '');
+const TK_MORE = [
+  ['نيوكاسل', 'Newcastle United', 'إنگلترا'], ['أستون فيلا', 'Aston Villa', 'إنگلترا'], ['وست هام', 'West Ham United', 'إنگلترا'], ['برايتون', 'Brighton & Hove Albion', 'إنگلترا'], ['إيفرتون', 'Everton', 'إنگلترا'], ['نوتنغهام فورست', 'Nottingham Forest', 'إنگلترا'], ['ليستر سيتي', 'Leicester City', 'إنگلترا'], ['فولهام', 'Fulham', 'إنگلترا'], ['كريستال بالاس', 'Crystal Palace', 'إنگلترا'], ['وولفرهامبتون', 'Wolverhampton Wanderers', 'إنگلترا'],
+  ['إشبيلية', 'Sevilla', 'إسبانيا'], ['فالنسيا', 'Valencia', 'إسبانيا'], ['فياريال', 'Villarreal', 'إسبانيا'], ['ريال سوسيداد', 'Real Sociedad', 'إسبانيا'], ['أتلتيك بلباو', 'Athletic Club', 'إسبانيا'], ['ريال بيتيس', 'Real Betis', 'إسبانيا'],
+  ['روما', 'Roma', 'إيطاليا'], ['لاتسيو', 'Lazio', 'إيطاليا'], ['أتالانتا', 'Atalanta', 'إيطاليا'], ['فيورنتينا', 'Fiorentina', 'إيطاليا'],
+  ['باير ليفركوزن', 'Bayer Leverkusen', 'ألمانيا'], ['لايبزيغ', 'RB Leipzig', 'ألمانيا'], ['آينتراخت فرانكفورت', 'Eintracht Frankfurt', 'ألمانيا'],
+  ['مارسيليا', 'Marseille', 'فرنسا'], ['ليون', 'Lyon', 'فرنسا'], ['موناكو', 'Monaco', 'فرنسا'], ['ليل', 'Lille', 'فرنسا'],
+  ['أياكس', 'Ajax', 'هولندا والبرتغال وتركيا'], ['آيندهوفن', 'PSV Eindhoven', 'هولندا والبرتغال وتركيا'], ['بنفيكا', 'Benfica', 'هولندا والبرتغال وتركيا'], ['بورتو', 'Porto', 'هولندا والبرتغال وتركيا'], ['سبورتينغ لشبونة', 'Sporting CP', 'هولندا والبرتغال وتركيا'], ['غلطة سراي', 'Galatasaray', 'هولندا والبرتغال وتركيا'], ['فنربخشة', 'Fenerbahce', 'هولندا والبرتغال وتركيا'], ['بشكتاش', 'Besiktas', 'هولندا والبرتغال وتركيا'], ['سلتيك', 'Celtic', 'هولندا والبرتغال وتركيا'],
+  ['الهلال', 'Al Hilal', 'السعودية'], ['النصر', 'Al Nassr', 'السعودية'], ['الاتحاد', 'Al Ittihad', 'السعودية'], ['الأهلي السعودي', 'Al Ahli', 'السعودية'], ['الشباب', 'Al Shabab', 'السعودية'], ['الاتفاق', 'Al Ettifaq', 'السعودية'], ['الفتح', 'Al Fateh', 'السعودية'],
+  ['العين', 'Al Ain', 'الإمارات وقطر'], ['الوحدة', 'Al Wahda', 'الإمارات وقطر'], ['شباب الأهلي', 'Shabab Al Ahli', 'الإمارات وقطر'], ['السد', 'Al Sadd', 'الإمارات وقطر'], ['الدحيل', 'Al Duhail', 'الإمارات وقطر'], ['الغرافة', 'Al Gharafa', 'الإمارات وقطر'],
+  ['الأهلي المصري', 'Al Ahly', 'مصر والمغرب'], ['الزمالك', 'Zamalek', 'مصر والمغرب'], ['بيراميدز', 'Pyramids', 'مصر والمغرب'], ['الوداد', 'Wydad Casablanca', 'مصر والمغرب'], ['الرجاء', 'Raja Casablanca', 'مصر والمغرب'],
+  ['فلامنغو', 'Flamengo', 'أمريكا'], ['بوكا جونيورز', 'Boca Juniors', 'أمريكا'], ['ريفر بليت', 'River Plate', 'أمريكا'], ['إنتر ميامي', 'Inter Miami', 'أمريكا'],
+  ['العراق', 'Iraq', 'المنتخبات'], ['السعودية', 'Saudi Arabia', 'المنتخبات'], ['قطر', 'Qatar', 'المنتخبات'], ['الإمارات', 'United Arab Emirates', 'المنتخبات'], ['الكويت', 'Kuwait', 'المنتخبات'], ['عُمان', 'Oman', 'المنتخبات'], ['البحرين', 'Bahrain', 'المنتخبات'], ['الأردن', 'Jordan', 'المنتخبات'], ['سوريا', 'Syria', 'المنتخبات'], ['لبنان', 'Lebanon', 'المنتخبات'], ['فلسطين', 'Palestine', 'المنتخبات'], ['اليمن', 'Yemen', 'المنتخبات'],
+  ['مصر', 'Egypt', 'المنتخبات'], ['المغرب', 'Morocco', 'المنتخبات'], ['الجزائر', 'Algeria', 'المنتخبات'], ['تونس', 'Tunisia', 'المنتخبات'], ['ليبيا', 'Libya', 'المنتخبات'], ['السودان', 'Sudan', 'المنتخبات'], ['إيران', 'Iran', 'المنتخبات'], ['تركيا', 'Turkey', 'المنتخبات'], ['كوريا الجنوبية', 'South Korea', 'المنتخبات'], ['اليابان', 'Japan', 'المنتخبات'], ['أستراليا', 'Australia', 'المنتخبات'],
+  ['البرازيل', 'Brazil', 'المنتخبات'], ['الأرجنتين', 'Argentina', 'المنتخبات'], ['فرنسا', 'France', 'المنتخبات'], ['ألمانيا', 'Germany', 'المنتخبات'], ['إسبانيا', 'Spain', 'المنتخبات'], ['إيطاليا', 'Italy', 'المنتخبات'], ['إنگلترا', 'England', 'المنتخبات'], ['البرتغال', 'Portugal', 'المنتخبات'], ['هولندا', 'Netherlands', 'المنتخبات'], ['بلجيكا', 'Belgium', 'المنتخبات'], ['كرواتيا', 'Croatia', 'المنتخبات'], ['أوروغواي', 'Uruguay', 'المنتخبات'], ['الولايات المتحدة', 'United States', 'المنتخبات'], ['المكسيك', 'Mexico', 'المنتخبات'], ['السنغال', 'Senegal', 'المنتخبات'], ['نيجيريا', 'Nigeria', 'المنتخبات']
+];
+const TK_ALL = CLUBS.map(c => ({ key: CLUBS.filter(x => String(x.ids[0]) === String(c.ids[0])).length > 1 ? 'x:' + c.id : String(c.ids[0]), name: c.name, lg: c.lg === 'العراق' ? 'أندية العراق' : c.lg }))
+  .concat(TK_MORE.map(([ar, en, lg]) => ({ key: 'n:' + TK_NN(en), name: ar, lg })));
+/* [slug on the score service, Arabic name, group]: the same slugs the TV watches */
+const TK_LG = [
+  ['eng.1', 'الدوري الإنجليزي الممتاز', 'دوريات'], ['esp.1', 'الدوري الإسباني', 'دوريات'], ['ita.1', 'الدوري الإيطالي', 'دوريات'], ['ger.1', 'الدوري الألماني', 'دوريات'], ['fra.1', 'الدوري الفرنسي', 'دوريات'], ['por.1', 'الدوري البرتغالي', 'دوريات'], ['ned.1', 'الدوري الهولندي', 'دوريات'], ['tur.1', 'الدوري التركي', 'دوريات'], ['eng.2', 'البطولة الإنجليزية', 'دوريات'], ['sco.1', 'الدوري الاسكتلندي', 'دوريات'], ['bra.1', 'الدوري البرازيلي', 'دوريات'], ['arg.1', 'الدوري الأرجنتيني', 'دوريات'],
+  ['ksa.1', 'الدوري السعودي', 'عربية'], ['qat.1', 'دوري نجوم قطر', 'عربية'], ['uae.1', 'دوري الإمارات', 'عربية'], ['egy.1', 'الدوري المصري', 'عربية'], ['irq.1', 'الدوري العراقي', 'عربية'],
+  ['uefa.champions', 'دوري أبطال أوروبا', 'كؤوس'], ['uefa.europa', 'الدوري الأوروبي', 'كؤوس'], ['uefa.europa.conf', 'دوري المؤتمر', 'كؤوس'], ['uefa.super_cup', 'السوبر الأوروبي', 'كؤوس'], ['eng.fa', 'كأس الاتحاد الإنجليزي', 'كؤوس'], ['eng.league_cup', 'كأس الرابطة الإنجليزية', 'كؤوس'], ['esp.copa_del_rey', 'كأس ملك إسبانيا', 'كؤوس'], ['esp.super_cup', 'السوبر الإسباني', 'كؤوس'], ['ita.coppa_italia', 'كأس إيطاليا', 'كؤوس'], ['ger.dfb_pokal', 'كأس ألمانيا', 'كؤوس'], ['fra.coupe_de_france', 'كأس فرنسا', 'كؤوس'],
+  ['afc.champions', 'دوري أبطال آسيا', 'قارية'], ['caf.champions', 'دوري أبطال أفريقيا', 'قارية'], ['conmebol.libertadores', 'كوبا ليبرتادوريس', 'قارية'], ['fifa.cwc', 'كأس العالم للأندية', 'قارية'],
+  ['fifa.world', 'كأس العالم', 'منتخبات'], ['fifa.worldq.afc', 'تصفيات آسيا لكأس العالم', 'منتخبات'], ['fifa.worldq.uefa', 'تصفيات أوروبا لكأس العالم', 'منتخبات'], ['fifa.worldq.caf', 'تصفيات أفريقيا لكأس العالم', 'منتخبات'], ['fifa.worldq.conmebol', 'تصفيات أمريكا الجنوبية', 'منتخبات'], ['afc.asian.cup', 'كأس آسيا', 'منتخبات'], ['uefa.euro', 'كأس أمم أوروبا', 'منتخبات'], ['conmebol.america', 'كوبا أمريكا', 'منتخبات'], ['caf.nations', 'كأس الأمم الأفريقية', 'منتخبات'], ['uefa.nations', 'دوري الأمم الأوروبية', 'منتخبات'], ['fifa.friendly', 'المباريات الودية الدولية', 'منتخبات']
+];
+/* the Arabic names of the chosen teams go along, they are the search words of the sports headlines */
+function tkNames(S) { const names = (S.tickerTeams || []).map(id => (TK_ALL.find(x => x.key === String(id)) || {}).name).filter(Boolean); if (names.length) S.tickerNames = names; else delete S.tickerNames; }
+
+/* choose the teams whose matches (live and coming) the strip shows */
 function tickerTeamsSheet(S, done) {
   const sel = new Set((S.tickerTeams || []).map(String));
-  const groups = {}; CLUBS.forEach(c => (groups[c.lg] = groups[c.lg] || []).push(c));
-  sheet(`<h2>فرق الشريط</h2><p class="sub">اضغط على الفريق حتى تضيفه أو تشيله. تگدر تختار أي عدد.</p>
-    ${Object.entries(groups).map(([lg, l]) => `<div class="sub" style="margin:8px 2px">${esc(lg === 'العراق' ? 'أندية العراق' : lg)}</div><div class="chips">${l.map(c => `<button class="chip ${sel.has(String(c.ids[0])) ? 'on' : ''}" data-tid="${c.ids[0]}">${esc(c.name)}</button>`).join('')}</div>`).join('')}
+  const groups = {}; TK_ALL.forEach(c => (groups[c.lg] = groups[c.lg] || []).push(c));
+  sheet(`<h2>فرق ومنتخبات الشريط</h2><p class="sub">اضغط على الفريق حتى تضيفه أو تشيله. تگدر تختار أي عدد.</p>
+    ${Object.entries(groups).map(([lg, l]) => `<div class="sub" style="margin:8px 2px">${esc(lg)}</div><div class="chips">${l.map(c => `<button class="chip ${sel.has(c.key) ? 'on' : ''}" data-tid="${esc(c.key)}">${esc(c.name)}</button>`).join('')}</div>`).join('')}
     <button class="btn pri full" id="ttOk" style="margin-top:14px">تم</button>`);
   $('#sheetBody').onclick = e => {
     const b = e.target.closest('[data-tid]');
     if (b) { tap(); const id = b.dataset.tid; if (sel.has(id)) sel.delete(id); else sel.add(id); b.classList.toggle('on', sel.has(id)); return; }
-    if (e.target.closest('#ttOk')) { S.tickerTeams = [...sel].map(Number); closeSheet(); changed(); live({ settings: S }); done(); }
+    if (e.target.closest('#ttOk')) { const l = [...sel].map(k => /^\d+$/.test(k) ? Number(k) : k); if (l.length) S.tickerTeams = l; else delete S.tickerTeams; tkNames(S); closeSheet(); changed(); live({ settings: S }); done(); }
+  };
+}
+
+/* choose leagues and cups: all their matches, live and coming */
+function tickerLeaguesSheet(S, done) {
+  const sel = new Set(S.tickerLeagues || []);
+  const groups = {}; TK_LG.forEach(l => (groups[l[2]] = groups[l[2]] || []).push(l));
+  sheet(`<h2>دوريات وكؤوس الشريط</h2><p class="sub">اضغط على الدوري حتى يطلع بالشريط بمبارياته المباشرة والقادمة. بعض الدوريات ممكن ما تتوفر مبارياتها من مصدر النتائج.</p>
+    ${Object.entries(groups).map(([g, l]) => `<div class="sub" style="margin:8px 2px">${esc(g)}</div><div class="chips">${l.map(x => `<button class="chip ${sel.has(x[0]) ? 'on' : ''}" data-lg="${esc(x[0])}">${esc(x[1])}</button>`).join('')}</div>`).join('')}
+    <button class="btn pri full" id="tlOk" style="margin-top:14px">تم</button>`);
+  $('#sheetBody').onclick = e => {
+    const b = e.target.closest('[data-lg]');
+    if (b) { tap(); const id = b.dataset.lg; if (sel.has(id)) sel.delete(id); else sel.add(id); b.classList.toggle('on', sel.has(id)); return; }
+    if (e.target.closest('#tlOk')) { if (sel.size) S.tickerLeagues = [...sel]; else delete S.tickerLeagues; closeSheet(); changed(); live({ settings: S }); done(); }
   };
 }

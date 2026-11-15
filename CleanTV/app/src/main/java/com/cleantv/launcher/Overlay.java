@@ -168,8 +168,10 @@ public class Overlay {
 
     private static void paintStrip() {
         if (strip == null || stripPages.length == 0) return;
-        stripBadge.setText(stripBadgeTxt);
-        stripText.setText(stripPages[Math.min(stripIdx, stripPages.length - 1)]);
+        String pg = stripPages[Math.min(stripIdx, stripPages.length - 1)];
+        int tab = pg.indexOf('\t');
+        stripBadge.setText(tab > 0 ? pg.substring(0, tab) : stripBadgeTxt);
+        stripText.setText(tab >= 0 ? pg.substring(tab + 1) : pg);
     }
 
     private static void showStrip(Context c) {

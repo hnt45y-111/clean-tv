@@ -26,7 +26,7 @@
   function ytTitles() { try { return JSON.parse(localStorage.getItem('myChTitles') || '{}') || {}; } catch (e) { return {}; } }
   function ytTitle(u) { var t = ytTitles()[u]; return t || ('يوتيوب · ' + (ytId(u) || 'قناة')); }
   function parseM3U(text) {
-    var out = [], lines = String(text || '').split(/\r?\n/), cur = null;
+    var out = [], lines = String(text || '').replace(/^\uFEFF/, '').split(/\r\n|\n|\r/), cur = null;
     lines.forEach(function (ln) {
       ln = ln.trim(); if (!ln) return;
       if (ln.indexOf('#EXTINF') === 0) {
@@ -78,7 +78,7 @@
     if (mine.length) lists.push({ key: 'own', name: 'قنواتي المضافة', items: mine, note: '' });
     links.forEach(function (u) {
       var items = parseM3U(cache[u] || ''), nm = listName(u);
-      lists.push({ key: u, name: nm, items: items, note: items.length ? '' : loadState[u] === 'fail' ? 'تعذّر جلب القائمة' : cache[u] ? 'ما لگيت قنوات بالقائمة' : 'جاري تحميل القائمة…' });
+      lists.push({ key: u, name: nm, items: items, note: items.length ? '' : /^fail/.test(loadState[u] || '') ? 'تعذّر جلب القائمة' + (loadState[u].length > 5 ? ': ' + loadState[u].slice(5) : '') : cache[u] ? 'الرد مو قائمة M3U فيها قنوات' : 'جاري تحميل القائمة…' });
     });
     lists.forEach(function (L) { L.items.forEach(function (c) { c.lk = L.key; c.ln = L.name; }); });
     cust = { lists: lists, list: [], groups: [], key: key };
@@ -99,7 +99,8 @@
     linksOf(S).forEach(function (u) {
       loadState[u] = 'loading'; cust.key = '';
       window.__fetchText(u).then(function (t) {
-        if (t && t.length > 20) {
+        if (t && t.indexOf('ERR:') === 0) { loadState[u] = 'fail:' + t.slice(4); }
+        else if (t && t.length > 20) {
           try { var c = readCache(); c[u] = t.slice(0, 600000); localStorage.setItem('myChLists', JSON.stringify(c)); } catch (e) {}
           delete loadState[u];
         } else loadState[u] = 'fail';
@@ -155,16 +156,32 @@
     $('lvGrid').style.transform = 'translateY(' + (-st.off) + 'px)';
     $('lvCount').textContent = st.list.length + ' قناة';
   }
+  /* everything the player needs: all channels once, and the folders (as lists of positions) so that OK inside a channel can show them */
+  function packFor(cur) {
+    var cs = cats(), chans = [], pos = {}, folders = [], fold = 0, curId = cs[st.ci] ? cs[st.ci].id : 'all';
+    function add(c) {
+      var k = c.u + '|' + c.n;
+      if (pos[k] === undefined) { pos[k] = chans.length; chans.push({ n: c.n, u: c.u, i: c.i || '', s: subOf(c), r: c.r || '', ua: c.ua || '', l: c.l || '', yt: isYT(c.u) }); }
+      return pos[k];
+    }
+    cs.forEach(function (ct) {
+      if (ct.id === 'my') {
+        custom().lists.forEach(function (L) { if (L.items.length) { if (curId === 'my' && st.fold === L.key) fold = folders.length; folders.push({ n: '📁 ' + L.name, idx: L.items.map(add) }); } });
+      } else {
+        var l = filter(ct.id); if (!l.length) return;
+        if (ct.id === curId) fold = folders.length;
+        folders.push({ n: ct.n, idx: l.map(add) });
+      }
+    });
+    return { list: chans, folders: folders, fold: fold, idx: pos[cur.u + '|' + cur.n] || 0 };
+  }
   function play() {
     if (!st.list.length) return;
     var cur = st.list[st.gi];
     if (cur && cur.folder) { st.fold = cur.key; st.gi = 0; st.off = 0; st.key = null; draw(); return; }
     if (cur && cur.empty) return;
-    /* a YouTube link can't be played by the player: it opens in the YouTube app */
-    if (cur && /(youtube\.com|youtu\.be)\//i.test(cur.u)) { if (window.Android && window.Android.openLink) window.Android.openLink(cur.u); return; }
-    var payload = JSON.stringify(st.list.filter(function (c) { return !/(youtube\.com|youtu\.be)\//i.test(c.u); }).map(function (c) { return { n: c.n, u: c.u, i: c.i || '', s: subOf(c), r: c.r || '', ua: c.ua || '', l: c.l || '' }; }));
-    var gi = Math.max(0, st.list.filter(function (c) { return !/(youtube\.com|youtu\.be)\//i.test(c.u); }).indexOf(cur));
-    if (window.Android && window.Android.playLive) window.Android.playLive(payload, gi);
+    var pk = packFor(cur);
+    if (window.Android && window.Android.playLive) window.Android.playLive(JSON.stringify(pk), pk.idx);
     else if (window.toastMsg) window.toastMsg('التشغيل يحتاج الشاشة نفسها');
   }
   var Live = {
