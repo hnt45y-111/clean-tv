@@ -324,7 +324,20 @@ function osPanelWire(box, S) {
         <p class="sub" style="margin-top:-2px">${(S.tickerTeams || []).length ? 'مختار ' + S.tickerTeams.length + ' فريق. الشريط يبين بس مبارياتهم.' : 'ما مختار شي: الشريط يبين كل المباريات المباشرة.'}</p>
         <div class="chips">${(S.tickerTeams || []).map(id => { const c = CLUBS.find(x => x.ids[0] === id); return c ? `<button class="chip on" data-ttm="${id}">${esc(c.name)} ×</button>` : ''; }).join('')}</div>
         <button class="btn sec full" data-tk="pick" style="margin-top:8px">${ic('layers')} اختار الفرق والأندية</button>${(S.tickerTeams || []).length ? `<button class="btn ghost full" data-tk="clear">شيل الاختيار (كل المباريات)</button>` : ''}</div>`;
-      p.insertBefore(box, p.firstChild); osPanelWire(box, S); return;
+      p.insertBefore(box, p.firstChild); osPanelWire(box, S);
+      const my = document.createElement('div');
+      const cnt = (S.myM3u || '').split(/\r?\n/).filter(l => /^https?:/i.test(l.trim())).length;
+      my.innerHTML = `<div class="panel"><h2>قنواتي الخاصة</h2><p class="sub" style="margin-top:-4px">أضف قنواتك اللي عندك حق بثها (مثل اتفاقيتك مع beIN، أو قنوات ثانية). تطلع بقسم «باقتي» داخل قنواتي، وكل مجموعة تصير باقة. الروابط تنحفظ بتصميمك وبشاشتك بس، وما تنرفع لأي مكان عام.</p>
+        <label class="f">الصق قائمة M3U (أو رابط بكل سطر، وتگدر تسمّي المجموعة بـ group-title)</label>
+        <textarea id="myM3u" dir="ltr" spellcheck="false" style="width:100%;min-height:140px;font:12.5px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)" placeholder="#EXTM3U&#10;#EXTINF:-1 group-title=&quot;beIN Sports&quot; tvg-logo=&quot;https://…/logo.png&quot;,beIN Sports 1&#10;https://…/stream.m3u8">${esc(S.myM3u || '')}</textarea>
+        <div class="sub" style="margin:6px 2px">${cnt ? 'فيها ' + cnt + ' قناة' : 'فارغة'} · روابط يوتيوب تنفتح بتطبيق يوتيوب</div>
+        <label class="f" style="margin-top:8px">أو رابط قائمة تحدّثها إنت (يقراها التلفزيون كل مرة تفتح قنواتي)</label>
+        <input id="chUrl" dir="ltr" placeholder="https://…/channels.m3u" value="${esc(S.channelsUrl || '')}">
+        <div class="row" style="margin-top:10px;gap:8px"><button class="btn sec" style="flex:1" id="myOk">${ic('save')} حفظ</button><button class="btn ghost" id="myClr">امسح</button></div></div>`;
+      p.insertBefore(my, box.nextSibling);
+      $('#myOk').onclick = () => { tap(); const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
+      $('#myClr').onclick = () => { tap(); delete S.myM3u; delete S.channelsUrl; changed(); live({ settings: S }); designPanel(); };
+      return;
     }
     if (D.tab !== 'theme') return;
     const box = document.createElement('div');

@@ -11,11 +11,12 @@ def read(c):
     t = open(p, encoding='utf-8', errors='ignore').read().split('\n'); out = []
     for i, l in enumerate(t):
         if l.startswith('#EXTINF'):
-            name = re.search(r',(.*)$', l).group(1).strip(); tid = (re.search(r'tvg-id="([^"]*)"', l) or [0, ''])[1]; url = ''; opt = False
+            name = re.search(r',(.*)$', l).group(1).strip(); tid = (re.search(r'tvg-id="([^"]*)"', l) or [0, ''])[1]; url = ''; hd = {}
             for j in range(i + 1, min(i + 5, len(t))):
-                if t[j].startswith('#EXTVLCOPT') or t[j].startswith('#EXTHTTP'): opt = True
+                m = re.match(r'#EXTVLCOPT:http-(referrer|referer|user-agent)=(.*)', t[j])
+                if m: hd['r' if m.group(1).startswith('refer') else 'ua'] = m.group(2).strip()
                 if t[j].startswith('http'): url = t[j].strip(); break
-            out.append((name, url, opt, tid.split('@')[0]))
+            out.append((name, url, hd, tid.split('@')[0]))
     return out
 # categories: news · sport · movies (أفلام ومسلسلات) · ent (منوعات) · kids · quran      p = package (mbc)
 T = [
@@ -49,11 +50,11 @@ T = [
  ('الأولى', 'iq', 'ent', '', 'iq', r'^Alawla TV', r'alawla\.tv'),
  ('MBC العراق', 'iq', 'ent', 'mbc', 'iq', r'^MBC Iraq', r'edgenextcdn\.net'),
  # religious
- ('قناة الإمام الحسين (ع)', 'iq', 'quran', '', 'iq', r'^Imam Hussein TV 2 \(1080p\)$', r'ar\.imamhossaintv\.com'),
+ ('قناة الإمام الحسين (ع)', 'iq', 'quran', 'karbala', 'iq', r'^Imam Hussein TV 2 \(1080p\)$', r'ar\.imamhossaintv\.com'),
  ('قناة المرجعيات', 'iq', 'quran', '', 'iq', r'^Marjaeyat TV Arabic', r'marjaeyattv\.com'),
  ('الأئمة', 'iq', 'quran', '', 'iq', r'^Al-Aimma TV', r'alaimma\.tv'),
- ('العباسية', 'iq', 'quran', '', 'iq', r'^Alabbassia TV', r'alabbassia\.com'),
- ('بيت العباس', 'iq', 'quran', '', 'iq', r'^BeitolAbbas TV', r'beitolabbas\.tv'),
+ ('العباسية', 'iq', 'quran', 'karbala', 'iq', r'^Alabbassia TV', r'alabbassia\.com'),
+ ('بيت العباس', 'iq', 'quran', 'karbala', 'iq', r'^BeitolAbbas TV', r'beitolabbas\.tv'),
  ('القرآن الكريم (السعودية)', 'sa', 'quran', '', 'sa', r'^Al Quran Al Kareem TV \(720p\)', r'live\.net\.sa'),
  ('تلفزيون قطر القرآن', 'qa', 'quran', '', 'qa', r'^Qatar TV The Holy Quran', r'qatartv\.akamaized\.net'),
  ('اقرأ القرآن', 'sa', 'quran', '', 'sa', r'^Iqraa Quran', r'fasttvcdn\.com'),
@@ -79,8 +80,16 @@ T = [
  ('أفلام إثارة', 'sa', 'movies', '', 'sa', r'^Movies Thriller', r'edgenextcdn\.net'),
  ('مسلسلات أردنية', 'jo', 'movies', '', 'jo', r'^Jordan Drama', r'fasttvcdn\.com'),
  ('كوميديا أردنية', 'jo', 'movies', '', 'jo', r'^Jordan Comedy', r'fasttvcdn\.com'),
- # kids
  ('سبيستون', 'ae', 'kids', '', 'ae', r'^Spacetoon Arabic', r'spacetoongo\.com'),
+ ('أطفال ومواهب', 'sa', 'kids', '', 'sa', r'^Atfal & Mawaheb', r'streamlock\.net'),
+ # documentaries
+ ('الجزيرة الوثائقية', 'qa', 'docs', '', 'qa', r'^Al Jazeera Documentary', r'getaj\.net'),
+ # Karbala package (the shrines' own channels)
+ ('كربلاء الوثائقية', 'iq', 'docs', 'karbala', 'iq', r'^Karbala Documentary', r'ktvlive\.online'),
+ ('القرآن الكريم · كربلاء', 'iq', 'quran', 'karbala', 'iq', r'^Alquran', r'ktvlive\.online'),
+ ('الإمام الحسين (ع) · فارسي', 'iq', 'quran', 'karbala', 'iq', r'^Imam Hussein TV 1 \(1080p\)$', r'fa\.imamhossaintv\.com'),
+ ('الإمام الحسين (ع) · إنجليزي', 'iq', 'quran', 'karbala', 'iq', r'^Imam Hussein TV 3 \(1080p\)$', r'en\.imamhossaintv\.com'),
+ ('الإمام الحسين (ع) · أردو', 'iq', 'quran', 'karbala', 'iq', r'^Imam Hussein TV 4 \(1080p\)$', r'ur\.imamhossaintv\.com'),
  # general by country
  ('تلفزيون قطر', 'qa', 'ent', '', 'qa', r'^Qatar Television \(1080p\)', r'qatartv\.akamaized\.net'),
  ('الريان', 'qa', 'ent', '', 'qa', r'^Al Rayyan \(1080p\)', r'vidgyor\.com'),
@@ -108,11 +117,12 @@ cache = {}; out = []; miss = []; lg = {}
 for ar, grp, cat, pk, f, nre, hre in T:
     if f not in cache: cache[f] = read(f)
     pick = None
-    for n, u, opt, cid in cache[f]:
-        if re.search(nre, n) and re.search(hre, u) and not opt: pick = (u, cid); break
+    for n, u, hd, cid in cache[f]:
+        if re.search(nre, n) and re.search(hre, u): pick = (u, cid, hd); break
     if not pick: miss.append(ar); continue
     o = {'n': ar, 'c': grp, 'g': cat, 'u': pick[0]}
     if pk: o['p'] = pk
+    o.update(pick[2])
     cid = re.sub(r'[^A-Za-z0-9._-]', '', pick[1])
     if cid and cid in logos: o['i'] = cid; lg[cid] = logos[cid][1]
     out.append(o)

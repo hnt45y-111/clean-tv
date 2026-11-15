@@ -41,7 +41,8 @@ import java.util.List;
  */
 public class LiveActivity extends Activity {
     private static final int INK = Color.parseColor("#15181B"), IVORY = Color.parseColor("#EFE7D4"), COPPER = Color.parseColor("#D9822B"), CHROME = Color.parseColor("#B8BDC2");
-    private final List<String> names = new ArrayList<>(), urls = new ArrayList<>(), ids = new ArrayList<>(), subs = new ArrayList<>();
+    private final List<String> names = new ArrayList<>(), urls = new ArrayList<>(), ids = new ArrayList<>(), subs = new ArrayList<>(), refs = new ArrayList<>(), uas = new ArrayList<>(), logos = new ArrayList<>();
+    private DefaultHttpDataSource.Factory httpFactory;
     private int idx, failed;
     private ExoPlayer player;
     private LinearLayout panel;
@@ -70,7 +71,7 @@ public class LiveActivity extends Activity {
             JSONArray a = new JSONArray(getIntent().getStringExtra("list"));
             for (int i = 0; i < a.length(); i++) {
                 JSONObject o = a.getJSONObject(i);
-                names.add(o.optString("n")); urls.add(o.optString("u")); ids.add(o.optString("i")); subs.add(o.optString("s"));
+                names.add(o.optString("n")); urls.add(o.optString("u")); ids.add(o.optString("i")); subs.add(o.optString("s")); refs.add(o.optString("r")); uas.add(o.optString("ua")); logos.add(o.optString("l"));
             }
         } catch (Throwable t) { finish(); return; }
         idx = Math.max(0, Math.min(urls.size() - 1, getIntent().getIntExtra("idx", 0)));
@@ -135,6 +136,7 @@ public class LiveActivity extends Activity {
         DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
                 .setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(12000).setReadTimeoutMs(12000)
                 .setUserAgent("Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 Chrome/120 Safari/537.36");
+        httpFactory = http;
         player = new ExoPlayer.Builder(this).setMediaSourceFactory(new DefaultMediaSourceFactory(this).setDataSourceFactory(http)).build();
         player.setVideoSurfaceView(sv);
         player.addListener(new Player.Listener() {
@@ -161,6 +163,15 @@ public class LiveActivity extends Activity {
         play(idx);
     }
 
+    private void loadRemoteLogo(final String url, final int forIdx) {
+        new Thread(new Runnable() { public void run() {
+            try (InputStream in = new java.net.URL(url).openStream()) {
+                final Bitmap bm = BitmapFactory.decodeStream(in);
+                if (bm != null) h.post(new Runnable() { public void run() { if (idx == forIdx) logo.setImageBitmap(bm); } });
+            } catch (Throwable ignored) { }
+        } }).start();
+    }
+
     private void showPanel(long ms) {
         h.removeCallbacks(hide);
         panel.animate().cancel();
@@ -183,6 +194,13 @@ public class LiveActivity extends Activity {
         if (id != null && id.length() > 0) {
             try (InputStream in = getAssets().open("logos/" + id + ".png")) { logo.setImageBitmap(BitmapFactory.decodeStream(in)); } catch (Throwable ignored) { }
         }
+        String lu = logos.get(idx);
+        if ((id == null || id.length() == 0) && lu != null && lu.startsWith("http")) loadRemoteLogo(lu, idx);
+        // some free streams only play with the broadcaster's own referrer / user agent
+        java.util.Map<String, String> hd = new java.util.HashMap<>();
+        if (refs.get(idx).length() > 0) hd.put("Referer", refs.get(idx));
+        httpFactory.setDefaultRequestProperties(hd);
+        httpFactory.setUserAgent(uas.get(idx).length() > 0 ? uas.get(idx) : "Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 Chrome/120 Safari/537.36");
         showPanel(0);          // stays until the picture is playing, then 4 more seconds
         state.setText("جاري التحميل…");
         player.setMediaItem(MediaItem.fromUri(urls.get(idx)));

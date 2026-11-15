@@ -5,24 +5,67 @@
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var COLS = 4, st = { f: 'grid', ci: 0, gi: 0, list: [], off: 0 };
-  var CATS = [['all', 'كل القنوات'], ['news', 'أخبار'], ['sport', 'رياضة'], ['movies', 'أفلام ومسلسلات'], ['ent', 'منوعات وترفيه'], ['mbc', 'باقة MBC المجانية'], ['kids', 'أطفال'], ['quran', 'قرآن ومرجعيات'], ['iq', 'قنوات عراقية']];
+  var CATS = [['all', 'كل القنوات'], ['news', 'أخبار'], ['sport', 'رياضة'], ['movies', 'أفلام ومسلسلات'], ['docs', 'وثائقية'], ['ent', 'منوعات وترفيه'], ['mbc', 'باقة MBC المجانية'], ['karbala', 'باقة قنوات كربلاء'], ['kids', 'أطفال'], ['quran', 'قرآن ومرجعيات'], ['iq', 'قنوات عراقية']];
   function cats() {
     var l = CATS.map(function (c) { return { id: c[0], n: c[1], kind: 'cat' }; });
+    custom().groups.forEach(function (g) { l.push({ id: 'my:' + g, n: 'باقتي: ' + g, kind: 'my' }); });
     var seen = {};
     (window.CHANNELS || []).forEach(function (c) { seen[c.c] = 1; });
     (window.CH_GROUPS || []).forEach(function (g) { if (seen[g[0]] && g[0] !== 'iq') l.push({ id: g[0], n: 'قنوات ' + g[1], kind: 'grp' }); });
     return l;
   }
+  /* the user's own channels (licensed streams he adds from the phone app: pasted M3U text or a link to a list) */
+  var cust = { list: [], groups: [], key: '' };
+  function parseM3U(text) {
+    var out = [], lines = String(text || '').split(/\r?\n/), cur = null;
+    lines.forEach(function (ln) {
+      ln = ln.trim(); if (!ln) return;
+      if (ln.indexOf('#EXTINF') === 0) {
+        var nm = (ln.match(/,(.*)$/) || [0, ''])[1].trim(), gr = (ln.match(/group-title="([^"]*)"/) || [0, ''])[1], lg = (ln.match(/tvg-logo="([^"]*)"/) || [0, ''])[1];
+        cur = { n: nm, grp: gr, l: lg };
+      } else if (ln.indexOf('#EXTVLCOPT') === 0 && cur) {
+        var m = ln.match(/http-(referrer|referer|user-agent)=(.*)/i); if (m) { if (/^refer/i.test(m[1])) cur.r = m[2]; else cur.ua = m[2]; }
+      } else if (ln.charAt(0) !== '#' && /^https?:/i.test(ln)) {
+        var c = cur || { n: ln, grp: '', l: '' }; c.u = ln; c.c = 'my'; c.g = guessCat(c.n + ' ' + c.grp); out.push(c); cur = null;
+      }
+    });
+    return out;
+  }
+  function guessCat(t) {
+    t = String(t).toLowerCase();
+    if (/sport|bein|رياض|كأس|مباري/.test(t)) return 'sport';
+    if (/news|أخبار|اخبار|نيوز|إخبار/.test(t)) return 'news';
+    if (/movie|film|drama|cinema|أفلام|افلام|مسلسل|دراما/.test(t)) return 'movies';
+    if (/doc|وثائق/.test(t)) return 'docs';
+    if (/kids|cartoon|أطفال|اطفال|كرتون|toon/.test(t)) return 'kids';
+    return 'ent';
+  }
+  function custom() {
+    var S = (window.__getSettings && window.__getSettings()) || {}, key = (S.myM3u || '').length + '|' + (S.channelsUrl || '') + '|' + (localStorage.getItem('myChUrlCache') || '').length;
+    if (cust.key === key) return cust;
+    var list = parseM3U(S.myM3u || '');
+    if (S.channelsUrl) { try { list = list.concat(parseM3U(localStorage.getItem('myChUrlCache') || '')); } catch (e) {} }
+    var seen = {}, groups = []; list.forEach(function (c) { var g = c.grp || 'قنواتي الخاصة'; c.grp = g; if (!seen[g]) { seen[g] = 1; groups.push(g); } });
+    cust = { list: list, groups: groups, key: key };
+    return cust;
+  }
+  /* a list kept at a link is read each time the page opens (and cached for when there is no internet) */
+  function pullUrl() {
+    var S = (window.__getSettings && window.__getSettings()) || {};
+    if (!S.channelsUrl || !window.__fetchText) return;
+    window.__fetchText(S.channelsUrl).then(function (t) { if (t && t.length > 20) { try { localStorage.setItem('myChUrlCache', t.slice(0, 400000)); } catch (e) {} cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); } });
+  }
   function filter(cid) {
-    var all = window.CHANNELS || [];
+    var all = (window.CHANNELS || []).concat(custom().list);
     if (cid === 'all') return all;
-    if (cid === 'mbc') return all.filter(function (c) { return c.p === 'mbc'; });
-    if (cid === 'news' || cid === 'sport' || cid === 'quran' || cid === 'movies' || cid === 'ent' || cid === 'kids') return all.filter(function (c) { return c.g === cid; });
+    if (cid.indexOf('my:') === 0) return custom().list.filter(function (c) { return c.grp === cid.slice(3); });
+    if (cid === 'mbc' || cid === 'karbala') return all.filter(function (c) { return c.p === cid; });
+    if (cid === 'news' || cid === 'sport' || cid === 'quran' || cid === 'movies' || cid === 'docs' || cid === 'ent' || cid === 'kids') return all.filter(function (c) { return c.g === cid; });
     return all.filter(function (c) { return c.c === cid; });
   }
   function grpName(code) { var g = (window.CH_GROUPS || []).filter(function (x) { return x[0] === code; })[0]; return g ? g[1] : ''; }
-  var GN = { news: 'أخبار', sport: 'رياضة', movies: 'أفلام', ent: 'منوعات', kids: 'أطفال', quran: 'قرآن' };
-  function subOf(c) { return grpName(c.c) + (GN[c.g] ? ' · ' + GN[c.g] : ''); }
+  var GN = { news: 'أخبار', sport: 'رياضة', movies: 'أفلام', docs: 'وثائقية', ent: 'منوعات', kids: 'أطفال', quran: 'قرآن' };
+  function subOf(c) { return c.c === 'my' ? (c.grp || 'قنواتي الخاصة') + (GN[c.g] ? ' · ' + GN[c.g] : '') : grpName(c.c) + (GN[c.g] ? ' · ' + GN[c.g] : ''); }
   function hue(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
   function draw() {
     var cs = cats(), cid = cs[st.ci].id;
@@ -33,7 +76,7 @@
     $('lvCats').innerHTML = html;
     $('lvGrid').innerHTML = st.list.length ? st.list.map(function (c, i) {
       var tint = 'hsl(' + hue(c.n) + ',28%,24%)', ini = c.n.replace(/^ال/, '').replace(/\s/g, '').slice(0, 2);
-      var logo = c.i ? '<img class="lv-img" src="logos/' + esc(c.i) + '.png" alt="" onerror="this.parentNode.removeChild(this)">' : '';
+      var logo = c.i ? '<img class="lv-img" src="logos/' + esc(c.i) + '.png" alt="" onerror="this.parentNode.removeChild(this)">' : c.l ? '<img class="lv-img" src="' + esc(c.l) + '" alt="" onerror="this.parentNode.removeChild(this)">' : '';
       return '<div class="lv-ch' + (st.f === 'grid' && i === st.gi ? ' focus' : '') + '"><div class="lv-art" style="background:' + tint + '"><b>' + esc(ini) + '</b>' + logo + '</div>' +
         '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(subOf(c)) + '</div></div></div>';
     }).join('') : '<div class="lv-empty">ماكو قنوات بهذا القسم</div>';
@@ -48,13 +91,18 @@
   }
   function play() {
     if (!st.list.length) return;
-    var payload = JSON.stringify(st.list.map(function (c) { return { n: c.n, u: c.u, i: c.i || '', s: subOf(c) }; }));
-    if (window.Android && window.Android.playLive) window.Android.playLive(payload, st.gi);
+    var cur = st.list[st.gi];
+    /* a YouTube link can't be played by the player: it opens in the YouTube app */
+    if (cur && /(youtube\.com|youtu\.be)\//i.test(cur.u)) { if (window.Android && window.Android.openLink) window.Android.openLink(cur.u); return; }
+    var payload = JSON.stringify(st.list.filter(function (c) { return !/(youtube\.com|youtu\.be)\//i.test(c.u); }).map(function (c) { return { n: c.n, u: c.u, i: c.i || '', s: subOf(c), r: c.r || '', ua: c.ua || '', l: c.l || '' }; }));
+    var gi = Math.max(0, st.list.filter(function (c) { return !/(youtube\.com|youtu\.be)\//i.test(c.u); }).indexOf(cur));
+    if (window.Android && window.Android.playLive) window.Android.playLive(payload, gi);
     else if (window.toastMsg) window.toastMsg('التشغيل يحتاج الشاشة نفسها');
   }
   var Live = {
     open: function () {
       st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0;
+      pullUrl();
       document.getElementById('liveModal').classList.add('on');
       if (window.__setLayer) window.__setLayer('live');
       draw();

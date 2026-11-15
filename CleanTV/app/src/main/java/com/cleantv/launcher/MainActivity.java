@@ -446,6 +446,12 @@ public class MainActivity extends Activity {
             return appsDirty;
         }
 
+        /** opens a link in the app that handles it (a YouTube live link opens the YouTube app) */
+        @JavascriptInterface
+        public boolean openLink(String url) {
+            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); return true; } catch (Throwable t) { return false; }
+        }
+
         /** «قنواتي»: plays one of the channels in the list (native player, so every kind of stream works) */
         @JavascriptInterface
         public void playLive(String json, int index) {
