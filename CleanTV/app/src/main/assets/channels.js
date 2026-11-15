@@ -67,7 +67,6 @@ window.CHANNELS = [{"n":"الجزيرة","c":"qa","g":"news","u":"https://live-h
 {"n":"بيبي فيرست","c":"int","g":"kids","u":"https://cdn.fast.jwp.services/v1/channel/1_jB6940Ei_TvhvIHDL/manifest.m3u8","i":"BabyFirst.us"},
 {"n":"كرتون كلاسيك","c":"int","g":"kids","u":"https://sr-live-weigel1.akamaized.net/out/v1/0d1dbf29e64e47bc991796cc24fbeb97/index_2.m3u8","i":"MeTVToons.us"},
 {"n":"الجزيرة الوثائقية","c":"qa","g":"docs","u":"https://live-hls-apps-ajd-fa.getaj.net/AJD/index.m3u8","i":"AlJazeeraDocumentary.qa"},
-{"n":"كربلاء الوثائقية","c":"iq","g":"docs","u":"https://ktvlive.online/stream/hls/ch3.m3u8","p":"karbala","i":"KarbalaDocumentary.iq"},
 {"n":"القرآن الكريم · كربلاء","c":"iq","g":"quran","u":"https://ktvlive.online/stream/hls/ch1.m3u8","p":"karbala","i":"Alquran.iq"},
 {"n":"الإمام الحسين (ع) · فارسي","c":"iq","g":"quran","u":"http://fa.imamhossaintv.com/live/ih1.m3u8","p":"karbala","i":"ImamHusseinTV1.iq"},
 {"n":"الإمام الحسين (ع) · إنجليزي","c":"iq","g":"quran","u":"http://en.imamhossaintv.com/live/ih3.m3u8","p":"karbala","i":"ImamHusseinTV3.iq"},

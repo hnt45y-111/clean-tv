@@ -919,6 +919,30 @@
   .lv-tx { min-width: 0; flex: 1; }
   .lv-n { font-size: 28px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .lv-s { font-size: 20px; color: var(--ink-3); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  #lvViews { position: absolute; top: 64px; left: 96px; display: flex; gap: 10px; }
+  .lv-vw { font-size: 24px; font-weight: 600; padding: 10px 20px; border-radius: 8px; color: var(--ink-2); background: #23282D; border: 2px solid transparent; }
+  .lv-vw.on { color: var(--ink); box-shadow: inset 0 -4px 0 #D9822B; }
+  .lv-vw.focus { border-color: #D9822B; background: #2A3036; }
+  /* four ways to show the channels */
+  #lvGrid[data-v="list"] { grid-template-columns: 1fr; gap: 14px; }
+  #lvGrid[data-v="list"] .lv-ch { min-height: 92px; padding: 10px 18px; }
+  #lvGrid[data-v="list"] .lv-art { width: 72px; height: 72px; }
+  #lvGrid[data-v="list"] .lv-art b { font-size: 28px; }
+  #lvGrid[data-v="list"] .lv-n { font-size: 30px; -webkit-line-clamp: 1; }
+  #lvGrid[data-v="list"] .lv-s { font-size: 22px; margin-top: 2px; }
+  #lvGrid[data-v="big"] { grid-template-columns: repeat(3, 1fr); gap: 26px; }
+  #lvGrid[data-v="big"] .lv-ch { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px; min-height: 0; }
+  #lvGrid[data-v="big"] .lv-art { width: 100%; height: 168px; border-radius: 10px; }
+  #lvGrid[data-v="big"] .lv-art b { font-size: 56px; }
+  #lvGrid[data-v="big"] .lv-n { text-align: center; -webkit-line-clamp: 1; }
+  #lvGrid[data-v="big"] .lv-s { text-align: center; }
+  #lvGrid[data-v="logos"] { grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  #lvGrid[data-v="logos"] .lv-ch { flex-direction: column; align-items: stretch; gap: 8px; padding: 8px; min-height: 0; border-radius: 12px; }
+  #lvGrid[data-v="logos"] .lv-art { width: 100%; height: 112px; border-radius: 8px; }
+  #lvGrid[data-v="logos"] .lv-art b { font-size: 36px; }
+  #lvGrid[data-v="logos"] .lv-n { font-size: 20px; text-align: center; -webkit-line-clamp: 1; }
+  #lvGrid[data-v="logos"] .lv-s { display: none; }
   .lv-empty { grid-column: 1 / -1; font-size: 32px; color: var(--ink-3); padding: 60px; text-align: center; }
   #lvHint { position: absolute; bottom: 44px; right: 96px; left: 96px; font-size: 22px; color: var(--ink-3); }
   /* ---- live scores ticker (identity) ---- */
@@ -1049,10 +1073,9 @@
   </div></div>
 
   <div id="pairBox"><div class="p-t">ربط الموبايل بمدير الشاشات</div><div class="p-code" id="pairCode"></div><div class="p-s" id="pairSub"></div><div id="pairQr"></div></div>
-  <div class="modal" id="liveModal"><div id="lvHead"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg><div><div class="lv-t">قنواتي</div><div class="lv-st">بث مباشر مجاني بدون اشتراك · <span id="lvCount"></span></div></div></div><div id="lvCats"></div><div id="lvGridWrap"><div id="lvGrid"></div></div><div id="lvHint">OK تشغيل · الأسهم للتنقل · داخل القناة: فوق وتحت للتنقل بين القنوات · رجوع للخروج</div></div>
+  <div class="modal" id="liveModal"><div id="lvHead"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg><div><div class="lv-t">قنواتي</div><div class="lv-st">بث مباشر مجاني بدون اشتراك · <span id="lvCount"></span></div></div></div><div id="lvViews"></div><div id="lvCats"></div><div id="lvGridWrap"><div id="lvGrid"></div></div><div id="lvHint">OK تشغيل · الأسهم للتنقل · فوق القائمة: طريقة العرض · داخل القناة: فوق وتحت للتنقل بين القنوات · رجوع للخروج</div></div>
   <div id="liveTicker"></div>
   <div id="brandStrip"></div>
-  <svg id="brandMark" viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg>
   <div id="toast"></div>
 </div>
 

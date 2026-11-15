@@ -1532,12 +1532,12 @@
     if (PREVIEW) { liveList = [{ lg: 'الدوري الإنجليزي', h: 'ليفربول', hs: '2', a: 'تشيلسي', as: '1', clk: '67' }, { lg: 'الدوري الإسباني', h: 'ريال مدريد', hs: '0', a: 'برشلونة', as: '0', clk: '12' }, { lg: 'دوري أبطال أوروبا', h: 'بايرن ميونخ', hs: '1', a: 'آرسنال', as: '1', clk: 'HT' }]; renderTicker(); return; }
     var want = {}, any = false; (settings.tickerTeams || []).forEach(function (id) { want[String(id)] = 1; any = true; });
     Promise.all(LIVE_LG.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l[0] + '/scoreboard').then(function (j) { return { j: j, lg: l[1] }; }); })).then(function (res) {
-      var seen = {}, out = [];
+      var seen = {}, out = [], soon = [];
       res.forEach(function (r) {
         if (!r.j || !r.j.events) return;
         r.j.events.forEach(function (e) {
           var c = e.competitions && e.competitions[0], st = (e.status && e.status.type) || {};
-          if (!c || !c.competitors || st.state !== 'in' || seen[e.id]) return;
+          if (!c || !c.competitors || (st.state !== 'in' && st.state !== 'pre') || seen[e.id]) return;
           var h = c.competitors.filter(function (x) { return x.homeAway === 'home'; })[0] || c.competitors[0], a = c.competitors.filter(function (x) { return x.homeAway === 'away'; })[0] || c.competitors[1];
           if (!h || !a) return;
           if (any && !want[String((h.team || {}).id)] && !want[String((a.team || {}).id)]) return;
@@ -1545,10 +1545,12 @@
           var nm = function (x) { var t = x.team || {}; return NAMES[t.displayName] || NAMES[t.shortDisplayName] || t.shortDisplayName || t.displayName || ''; };
           var sc = function (x) { var v = x.score && (x.score.displayValue != null ? x.score.displayValue : x.score); return v == null ? '0' : String(v); };
           var detail = (e.status && (e.status.displayClock || st.shortDetail)) || '', clk = /half/i.test(st.detail || '') || /^HT$/i.test(st.shortDetail || '') ? 'HT' : String(parseInt(detail, 10) || '');
+          if (st.state === 'pre') { var dt = new Date(e.date); if (isNaN(dt) || dt - Date.now() > 36e5 * 30) return; soon.push({ lg: r.lg, h: nm(h), a: nm(a), at: dt.getTime(), pre: 1 }); return; }
           out.push({ lg: r.lg, h: nm(h), hs: sc(h), a: nm(a), as: sc(a), clk: clk });
         });
       });
-      liveList = out; renderTicker();
+      soon.sort(function (x, y) { return x.at - y.at; });
+      liveList = out.length ? out : soon.slice(0, 12); renderTicker();
     });
   }
   function renderTicker() {
@@ -1556,12 +1558,14 @@
     var on = settings.ticker !== false && liveList.length > 0;
     t.classList.toggle('on', on); document.body.classList.toggle('tickeron', on);
     if (!on) { t.innerHTML = ''; return; }
+    var pre = !!liveList[0].pre;
     var one = liveList.map(function (m) {
+      if (m.pre) { var d = new Date(m.at), tm = d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }), same = d.toDateString() === new Date().toDateString(); return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>ضد</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + (same ? 'اليوم' : 'باچر') + ' ' + tm + '</em></span>'; }
       var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
       return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>' + nf.format(+m.hs || 0) + '</b><u></u><b>' + nf.format(+m.as || 0) + '</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
     }).join('<span class="lt-sep"></span>') + '<span class="lt-sep"></span>';
     t.setAttribute('data-dir', settings.tickerDir === 'ltr' ? 'ltr' : 'rtl');
-    t.innerHTML = '<div class="lt-badge"><i></i>مباشر</div><div class="lt-win"><div class="lt-run" style="animation-duration:' + Math.max(24, liveList.length * 12) + 's">' + one + one + '</div></div>';
+    t.innerHTML = '<div class="lt-badge"><i></i>' + (pre ? 'مباريات قادمة' : 'مباشر') + '</div><div class="lt-win"><div class="lt-run" style="animation-duration:' + Math.max(24, liveList.length * 12) + 's">' + one + one + '</div></div>';
   }
   setTimeout(refreshLive, 3000);
   setInterval(function () { if (!PREVIEW) refreshLive(); }, 90000);
