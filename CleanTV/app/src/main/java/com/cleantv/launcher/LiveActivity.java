@@ -259,11 +259,21 @@ public class LiveActivity extends Activity {
     }
 
     // ---------------------------------------------------------------- the channel list (OK on a channel)
-    private GradientDrawable rowBg(boolean focused, boolean selected) {
+    private Typeface kufi, plexB, plexR;
+    private Typeface font(String file, Typeface fallback) {
+        try { return Typeface.createFromAsset(getAssets(), "fonts/" + file); } catch (Throwable t) { return fallback; }
+    }
+    private TextView ptv(float sp, int color, Typeface tf) {
+        TextView t = new TextView(this);
+        t.setTextSize(sp); t.setTextColor(color); t.setIncludeFontPadding(false); t.setTypeface(tf);
+        return t;
+    }
+    /** the same flat cards as the page: surf fill, thin chrome border, copper ring on focus */
+    private GradientDrawable cardBg(boolean focused, boolean selected, int radiusDp) {
         GradientDrawable g = new GradientDrawable();
-        g.setColor(focused ? Color.parseColor("#2A3036") : selected ? Color.parseColor("#23282D") : Color.TRANSPARENT);
-        g.setCornerRadius(dp(8));
-        if (focused) g.setStroke(dp(2), COPPER);
+        g.setColor(focused ? Color.parseColor("#2A3036") : selected ? Color.parseColor("#23282D") : Color.parseColor("#1D2125"));
+        g.setCornerRadius(dp(radiusDp));
+        if (focused) g.setStroke(dp(3), COPPER); else g.setStroke(1, Color.parseColor("#3A4046"));
         return g;
     }
 
@@ -279,6 +289,11 @@ public class LiveActivity extends Activity {
         return b;
     }
 
+    private static int tintOf(String s) {
+        int h = 7; for (int i = 0; i < s.length(); i++) h = (h * 31 + s.charAt(i)) % 360;
+        return Color.HSVToColor(new float[] { h, 0.30f, 0.30f });
+    }
+
     private ListView newList() {
         ListView lv = new ListView(this);
         lv.setDivider(null); lv.setSelector(new ColorDrawable(Color.TRANSPARENT)); lv.setFocusable(false);
@@ -286,26 +301,41 @@ public class LiveActivity extends Activity {
         return lv;
     }
 
+    private TextView listCount;
+
     private void buildListPanel() {
-        int pw = Math.round(getResources().getDisplayMetrics().widthPixels * 0.34f);
+        kufi = font("ReemKufi.ttf", Typeface.DEFAULT_BOLD);
+        plexB = font("PlexArabic-SemiBold.ttf", Typeface.DEFAULT_BOLD);
+        plexR = font("PlexArabic-Regular.ttf", Typeface.DEFAULT);
+        int pw = Math.round(getResources().getDisplayMetrics().widthPixels * 0.5f);
         listPanel = new LinearLayout(this);
         listPanel.setOrientation(LinearLayout.VERTICAL);
-        listPanel.setBackgroundColor(Color.parseColor("#F415181B"));
+        listPanel.setBackgroundColor(Color.parseColor("#F815181B"));
         View top = new View(this); top.setBackgroundColor(COPPER);
-        listPanel.addView(top, new LinearLayout.LayoutParams(-1, dp(5)));
+        listPanel.addView(top, new LinearLayout.LayoutParams(-1, dp(6)));
         View top2 = new View(this); top2.setBackgroundColor(CHROME);
         listPanel.addView(top2, new LinearLayout.LayoutParams(-1, dp(1)));
-        TextView title = tv(22, IVORY, true); title.setText("قنواتي");
-        title.setPadding(dp(18), dp(14), dp(18), dp(10));
-        listPanel.addView(title, new LinearLayout.LayoutParams(-2, -2));
+        LinearLayout head = new LinearLayout(this);
+        head.setOrientation(LinearLayout.VERTICAL);
+        head.setPadding(dp(26), dp(18), dp(26), dp(12));
+        TextView title = ptv(34, IVORY, kufi); title.setText("قنواتي");
+        listCount = ptv(14, CHROME, plexR);
+        LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2); cl.topMargin = dp(6);
+        head.addView(title); head.addView(listCount, cl);
+        listPanel.addView(head, new LinearLayout.LayoutParams(-1, -2));
         LinearLayout cols = new LinearLayout(this);
         cols.setOrientation(LinearLayout.HORIZONTAL);
+        cols.setPadding(dp(14), 0, dp(14), 0);
         fList = newList(); cList = newList();
-        cols.addView(fList, new LinearLayout.LayoutParams(0, -1, 0.36f));
+        cols.addView(fList, new LinearLayout.LayoutParams(0, -1, 0.34f));
         View vl = new View(this); vl.setBackgroundColor(Color.parseColor("#3A4046"));
-        cols.addView(vl, new LinearLayout.LayoutParams(dp(1), -1));
-        cols.addView(cList, new LinearLayout.LayoutParams(0, -1, 0.64f));
+        LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(dp(1), -1); vp.setMargins(dp(8), dp(4), dp(8), dp(4));
+        cols.addView(vl, vp);
+        cols.addView(cList, new LinearLayout.LayoutParams(0, -1, 0.66f));
         listPanel.addView(cols, new LinearLayout.LayoutParams(-1, 0, 1f));
+        TextView hint = ptv(13, CHROME, plexR); hint.setText("OK تشغيل · ◄ ► بين الفولدرات والقنوات · رجوع للإغلاق");
+        hint.setPadding(dp(26), dp(10), dp(26), dp(14));
+        listPanel.addView(hint, new LinearLayout.LayoutParams(-1, -2));
         listPanel.setVisibility(View.GONE);
         root.addView(listPanel, new FrameLayout.LayoutParams(pw, -1, Gravity.START));
 
@@ -316,15 +346,22 @@ public class LiveActivity extends Activity {
             public View getView(int p, View v, ViewGroup g) {
                 LinearLayout r;
                 if (v == null) {
-                    r = new LinearLayout(LiveActivity.this); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(dp(6), dp(3), dp(6), dp(3));
-                    View bar = new View(LiveActivity.this); r.addView(bar, new LinearLayout.LayoutParams(dp(4), dp(24)));
-                    TextView t = tv(16, IVORY, true); t.setPadding(dp(10), dp(12), dp(6), dp(12)); r.addView(t, new LinearLayout.LayoutParams(0, -2, 1f));
+                    r = new LinearLayout(LiveActivity.this); r.setGravity(Gravity.CENTER_VERTICAL);
+                    r.setPadding(dp(4), dp(2), dp(4), dp(2));
+                    LinearLayout card = new LinearLayout(LiveActivity.this); card.setGravity(Gravity.CENTER_VERTICAL);
+                    View bar = new View(LiveActivity.this); card.addView(bar, new LinearLayout.LayoutParams(dp(5), dp(26)));
+                    TextView t = ptv(17, IVORY, plexB); t.setPadding(dp(12), dp(13), dp(8), dp(13));
+                    card.addView(t, new LinearLayout.LayoutParams(0, -2, 1f));
+                    r.addView(card, new LinearLayout.LayoutParams(-1, -2));
                 } else r = (LinearLayout) v;
-                View bar = r.getChildAt(0); TextView t = (TextView) r.getChildAt(1);
+                LinearLayout card = (LinearLayout) r.getChildAt(0);
+                View bar = card.getChildAt(0); TextView t = (TextView) card.getChildAt(1);
                 boolean sel = p == selFolder, foc = sel && focusCol == 0;
-                t.setText(fNames.get(p)); t.setTextColor(sel ? IVORY : CHROME);
+                t.setText(fNames.get(p)); t.setTextColor(sel ? IVORY : Color.parseColor("#CFC8B8"));
                 bar.setBackgroundColor(sel ? COPPER : Color.TRANSPARENT);
-                r.setBackground(rowBg(foc, sel));
+                GradientDrawable bg = cardBg(foc, sel, 8);
+                if (!sel) { bg.setColor(Color.TRANSPARENT); bg.setStroke(0, Color.TRANSPARENT); }
+                card.setBackground(bg);
                 return r;
             }
         };
@@ -337,32 +374,38 @@ public class LiveActivity extends Activity {
             public View getView(int p, View v, ViewGroup g) {
                 LinearLayout r;
                 if (v == null) {
-                    r = new LinearLayout(LiveActivity.this); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(dp(8), dp(6), dp(8), dp(6));
+                    r = new LinearLayout(LiveActivity.this); r.setPadding(dp(5), dp(4), dp(5), dp(4));
+                    LinearLayout card = new LinearLayout(LiveActivity.this); card.setGravity(Gravity.CENTER_VERTICAL); card.setPadding(dp(12), dp(10), dp(14), dp(10));
                     FrameLayout box = new FrameLayout(LiveActivity.this);
-                    GradientDrawable bb = new GradientDrawable(); bb.setColor(IVORY); bb.setCornerRadius(dp(8)); box.setBackground(bb);
-                    TextView m = tv(16, INK, true); m.setGravity(Gravity.CENTER); box.addView(m, new FrameLayout.LayoutParams(-1, -1));
-                    ImageView im = new ImageView(LiveActivity.this); im.setScaleType(ImageView.ScaleType.FIT_CENTER); im.setPadding(dp(5), dp(5), dp(5), dp(5)); box.addView(im, new FrameLayout.LayoutParams(-1, -1));
-                    LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(dp(46), dp(46)); bl.setMarginEnd(dp(10)); r.addView(box, bl);
+                    TextView m = ptv(19, IVORY, kufi); m.setGravity(Gravity.CENTER); box.addView(m, new FrameLayout.LayoutParams(-1, -1));
+                    ImageView im = new ImageView(LiveActivity.this); im.setScaleType(ImageView.ScaleType.FIT_CENTER); im.setPadding(dp(6), dp(6), dp(6), dp(6)); box.addView(im, new FrameLayout.LayoutParams(-1, -1));
+                    LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(dp(58), dp(58)); bl.setMarginEnd(dp(14)); card.addView(box, bl);
                     LinearLayout col = new LinearLayout(LiveActivity.this); col.setOrientation(LinearLayout.VERTICAL);
-                    TextView n = tv(16, IVORY, true); n.setSingleLine(true); n.setEllipsize(android.text.TextUtils.TruncateAt.END);
-                    TextView sb = tv(12, CHROME, false); sb.setSingleLine(true); sb.setEllipsize(android.text.TextUtils.TruncateAt.END);
-                    col.addView(n); col.addView(sb);
-                    r.addView(col, new LinearLayout.LayoutParams(0, -2, 1f));
-                    View dot = new View(LiveActivity.this); GradientDrawable dd = new GradientDrawable(); dd.setShape(GradientDrawable.OVAL); dd.setColor(COPPER); dot.setBackground(dd);
-                    r.addView(dot, new LinearLayout.LayoutParams(dp(10), dp(10)));
+                    TextView n = ptv(19, IVORY, plexB); n.setSingleLine(true); n.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                    TextView sb = ptv(13, CHROME, plexR); sb.setSingleLine(true); sb.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                    LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-2, -2); sl.topMargin = dp(4);
+                    col.addView(n); col.addView(sb, sl);
+                    card.addView(col, new LinearLayout.LayoutParams(0, -2, 1f));
+                    TextView live = ptv(12, INK, kufi); live.setText("يعرض الآن"); live.setPadding(dp(10), dp(4), dp(10), dp(4));
+                    GradientDrawable lb = new GradientDrawable(); lb.setColor(COPPER); lb.setCornerRadius(dp(4)); live.setBackground(lb);
+                    card.addView(live);
+                    r.addView(card, new LinearLayout.LayoutParams(-1, -2));
                 } else r = (LinearLayout) v;
                 int ch = fIdx.get(selFolder)[p];
-                FrameLayout box = (FrameLayout) r.getChildAt(0);
+                LinearLayout card = (LinearLayout) r.getChildAt(0);
+                FrameLayout box = (FrameLayout) card.getChildAt(0);
                 TextView m = (TextView) box.getChildAt(0); ImageView im = (ImageView) box.getChildAt(1);
-                LinearLayout col = (LinearLayout) r.getChildAt(1);
+                LinearLayout col = (LinearLayout) card.getChildAt(1);
                 String nm = names.get(ch);
                 String ini = nm.replaceFirst("^ال", "").replace(" ", "");
                 m.setText(ini.substring(0, Math.min(2, ini.length())));
-                im.setImageBitmap(logoFor(ids.get(ch)));
+                Bitmap lg = logoFor(ids.get(ch));
+                GradientDrawable bb = new GradientDrawable(); bb.setCornerRadius(dp(8)); bb.setColor(lg != null ? IVORY : tintOf(nm)); box.setBackground(bb);
+                im.setImageBitmap(lg);
                 ((TextView) col.getChildAt(0)).setText(nm);
                 ((TextView) col.getChildAt(1)).setText(subs.get(ch));
-                r.getChildAt(2).setVisibility(ch == idx ? View.VISIBLE : View.INVISIBLE);
-                r.setBackground(rowBg(focusCol == 1 && p == chSel, p == chSel));
+                card.getChildAt(2).setVisibility(ch == idx ? View.VISIBLE : View.GONE);
+                card.setBackground(cardBg(focusCol == 1 && p == chSel, p == chSel, 12));
                 return r;
             }
         };
@@ -373,7 +416,10 @@ public class LiveActivity extends Activity {
         lv.post(new Runnable() { public void run() { lv.setSelectionFromTop(Math.max(0, pos), Math.max(0, lv.getHeight() / 3)); } });
     }
 
-    private void refreshPanel() { fAd.notifyDataSetChanged(); cAd.notifyDataSetChanged(); }
+    private void refreshPanel() {
+        listCount.setText("بث مباشر مجاني · " + fIdx.get(selFolder).length + " قناة");
+        fAd.notifyDataSetChanged(); cAd.notifyDataSetChanged();
+    }
 
     private void openPanel() {
         panelOpen = true; selFolder = curFolder; focusCol = 1;
