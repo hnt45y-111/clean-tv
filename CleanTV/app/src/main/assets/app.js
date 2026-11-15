@@ -1526,15 +1526,16 @@
     ['uefa.champions', 'دوري أبطال أوروبا'], ['uefa.europa', 'الدوري الأوروبي'], ['uefa.europa.conf', 'دوري المؤتمر'], ['ksa.1', 'الدوري السعودي'], ['qat.1', 'دوري نجوم قطر'],
     ['uae.1', 'دوري الإمارات'], ['egy.1', 'الدوري المصري'], ['irq.1', 'الدوري العراقي'], ['afc.champions', 'دوري أبطال آسيا'], ['fifa.world', 'كأس العالم'], ['fifa.worldq.afc', 'تصفيات آسيا'],
     ['fifa.friendly', 'مباراة ودية'], ['uefa.nations', 'دوري الأمم'], ['por.1', 'الدوري البرتغالي'], ['ned.1', 'الدوري الهولندي'], ['tur.1', 'الدوري التركي'], ['bra.1', 'الدوري البرازيلي'], ['arg.1', 'الدوري الأرجنتيني']];
-  var liveList = [];
+  var liveList = [], liveNote = '';
   function refreshLive() {
-    if (settings.ticker === false) { liveList = []; renderTicker(); return; }
+    if (settings.ticker === false) { liveList = []; liveNote = ''; renderTicker(); return; }
     if (PREVIEW) { liveList = [{ lg: 'الدوري الإنجليزي', h: 'ليفربول', hs: '2', a: 'تشيلسي', as: '1', clk: '67' }, { lg: 'الدوري الإسباني', h: 'ريال مدريد', hs: '0', a: 'برشلونة', as: '0', clk: '12' }, { lg: 'دوري أبطال أوروبا', h: 'بايرن ميونخ', hs: '1', a: 'آرسنال', as: '1', clk: 'HT' }]; renderTicker(); return; }
     var want = {}, any = false; (settings.tickerTeams || []).forEach(function (id) { want[String(id)] = 1; any = true; });
     Promise.all(LIVE_LG.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l[0] + '/scoreboard').then(function (j) { return { j: j, lg: l[1] }; }); })).then(function (res) {
-      var seen = {}, out = [], soon = [];
+      var seen = {}, out = [], soon = [], got = 0;
       res.forEach(function (r) {
         if (!r.j || !r.j.events) return;
+        got++;
         r.j.events.forEach(function (e) {
           var c = e.competitions && e.competitions[0], st = (e.status && e.status.type) || {};
           if (!c || !c.competitors || (st.state !== 'in' && st.state !== 'pre') || seen[e.id]) return;
@@ -1550,7 +1551,9 @@
         });
       });
       soon.sort(function (x, y) { return x.at - y.at; });
-      liveList = out.length ? out : soon.slice(0, 8); renderTicker();
+      liveList = out.length ? out : soon.slice(0, 8);
+      liveNote = liveList.length ? '' : !got ? 'تعذّر جلب النتائج، تأكد من الإنترنت' : any ? 'ماكو مباريات لفرقك المختارة هسه' : 'ماكو مباريات مباشرة أو قريبة هسه';
+      renderTicker();
     });
   }
   var tk = { sig: '', pages: [], i: 0, t: 0 };
@@ -1560,11 +1563,12 @@
   }
   function renderTicker() {
     var t = $('liveTicker'); if (!t) return;
-    var on = settings.ticker !== false && liveList.length > 0;
+    var note = !liveList.length && settings.ticker !== false ? liveNote : '';
+    var on = settings.ticker !== false && (liveList.length > 0 || !!note);
     t.classList.toggle('on', on); document.body.classList.toggle('tickeron', on);
     if (!on) { clearInterval(tk.t); tk = { sig: '', pages: [], i: 0, t: 0 }; t.innerHTML = ''; return; }
-    var pre = !!liveList[0].pre;
-    var items = liveList.map(function (m) {
+    var pre = !!(liveList[0] && liveList[0].pre);
+    var items = !liveList.length ? ['<span class="lt-m"><em>' + esc(note) + '</em></span>'] : liveList.map(function (m) {
       if (m.pre) { var d = new Date(m.at), tm = d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }), same = d.toDateString() === new Date().toDateString(); return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>ضد</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + (same ? 'اليوم' : 'باچر') + ' ' + tm + '</em></span>'; }
       var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
       return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>' + nf.format(+m.hs || 0) + '</b><u></u><b>' + nf.format(+m.as || 0) + '</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
@@ -1574,7 +1578,7 @@
     var pages = []; for (var q = 0; q < items.length; q += 2) pages.push(items.slice(q, q + 2).join('<span class="lt-sep"></span>'));
     clearInterval(tk.t); tk = { sig: sig, pages: pages, i: 0, t: 0 };
     t.setAttribute('data-dir', dir);
-    t.innerHTML = '<div class="lt-badge"><i></i>' + (pre ? 'مباريات قادمة' : 'مباشر') + '</div><div class="lt-win"><div class="lt-run"></div></div>';
+    t.innerHTML = '<div class="lt-badge"><i></i>' + (pre ? 'مباريات قادمة' : !liveList.length ? 'النتائج' : 'مباشر') + '</div><div class="lt-win"><div class="lt-run"></div></div>';
     tickPage();
     if (pages.length > 1) tk.t = setInterval(tickPage, 7000);
   }
