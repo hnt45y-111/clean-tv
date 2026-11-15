@@ -170,6 +170,8 @@ function openDesign(d) {
   D = Object.assign({ sel: null, tab: 'el', dirty: false }, d);
   D.cfg.settings = D.cfg.settings || {};
   D.cfg.layout = D.cfg.layout || {};
+  /* what the screen owned when this design was opened: used to keep app order / hidden apps / icons the user changed on the TV since */
+  D.base = deepCopy({ appOrder: D.cfg.appOrder, appHidden: D.cfg.appHidden, customIcons: D.cfg.customIcons });
   renderDesign();
 }
 
@@ -553,12 +555,22 @@ async function localPackToTv(cfg) {
   return cfg;
 }
 async function cfgStamp() { try { const c = JSON.parse(await run('cfgGet')); return c.stamp || null; } catch (e) { return null; } }
+/* the app order, hidden apps and custom icons belong to the screen: if the user moved apps on the TV after this design was opened
+   and did not touch them here, the screen's own version stays (it used to be put back to the older order on every export) */
+async function keepTvOwned(cfg) {
+  try {
+    const tv = JSON.parse(await run('cfgGet')), b = (D && D.base) || {};
+    ['appOrder', 'appHidden', 'customIcons'].forEach(k => { if (tv[k] !== undefined && JSON.stringify(cfg[k]) === JSON.stringify(b[k])) cfg[k] = tv[k]; });
+  } catch (e) {}
+  return cfg;
+}
 async function applyToTv(cfg) {
   if (!need()) return;
   busy('أجهّز التصميم…');
   try {
     cfg = await localPackToTv(cfg);
     cfg = deepCopy(cfg);
+    cfg = await keepTvOwned(cfg);
     if (!cfg.mode) cfg.mode = 'tv';
     const L = cfg.layout || {};
     const imgs = Object.keys(L).filter(k => L[k] && L[k].bgImg && L[k].bgImg.startsWith('data:'));

@@ -277,7 +277,7 @@ function osPanelWire(box, S) {
     if (t.dataset.ttm) { S.tickerTeams = (S.tickerTeams || []).filter(x => String(x) !== t.dataset.ttm); redo(); return; }
     if (t.dataset.tk === 'clear') { delete S.tickerTeams; redo(); return; }
     if (t.dataset.tk === 'pick') { tickerTeamsSheet(S, redo); return; }
-    if (t.dataset.tk) { if (t.dataset.tk === 'on') S.ticker = S.ticker === false; else S.tickerDir = t.dataset.tk; redo(); return; }
+    if (t.dataset.tk) { if (t.dataset.tk === 'on') S.ticker = S.ticker === false; else if (t.dataset.tk === 'apps') S.tickerApps = S.tickerApps !== true; else S.tickerDir = t.dataset.tk; redo(); return; }
     if (t.dataset.oav) {
       if (t.dataset.oav === 'del') { delete O.avatar; redo(); return; }
       busy('اختار صورة…');
@@ -316,8 +316,9 @@ function osPanelWire(box, S) {
     const S = D.cfg.settings, p = $('#dPanel'); if (!p) return;
     if (D.tab === 'set') {
       const box = document.createElement('div');
-      box.innerHTML = `<div class="panel"><h2>شريط النتائج المباشرة</h2><p class="sub" style="margin-top:-4px">يطلع تحت بالشاشة بس وقت المباريات المباشرة، ويمر بنتيجة كل مباراة شغالة هسه.</p>
-        <div class="list" style="margin:0"><div class="item tap" data-tk="on" style="padding:6px 0;min-height:0"><div class="t"><b>تشغيل الشريط</b></div><div class="toggle ${S.ticker !== false ? 'on' : ''}"></div></div></div>
+      box.innerHTML = `<div class="panel"><h2>شريط النتائج المباشرة</h2><p class="sub" style="margin-top:-4px">يطلع تحت بالشاشة، ويبين المباريات المباشرة. وإذا اخترت فرق، يبين مبارياتهم المباشرة ومبارياتهم القادمة.</p>
+        <div class="list" style="margin:0"><div class="item tap" data-tk="on" style="padding:6px 0;min-height:0"><div class="t"><b>تشغيل الشريط</b></div><div class="toggle ${S.ticker !== false ? 'on' : ''}"></div></div>
+        <div class="item tap" data-tk="apps" style="padding:6px 0;min-height:0"><div class="t"><b>يظهر فوق التطبيقات</b><small>يطلع الشريط فوق يوتيوب وقنواتي وأي تطبيق ثاني (يحتاج إذن العرض فوق التطبيقات)</small></div><div class="toggle ${S.tickerApps === true ? 'on' : ''}"></div></div></div>
         <div class="lb" style="margin:10px 0 6px"><span class="sub">اتجاه الحركة</span></div>
         <div class="chips"><button class="chip ${S.tickerDir !== 'ltr' ? 'on' : ''}" data-tk="rtl">من اليمين لليسار</button><button class="chip ${S.tickerDir === 'ltr' ? 'on' : ''}" data-tk="ltr">من اليسار لليمين</button></div>
         <div class="lb" style="margin:12px 0 6px"><span class="sub">الفرق اللي تظهر مبارياتها</span></div>

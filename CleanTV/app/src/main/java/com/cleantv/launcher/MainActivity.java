@@ -1027,6 +1027,51 @@ public class MainActivity extends Activity {
             }).start();
         }
 
+        /** A channel list (M3U): keeps the line breaks, follows redirects (also http to https), and looks like a player to the server. */
+        @JavascriptInterface
+        public void fetchList(final String url, final String cbId) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String res = "";
+                    try {
+                        String u = url;
+                        for (int hop = 0; hop < 6; hop++) {
+                            HttpURLConnection con = (HttpURLConnection) new URL(u).openConnection();
+                            con.setInstanceFollowRedirects(false);
+                            con.setConnectTimeout(12000);
+                            con.setReadTimeout(25000);
+                            con.setRequestProperty("User-Agent", "VLC/3.0.20 LibVLC/3.0.20");
+                            int code = con.getResponseCode();
+                            if (code >= 300 && code < 400 && con.getHeaderField("Location") != null) {
+                                u = new URL(new URL(u), con.getHeaderField("Location")).toString();
+                                con.disconnect();
+                                continue;
+                            }
+                            if (code >= 200 && code < 300) {
+                                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                                byte[] buf = new byte[32768];
+                                int n, total = 0;
+                                java.io.InputStream in = con.getInputStream();
+                                while ((n = in.read(buf)) > 0 && total < 4000000) { bo.write(buf, 0, n); total += n; }
+                                in.close();
+                                res = bo.toString("UTF-8");
+                            }
+                            con.disconnect();
+                            break;
+                        }
+                    } catch (Throwable ignored) { }
+                    callJs("window.__cb(" + JSONObject.quote(cbId) + "," + JSONObject.quote(res) + ")");
+                }
+            }).start();
+        }
+
+        /** The scores strip drawn above other apps: pages separated by a newline. */
+        @JavascriptInterface
+        public void tickerOverlay(boolean on, String badge, String pages) {
+            Overlay.setStrip(MainActivity.this, on, badge, pages == null || pages.length() == 0 ? new String[0] : pages.split("\n"));
+        }
+
         @JavascriptInterface
         public String httpGet(String url) {
             HttpURLConnection con = null;

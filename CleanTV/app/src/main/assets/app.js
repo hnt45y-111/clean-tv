@@ -1527,6 +1527,33 @@
     ['uae.1', 'دوري الإمارات'], ['egy.1', 'الدوري المصري'], ['irq.1', 'الدوري العراقي'], ['afc.champions', 'دوري أبطال آسيا'], ['fifa.world', 'كأس العالم'], ['fifa.worldq.afc', 'تصفيات آسيا'],
     ['fifa.friendly', 'مباراة ودية'], ['uefa.nations', 'دوري الأمم'], ['por.1', 'الدوري البرتغالي'], ['ned.1', 'الدوري الهولندي'], ['tur.1', 'الدوري التركي'], ['bra.1', 'الدوري البرازيلي'], ['arg.1', 'الدوري الأرجنتيني']];
   var liveList = [], liveNote = '';
+  var favUp = { at: 0, key: '', list: [] };   /* upcoming matches of the chosen teams (looked up again every 30 minutes) */
+  function espnDay(ms) { var d = new Date(ms); return d.getUTCFullYear() + ('0' + (d.getUTCMonth() + 1)).slice(-2) + ('0' + d.getUTCDate()).slice(-2); }
+  function teamName(x) { var t = (x && x.team) || {}; return NAMES[t.displayName] || NAMES[t.shortDisplayName] || t.shortDisplayName || t.displayName || ''; }
+  function evTeams(e) {
+    var c = e.competitions && e.competitions[0]; if (!c || !c.competitors) return null;
+    var h = c.competitors.filter(function (x) { return x.homeAway === 'home'; })[0] || c.competitors[0], a = c.competitors.filter(function (x) { return x.homeAway === 'away'; })[0] || c.competitors[1];
+    return h && a ? { h: h, a: a } : null;
+  }
+  function loadFavUpcoming(want, key) {
+    if (favUp.key === key && Date.now() - favUp.at < 30 * 60000) return Promise.resolve(favUp.list);
+    var range = espnDay(Date.now()) + '-' + espnDay(Date.now() + 14 * 864e5);
+    return Promise.all(LIVE_LG.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l[0] + '/scoreboard?limit=300&dates=' + range).then(function (j) { return { j: j, lg: l[1] }; }); })).then(function (res) {
+      var seen = {}, out = [];
+      res.forEach(function (r) {
+        if (!r.j || !r.j.events) return;
+        r.j.events.forEach(function (e) {
+          var st = (e.status && e.status.type) || {}, tm = evTeams(e); if (!tm || st.state !== 'pre' || seen[e.id]) return;
+          if (!want[String((tm.h.team || {}).id)] && !want[String((tm.a.team || {}).id)]) return;
+          var dt = new Date(e.date); if (isNaN(dt)) return;
+          seen[e.id] = 1; out.push({ lg: r.lg, h: teamName(tm.h), a: teamName(tm.a), at: dt.getTime(), pre: 1 });
+        });
+      });
+      out.sort(function (x, y) { return x.at - y.at; });
+      favUp = { at: Date.now(), key: key, list: out.slice(0, 8) };
+      return favUp.list;
+    });
+  }
   function refreshLive() {
     if (settings.ticker === false) { liveList = []; liveNote = ''; renderTicker(); return; }
     if (PREVIEW) { liveList = [{ lg: 'الدوري الإنجليزي', h: 'ليفربول', hs: '2', a: 'تشيلسي', as: '1', clk: '67' }, { lg: 'الدوري الإسباني', h: 'ريال مدريد', hs: '0', a: 'برشلونة', as: '0', clk: '12' }, { lg: 'دوري أبطال أوروبا', h: 'بايرن ميونخ', hs: '1', a: 'آرسنال', as: '1', clk: 'HT' }]; renderTicker(); return; }
@@ -1537,23 +1564,24 @@
         if (!r.j || !r.j.events) return;
         got++;
         r.j.events.forEach(function (e) {
-          var c = e.competitions && e.competitions[0], st = (e.status && e.status.type) || {};
-          if (!c || !c.competitors || (st.state !== 'in' && st.state !== 'pre') || seen[e.id]) return;
-          var h = c.competitors.filter(function (x) { return x.homeAway === 'home'; })[0] || c.competitors[0], a = c.competitors.filter(function (x) { return x.homeAway === 'away'; })[0] || c.competitors[1];
-          if (!h || !a) return;
-          if (any && !want[String((h.team || {}).id)] && !want[String((a.team || {}).id)]) return;
+          var st = (e.status && e.status.type) || {}, tm = evTeams(e);
+          if (!tm || (st.state !== 'in' && st.state !== 'pre') || seen[e.id]) return;
+          if (any && !want[String((tm.h.team || {}).id)] && !want[String((tm.a.team || {}).id)]) return;
           seen[e.id] = 1;
-          var nm = function (x) { var t = x.team || {}; return NAMES[t.displayName] || NAMES[t.shortDisplayName] || t.shortDisplayName || t.displayName || ''; };
           var sc = function (x) { var v = x.score && (x.score.displayValue != null ? x.score.displayValue : x.score); return v == null ? '0' : String(v); };
           var detail = (e.status && (e.status.displayClock || st.shortDetail)) || '', clk = /half/i.test(st.detail || '') || /^HT$/i.test(st.shortDetail || '') ? 'HT' : String(parseInt(detail, 10) || '');
-          if (st.state === 'pre') { var dt = new Date(e.date); if (isNaN(dt) || dt - Date.now() > 36e5 * 30) return; soon.push({ lg: r.lg, h: nm(h), a: nm(a), at: dt.getTime(), pre: 1 }); return; }
-          out.push({ lg: r.lg, h: nm(h), hs: sc(h), a: nm(a), as: sc(a), clk: clk });
+          if (st.state === 'pre') { var dt = new Date(e.date); if (isNaN(dt) || dt - Date.now() > 36e5 * 30) return; soon.push({ lg: r.lg, h: teamName(tm.h), a: teamName(tm.a), at: dt.getTime(), pre: 1 }); return; }
+          out.push({ lg: r.lg, h: teamName(tm.h), hs: sc(tm.h), a: teamName(tm.a), as: sc(tm.a), clk: clk });
         });
       });
       soon.sort(function (x, y) { return x.at - y.at; });
-      liveList = out.length ? out : soon.slice(0, 8);
-      liveNote = liveList.length ? '' : !got ? 'تعذّر جلب النتائج، تأكد من الإنترنت' : any ? 'ماكو مباريات لفرقك المختارة هسه' : 'ماكو مباريات مباشرة أو قريبة هسه';
-      renderTicker();
+      var done = function (up) {
+        /* chosen teams: what is on now, then their next matches. no chosen teams: what is on now, else what starts soon */
+        liveList = any ? out.concat(up.filter(function (m) { return m.at > Date.now() - 6e4; }).slice(0, 6)) : (out.length ? out : soon.slice(0, 8));
+        liveNote = liveList.length ? '' : !got ? 'تعذّر جلب النتائج، تأكد من الإنترنت' : any ? 'ماكو مباريات قريبة لفرقك المختارة' : 'ماكو مباريات مباشرة أو قريبة هسه';
+        renderTicker();
+      };
+      if (any) loadFavUpcoming(want, Object.keys(want).sort().join(',')).then(done, function () { done([]); }); else done([]);
     });
   }
   var tk = { sig: '', pages: [], i: 0, t: 0 };
@@ -1561,15 +1589,34 @@
     var r = document.querySelector('#liveTicker .lt-run'); if (!r || !tk.pages.length) return;
     r.innerHTML = tk.pages[tk.i % tk.pages.length]; r.classList.toggle('b', tk.i % 2 === 1); tk.i++;
   }
+  /* the same strip, as plain text, for the copy that is drawn above other apps (chosen in the settings) */
+  function dayWord(d) {
+    var t = new Date(), a = new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime(), b = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(), k = Math.round((b - a) / 864e5);
+    return k <= 0 ? 'اليوم' : k === 1 ? 'باچر' : d.toLocaleDateString('ar-IQ', { weekday: 'long' });
+  }
+  function plainOf(m) {
+    if (m.pre) { var d = new Date(m.at); return m.lg + ': ' + m.h + ' ضد ' + m.a + ' · ' + (dayWord(d) + ' ') + d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }); }
+    return m.lg + ': ' + m.h + ' ' + nf.format(+m.hs || 0) + ' - ' + nf.format(+m.as || 0) + ' ' + m.a + ' · ' + (m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر');
+  }
+  function pushStrip(on) {
+    if (!HAS_ANDROID || !A.tickerOverlay) return;
+    try {
+      var show = on && settings.tickerApps === true && liveList.length > 0, pages = [];
+      for (var q = 0; q < liveList.length; q += 2) pages.push(liveList.slice(q, q + 2).map(plainOf).join('   │   '));
+      var live = liveList.some(function (m) { return !m.pre; });
+      A.tickerOverlay(!!show, live ? 'مباشر' : 'مباريات قادمة', pages.join('\n'));
+    } catch (e) {}
+  }
   function renderTicker() {
     var t = $('liveTicker'); if (!t) return;
     var note = !liveList.length && settings.ticker !== false ? liveNote : '';
     var on = settings.ticker !== false && (liveList.length > 0 || !!note);
     t.classList.toggle('on', on); document.body.classList.toggle('tickeron', on);
+    pushStrip(on);
     if (!on) { clearInterval(tk.t); tk = { sig: '', pages: [], i: 0, t: 0 }; t.innerHTML = ''; return; }
-    var pre = !!(liveList[0] && liveList[0].pre);
+    var pre = liveList.length > 0 && !liveList.some(function (m) { return !m.pre; });
     var items = !liveList.length ? ['<span class="lt-m"><em>' + esc(note) + '</em></span>'] : liveList.map(function (m) {
-      if (m.pre) { var d = new Date(m.at), tm = d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }), same = d.toDateString() === new Date().toDateString(); return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>ضد</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + (same ? 'اليوم' : 'باچر') + ' ' + tm + '</em></span>'; }
+      if (m.pre) { var d = new Date(m.at), tm = d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }), same = d.toDateString() === new Date().toDateString(); return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>ضد</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + dayWord(d) + ' ' + tm + '</em></span>'; }
       var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
       return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>' + nf.format(+m.hs || 0) + '</b><u></u><b>' + nf.format(+m.as || 0) + '</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
     });
@@ -1631,6 +1678,10 @@
         { label: 'الثيم', value: themeName(settings.theme), act: function (k) { if (k === 'ok') { closeModal(); openThemes(); return false; } var ids = THEMES.map(function (t) { return t[0]; }); settings.theme = cycle(ids, settings.theme, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'صوت النقر عند التنقل', value: settings.clickSound ? 'شغّال' : 'متوقف', act: function () { settings.clickSound = !settings.clickSound; saveSettings(); clickSound(); } },
         { label: 'شريط النتائج المباشرة', value: settings.ticker === false ? 'متوقف' : 'شغّال', act: function () { settings.ticker = settings.ticker === false; saveSettings(); refreshLive(); } },
+        { label: 'شريط النتائج فوق التطبيقات (يوتيوب وغيره)', value: settings.tickerApps === true ? 'شغّال' : 'متوقف', act: function () {
+          if (settings.tickerApps !== true && HAS_ANDROID && A.hasOverlay && !A.hasOverlay()) { toast('لازم تسمح للواجهة بالعرض فوق التطبيقات، وارجع شغّل الخيار', 5000); if (A.openOverlaySettings) A.openOverlaySettings(); return; }
+          settings.tickerApps = settings.tickerApps !== true; saveSettings(); renderTicker();
+        } },
         { label: 'اتجاه شريط النتائج', value: settings.tickerDir === 'ltr' ? 'من اليسار لليمين' : 'من اليمين لليسار', act: function () { settings.tickerDir = settings.tickerDir === 'ltr' ? 'rtl' : 'ltr'; saveSettings(); renderTicker(); } },
         { label: 'مصادر الخلفيات ووقت التبديل', value: intervalText(settings.bgInterval || 300), act: function () { closeModal(); openBgSources(); return false; } },
         { label: 'شاشة التوقف بعد', value: nf.format(settings.saverMin || 10) + ' دقايق', act: function (k) { settings.saverMin = cycle([5, 10, 15, 20, 30], settings.saverMin || 10, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
@@ -1862,7 +1913,7 @@
   var layer = 'main';
   window.__setLayer = function (l) { layer = l; };
   window.__getSettings = function () { return settings; };
-  window.__fetchText = function (u) { return getTextAny(u); };
+  window.__fetchText = function (u) { return (HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u); };
   window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   var nav = (function () {
     var rowEls = qa('#content .row');

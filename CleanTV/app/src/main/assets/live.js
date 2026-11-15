@@ -21,6 +21,10 @@
   }
   /* the user's own channels (licensed streams he adds from the phone app: pasted M3U text or a link to a list) */
   var cust = { lists: [], list: [], groups: [], key: '' };
+  function isYT(u) { return /(youtube\.com|youtu\.be)\//i.test(u); }
+  function ytId(u) { var m = String(u).match(/(?:[?&]v=|youtu\.be\/|\/live\/|\/embed\/|\/shorts\/)([\w-]{6,})/); return m ? m[1] : ''; }
+  function ytTitles() { try { return JSON.parse(localStorage.getItem('myChTitles') || '{}') || {}; } catch (e) { return {}; } }
+  function ytTitle(u) { var t = ytTitles()[u]; return t || ('يوتيوب · ' + (ytId(u) || 'قناة')); }
   function parseM3U(text) {
     var out = [], lines = String(text || '').split(/\r?\n/), cur = null;
     lines.forEach(function (ln) {
@@ -31,7 +35,7 @@
       } else if (ln.indexOf('#EXTVLCOPT') === 0 && cur) {
         var m = ln.match(/http-(referrer|referer|user-agent)=(.*)/i); if (m) { if (/^refer/i.test(m[1])) cur.r = m[2]; else cur.ua = m[2]; }
       } else if (ln.charAt(0) !== '#' && /^https?:/i.test(ln)) {
-        var c = cur || { n: ln, grp: '', l: '' }; c.u = ln; c.c = 'my'; c.g = guessCat(c.n + ' ' + c.grp); out.push(c); cur = null;
+        var c = cur || { n: ln, grp: '', l: '', bare: 1 }; c.u = ln; if (isYT(ln) && (c.bare || !c.n)) { c.n = ytTitle(ln); c.bare = 1; } c.c = 'my'; c.g = guessCat(c.n + ' ' + c.grp); out.push(c); cur = null;
       }
     });
     return out;
@@ -50,7 +54,7 @@
   function listName(u) {
     var n = u.replace(/[?#].*$/, '').replace(/\/+$/, '').split('/').pop() || '';
     try { n = decodeURIComponent(n); } catch (e) {}
-    n = n.replace(/\.m3u8?$/i, '').replace(/[-_]+/g, ' ').trim();
+    n = n.replace(/\.[a-z0-9]{1,5}$/i, '').replace(/[-_]+/g, ' ').trim();
     if (!n || /^(get|playlist|index|list)$/i.test(n)) n = u.replace(/^https?:\/\//, '').split('/')[0];
     return n;
   }
@@ -58,17 +62,18 @@
   function linksOf(S) {
     var out = [];
     String(S.myM3u || '').split(/\r?\n/).forEach(function (l) { l = l.trim(); if (isListLink(l)) out.push(l); });
-    String(S.channelsUrl || '').split(/[\s,]+/).forEach(function (l) { if (/^https?:\/\//i.test(l) && out.indexOf(l) < 0) out.push(l); });
+    String(S.channelsUrl || '').split(/[\s,]+/).forEach(function (l) { if (/^https?:\/\//i.test(l) && !isYT(l) && !/\.m3u8(\?[^\s]*)?$/i.test(l) && out.indexOf(l) < 0) out.push(l); });
     return out.filter(function (u, i) { return out.indexOf(u) === i; });
   }
   var loadState = {};   /* url -> 'loading' | 'fail' */
   function custom() {
     var S = (window.__getSettings && window.__getSettings()) || {}, cache = readCache(), links = linksOf(S);
-    var key = (S.myM3u || '').length + '|' + links.join(',') + '|' + links.map(function (u) { return (cache[u] || '').length + (loadState[u] || ''); }).join(',');
+    var key = (S.myM3u || '').length + '|' + (S.channelsUrl || '') + '|' + JSON.stringify(ytTitles()).length + '|' + links.join(',') + '|' + links.map(function (u) { return (cache[u] || '').length + (loadState[u] || ''); }).join(',');
     if (cust.key === key) return cust;
     var lists = [], mine = [];
     /* channels pasted straight into the box (text with #EXTINF, or single stream links) */
     var own = String(S.myM3u || '').split(/\r?\n/).filter(function (l) { return !isListLink(l.trim()); }).join('\n');
+    String(S.channelsUrl || '').split(/[\s,]+/).forEach(function (l) { if (/^https?:\/\//i.test(l) && (isYT(l) || /\.m3u8(\?[^\s]*)?$/i.test(l))) own += '\n' + l; });
     mine = parseM3U(own);
     if (mine.length) lists.push({ key: 'own', name: 'قنواتي المضافة', items: mine, note: '' });
     links.forEach(function (u) {
@@ -83,6 +88,14 @@
   function pullUrl() {
     var S = (window.__getSettings && window.__getSettings()) || {};
     if (!window.__fetchText) return;
+    /* names of YouTube links: asked once from YouTube and kept */
+    var yts = [];
+    (String(S.myM3u || '') + '\n' + String(S.channelsUrl || '').replace(/[\s,]+/g, '\n')).split(/\r?\n/).forEach(function (l) { l = l.trim(); if (/^https?:/i.test(l) && isYT(l) && !ytTitles()[l] && yts.indexOf(l) < 0) yts.push(l); });
+    yts.slice(0, 12).forEach(function (u) {
+      window.__fetchText('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(u)).then(function (t) {
+        try { var j = JSON.parse(t); if (j && j.title) { var T = ytTitles(); T[u] = j.title + (j.author_name ? ' · ' + j.author_name : ''); localStorage.setItem('myChTitles', JSON.stringify(T)); cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); } } catch (e) {}
+      }, function () {});
+    });
     linksOf(S).forEach(function (u) {
       loadState[u] = 'loading'; cust.key = '';
       window.__fetchText(u).then(function (t) {

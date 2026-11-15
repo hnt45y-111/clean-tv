@@ -211,8 +211,8 @@ public class LiveActivity extends Activity {
     @Override
     public boolean onKeyDown(int code, KeyEvent e) {
         switch (code) {
-            case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_CHANNEL_UP: case KeyEvent.KEYCODE_PAGE_UP: failed = 0; play(idx - 1); return true;
-            case KeyEvent.KEYCODE_DPAD_DOWN: case KeyEvent.KEYCODE_CHANNEL_DOWN: case KeyEvent.KEYCODE_PAGE_DOWN: failed = 0; play(idx + 1); return true;
+            case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_CHANNEL_UP: case KeyEvent.KEYCODE_PAGE_UP: failed = 0; play(idx + 1); return true;
+            case KeyEvent.KEYCODE_DPAD_DOWN: case KeyEvent.KEYCODE_CHANNEL_DOWN: case KeyEvent.KEYCODE_PAGE_DOWN: failed = 0; play(idx - 1); return true;
             case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: showPanel(4000); return true;
             case KeyEvent.KEYCODE_BACK: finish(); return true;
             default: return super.onKeyDown(code, e);
