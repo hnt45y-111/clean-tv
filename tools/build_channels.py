@@ -82,6 +82,17 @@ T = [
  ('كوميديا أردنية', 'jo', 'movies', '', 'jo', r'^Jordan Comedy', r'fasttvcdn\.com'),
  ('سبيستون', 'ae', 'kids', '', 'ae', r'^Spacetoon Arabic', r'spacetoongo\.com'),
  ('أطفال ومواهب', 'sa', 'kids', '', 'sa', r'^Atfal & Mawaheb', r'streamlock\.net'),
+ # kids from official broadcasters and free platforms (foreign too)
+ ('تي آر تي تشوجوك', 'int', 'kids', '', 'tr', r'^TRT Cocuk', r'trt\.com\.tr'),
+ ('تي آر تي ديانت تشوجوك', 'int', 'kids', '', 'tr', r'^TRT Diyanet', r'trt\.com\.tr'),
+ ('بي بي إس كيدز', 'int', 'kids', '', 'us', r'^PBS Kids \(720p\)$', r'pbskids\.org'),
+ ('كيكا الألمانية', 'int', 'kids', '', 'de', r'^KiKA \(1080p\) \[Not 24/7\]', r'kikahls\.akamaized\.net'),
+ ('أو آر إف كيدز', 'int', 'kids', '', 'at', r'^ORF Kids', r'mdn\.ors\.at'),
+ ('كاروسيل الروسية', 'int', 'kids', '', 'ru', r'^Carousel \(576p\)$', r'smotrim\.ru'),
+ ('سنافر TV', 'int', 'kids', '', 'us', r'^Smurf TV', r'ottera\.tv'),
+ ('تون غوغلز', 'int', 'kids', '', 'us', r'^ToonGoggles', r'cloudfront\.net'),
+ ('بيبي فيرست', 'int', 'kids', '', 'us', r'^BabyFirst \(720p\)', r'jwp\.services'),
+ ('كرتون كلاسيك', 'int', 'kids', '', 'us', r'^MeTV Toons', r'akamaized\.net'),
  # documentaries
  ('الجزيرة الوثائقية', 'qa', 'docs', '', 'qa', r'^Al Jazeera Documentary', r'getaj\.net'),
  # Karbala package (the shrines' own channels)
