@@ -74,13 +74,21 @@
     var from = Math.max(0, Math.min(st.ci - 3, cs.length - 8)), html = '';
     for (var q = from; q < Math.min(cs.length, from + 8); q++) html += '<div class="lv-cat' + (q === st.ci ? ' on' : '') + (st.f === 'cat' && q === st.ci ? ' focus' : '') + '">' + esc(cs[q].n) + '</div>';
     $('lvCats').innerHTML = html;
-    $('lvGrid').innerHTML = st.list.length ? st.list.map(function (c, i) {
+    var key = cid + '|' + st.list.length + '|' + (st.list[0] ? st.list[0].u : '');
+    var grid = $('lvGrid');
+    if (st.key !== key) { st.key = key;
+    grid.innerHTML = st.list.length ? st.list.map(function (c, i) {
       var tint = 'hsl(' + hue(c.n) + ',28%,24%)', ini = c.n.replace(/^ال/, '').replace(/\s/g, '').slice(0, 2);
       var logo = c.i ? '<img class="lv-img" src="logos/' + esc(c.i) + '.png" alt="" onerror="this.parentNode.removeChild(this)">' : c.l ? '<img class="lv-img" src="' + esc(c.l) + '" alt="" onerror="this.parentNode.removeChild(this)">' : '';
       return '<div class="lv-ch' + (st.f === 'grid' && i === st.gi ? ' focus' : '') + '"><div class="lv-art" style="background:' + tint + '"><b>' + esc(ini) + '</b>' + logo + '</div>' +
         '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(subOf(c)) + '</div></div></div>';
     }).join('') : '<div class="lv-empty">ماكو قنوات بهذا القسم</div>';
-    var f = document.querySelector('#lvGrid .focus'), wrap = $('lvGridWrap');
+    }
+    /* only move the focus ring: rebuilding every card (and reloading its logo) on each key press made it slow */
+    var kids = grid.children, pf = grid.querySelector('.focus'), want = (st.f === 'grid' && st.list.length) ? kids[st.gi] : null;
+    if (pf && pf !== want) pf.classList.remove('focus');
+    if (want && want !== pf) want.classList.add('focus');
+    var f = grid.querySelector('.focus'), wrap = $('lvGridWrap');
     if (f && wrap) {
       var H = wrap.clientHeight, t = f.offsetTop, h = f.offsetHeight, o = st.off;
       if (t - o < 12) o = Math.max(0, t - 12); else if (t + h - o > H - 12) o = t + h - H + 12;
@@ -101,7 +109,7 @@
   }
   var Live = {
     open: function () {
-      st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0;
+      st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null;
       pullUrl();
       document.getElementById('liveModal').classList.add('on');
       if (window.__setLayer) window.__setLayer('live');
