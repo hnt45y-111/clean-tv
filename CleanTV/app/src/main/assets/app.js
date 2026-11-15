@@ -1842,6 +1842,8 @@
   // ---------- Main focus navigation ----------
   var layer = 'main';
   window.__setLayer = function (l) { layer = l; };
+  window.__getSettings = function () { return settings; };
+  window.__fetchText = function (u) { return getTextAny(u); };
   window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   var nav = (function () {
     var rowEls = qa('#content .row');

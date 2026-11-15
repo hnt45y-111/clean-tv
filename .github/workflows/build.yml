@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'CleanTV/**'
+      - 'tools/channel_logos.json'
+      - 'tools/fetch_logos.py'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 permissions:
@@ -25,6 +27,8 @@ jobs:
         run: command -v convert || (sudo apt-get update && sudo apt-get install -y imagemagick)
       - name: Download fonts and shrine photos
         run: python3 tools/fetch_assets.py
+      - name: Channel logos
+        run: python3 ../tools/fetch_logos.py || true
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
