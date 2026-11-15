@@ -114,7 +114,7 @@ async function designFromTv() {
   if (!need()) return;
   busy('أجيب شكل الشاشة الحالي…');
   try {
-    const cfg = JSON.parse(await run('cfgGet'));
+    const cfg = JSON.parse(await Promise.race([run('cfgGet'), new Promise((_, rej) => setTimeout(() => rej(new Error('الشاشة ما ردّت. تأكد إن الواجهة مفتوحة على التلفزيون وإن الاتصال شغّال، وجرّب مرة ثانية')), 25000))]));
     unbusy();
     openDesign({ name: 'واجهة ' + tvName(), from: 'tv', cfg });
   } catch (e) {
