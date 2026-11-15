@@ -63,6 +63,7 @@
   function filter(cid) {
     var all = window.CHANNELS || [];
     if (cid === 'my') return custom().list;
+    if (cid === 'all') return all;
     if (cid === 'mbc' || cid === 'karbala') return all.filter(function (c) { return c.p === cid; });
     if (cid === 'news' || cid === 'sport' || cid === 'quran' || cid === 'movies' || cid === 'docs' || cid === 'ent' || cid === 'kids') return all.filter(function (c) { return c.g === cid; });
     return all.filter(function (c) { return c.c === cid; });
