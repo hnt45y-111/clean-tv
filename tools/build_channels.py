@@ -96,7 +96,6 @@ T = [
  # documentaries
  ('الجزيرة الوثائقية', 'qa', 'docs', '', 'qa', r'^Al Jazeera Documentary', r'getaj\.net'),
  # Karbala package (the shrines' own channels)
- ('كربلاء الوثائقية', 'iq', 'docs', 'karbala', 'iq', r'^Karbala Documentary', r'ktvlive\.online'),
  ('القرآن الكريم · كربلاء', 'iq', 'quran', 'karbala', 'iq', r'^Alquran', r'ktvlive\.online'),
  ('الإمام الحسين (ع) · فارسي', 'iq', 'quran', 'karbala', 'iq', r'^Imam Hussein TV 1 \(1080p\)$', r'fa\.imamhossaintv\.com'),
  ('الإمام الحسين (ع) · إنجليزي', 'iq', 'quran', 'karbala', 'iq', r'^Imam Hussein TV 3 \(1080p\)$', r'en\.imamhossaintv\.com'),

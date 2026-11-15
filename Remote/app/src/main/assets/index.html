@@ -73,6 +73,47 @@
   nav button.on { color: var(--cu2); }
   #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--ink); color: #15181B; padding: 12px 18px; border-radius: var(--r2); font-weight: 600; font-size: 14px; opacity: 0; transition: .25s; pointer-events: none; z-index: 9; }
   #toast.on { opacity: 1; transform: translateX(-50%); }
+
+  /* ---- remote (modern) ---- */
+  .card.txt { padding: 14px; }
+  .tbox { display: flex; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r1); padding: 0 14px; }
+  .tbox:focus-within { border-color: var(--cu); }
+  .tbox .ni { color: var(--ink-3); flex: none; width: 26px; height: 26px; }
+  .tbox input { border: 0; background: none; padding: 16px 0; font-size: 18px; }
+  .tbox .x { background: none; border: 0; padding: 8px; color: var(--ink-3); }
+  .trow { display: flex; gap: 10px; margin-top: 10px; }
+  .trow button, .pill { display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--r1); height: 52px; }
+  #textHint { margin-top: 10px; font-size: 13px; }
+  .card.rem { padding: 18px 16px 20px; }
+  .top3 { display: flex; justify-content: space-between; margin-bottom: 14px; }
+  .rb { width: 52px; height: 52px; border-radius: 50%; padding: 0; display: grid; place-items: center; }
+  .rb.red { background: var(--red); border-color: transparent; color: #EFE7D4; }
+  .rb .ni, .dpad .ni, .rk .ni, .md .ni { width: 26px; height: 26px; }
+  .dpad { position: relative; width: 272px; height: 272px; margin: 6px auto 20px; border-radius: 50%; background: var(--panel2); border: 1px solid var(--line); }
+  .dpad button { position: absolute; background: none; border: 0; border-radius: 50%; width: 84px; height: 84px; padding: 0; display: grid; place-items: center; color: var(--ink); }
+  .dpad button:active { background: rgba(217,130,43,.22); transform: none; }
+  .dpad .u { top: 6px; left: 94px; } .dpad .d { bottom: 6px; left: 94px; }
+  .dpad .l { left: 6px; top: 94px; } .dpad .r { right: 6px; top: 94px; }
+  .dpad .ni { width: 34px; height: 34px; stroke-width: 2.2; }
+  .dpad .c { left: 88px; top: 88px; width: 96px; height: 96px; background: var(--cu); color: #15181B; font-family: 'Kufi', sans-serif; font-size: 24px; font-weight: 700; }
+  .dpad .c:active { background: var(--cu2); transform: scale(.94); }
+  .touch { height: 272px; margin-bottom: 20px; }
+  .duo { display: flex; gap: 10px; margin-bottom: 14px; }
+  .duo .pill { flex: 1; }
+  .rock { display: flex; gap: 12px; align-items: stretch; }
+  .rk { width: 76px; display: flex; flex-direction: column; align-items: center; background: var(--panel2); border: 1px solid var(--line); border-radius: 38px; padding: 6px 0; }
+  .rk button { background: none; border: 0; width: 64px; height: 64px; padding: 0; display: grid; place-items: center; border-radius: 50%; }
+  .rk button:active { background: rgba(217,130,43,.22); }
+  .rk span { color: var(--ink-3); height: 30px; display: grid; place-items: center; }
+  .md { flex: 1; display: flex; align-items: center; justify-content: space-around; background: var(--panel2); border: 1px solid var(--line); border-radius: 38px; padding: 0 8px; }
+  .md button { background: none; border: 0; width: 64px; height: 64px; border-radius: 50%; padding: 0; display: grid; place-items: center; }
+  .md .pl { background: var(--cu); color: #15181B; width: 72px; height: 72px; }
+  .seg { border-radius: 999px; padding: 4px; }
+  .seg button { border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .seg .ni { width: 18px; height: 18px; }
+  nav { left: 12px; right: 12px; bottom: 10px; border: 1px solid var(--line); border-radius: 22px; padding: 8px 6px 8px; }
+  nav button.on { color: var(--cu2); }
+  nav button.on .ni { stroke-width: 2.3; }
 </style>
 </head>
 <body>
@@ -109,24 +150,34 @@
 <!-- 3) main -->
 <main id="mainView" class="hidden">
   <section data-tab="remote">
-    <div class="card">
-      <div class="seg"><button class="on" data-mode="touch">لوحة اللمس</button><button data-mode="pad">الأسهم</button></div>
-      <div class="touch" id="touch">اسحب بإصبعك للتنقل · اضغط مرة لـ OK</div>
-      <div class="pad hidden" id="pad">
-        <button class="blank"></button><button data-k="up">▲</button><button class="blank"></button>
-        <button data-k="right">▶</button><button class="ok" data-k="ok">OK</button><button data-k="left">◀</button>
-        <button class="blank"></button><button data-k="down">▼</button><button class="blank"></button>
+    <div class="card txt">
+      <div class="tbox"><svg class="ni" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg><input id="textIn" placeholder="اكتب هنا وينكتب على الشاشة" enterkeyhint="send" autocomplete="off"><button class="x hidden" id="clrText" aria-label="مسح"><svg class="ni" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="trow"><button class="gold grow" id="sendText"><svg class="ni" viewBox="0 0 24 24"><path d="M4 12h13M12 6l6 6-6 6"/></svg> إرسال وبحث</button><button id="enterBtn" data-k="ok"><svg class="ni" viewBox="0 0 24 24"><path d="M20 5v7a3 3 0 0 1-3 3H5M9 11l-4 4 4 4"/></svg> Enter</button></div>
+      <p class="muted" id="textHint">اضغط على خانة البحث بالشاشة أول، بعدين اكتب هنا.</p>
+    </div>
+    <div class="card rem">
+      <div class="top3"><button class="rb red" data-k="power" aria-label="الطاقة"><svg class="ni" viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></svg></button><button class="rb" data-k="mute" aria-label="كتم"><svg class="ni" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></button><button class="rb" data-k="settings" aria-label="الإعدادات"><svg class="ni" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button></div>
+      <div class="seg"><button class="on" data-mode="pad"><svg class="ni" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg> أسهم</button><button data-mode="touch"><svg class="ni" viewBox="0 0 24 24"><path d="M9 11V5a2 2 0 0 1 4 0v6l3 .5a2 2 0 0 1 1.7 2L17 18a4 4 0 0 1-4 3H11a4 4 0 0 1-3-1.4L4 15l1.5-1.5L9 15z"/></svg> لمس</button></div>
+      <div class="dpad" id="pad">
+        <button class="u" data-k="up" aria-label="فوق"><svg class="ni" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
+        <button class="l" data-k="right" aria-label="يمين"><svg class="ni" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="r" data-k="left" aria-label="يسار"><svg class="ni" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <button class="d" data-k="down" aria-label="تحت"><svg class="ni" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="c" data-k="ok">OK</button>
       </div>
-      <div class="bar"><button data-k="back">رجوع</button><button data-k="home">الرئيسية</button></div>
-      <div class="keys"><button data-k="vdn"><svg class="ni" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 10a3 3 0 0 1 0 4"/></svg>صوت −</button><button data-k="vup"><svg class="ni" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 10a3 3 0 0 1 0 4M18.5 7.5a7 7 0 0 1 0 9"/></svg>صوت +</button><button data-k="mute"><svg class="ni" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>كتم</button><button data-k="power"><svg class="ni" viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></svg>الطاقة</button><button data-k="prev"><svg class="ni" viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg>السابق</button><button data-k="play"><svg class="ni" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>تشغيل / إيقاف</button><button data-k="next"><svg class="ni" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg>التالي</button><button data-k="settings"><svg class="ni" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>الإعدادات</button></div>
+      <div class="touch hidden" id="touch">اسحب بإصبعك للتنقل · اضغط مرة لـ OK</div>
+      <div class="duo">
+        <button class="pill" data-k="back"><svg class="ni" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg> رجوع</button>
+        <button class="pill" data-k="home"><svg class="ni" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg> الرئيسية</button>
+      </div>
+      <div class="rock">
+        <div class="rk"><button data-k="vup" aria-label="رفع الصوت"><svg class="ni" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><span><svg class="ni" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 10a3 3 0 0 1 0 4M18.5 7.5a7 7 0 0 1 0 9"/></svg></span><button data-k="vdn" aria-label="خفض الصوت"><svg class="ni" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button></div>
+        <div class="md"><button data-k="prev" aria-label="السابق"><svg class="ni" viewBox="0 0 24 24"><path d="M6 6v12M18 6l-9 6 9 6z"/></svg></button><button class="pl" data-k="play" aria-label="تشغيل أو إيقاف"><svg class="ni" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></svg></button><button data-k="next" aria-label="التالي"><svg class="ni" viewBox="0 0 24 24"><path d="M18 6v12M6 6l9 6-9 6z"/></svg></button></div>
+      </div>
     </div>
     <div class="card"><h2>قنواتي والمباريات</h2><div class="row"><button class="gold grow" id="openLive">فتح قنواتي على التلفاز</button></div>
       <div class="row" style="margin-top:10px"><button class="grow" id="tickOn">تشغيل شريط النتائج</button><button class="grow" id="tickOff">إيقافه</button></div>
       <p class="muted" style="margin-top:8px">داخل القناة: أسهم فوق وتحت تبدّل القناة، ورجوع يطلعك.</p></div>
-    <div class="card">
-      <h2>الكتابة والبحث</h2>
-      <div class="row"><input id="textIn" placeholder="اكتب وينكتب على التلفاز…"><button class="gold" id="sendText">إرسال</button></div>
-    </div>
   </section>
 
   <section data-tab="apps" class="hidden">
@@ -243,11 +294,11 @@
   document.querySelectorAll('[data-mode]').forEach(function (b) {
     b.onclick = function () {
       document.querySelectorAll('[data-mode]').forEach(function (x) { x.classList.toggle('on', x === b); });
-      var t = b.getAttribute('data-mode') === 'touch'; $('touch').classList.toggle('hidden', !t); $('pad').classList.toggle('hidden', t);
+      var t = b.getAttribute('data-mode') === 'touch'; $('touch').classList.toggle('hidden', !t); $('pad').style.display = t ? 'none' : '';
       localStorage.setItem('padMode', b.getAttribute('data-mode'));
     };
   });
-  if (localStorage.getItem('padMode') === 'pad') document.querySelector('[data-mode="pad"]').onclick();
+  if (localStorage.getItem('padMode') === 'touch') document.querySelector('[data-mode="touch"]').onclick();
   (function () {
     var el = $('touch'), sx = 0, sy = 0, lx = 0, ly = 0, moved = false, STEP = 48;
     function ripple(x, y) { var r = document.createElement('div'); r.className = 'ripple'; var b = el.getBoundingClientRect(); r.style.left = (x - b.left) + 'px'; r.style.top = (y - b.top) + 'px'; el.appendChild(r); setTimeout(function () { r.remove(); }, 460); }
@@ -263,8 +314,19 @@
     }, { passive: false });
     el.addEventListener('touchend', function (e) { if (!moved && Math.abs(lx - sx) < 12 && Math.abs(ly - sy) < 12) { ripple(sx, sy); key('ok'); } e.preventDefault(); }, { passive: false });
   })();
-  $('sendText').onclick = function () { var v = $('textIn').value; if (!v) return; buzz(); api('text', { text: v, submit: true }).then(function (j) { toast(j.ok ? 'انرسل ✅' : 'افتح خانة بحث بالتلفاز أول'); if (j.ok) $('textIn').value = ''; }).catch(function () {}); };
+  /* typing: the text follows what you type (without Enter); the button sends it and presses search */
+  var typeT = 0, lastSent = null;
+  function sendTxt(submit) {
+    var v = $('textIn').value; if (!v && submit) return; buzz(submit ? 20 : 4);
+    api('text', { text: v, submit: !!submit }).then(function (j) {
+      if (submit) toast(j.ok ? 'انرسل ✅' : 'اضغط على خانة البحث بالشاشة أول');
+      $('textHint').textContent = j.ok ? 'وصل النص للشاشة' : 'اضغط على خانة البحث بالشاشة أول، بعدين اكتب هنا.';
+    }).catch(function () {});
+  }
+  $('sendText').onclick = function () { clearTimeout(typeT); sendTxt(true); };
+  $('textIn').addEventListener('input', function () { $('clrText').classList.toggle('hidden', !this.value); clearTimeout(typeT); typeT = setTimeout(function () { sendTxt(false); }, 450); });
   $('textIn').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('sendText').onclick(); });
+  $('clrText').onclick = function () { $('textIn').value = ''; this.classList.add('hidden'); sendTxt(false); $('textIn').focus(); };
 
   // ---------- tabs ----------
   document.querySelectorAll('[data-go]').forEach(function (b) {

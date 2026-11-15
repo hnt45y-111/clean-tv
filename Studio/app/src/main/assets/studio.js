@@ -410,7 +410,7 @@ function designPanel() {
   const pa = $('#packAdd');
   if (pa) pa.onclick = addPhonePhotos;
   const pcl = $('#packClr'); if (pcl) pcl.onclick = () => { S.bgPack = []; changed(); live({ settings: S, bg: true }); designPanel(); };
-  const ow = $('#ownerI'); if (ow) ow.onchange = () => { S.owner = ow.value.trim() || 'مدير الشاشات'; changed(); live({ settings: S }); };
+  const ow = $('#ownerI'); if (ow) ow.oninput = ow.onchange = () => { S.owner = ow.value.trim() || 'مدير الشاشات'; changed(); live({ settings: S }); };
   const pc = $('#pickClub'); if (pc) pc.onclick = () => clubPicker(c => { Object.assign(S, deepCopy(clubCfg(c).settings)); changed(); live({ settings: S }); designPanel(); });
   const tb = $('#teamBtn'); if (tb) tb.onclick = () => clubPicker(c => { if (c) S.team = clubTeam(c); else delete S.team; changed(); live({ settings: S }); designPanel(); }, true);
 }
