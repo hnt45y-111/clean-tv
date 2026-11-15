@@ -327,10 +327,10 @@ function osPanelWire(box, S) {
       p.insertBefore(box, p.firstChild); osPanelWire(box, S);
       const my = document.createElement('div');
       const cnt = (S.myM3u || '').split(/\r?\n/).filter(l => /^https?:/i.test(l.trim())).length;
-      my.innerHTML = `<div class="panel"><h2>قنواتي الخاصة</h2><p class="sub" style="margin-top:-4px">أضف قنواتك اللي عندك حق بثها (مثل اتفاقيتك مع beIN، أو قنوات ثانية). تطلع بقسم «باقتي» داخل قنواتي، وكل مجموعة تصير باقة. الروابط تنحفظ بتصميمك وبشاشتك بس، وما تنرفع لأي مكان عام.</p>
-        <label class="f">الصق قائمة M3U (أو رابط بكل سطر، وتگدر تسمّي المجموعة بـ group-title)</label>
+      my.innerHTML = `<div class="panel"><h2>قنواتي الخاصة</h2><p class="sub" style="margin-top:-4px">أضف قنواتك اللي عندك حق بثها (مثل اتفاقيتك مع beIN، أو قنوات ثانية). تطلع آخر شي بقنواتي داخل فولدر «قنواتي الخاصة»، وكل قائمة IPTV تصير فولدر لحاله وبيه قنواتها. الروابط تنحفظ بتصميمك وبشاشتك بس، وما تنرفع لأي مكان عام.</p>
+        <label class="f">الصق روابط قوائم M3U (رابط بكل سطر، كل رابط يصير فولدر) أو نص قائمة كاملة</label>
         <textarea id="myM3u" dir="ltr" spellcheck="false" style="width:100%;min-height:140px;font:12.5px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)" placeholder="#EXTM3U&#10;#EXTINF:-1 group-title=&quot;beIN Sports&quot; tvg-logo=&quot;https://…/logo.png&quot;,beIN Sports 1&#10;https://…/stream.m3u8">${esc(S.myM3u || '')}</textarea>
-        <div class="sub" style="margin:6px 2px">${cnt ? 'فيها ' + cnt + ' قناة' : 'فارغة'} · روابط يوتيوب تنفتح بتطبيق يوتيوب</div>
+        <div class="sub" style="margin:6px 2px">${cnt ? 'فيها ' + cnt + ' رابط' : 'فارغة'} · روابط يوتيوب تنفتح بتطبيق يوتيوب</div>
         <label class="f" style="margin-top:8px">أو رابط قائمة تحدّثها إنت (يقراها التلفزيون كل مرة تفتح قنواتي)</label>
         <input id="chUrl" dir="ltr" placeholder="https://…/channels.m3u" value="${esc(S.channelsUrl || '')}">
         <div class="row" style="margin-top:10px;gap:8px"><button class="btn sec" style="flex:1" id="myOk">${ic('save')} حفظ</button><button class="btn ghost" id="myClr">امسح</button></div></div>`;

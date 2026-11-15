@@ -16,11 +16,11 @@
     (window.CHANNELS || []).forEach(function (c) { seen[c.c] = 1; });
     (window.CH_GROUPS || []).forEach(function (g) { if (seen[g[0]] && g[0] !== 'iq') l.push({ id: g[0], n: 'قنوات ' + g[1], kind: 'grp' }); });
     /* the user's own channels live in one folder, always the last one */
-    if (custom().list.length) l.push({ id: 'my', n: '📁 قنواتي الخاصة', kind: 'my' });
+    if (custom().lists.length) l.push({ id: 'my', n: '📁 قنواتي الخاصة', kind: 'my' });
     return l;
   }
   /* the user's own channels (licensed streams he adds from the phone app: pasted M3U text or a link to a list) */
-  var cust = { list: [], groups: [], key: '' };
+  var cust = { lists: [], list: [], groups: [], key: '' };
   function parseM3U(text) {
     var out = [], lines = String(text || '').split(/\r?\n/), cur = null;
     lines.forEach(function (ln) {
@@ -45,24 +45,62 @@
     if (/kids|cartoon|أطفال|اطفال|كرتون|toon/.test(t)) return 'kids';
     return 'ent';
   }
+  /* a line that is only a link to another list (…/sports.m3u) is a list to read, not a channel */
+  function isListLink(u) { return /^https?:\/\/[^\s]+$/i.test(u) && (/\.m3u(\?[^\s]*)?$/i.test(u) || /get\.php\?|[?&]type=m3u/i.test(u)); }
+  function listName(u) {
+    var n = u.replace(/[?#].*$/, '').replace(/\/+$/, '').split('/').pop() || '';
+    try { n = decodeURIComponent(n); } catch (e) {}
+    n = n.replace(/\.m3u8?$/i, '').replace(/[-_]+/g, ' ').trim();
+    if (!n || /^(get|playlist|index|list)$/i.test(n)) n = u.replace(/^https?:\/\//, '').split('/')[0];
+    return n;
+  }
+  function readCache() { try { return JSON.parse(localStorage.getItem('myChLists') || '{}') || {}; } catch (e) { return {}; } }
+  function linksOf(S) {
+    var out = [];
+    String(S.myM3u || '').split(/\r?\n/).forEach(function (l) { l = l.trim(); if (isListLink(l)) out.push(l); });
+    String(S.channelsUrl || '').split(/[\s,]+/).forEach(function (l) { if (/^https?:\/\//i.test(l) && out.indexOf(l) < 0) out.push(l); });
+    return out.filter(function (u, i) { return out.indexOf(u) === i; });
+  }
+  var loadState = {};   /* url -> 'loading' | 'fail' */
   function custom() {
-    var S = (window.__getSettings && window.__getSettings()) || {}, key = (S.myM3u || '').length + '|' + (S.channelsUrl || '') + '|' + (localStorage.getItem('myChUrlCache') || '').length;
+    var S = (window.__getSettings && window.__getSettings()) || {}, cache = readCache(), links = linksOf(S);
+    var key = (S.myM3u || '').length + '|' + links.join(',') + '|' + links.map(function (u) { return (cache[u] || '').length + (loadState[u] || ''); }).join(',');
     if (cust.key === key) return cust;
-    var list = parseM3U(S.myM3u || '');
-    if (S.channelsUrl) { try { list = list.concat(parseM3U(localStorage.getItem('myChUrlCache') || '')); } catch (e) {} }
-    var seen = {}, groups = []; list.forEach(function (c) { var g = c.grp || 'قنواتي الخاصة'; c.grp = g; if (!seen[g]) { seen[g] = 1; groups.push(g); } });
-    cust = { list: list, groups: groups, key: key };
+    var lists = [], mine = [];
+    /* channels pasted straight into the box (text with #EXTINF, or single stream links) */
+    var own = String(S.myM3u || '').split(/\r?\n/).filter(function (l) { return !isListLink(l.trim()); }).join('\n');
+    mine = parseM3U(own);
+    if (mine.length) lists.push({ key: 'own', name: 'قنواتي المضافة', items: mine, note: '' });
+    links.forEach(function (u) {
+      var items = parseM3U(cache[u] || ''), nm = listName(u);
+      lists.push({ key: u, name: nm, items: items, note: items.length ? '' : loadState[u] === 'fail' ? 'تعذّر جلب القائمة' : cache[u] ? 'ما لگيت قنوات بالقائمة' : 'جاري تحميل القائمة…' });
+    });
+    lists.forEach(function (L) { L.items.forEach(function (c) { c.lk = L.key; c.ln = L.name; }); });
+    cust = { lists: lists, list: [], groups: [], key: key };
     return cust;
   }
-  /* a list kept at a link is read each time the page opens (and cached for when there is no internet) */
+  /* each list kept at a link is read when the page opens (and cached for when there is no internet) */
   function pullUrl() {
     var S = (window.__getSettings && window.__getSettings()) || {};
-    if (!S.channelsUrl || !window.__fetchText) return;
-    window.__fetchText(S.channelsUrl).then(function (t) { if (t && t.length > 20) { try { localStorage.setItem('myChUrlCache', t.slice(0, 400000)); } catch (e) {} cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); } });
+    if (!window.__fetchText) return;
+    linksOf(S).forEach(function (u) {
+      loadState[u] = 'loading'; cust.key = '';
+      window.__fetchText(u).then(function (t) {
+        if (t && t.length > 20) {
+          try { var c = readCache(); c[u] = t.slice(0, 600000); localStorage.setItem('myChLists', JSON.stringify(c)); } catch (e) {}
+          delete loadState[u];
+        } else loadState[u] = 'fail';
+        cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw();
+      }, function () { loadState[u] = 'fail'; cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); });
+    });
   }
   function filter(cid) {
     var all = window.CHANNELS || [];
-    if (cid === 'my') return custom().list;
+    if (cid === 'my') {
+      var Ls = custom().lists;
+      if (st.fold) { var F = Ls.filter(function (L) { return L.key === st.fold; })[0]; if (F) return F.items.length ? F.items : [{ n: F.note || 'القائمة فاضية', sub: '', empty: 1, u: '' }]; st.fold = null; }
+      return Ls.map(function (L) { return { folder: 1, key: L.key, n: L.name, sub: L.items.length ? L.items.length + ' قناة' : L.note, u: '', c: 'my' }; });
+    }
     if (cid === 'all') return all;
     if (cid === 'mbc' || cid === 'karbala') return all.filter(function (c) { return c.p === cid; });
     if (cid === 'news' || cid === 'sport' || cid === 'quran' || cid === 'movies' || cid === 'docs' || cid === 'ent' || cid === 'kids') return all.filter(function (c) { return c.g === cid; });
@@ -70,7 +108,7 @@
   }
   function grpName(code) { var g = (window.CH_GROUPS || []).filter(function (x) { return x[0] === code; })[0]; return g ? g[1] : ''; }
   var GN = { news: 'أخبار', sport: 'رياضة', movies: 'أفلام', docs: 'وثائقية', ent: 'منوعات', kids: 'أطفال', quran: 'قرآن' };
-  function subOf(c) { return c.c === 'my' ? (c.grp || 'قنواتي الخاصة') + (GN[c.g] ? ' · ' + GN[c.g] : '') : grpName(c.c) + (GN[c.g] ? ' · ' + GN[c.g] : ''); }
+  function subOf(c) { if (c.folder || c.empty) return c.sub || ''; return c.c === 'my' ? (c.grp || c.ln || 'قنواتي الخاصة') + (GN[c.g] ? ' · ' + GN[c.g] : '') : grpName(c.c) + (GN[c.g] ? ' · ' + GN[c.g] : ''); }
   function hue(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
   function draw() {
     var cs = cats(), cid = cs[st.ci].id;
@@ -81,11 +119,11 @@
     $('lvCats').innerHTML = html;
     var vh = ''; VIEWS.forEach(function (v, i) { vh += '<div class="lv-vw' + (i === st.vi ? ' on' : '') + (st.f === 'view' && i === st.vi ? ' focus' : '') + '">' + v[1] + '</div>'; });
     $('lvViews').innerHTML = vh; $('lvGrid').setAttribute('data-v', VIEWS[st.vi][0]);
-    var key = VIEWS[st.vi][0] + '|' + cid + '|' + st.list.length + '|' + (st.list[0] ? st.list[0].u : '');
+    var key = VIEWS[st.vi][0] + '|' + cid + '|' + (st.fold || '') + '|' + st.list.length + '|' + (st.list[0] ? st.list[0].n + st.list[0].u + (st.list[0].sub || '') : '');
     var grid = $('lvGrid');
     if (st.key !== key) { st.key = key;
     grid.innerHTML = st.list.length ? st.list.map(function (c, i) {
-      var tint = 'hsl(' + hue(c.n) + ',28%,24%)', ini = c.n.replace(/^ال/, '').replace(/\s/g, '').slice(0, 2);
+      var tint = 'hsl(' + hue(c.n) + ',28%,24%)', ini = c.folder ? '📁' : c.n.replace(/^ال/, '').replace(/\s/g, '').slice(0, 2);
       var logo = c.i ? '<img class="lv-img" src="logos/' + esc(c.i) + '.png" alt="" onerror="this.parentNode.removeChild(this)">' : c.l ? '<img class="lv-img" src="' + esc(c.l) + '" alt="" onerror="this.parentNode.removeChild(this)">' : '';
       return '<div class="lv-ch' + (st.f === 'grid' && i === st.gi ? ' focus' : '') + '"><div class="lv-art" style="background:' + tint + '"><b>' + esc(ini) + '</b>' + logo + '</div>' +
         '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(subOf(c)) + '</div></div></div>';
@@ -107,6 +145,8 @@
   function play() {
     if (!st.list.length) return;
     var cur = st.list[st.gi];
+    if (cur && cur.folder) { st.fold = cur.key; st.gi = 0; st.off = 0; st.key = null; draw(); return; }
+    if (cur && cur.empty) return;
     /* a YouTube link can't be played by the player: it opens in the YouTube app */
     if (cur && /(youtube\.com|youtu\.be)\//i.test(cur.u)) { if (window.Android && window.Android.openLink) window.Android.openLink(cur.u); return; }
     var payload = JSON.stringify(st.list.filter(function (c) { return !/(youtube\.com|youtu\.be)\//i.test(c.u); }).map(function (c) { return { n: c.n, u: c.u, i: c.i || '', s: subOf(c), r: c.r || '', ua: c.ua || '', l: c.l || '' }; }));
@@ -116,7 +156,7 @@
   }
   var Live = {
     open: function () {
-      st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null; COLS = VIEWS[st.vi][2];
+      st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null; st.fold = null; COLS = VIEWS[st.vi][2];
       pullUrl();
       document.getElementById('liveModal').classList.add('on');
       if (window.__setLayer) window.__setLayer('live');
@@ -124,14 +164,14 @@
     },
     key: function (k) {
       var cs = cats();
-      if (k === 'back') { if (window.__closeLive) window.__closeLive(); return; }
+      if (k === 'back') { if (st.fold && cs[st.ci] && cs[st.ci].id === 'my') { st.fold = null; st.gi = 0; st.off = 0; st.key = null; st.f = 'grid'; draw(); return; } if (window.__closeLive) window.__closeLive(); return; }
       if (st.f === 'view') {
         if (k === 'ArrowRight') setView(Math.max(0, st.vi - 1));
         else if (k === 'ArrowLeft') setView(Math.min(VIEWS.length - 1, st.vi + 1));
         else if (k === 'ArrowDown' || k === 'ok') st.f = 'cat';
       } else if (st.f === 'cat') {
-        if (k === 'ArrowUp') { if (st.ci === 0) st.f = 'view'; else { st.ci--; st.gi = 0; st.off = 0; } }
-        else if (k === 'ArrowDown') { st.ci = Math.min(cs.length - 1, st.ci + 1); st.gi = 0; st.off = 0; }
+        if (k === 'ArrowUp') { if (st.ci === 0) st.f = 'view'; else { st.ci--; st.gi = 0; st.off = 0; st.fold = null; } }
+        else if (k === 'ArrowDown') { st.ci = Math.min(cs.length - 1, st.ci + 1); st.gi = 0; st.off = 0; st.fold = null; }
         else if (k === 'ArrowLeft' || k === 'ok') { if (st.list.length) st.f = 'grid'; }
       } else {
         if (k === 'ArrowRight') { if (st.gi % COLS === 0) st.f = 'cat'; else st.gi--; }
