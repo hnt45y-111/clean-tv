@@ -1526,8 +1526,17 @@
     ['uefa.champions', 'دوري أبطال أوروبا'], ['uefa.europa', 'الدوري الأوروبي'], ['uefa.europa.conf', 'دوري المؤتمر'], ['ksa.1', 'الدوري السعودي'], ['qat.1', 'دوري نجوم قطر'],
     ['uae.1', 'دوري الإمارات'], ['egy.1', 'الدوري المصري'], ['irq.1', 'الدوري العراقي'], ['afc.champions', 'دوري أبطال آسيا'], ['fifa.world', 'كأس العالم'], ['fifa.worldq.afc', 'تصفيات آسيا'],
     ['fifa.friendly', 'مباراة ودية'], ['uefa.nations', 'دوري الأمم'], ['por.1', 'الدوري البرتغالي'], ['ned.1', 'الدوري الهولندي'], ['tur.1', 'الدوري التركي'], ['bra.1', 'الدوري البرازيلي'], ['arg.1', 'الدوري الأرجنتيني']];
-  var liveList = [], liveNote = '';
-  var favUp = { at: 0, key: '', list: [] };   /* upcoming matches of the chosen teams (looked up again every 30 minutes) */
+  /* every league / cup the chooser knows (slug on the scores service, Arabic name). The first group is always watched for live matches. */
+  var TKL = LIVE_LG.concat([['eng.2', 'البطولة الإنجليزية'], ['eng.fa', 'كأس الاتحاد الإنجليزي'], ['eng.league_cup', 'كأس الرابطة الإنجليزية'], ['esp.copa_del_rey', 'كأس ملك إسبانيا'], ['esp.super_cup', 'السوبر الإسباني'],
+    ['ita.coppa_italia', 'كأس إيطاليا'], ['ger.dfb_pokal', 'كأس ألمانيا'], ['fra.coupe_de_france', 'كأس فرنسا'], ['sco.1', 'الدوري الاسكتلندي'], ['bel.1', 'الدوري البلجيكي'], ['uefa.super_cup', 'السوبر الأوروبي'],
+    ['conmebol.libertadores', 'كوبا ليبرتادوريس'], ['caf.champions', 'دوري أبطال أفريقيا'], ['fifa.worldq.uefa', 'تصفيات أوروبا لكأس العالم'], ['fifa.worldq.caf', 'تصفيات أفريقيا لكأس العالم'],
+    ['fifa.worldq.conmebol', 'تصفيات أمريكا الجنوبية'], ['afc.asian.cup', 'كأس آسيا'], ['uefa.euro', 'كأس أمم أوروبا'], ['conmebol.america', 'كوبا أمريكا'], ['caf.nations', 'كأس الأمم الأفريقية'], ['fifa.cwc', 'كأس العالم للأندية'], ['concacaf.gold', 'الكأس الذهبية']]);
+  var TKL_NAME = {}; TKL.forEach(function (l) { TKL_NAME[l[0]] = l[1]; });
+  /* team names are matched in a simplified form so that "Manchester United FC" and "manchester united" are the same */
+  function nn(x) { return String(x || '').toLowerCase().replace(/\b(fc|cf|afc|sc|ac|club|de futbol)\b/g, '').replace(/[^a-z0-9\u0600-\u06ff]/g, ''); }
+  var liveList = [], liveNews = [], liveNote = '';
+  var favUp = { at: 0, key: '', list: [] };   /* upcoming matches of the chosen teams / leagues (looked up again every 30 minutes) */
+  var sportNews = { at: 0, key: '', list: [] };
   function espnDay(ms) { var d = new Date(ms); return d.getUTCFullYear() + ('0' + (d.getUTCMonth() + 1)).slice(-2) + ('0' + d.getUTCDate()).slice(-2); }
   function teamName(x) { var t = (x && x.team) || {}; return NAMES[t.displayName] || NAMES[t.shortDisplayName] || t.shortDisplayName || t.displayName || ''; }
   function evTeams(e) {
@@ -1535,30 +1544,62 @@
     var h = c.competitors.filter(function (x) { return x.homeAway === 'home'; })[0] || c.competitors[0], a = c.competitors.filter(function (x) { return x.homeAway === 'away'; })[0] || c.competitors[1];
     return h && a ? { h: h, a: a } : null;
   }
-  function loadFavUpcoming(want, key) {
-    if (favUp.key === key && Date.now() - favUp.at < 30 * 60000) return Promise.resolve(favUp.list);
+  function pickSel() {
+    var want = {}, lg = {}, nt = 0, nl = 0;
+    (settings.tickerTeams || []).forEach(function (id) { want[String(id)] = 1; nt++; });
+    (settings.tickerLeagues || []).forEach(function (sl) { lg[sl] = 1; nl++; });
+    var wantN = Object.keys(want).filter(function (k) { return k.indexOf('n:') === 0; }).map(function (k) { return k.slice(2); });
+    function isWanted(t) {
+      t = t || {}; if (want[String(t.id)]) return true;
+      return [nn(t.displayName), nn(t.shortDisplayName), nn(t.name)].some(function (n) { return n && wantN.some(function (k) { return k === n || (Math.min(k.length, n.length) >= 5 && (k.indexOf(n) === 0 || n.indexOf(k) === 0)); }); });
+    }
+    return { teams: nt > 0, leagues: nl > 0, any: nt + nl > 0, ok: function (tm, slug) { return !!lg[slug] || isWanted(tm.h.team) || isWanted(tm.a.team); }, key: Object.keys(want).sort().join(',') + '|' + Object.keys(lg).sort().join(',') };
+  }
+  function loadFavUpcoming(sel) {
+    if (favUp.key === sel.key && Date.now() - favUp.at < 30 * 60000) return Promise.resolve(favUp.list);
     var range = espnDay(Date.now()) + '-' + espnDay(Date.now() + 14 * 864e5);
-    return Promise.all(LIVE_LG.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l[0] + '/scoreboard?limit=300&dates=' + range).then(function (j) { return { j: j, lg: l[1] }; }); })).then(function (res) {
+    var slugs = sel.teams ? TKL : TKL.filter(function (l) { return (settings.tickerLeagues || []).indexOf(l[0]) >= 0; });
+    return Promise.all(slugs.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l[0] + '/scoreboard?limit=300&dates=' + range).then(function (j) { return { j: j, lg: l[1], slug: l[0] }; }); })).then(function (res) {
       var seen = {}, out = [];
       res.forEach(function (r) {
         if (!r.j || !r.j.events) return;
         r.j.events.forEach(function (e) {
           var st = (e.status && e.status.type) || {}, tm = evTeams(e); if (!tm || st.state !== 'pre' || seen[e.id]) return;
-          if (!want[String((tm.h.team || {}).id)] && !want[String((tm.a.team || {}).id)]) return;
+          if (!sel.ok(tm, r.slug)) return;
           var dt = new Date(e.date); if (isNaN(dt)) return;
           seen[e.id] = 1; out.push({ lg: r.lg, h: teamName(tm.h), a: teamName(tm.a), at: dt.getTime(), pre: 1 });
         });
       });
       out.sort(function (x, y) { return x.at - y.at; });
-      favUp = { at: Date.now(), key: key, list: out.slice(0, 8) };
+      favUp = { at: Date.now(), key: sel.key, list: out.slice(0, 10) };
       return favUp.list;
     });
   }
+  /* Arabic sports headlines (Google News in Arabic): about the chosen teams and leagues, else football in general */
+  function loadSportNews() {
+    if (settings.tickerNews === false) return Promise.resolve([]);
+    var terms = (settings.tickerNames || []).slice(0, 5).concat((settings.tickerLeagues || []).slice(0, 2).map(function (s) { return TKL_NAME[s]; })).filter(Boolean);
+    var q = terms.length ? terms.map(function (t) { return '"' + t + '"'; }).join(' OR ') + ' كرة القدم' : 'كرة القدم';
+    if (sportNews.key === q && Date.now() - sportNews.at < 20 * 60000) return Promise.resolve(sportNews.list);
+    return getTextAny('https://news.google.com/rss/search?q=' + encodeURIComponent(q + ' when:2d') + '&hl=ar&gl=IQ&ceid=IQ:ar').then(function (x) {
+      var out = [];
+      if (x) {
+        var doc = new DOMParser().parseFromString(x, 'text/xml');
+        Array.prototype.forEach.call(doc.getElementsByTagName('item'), function (it) {
+          var t = ((it.getElementsByTagName('title')[0] || {}).textContent || '').replace(/\s+-\s+[^-]+$/, '').trim();
+          if (t && /[\u0600-\u06ff]/.test(t) && out.indexOf(t) < 0) out.push(t);
+        });
+      }
+      sportNews = { at: Date.now(), key: q, list: out.slice(0, 8) };
+      return sportNews.list;
+    }).catch(function () { return sportNews.list; });
+  }
   function refreshLive() {
-    if (settings.ticker === false) { liveList = []; liveNote = ''; renderTicker(); return; }
+    if (settings.ticker === false) { liveList = []; liveNews = []; liveNote = ''; renderTicker(); return; }
     if (PREVIEW) { liveList = [{ lg: 'الدوري الإنجليزي', h: 'ليفربول', hs: '2', a: 'تشيلسي', as: '1', clk: '67' }, { lg: 'الدوري الإسباني', h: 'ريال مدريد', hs: '0', a: 'برشلونة', as: '0', clk: '12' }, { lg: 'دوري أبطال أوروبا', h: 'بايرن ميونخ', hs: '1', a: 'آرسنال', as: '1', clk: 'HT' }]; renderTicker(); return; }
-    var want = {}, any = false; (settings.tickerTeams || []).forEach(function (id) { want[String(id)] = 1; any = true; });
-    Promise.all(LIVE_LG.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l[0] + '/scoreboard').then(function (j) { return { j: j, lg: l[1] }; }); })).then(function (res) {
+    var sel = pickSel(), slugs = LIVE_LG.slice();
+    (settings.tickerLeagues || []).forEach(function (sl) { if (!slugs.some(function (l) { return l[0] === sl; })) slugs.push([sl, TKL_NAME[sl] || sl]); });
+    Promise.all(slugs.map(function (l) { return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/' + l[0] + '/scoreboard').then(function (j) { return { j: j, lg: l[1], slug: l[0] }; }); })).then(function (res) {
       var seen = {}, out = [], soon = [], got = 0;
       res.forEach(function (r) {
         if (!r.j || !r.j.events) return;
@@ -1566,7 +1607,7 @@
         r.j.events.forEach(function (e) {
           var st = (e.status && e.status.type) || {}, tm = evTeams(e);
           if (!tm || (st.state !== 'in' && st.state !== 'pre') || seen[e.id]) return;
-          if (any && !want[String((tm.h.team || {}).id)] && !want[String((tm.a.team || {}).id)]) return;
+          if (sel.any && !sel.ok(tm, r.slug)) return;
           seen[e.id] = 1;
           var sc = function (x) { var v = x.score && (x.score.displayValue != null ? x.score.displayValue : x.score); return v == null ? '0' : String(v); };
           var detail = (e.status && (e.status.displayClock || st.shortDetail)) || '', clk = /half/i.test(st.detail || '') || /^HT$/i.test(st.shortDetail || '') ? 'HT' : String(parseInt(detail, 10) || '');
@@ -1575,59 +1616,68 @@
         });
       });
       soon.sort(function (x, y) { return x.at - y.at; });
-      var done = function (up) {
-        /* chosen teams: what is on now, then their next matches. no chosen teams: what is on now, else what starts soon */
-        liveList = any ? out.concat(up.filter(function (m) { return m.at > Date.now() - 6e4; }).slice(0, 6)) : (out.length ? out : soon.slice(0, 8));
-        liveNote = liveList.length ? '' : !got ? 'تعذّر جلب النتائج، تأكد من الإنترنت' : any ? 'ماكو مباريات قريبة لفرقك المختارة' : 'ماكو مباريات مباشرة أو قريبة هسه';
+      var done = function (up, news) {
+        /* chosen teams / leagues: what is on now, then their next matches. nothing chosen: what is on now, else what starts soon */
+        liveList = sel.any ? out.concat(up.filter(function (m) { return m.at > Date.now() - 6e4; }).slice(0, 8)) : (out.length ? out : soon.slice(0, 8));
+        liveNews = news || [];
+        liveNote = liveList.length || liveNews.length ? '' : !got ? 'تعذّر جلب النتائج، تأكد من الإنترنت' : sel.any ? 'ماكو مباريات قريبة لاختيارك' : 'ماكو مباريات مباشرة أو قريبة هسه';
         renderTicker();
       };
-      if (any) loadFavUpcoming(want, Object.keys(want).sort().join(',')).then(done, function () { done([]); }); else done([]);
+      Promise.all([sel.any ? loadFavUpcoming(sel).catch(function () { return []; }) : Promise.resolve([]), loadSportNews()]).then(function (r) { done(r[0], r[1]); }, function () { done([], []); });
     });
   }
   var tk = { sig: '', pages: [], i: 0, t: 0 };
   function tickPage() {
-    var r = document.querySelector('#liveTicker .lt-run'); if (!r || !tk.pages.length) return;
-    r.innerHTML = tk.pages[tk.i % tk.pages.length]; r.classList.toggle('b', tk.i % 2 === 1); tk.i++;
+    var r = document.querySelector('#liveTicker .lt-run'), bd = document.querySelector('#liveTicker .lt-badge b'); if (!r || !tk.pages.length) return;
+    var p = tk.pages[tk.i % tk.pages.length];
+    r.innerHTML = p.html; r.classList.toggle('b', tk.i % 2 === 1); if (bd) bd.textContent = p.badge; tk.i++;
   }
-  /* the same strip, as plain text, for the copy that is drawn above other apps (chosen in the settings) */
   function dayWord(d) {
     var t = new Date(), a = new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime(), b = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(), k = Math.round((b - a) / 864e5);
     return k <= 0 ? 'اليوم' : k === 1 ? 'باچر' : d.toLocaleDateString('ar-IQ', { weekday: 'long' });
   }
+  /* the same strip, as plain text, for the copy that is drawn above other apps (chosen in the settings) */
   function plainOf(m) {
-    if (m.pre) { var d = new Date(m.at); return m.lg + ': ' + m.h + ' ضد ' + m.a + ' · ' + (dayWord(d) + ' ') + d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }); }
+    if (m.pre) { var d = new Date(m.at); return m.lg + ': ' + m.h + ' ضد ' + m.a + ' · ' + dayWord(d) + ' ' + d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }); }
     return m.lg + ': ' + m.h + ' ' + nf.format(+m.hs || 0) + ' - ' + nf.format(+m.as || 0) + ' ' + m.a + ' · ' + (m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر');
   }
-  function pushStrip(on) {
+  function matchHtml(m) {
+    if (m.pre) { var d = new Date(m.at), tm = d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }); return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>ضد</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + dayWord(d) + ' ' + tm + '</em></span>'; }
+    var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
+    return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>' + nf.format(+m.hs || 0) + '</b><u></u><b>' + nf.format(+m.as || 0) + '</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
+  }
+  /* what the strip says, page by page: matches two at a time (live first), then one sports headline per page */
+  function tickerPages() {
+    var pages = [], plain = [];
+    for (var q = 0; q < liveList.length; q += 2) {
+      var two = liveList.slice(q, q + 2), live = two.some(function (m) { return !m.pre; }), badge = live ? 'مباشر' : 'مباريات قادمة';
+      pages.push({ badge: badge, html: two.map(matchHtml).join('<span class="lt-sep"></span>') });
+      plain.push(badge + '\t' + two.map(plainOf).join('   │   '));
+    }
+    liveNews.forEach(function (t) {
+      pages.push({ badge: 'أخبار رياضية', html: '<span class="lt-m"><span class="lt-news">' + esc(t) + '</span></span>' });
+      plain.push('أخبار رياضية\t' + t);
+    });
+    if (!pages.length && liveNote) { pages.push({ badge: 'النتائج', html: '<span class="lt-m"><em>' + esc(liveNote) + '</em></span>' }); }
+    return { pages: pages, plain: plain };
+  }
+  function pushStrip(on, plain) {
     if (!HAS_ANDROID || !A.tickerOverlay) return;
-    try {
-      var show = on && settings.tickerApps === true && liveList.length > 0, pages = [];
-      for (var q = 0; q < liveList.length; q += 2) pages.push(liveList.slice(q, q + 2).map(plainOf).join('   │   '));
-      var live = liveList.some(function (m) { return !m.pre; });
-      A.tickerOverlay(!!show, live ? 'مباشر' : 'مباريات قادمة', pages.join('\n'));
-    } catch (e) {}
+    try { A.tickerOverlay(!!(on && settings.tickerApps === true && plain.length), plain.length ? plain[0].split('\t')[0] : '', plain.join('\n')); } catch (e) {}
   }
   function renderTicker() {
     var t = $('liveTicker'); if (!t) return;
-    var note = !liveList.length && settings.ticker !== false ? liveNote : '';
-    var on = settings.ticker !== false && (liveList.length > 0 || !!note);
+    var tp = tickerPages(), on = settings.ticker !== false && tp.pages.length > 0;
     t.classList.toggle('on', on); document.body.classList.toggle('tickeron', on);
-    pushStrip(on);
+    pushStrip(on, tp.plain);
     if (!on) { clearInterval(tk.t); tk = { sig: '', pages: [], i: 0, t: 0 }; t.innerHTML = ''; return; }
-    var pre = liveList.length > 0 && !liveList.some(function (m) { return !m.pre; });
-    var items = !liveList.length ? ['<span class="lt-m"><em>' + esc(note) + '</em></span>'] : liveList.map(function (m) {
-      if (m.pre) { var d = new Date(m.at), tm = d.toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' }), same = d.toDateString() === new Date().toDateString(); return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>ضد</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + dayWord(d) + ' ' + tm + '</em></span>'; }
-      var clk = m.clk === 'HT' ? 'استراحة' : m.clk ? nf.format(+m.clk) + ' د' : 'مباشر';
-      return '<span class="lt-m"><b class="lt-lg">' + esc(m.lg) + '</b><span class="lt-t">' + esc(m.h) + '</span><span class="lt-s"><b>' + nf.format(+m.hs || 0) + '</b><u></u><b>' + nf.format(+m.as || 0) + '</b></span><span class="lt-t">' + esc(m.a) + '</span><em>' + clk + '</em></span>';
-    });
-    var dir = settings.tickerDir === 'ltr' ? 'ltr' : 'rtl', sig = dir + (pre ? 'p' : 'l') + items.join('');
+    var dir = settings.tickerDir === 'ltr' ? 'ltr' : 'rtl', sig = dir + tp.pages.map(function (p) { return p.badge + p.html; }).join('');
     if (sig === tk.sig) return;   /* nothing changed: leave what is on screen alone */
-    var pages = []; for (var q = 0; q < items.length; q += 2) pages.push(items.slice(q, q + 2).join('<span class="lt-sep"></span>'));
-    clearInterval(tk.t); tk = { sig: sig, pages: pages, i: 0, t: 0 };
+    clearInterval(tk.t); tk = { sig: sig, pages: tp.pages, i: 0, t: 0 };
     t.setAttribute('data-dir', dir);
-    t.innerHTML = '<div class="lt-badge"><i></i>' + (pre ? 'مباريات قادمة' : !liveList.length ? 'النتائج' : 'مباشر') + '</div><div class="lt-win"><div class="lt-run"></div></div>';
+    t.innerHTML = '<div class="lt-badge"><i></i><b></b></div><div class="lt-win"><div class="lt-run"></div></div>';
     tickPage();
-    if (pages.length > 1) tk.t = setInterval(tickPage, 7000);
+    if (tp.pages.length > 1) tk.t = setInterval(tickPage, 7000);
   }
   setTimeout(refreshLive, 3000);
   setInterval(function () { if (!PREVIEW) refreshLive(); }, 90000);
@@ -1682,6 +1732,7 @@
           if (settings.tickerApps !== true && HAS_ANDROID && A.hasOverlay && !A.hasOverlay()) { toast('لازم تسمح للواجهة بالعرض فوق التطبيقات، وارجع شغّل الخيار', 5000); if (A.openOverlaySettings) A.openOverlaySettings(); return; }
           settings.tickerApps = settings.tickerApps !== true; saveSettings(); renderTicker();
         } },
+        { label: 'أخبار رياضية بالشريط', value: settings.tickerNews === false ? 'متوقفة' : 'شغّالة', act: function () { settings.tickerNews = settings.tickerNews === false; saveSettings(); sportNews.at = 0; refreshLive(); } },
         { label: 'اتجاه شريط النتائج', value: settings.tickerDir === 'ltr' ? 'من اليسار لليمين' : 'من اليمين لليسار', act: function () { settings.tickerDir = settings.tickerDir === 'ltr' ? 'rtl' : 'ltr'; saveSettings(); renderTicker(); } },
         { label: 'مصادر الخلفيات ووقت التبديل', value: intervalText(settings.bgInterval || 300), act: function () { closeModal(); openBgSources(); return false; } },
         { label: 'شاشة التوقف بعد', value: nf.format(settings.saverMin || 10) + ' دقايق', act: function (k) { settings.saverMin = cycle([5, 10, 15, 20, 30], settings.saverMin || 10, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },

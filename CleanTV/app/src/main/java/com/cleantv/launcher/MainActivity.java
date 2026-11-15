@@ -487,7 +487,8 @@ public class MainActivity extends Activity {
         /** «قنواتي»: plays one of the channels in the list (native player, so every kind of stream works) */
         @JavascriptInterface
         public void playLive(String json, int index) {
-            Intent i = new Intent(MainActivity.this, LiveActivity.class).putExtra("list", json).putExtra("idx", index);
+            LiveActivity.PACK = json;
+            Intent i = new Intent(MainActivity.this, LiveActivity.class).putExtra("idx", index);
             startActivity(i);
         }
 
@@ -1048,6 +1049,7 @@ public class MainActivity extends Activity {
                                 con.disconnect();
                                 continue;
                             }
+                            if (code < 200 || code >= 300) res = "ERR:رد الخادم " + code;
                             if (code >= 200 && code < 300) {
                                 java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
                                 byte[] buf = new byte[32768];
@@ -1060,7 +1062,9 @@ public class MainActivity extends Activity {
                             con.disconnect();
                             break;
                         }
-                    } catch (Throwable ignored) { }
+                    } catch (java.net.UnknownHostException e) { res = "ERR:ما لگيت عنوان الخادم"; }
+                    catch (java.net.SocketTimeoutException e) { res = "ERR:الخادم تأخر بالرد"; }
+                    catch (Throwable t) { res = "ERR:" + t.getClass().getSimpleName(); }
                     callJs("window.__cb(" + JSONObject.quote(cbId) + "," + JSONObject.quote(res) + ")");
                 }
             }).start();
