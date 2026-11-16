@@ -1075,7 +1075,25 @@ public class MainActivity extends Activity {
                                 con.disconnect();
                                 continue;
                             }
-                            if (code < 200 || code >= 300) res = "ERR:رد الخادم " + code;
+                            if (code < 200 || code >= 300) {
+                                /* say who refused and why: the first words of the answer tell a blocked domain from a refused account */
+                                String why = "";
+                                try {
+                                    java.io.InputStream es = con.getErrorStream();
+                                    if (es != null) {
+                                        java.io.ByteArrayOutputStream eb = new java.io.ByteArrayOutputStream(); byte[] b2 = new byte[4096]; int n2, t2 = 0;
+                                        while ((n2 = es.read(b2)) > 0 && t2 < 12000) { eb.write(b2, 0, n2); t2 += n2; }
+                                        es.close();
+                                        String body = eb.toString("UTF-8");
+                                        String low = body.toLowerCase();
+                                        if (low.contains("cloudflare") && low.contains("terms")) why = " · Cloudflare موقّفة دومين السيرفر نفسه (Website Access Blocked)، اطلب عنوان جديد من المزوّد";
+                                        else if (low.contains("cloudflare")) why = " · الرفض من حماية Cloudflare أمام السيرفر";
+                                        else { String txt = body.replaceAll("(?s)<(script|style)[^>]*>.*?</\\1>", " ").replaceAll("<[^>]+>", " ").replaceAll("\\s+", " ").trim(); if (txt.length() > 0) why = " · " + (txt.length() > 90 ? txt.substring(0, 90) : txt); }
+                                    }
+                                    String sv = con.getHeaderField("Server"); if (why.length() == 0 && sv != null) why = " · " + sv;
+                                } catch (Throwable ig) {}
+                                res = "ERR:رد الخادم " + code + why;
+                            }
                             if (code >= 200 && code < 300) {
                                 java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
                                 byte[] buf = new byte[32768];
