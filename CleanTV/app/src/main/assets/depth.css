@@ -14,20 +14,25 @@ body[data-skin="depth"] #osArt, body[data-skin="depth"] #clubBg, body[data-skin=
 .dp-reduce .dp-lyr, .dp-reduce .dp-sc { transition-duration: .12s; }
 .dp-sc.nofx .dp-fgw { display: none; }
 .dp-clk { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity .3s ease-out; }
-.dp-ck { font: 800 300px 'Tajawal', 'Plex', system-ui, sans-serif; fill: rgba(255,255,255,.85); letter-spacing: -4px; }
+.dp-ck { font: 800 300px 'Tajawal', 'Plex', system-ui, sans-serif; fill: rgba(255,255,255,.92); letter-spacing: -4px; stroke: rgba(0,0,0,.22); stroke-width: 4px; paint-order: stroke; stroke-linejoin: round; }
+.dp-clk[data-lum="light"] .dp-ck { fill: rgba(14,20,44,.9); stroke: rgba(255,255,255,.35); }
 /* six looks for the clock */
 .dp-ckc { font: 800 300px 'Tajawal', 'Plex', system-ui, sans-serif; letter-spacing: -4px; }
 .dp-fog { display: none; }
 .dp-clk[data-cs="glass"] .dp-fog { display: inline; }
-.dp-clk[data-cs="glass"] .dp-ck { fill: none; stroke: rgba(255,255,255,.9); stroke-width: 3px; }
-.dp-clk[data-cs="normal"] .dp-ck { fill: rgba(255,255,255,.85); }
+.dp-clk[data-cs="glass"] .dp-ck { fill: none; stroke: rgba(255,255,255,.95); stroke-width: 3px; paint-order: normal; }
+.dp-tint { fill: #0a1030; opacity: 0; }
+.dp-clk[data-lum="light"] .dp-tint { opacity: .62; }
+.dp-clk[data-lum="light"][data-cs="glass"] .dp-ck { stroke: rgba(255,255,255,.95); }
+.dp-clk[data-cs="normal"] .dp-ck { fill: rgba(255,255,255,.92); }
+.dp-clk[data-lum="light"][data-cs="normal"] .dp-ck { fill: rgba(14,20,44,.9); }
 .dp-clk[data-cs="bold"] .dp-ck { font-family: 'Kufi', 'Tajawal', sans-serif; font-weight: 700; stroke: rgba(255,255,255,.85); stroke-width: 9px; stroke-linejoin: round; paint-order: stroke; }
 .dp-clk[data-cs="thin"] .dp-ck { font-weight: 300; fill: rgba(255,255,255,.9); letter-spacing: 0; }
 .dp-clk[data-cs="round"] .dp-ck { font-family: 'Plex', 'Tajawal', sans-serif; font-weight: 700; stroke: rgba(255,255,255,.85); stroke-width: 16px; stroke-linejoin: round; stroke-linecap: round; paint-order: stroke; }
 .dp-clk[data-cs="ital"] .dp-ck { font-weight: 800; }
 .dp-glow { position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: 0; transition: opacity .35s ease-out; pointer-events: none; mix-blend-mode: screen; }
 .dp-reduce .dp-glow { transition-duration: .1s; }
-.dp-glass { background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(26px) saturate(1.3); backdrop-filter: blur(26px) saturate(1.3); border: 1px solid rgba(255,255,255,.28); box-shadow: 0 14px 40px rgba(0,0,0,.28); }
+.dp-glass { background: rgba(18,24,46,.5); border: 1px solid rgba(255,255,255,.3); }
 /* widgets: a box per part; its place and size come from depth.js */
 .dpw { position: absolute; transform-origin: 50% 50%; will-change: transform; transition: opacity .3s ease-out; }
 .dpw.dp-gone { opacity: 0; pointer-events: none; }
@@ -44,7 +49,7 @@ body[data-skin="depth"] #osArt, body[data-skin="depth"] #clubBg, body[data-skin=
 #dpPray { position: absolute; top: 0; left: 0; padding: 16px 28px 18px; border-radius: 30px; min-width: 250px; }
 #dpPray .pk { font-size: 20px; opacity: .8; } #dpPray .pn { font-size: 32px; font-weight: 700; margin-top: 2px; } #dpPray .pn b { font-weight: 800; margin-right: 8px; } #dpPray .ps { font-size: 20px; opacity: .85; margin-top: 2px; }
 #dpTop { position: absolute; top: 0; right: 0; display: flex; gap: 16px; align-items: flex-start; }
-.dp-circ { position: relative; width: 78px; height: 78px; border-radius: 50%; background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); border: 1px solid rgba(255,255,255,.28); display: grid; place-items: center; transition: transform .3s cubic-bezier(.34,1.4,.64,1), box-shadow .25s ease-out; }
+.dp-circ { position: relative; width: 78px; height: 78px; border-radius: 50%; background: rgba(18,24,46,.5); border: 1px solid rgba(255,255,255,.28); display: grid; place-items: center; transition: transform .3s cubic-bezier(.34,1.4,.64,1), box-shadow .25s ease-out; }
 .dp-circ svg { width: 36px; height: 36px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .dp-circ.off svg { stroke: #ff9a8a; }
 .dp-circ span { position: absolute; top: 90px; font-size: 22px; white-space: nowrap; background: rgba(0,0,0,.45); padding: 3px 14px; border-radius: 12px; }
@@ -62,14 +67,14 @@ body[data-skin="depth"] #osArt, body[data-skin="depth"] #clubBg, body[data-skin=
 .dp-empty { font-size: 26px; opacity: .8; padding: 0 30px; }
 #dpName { position: absolute; left: 0; right: 0; top: 150px; text-align: center; font-size: 30px; font-weight: 600; opacity: 0; transition: opacity .25s ease-out; pointer-events: none; }
 #dpName.on { opacity: 1; }
-.dp-strip { position: absolute; left: 0; right: 0; top: 0; height: 100%; border-radius: 999px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.dp-strip { position: absolute; left: 0; right: 0; top: 0; height: 100%; border-radius: 999px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 26px; background: rgba(10,14,32,.62); border: 1px solid rgba(255,255,255,.22); }
 .dp-strip.empty { opacity: 0; }
 .dp-strip .mi { white-space: nowrap; } .dp-strip .mi b { font-weight: 700; } .dp-strip .mi em { font-style: normal; margin: 0 18px; color: #ffd0a0; } .dp-strip .mi small { opacity: .7; font-size: 22px; } .dp-strip .dim { opacity: .75; }
 .dp-strip .mq { width: 100%; overflow: hidden; direction: ltr; } .dp-strip .mqi { display: inline-block; white-space: nowrap; direction: rtl; padding-left: 100%; animation: dpmq linear infinite; will-change: transform; }
 .dp-strip .ni { padding: 0 8px; } .dp-strip .sp { font-style: normal; color: #ffb070; margin: 0 18px; font-size: 20px; }
 @keyframes dpmq { from { transform: translate3d(-100%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
 .dp-reduce .dp-strip .mqi { animation-duration: 90s !important; }
-#dpDrawer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; opacity: 0; pointer-events: none; background: rgba(8,6,22,.82); -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px); transition: opacity .3s ease-out; overflow: hidden; }
+#dpDrawer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; opacity: 0; pointer-events: none; background: rgba(8,6,22,.93); transition: opacity .3s ease-out; overflow: hidden; }
 #dpDrawer.on { opacity: 1; }
 #dpDrawerGrid { position: absolute; top: 250px; left: 110px; right: 110px; display: grid; grid-template-columns: repeat(10, 1fr); row-gap: 56px; justify-items: center; transition: transform .3s cubic-bezier(.2,.8,.25,1); }
 .dp-gi { transition: transform .3s cubic-bezier(.34,1.4,.64,1); }
@@ -90,10 +95,12 @@ body[data-skin="depth"] #osArt, body[data-skin="depth"] #clubBg, body[data-skin=
 #dpPick { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 10; display: none; background: linear-gradient(180deg, #0e1738, #070b1f); }
 #dpPick.on { display: block; }
 #dpPickBox { position: absolute; left: 50%; top: 90px; width: 1056px; height: 594px; margin-left: -528px; border-radius: 46px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,.18); background: #101830; }
-#dpPickBox .dp-sc { top: 0; left: 0; right: auto; bottom: auto; width: 1920px; height: 1080px; transform: scale(.55); transform-origin: 0 0; transition: opacity .3s ease-out; }
+#dpPickBox .dp-sc { transition: opacity .3s ease-out; }
+#dpPickBox .dp-bg, #dpPickBox .dp-fg { transform: none; animation: none; will-change: auto; }
+#dpPickBox .dp-lyr, #dpPickBox .dp-mist { transform: none !important; will-change: auto; }
 #dpPickWrap { position: absolute; left: 0; right: 0; top: 730px; height: 84px; overflow: hidden; }
 #dpPickBtns { position: absolute; left: 0; top: 6px; display: flex; gap: 16px; white-space: nowrap; direction: rtl; transition: transform .3s cubic-bezier(.2,.8,.25,1); }
-.dp-pb { font-size: 32px; font-weight: 600; padding: 14px 34px; border-radius: 999px; background: rgba(255,255,255,.12); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.25); transition: transform .3s cubic-bezier(.34,1.4,.64,1), background .25s ease-out; }
+.dp-pb { font-size: 32px; font-weight: 600; padding: 14px 34px; border-radius: 999px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.3); transition: transform .3s cubic-bezier(.34,1.4,.64,1), background .25s ease-out; }
 .dp-pb.cur { background: rgba(255,255,255,.22); }
 .dp-pb.add { border-style: dashed; }
 .dp-pb.focus { background: rgba(255,255,255,.34); transform: scale(1.1); box-shadow: 0 0 0 3px rgba(255,255,255,.9), 0 0 30px rgba(255,255,255,.4); }
@@ -103,8 +110,8 @@ body[data-skin="depth"] #osArt, body[data-skin="depth"] #clubBg, body[data-skin=
 #dpPickHint { position: absolute; left: 0; right: 0; bottom: 60px; text-align: center; font-size: 25px; opacity: .65; }
 
 /* moving mist: two soft bands drifting slowly across the picture, behind the clock */
-.dp-mist { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; transition: transform .45s cubic-bezier(.22,.8,.2,1), opacity .4s ease-out; will-change: transform; opacity: .5; }
-.dp-mist i { position: absolute; left: -30%; width: 160%; border-radius: 50%; will-change: transform; }
+.dp-mist { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; transition: transform .45s cubic-bezier(.22,.8,.2,1), opacity .4s ease-out; opacity: 0; }
+.dp-mist i { position: absolute; left: -30%; width: 160%; border-radius: 50%; }
 .dp-mist .m1 { top: 36%; height: 34%; background: radial-gradient(50% 50% at 50% 50%, rgba(255,255,255,.38), rgba(255,255,255,0) 70%); animation: dpm1 70s linear infinite alternate; }
 .dp-mist .m2 { top: 56%; height: 38%; background: radial-gradient(50% 50% at 50% 50%, rgba(255,235,245,.3), rgba(255,235,245,0) 70%); animation: dpm2 95s linear infinite alternate; }
 @keyframes dpm1 { from { transform: translate3d(-6%, 0, 0); } to { transform: translate3d(8%, 3%, 0); } }

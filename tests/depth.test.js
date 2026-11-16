@@ -232,8 +232,8 @@ test('depth and motion are chosen per picture; reduce motion switches the motion
   const p = x.t.placeList()[0];
   assert.ok(x.t.depthOn(p));
   x.t.state.bgo[p.id] = { depth: false }; assert.ok(!x.t.depthOn(p)); assert.ok(x.t.depthOn(x.t.placeList()[1]));
-  x.t.state.bgo[p.id] = { motion: false }; assert.ok(!x.t.motionOn(p.id));
-  x.t.state.bgo[p.id] = {}; assert.ok(x.t.motionOn(p.id)); x.t.state.reduce = true; assert.ok(!x.t.motionOn(p.id));
+  assert.ok(!x.t.motionOn(p.id), 'a picture does not move unless it is asked to');
+  x.t.state.bgo[p.id] = { motion: true }; assert.ok(x.t.motionOn(p.id)); x.t.state.reduce = true; assert.ok(!x.t.motionOn(p.id), 'the light mode stops it');
 });
 
 test('the old first-release choice (a number) still maps to the same Algerian picture', () => {
@@ -257,4 +257,26 @@ test('the page loads the new files and the old skins stay in the studio lists', 
   assert.ok(html.indexOf('depth.css') > 0 && html.indexOf('depth.js') > 0);
   const studio = fs.readFileSync(path.join(__dirname, '../Studio/app/src/main/assets/studio.js'), 'utf8');
   ['classic', 'ribbon', 'shelf', 'club', 'depth'].forEach(id => assert.ok(studio.indexOf("['" + id + "',") >= 0, id));
+});
+
+test('nothing heavy or self-moving by default (what made the TV lag and blanked its buttons)', () => {
+  const css = fs.readFileSync(path.join(ASSETS, 'depth.css'), 'utf8'), js = fs.readFileSync(path.join(ASSETS, 'depth.js'), 'utf8');
+  assert.ok(!/backdrop-filter/.test(css), 'no blur-behind');
+  assert.ok(!/feDropShadow|feGaussianBlur/.test(js), 'no SVG filters on the clock');
+  assert.ok(!/transform: scale\(\.55\)/.test(css), 'the picker preview is not a giant scaled layer');
+  const x = load(); x.t.loadCfg();
+  assert.strictEqual(x.t.state.mist, 0, 'no mist until it is switched on'); assert.ok(x.t.state.pamt <= .7);
+  assert.ok(!x.t.motionOn(x.t.placeList()[0].id));
+});
+
+test('the clock takes dark ink on a light picture and light ink on a dark one', () => {
+  const { t } = load();
+  const mk = v => { const d = new Uint8ClampedArray(48 * 27 * 4).fill(v); return d; };
+  assert.strictEqual(t.lumFrom(mk(235), 48, 27), 'light'); assert.strictEqual(t.lumFrom(mk(40), 48, 27), 'dark');
+});
+
+test('a TV that cannot keep up gets the light mode: about 30 frames a second is the line', () => {
+  const { t } = load();
+  const at = ms => Array.from({ length: 40 }, (_, i) => i * ms);
+  assert.strictEqual(t.slowFrames(at(16.7)), false); assert.strictEqual(t.slowFrames(at(50)), true); assert.strictEqual(t.slowFrames(at(100).slice(0, 4)), false, 'too few frames to judge');
 });
