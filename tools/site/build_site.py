@@ -9,7 +9,7 @@ def mark(cls='mk', extra=''): return '<svg class="%s" viewBox="0 0 100 100" aria
 DL = '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>'
 CK = '<svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
 def li(items): return '<ul>' + ''.join('<li>%s%s</li>' % (CK, t) for t in items) + '</ul>'
-VER = 'v5.0'
+VER = 'v6.0'
 APPS = [
  dict(id='tv', tag='للتلفزيون والبوكس والسيارة', name='واجهة مدير الشاشات', img='tv-home.jpg', alt='الواجهة على التلفزيون', link=L['tv'], tagv=b, btn='تحميل الواجهة',
       text='واجهة كاملة بهوية واحدة: ساعة وتاريخ هجري وميلادي، تطبيقاتك ببلاطات واضحة، وكل شي يتحرك بالريموت.',
