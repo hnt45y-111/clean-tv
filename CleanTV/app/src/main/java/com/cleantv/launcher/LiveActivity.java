@@ -10,6 +10,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
@@ -479,15 +480,22 @@ public class LiveActivity extends Activity {
         switch (code) {
             case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_CHANNEL_UP: case KeyEvent.KEYCODE_PAGE_UP: zap(1); return true;
             case KeyEvent.KEYCODE_DPAD_DOWN: case KeyEvent.KEYCODE_CHANNEL_DOWN: case KeyEvent.KEYCODE_PAGE_DOWN: zap(-1); return true;
-            case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: openPanel(); return true;
+            case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER:
+                // the OK that started this channel is still down (or repeating) when the player opens: it must not open the list
+                if (SystemClock.uptimeMillis() - born < 900 || okRepeat) return true;
+                openPanel(); return true;
             case KeyEvent.KEYCODE_BACK: finish(); return true;
             default: return false;
         }
     }
 
+    private long born = SystemClock.uptimeMillis();
+    private boolean okRepeat;
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
         int code = e.getKeyCode();
+        okRepeat = (code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) && e.getRepeatCount() > 0;
         if (e.getAction() == KeyEvent.ACTION_DOWN) { if (handleKey(code)) { downHandled = code; return true; } }
         else if (e.getAction() == KeyEvent.ACTION_UP && downHandled == code) { downHandled = -1; return true; }
         return super.dispatchKeyEvent(e);

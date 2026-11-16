@@ -21,7 +21,7 @@ jobs:
         run: |
           for f in CleanTV/app/src/main/assets/*.js Studio/app/src/main/assets/*.js; do node --check "$f" || exit 1; done
       - name: Run tests
-        run: node --test tests/live.test.js
+        run: node --test tests/*.test.js
   android:
     name: Android unit tests (JVM, no emulator)
     runs-on: ubuntu-latest
