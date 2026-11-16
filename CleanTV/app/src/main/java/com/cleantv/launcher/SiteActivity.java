@@ -61,7 +61,7 @@ public class SiteActivity extends Activity {
             store(c, o);
         } catch (Throwable ignored) { }
     }
-    private static void put(Context c, JSONObject n) {
+    static void save(Context c, JSONObject n) {
         try {
             JSONArray a = load(c), o = new JSONArray();
             for (int i = 0; i < a.length(); i++) { JSONObject j = a.getJSONObject(i); if (!j.optString("u").equals(n.optString("u"))) o.put(j); }
@@ -433,7 +433,7 @@ public class SiteActivity extends Activity {
             JSONObject o = new JSONObject();
             o.put("n", name); o.put("u", st[0]); o.put("g", f[1]); o.put("p", f[2]); o.put("c", f[3]);
             o.put("r", st[1] == null ? "" : st[1]); o.put("ua", st[2] == null ? "" : st[2]); o.put("site", startUrl);
-            put(this, o);
+            save(this, o);
             say("انحفظت «" + name + "» بمجلد " + f[0]);
         } catch (Throwable t) { say("ما انحفظت القناة"); }
         closeSave();

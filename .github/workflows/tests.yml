@@ -1,0 +1,41 @@
+name: Tests
+on:
+  push:
+    paths:
+      - 'CleanTV/**'
+      - 'Studio/**'
+      - 'tests/**'
+      - '.github/workflows/tests.yml'
+  pull_request:
+  workflow_dispatch:
+jobs:
+  js:
+    name: قنواتي logic (Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax of the app scripts
+        run: |
+          for f in CleanTV/app/src/main/assets/*.js Studio/app/src/main/assets/*.js; do node --check "$f" || exit 1; done
+      - name: Run tests
+        run: node --test tests/live.test.js
+  android:
+    name: Android unit tests (JVM, no emulator)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CleanTV
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Run tests
+        run: gradle testDebugUnitTest --no-daemon
