@@ -149,7 +149,6 @@
     $('hm').textContent = c.hm; $('ampm').textContent = c.p;
     $('greg').textContent = fmtGreg.format(now);
     $('hijri').textContent = hijriText(now);
-    if (window.Depth) window.Depth.paint();
   }
 
   // ---------- Prayer times ----------
@@ -445,7 +444,6 @@
     else toast('دز صورك للتلفزيون بتطبيق LocalSend، وبعدها ارجع هنا', 5000);
   }
   window.onImagePicked = function (path) {
-    if (window.Depth && window.Depth.picked && window.Depth.picked(path)) return;
     if (!path) { toast('ما تم اختيار صورة'); return; }
     if (picker.target) { customIcons[picker.target] = path; save('customIcons', customIcons); loadMine(); closeModal(); renderApps(); toast('تم تغيير الأيقونة'); return; }
     loadMine(); bgPinned = path; save('bgPinned', path); setBg(path); closeModal(); toast('تمت إضافة الصورة وتثبيتها خلفية');
@@ -669,7 +667,6 @@
       : mode === 'kidsel' ? 'تطبيقات الأطفال: OK حتى تسمح أو تمنع · رجوع للحفظ' : mode === 'icon' ? 'تغيير الأيقونة: اختار التطبيق واضغط OK · رجوع للخروج'
       : kids.on ? (kids.limit ? 'باقي ' + nf.format(kidsRemaining()) + ' دقيقة مشاهدة اليوم' : '') : '';
     renderOs();
-    if (window.Depth) window.Depth.apps();
     nav.refresh();
   }
   function saveOrder() { order = apps.map(function (a) { return a.pkg; }); save('appOrder', order); }
@@ -1390,9 +1387,9 @@
   var lastTeamKey = null;
   function applySkin() {
     var b = document.body, sk = settings.skin || 'classic', st = b.style;
+    if (!/^(classic|ribbon|shelf|club|tizen|oneui|webos|vidaa|googletv|androidtv|firetv|roku|patchwall|cyt)$/.test(sk)) sk = 'classic';   /* a design that names a look this version no longer has opens as the classic one */
     if (sk === 'classic') b.removeAttribute('data-skin'); else b.setAttribute('data-skin', sk);
     if (typeof customIcons !== 'undefined') renderOs();
-    if (window.Depth) window.Depth.sync();
     /* a design can carry its own CSS (imported launchers, or written in the phone app) and it is applied last */
     var uc = $('userCss'), css = typeof settings.css === 'string' ? settings.css.slice(0, 60000) : '';
     if (uc && uc.textContent !== css) uc.textContent = css;
@@ -1998,42 +1995,6 @@
   var layer = 'main';
   window.__setLayer = function (l) { layer = l; };
   window.__getSettings = function () { return settings; };
-  /* «واجهة العمق» (depth.js) reaches the launcher only through this */
-  function depthPrayer(lat, lon) {
-    if (!window.PRAY) return null;
-    var now = new Date(), t = lat != null ? window.PRAY.compute(baghdadYMD(now), lat, lon, 3) : prayerFor(now), h = nowHoursBaghdad(), list = [['الفجر', t.fajr], ['الظهر', t.dhuhr], ['المغرب', t.maghrib]], next = null, left;
-    list.forEach(function (p) { if (!next && p[1] > h) next = p; });
-    if (!next) { var tm = lat != null ? window.PRAY.compute(baghdadYMD(new Date(now.getTime() + DAY)), lat, lon, 3) : prayerFor(new Date(now.getTime() + DAY)); next = ['الفجر', tm.fajr]; left = tm.fajr + 24 - h; } else left = next[1] - h;
-    var mins = Math.max(0, Math.round(left * 60)), lh = Math.floor(mins / 60), lm = mins % 60;
-    return { maghribPassed: h >= t.maghrib, name: next[0], time: hoursToText(next[1]), left: 'باقي ' + (lh > 0 ? nf.format(lh) + ' ساعة' + (lm ? ' و' + nf.format(lm) + ' دقيقة' : '') : nf.format(lm) + ' دقيقة') };
-  }
-  window.__depthApi = {
-    preview: PREVIEW,
-    settings: function () { return settings; },
-    apps: function () { return visibleApps(); },
-    label: function (a) { return appName(a); },
-    icon: function (a) { return customIcons[a.pkg] || a.icon || ''; },
-    launch: function (pkg) { launchApp(pkg); },
-    hijri: function (off) { try { return hijriText(new Date(Date.now() + (off || 0) * DAY)); } catch (e) { return ''; } },
-    clock: function () { return clockParts(new Date()).hm; },
-    prayer: function () { return depthPrayer(); },
-    prayerAt: depthPrayer,
-    getText: function (u) { return getTextAny(u); },
-    pickImage: function () { return !!(HAS_ANDROID && A.pickImage && A.pickImage()); },
-    upcoming: function () {
-      var sel = pickSel();
-      if (PREVIEW) return Promise.resolve({ any: true, list: [{ lg: 'الدوري الإسباني', h: 'ريال مدريد', a: 'برشلونة', at: Date.now() + 86400000 }, { lg: 'دوري أبطال أوروبا', h: 'ليفربول', a: 'آرسنال', at: Date.now() + 3 * 86400000 }] });
-      return sel.any ? loadFavUpcoming(sel).then(function (l) { return { any: true, list: l }; }, function () { return { any: true, list: [] }; }) : Promise.resolve({ any: false, list: [] });
-    },
-    teams: function () { return (settings.tickerNames || []).slice(); },
-    addTeam: function (name) { settings.tickerTeams = (settings.tickerTeams || []).concat(['n:' + nn(name)]); settings.tickerNames = (settings.tickerNames || []).concat([name]); favUp.key = ''; saveSettings(); },
-    removeTeam: function (name) { var i = (settings.tickerNames || []).indexOf(name); if (i < 0) return; settings.tickerNames.splice(i, 1); var k = 'n:' + nn(name); settings.tickerTeams = (settings.tickerTeams || []).filter(function (t) { return String(t) !== k; }); favUp.key = ''; saveSettings(); },
-    toast: function (m) { toast(m, 3500); },
-    layer: function () { return layer; },
-    press: function () { pressFx(); },
-    openSettings: function () { openSettings(); },
-    sysSettings: function () { if (HAS_ANDROID && A.openSettings) A.openSettings(); else toast('إعدادات الجهاز: تحتاج الشاشة نفسها'); }
-  };
   window.__fetchText = function (u) { return (HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u); };
   window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   var nav = (function () {
@@ -2199,7 +2160,6 @@
     if (layer === 'search') return searchKey(k);
     if (layer === 'quran') return quranKey(k);
     if (layer === 'pin') return pinKey(k);
-    if (layer === 'main' && window.Depth && window.Depth.on()) return window.Depth.key(k);
     if (k.indexOf('Arrow') === 0) nav.arrow(k);
     else if (k === 'ok') nav.ok();
     else if (k === 'back') nav.back();
@@ -2233,7 +2193,6 @@
   window.onHomePressed = function () {
     lastInput = Date.now(); if (saverOn) stopSaver();
     if (layer === 'edit') closeEdit(); else if (layer !== 'main') closeModal();
-    if (window.Depth && window.Depth.on()) window.Depth.home();
     nav.home();
   };
   window.onAppResume = function () {
@@ -2286,7 +2245,6 @@
       Object.keys(o.settings).forEach(function (k) { settings[k] = o.settings[k]; });
       applyTheme(); refreshNews(true); renderClub(); renderTopbar(); applyLayout(); renderApps(); refreshLive();
     }
-    if (o.dsel !== undefined && window.Depth && window.Depth.previewSelect) window.Depth.previewSelect(o.dsel);
     if (o.bg || o.settings) { buildBgList(); bgCur = ''; showBg(); }
     if (o.select !== undefined) {
       qa('.editing').forEach(function (e) { e.classList.remove('editing'); });
