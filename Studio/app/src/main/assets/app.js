@@ -939,7 +939,7 @@ function mockBridge() {
     logout: () => { store.s = null; }, gen: () => 'ABCDE-FGHJK',
     kvGet: k => store[k] || null, kvSet: (k, v) => { store[k] = v; },
     open: () => {}, copy: () => {}, share: () => {}, toast: () => {}, vibe: () => {}, bars: () => {}, version: () => '2.0', exit: () => {},
-    build: () => 3, live: () => {}, cast: () => {}, castState: () => '{"on":false}', assetList: () => '[]', asset: () => null,
+    build: () => 3, srv: () => '', live: () => {}, cast: () => {}, castState: () => '{"on":false}', assetList: () => '[]', asset: () => null,
     discover: () => setTimeout(() => window.onFound && onFound({ kind: 'pair', name: 'adb-GD1-x7Qz1a', host: '192.168.1.42', port: 37115 }), 400),
     run: (id, op, args) => setTimeout(() => {
       const R = { shareStart: { ips: [{ ip: "192.168.43.1", hot: true }, { ip: "10.0.0.5", hot: false }], port: 8080 },
