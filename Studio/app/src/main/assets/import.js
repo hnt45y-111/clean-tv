@@ -351,6 +351,7 @@ function osPanelWire(box, S) {
       my.innerHTML = `<div class="panel"><h2>قنواتي الخاصة</h2><p class="sub" style="margin-top:-4px">أضف قنواتك اللي عندك حق بثها (مثل اتفاقيتك مع beIN، أو قنوات ثانية). تطلع آخر شي بقنواتي داخل فولدر «قنواتي الخاصة»، وكل قائمة IPTV تصير فولدر لحاله وبيه قنواتها. الروابط تنحفظ بتصميمك وبشاشتك بس، وما تنرفع لأي مكان عام.</p>
         <label class="f">الصق روابط قوائم M3U (رابط بكل سطر، كل رابط يصير فولدر) أو نص قائمة كاملة</label>
         <textarea id="myM3u" dir="ltr" spellcheck="false" style="width:100%;min-height:140px;font:12.5px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)" placeholder="#EXTM3U&#10;#EXTINF:-1 group-title=&quot;beIN Sports&quot; tvg-logo=&quot;https://…/logo.png&quot;,beIN Sports 1&#10;https://…/stream.m3u8">${esc(S.myM3u || '')}</textarea>
+        <div class="row" style="margin:8px 0 0;gap:8px"><button class="btn sec" style="flex:1" id="myFile">${ic('file')} حمّل ملف m3u من الموبايل</button><input type="file" id="myFileIn" accept=".m3u,.m3u8,.txt,audio/x-mpegurl,application/vnd.apple.mpegurl,application/x-mpegurl,text/plain" style="display:none"></div>
         <div class="sub" style="margin:6px 2px">${cnt ? 'فيها ' + cnt + ' رابط' : 'فارغة'} · روابط يوتيوب تنفتح بتطبيق يوتيوب</div>
         <label class="f" style="margin-top:8px">أو رابط قائمة تحدّثها إنت (يقراها التلفزيون كل مرة تفتح قنواتي)</label>
         <input id="chUrl" dir="ltr" placeholder="https://…/channels.m3u" value="${esc(S.channelsUrl || '')}">
@@ -359,6 +360,21 @@ function osPanelWire(box, S) {
         <div class="row" style="margin-top:10px;gap:8px"><button class="btn sec" style="flex:1" id="myOk">${ic('save')} حفظ</button><button class="btn ghost" id="myClr">امسح</button></div></div>`;
       p.insertBefore(my, box.nextSibling);
       $('#myOk').onclick = () => { tap(); const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
+      $('#myFile').onclick = () => { tap(); $('#myFileIn').click(); };
+      $('#myFileIn').onchange = e => {
+        const f = e.target.files && e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+          let t = String(r.result || '').replace(/^\uFEFF/, '');
+          if (!/#EXTINF|^https?:/im.test(t)) { toast('الملف مو قائمة m3u'); return; }
+          const old = $('#myM3u').value.trim(), n = (t.match(/#EXTINF/g) || []).length;
+          let all = (old ? old + '\n' : '') + t.trim();
+          if (all.length > 120000) { all = all.slice(0, 120000); all = all.slice(0, all.lastIndexOf('\n#EXTINF')); toast('الملف كبير: انحفظ أول ' + (all.match(/#EXTINF/g) || []).length + ' قناة'); }
+          else toast('انقرأت ' + n + ' قناة من الملف');
+          $('#myM3u').value = all;
+        };
+        r.readAsText(f); e.target.value = '';
+      };
       $('#myClr').onclick = () => { tap(); delete S.myM3u; delete S.channelsUrl; delete S.chSites; changed(); live({ settings: S }); designPanel(); };
       return;
     }
