@@ -597,6 +597,9 @@ public class MainActivity extends Activity {
         public void setPref(String k, String v) { Media.prefs(MainActivity.this).edit().putString(k, v).apply(); }
 
         @JavascriptInterface
+        public String srv() { return Srv.get(MainActivity.this); }
+
+        @JavascriptInterface
         public String getPref(String k) { return Media.prefs(MainActivity.this).getString(k, ""); }
 
         /** Screensaver on the launcher: lower the panel brightness (works on car units / boxes that honour it; TVs ignore it safely). */

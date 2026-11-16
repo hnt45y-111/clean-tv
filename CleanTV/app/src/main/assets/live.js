@@ -88,7 +88,9 @@
   }
   function readCache() { try { return JSON.parse(localStorage.getItem('myChLists') || '{}') || {}; } catch (e) { return {}; } }
   /* an IPTV account of the Xtream kind (server, user, password) that the user owns: its live channels come as one folder, one sub-folder per category */
-  function xtOf(S) { var x = S && S.xtream; if (!x || !x.host || !x.user || !x.pass || x.live === false) return null; var h = String(x.host).trim(); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; h = h.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1'); try { var kb = localStorage.getItem('xtBase|' + h); if (kb) h = kb; } catch (e) {} return { host: h, host0: String(x.host).trim(), user: String(x.user).trim(), pass: String(x.pass).trim(), out: x.out === 'm3u8' ? 'm3u8' : 'ts', name: x.name || 'IPTV' }; }
+  /* the server address ships inside the app (assets/srv.dat); it is used when the account carries only a user and a password */
+  window.__tvSrv = function () { try { return String((window.Android && window.Android.srv && window.Android.srv()) || '').trim(); } catch (e) { return ''; } };
+  function xtOf(S) { var x = S && S.xtream; var xh = x ? (x.host || window.__tvSrv()) : ''; if (!x || !xh || !x.user || !x.pass || x.live === false) return null; var h = String(xh).trim(); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; h = h.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1'); try { var kb = localStorage.getItem('xtBase|' + h); if (kb) h = kb; } catch (e) {} return { host: h, host0: String(xh).trim(), user: String(x.user).trim(), pass: String(x.pass).trim(), out: x.out === 'm3u8' ? 'm3u8' : 'ts', name: x.name || 'IPTV' }; }
   function xtApi(x, action) { return x.host + '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + (action ? '&action=' + action : ''); }
   /* a server that refuses one address may answer at the other (http/https, with or without the port): try them, keep the one that works */
   function xtBases(x) {
