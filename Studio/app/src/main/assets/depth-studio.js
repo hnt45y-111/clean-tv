@@ -49,7 +49,7 @@
       h += `<div class="dprow ${id === cur ? 'on' : ''} ${hid ? 'offp' : ''}"><button class="dpn" data-dbg="${id}">${esc(n)}</button><button class="m" data-dup="${id}">▲</button><button class="m" data-ddn="${id}">▼</button><button class="m ${hid ? '' : 'on'}" data-doff="${id}">${hid ? '✕' : '✓'}</button>${isPh ? `<button class="m" data-ddel="${id}">🗑</button>` : ''}</div>`;
     });
     h += `<div class="lb" style="margin:12px 0 6px"><span class="sub">الخلفية الحالية: ${esc((ord.find(p => p[0] === cur) || [, cur])[1])}</span></div>
-      ${chips([['متحركة', 'm1'], ['ثابتة', 'm0']], c.motion === false ? 'm0' : 'm1', 'dmo')}
+      ${chips([['ثابتة (الأفضل للأداء)', 'm0'], ['متحركة (الكاميرا تتحرك ببطء)', 'm1']], c.motion === true ? 'm1' : 'm0', 'dmo')}
       ${chips([['تأثير العمق شغّال', 'd1'], ['تأثير العمق مطفي', 'd0']], c.depth === false ? 'd0' : 'd1', 'ddp')}
       <button class="btn sec full" data-dadd="1" style="margin-top:10px">${ic('layers')} إضافة صور من التلفون (حتى ١٥)</button>`;
     const ph = (d.bgs || []).find(b => b.id === cur);
@@ -77,9 +77,9 @@
   }
   function motionBody() {
     const d = dd();
-    return `${sl('pspd', 'سرعة حركة الخلفية عند التنقل (أقل = أسرع)', 120, 1400, 20, d.pspd ?? 450, ' م.ث')}${sl('pamt', 'شدة الحركة (البارالاكس)', 0, 250, 10, Math.round((d.pamt ?? 1) * 100), '٪')}
-      <div class="lb" style="margin:8px 0 6px"><span class="sub">الضباب المتحرك</span></div>${chips([['مطفي', 0], ['خفيف', 1], ['متوسط', 2], ['كثيف', 3]], d.mist ?? 1, 'dmist')}
-      ${tg('reduce', 'تقليل الحركة (للأجهزة الضعيفة)', !!d.reduce)}${tg('effect', 'تأثير العمق عموماً', d.effect !== false)}`;
+    return `${sl('pspd', 'سرعة حركة الخلفية عند التنقل (أقل = أسرع)', 120, 1400, 20, d.pspd ?? 350, ' م.ث')}${sl('pamt', 'شدة الحركة عند التنقل (٠ = بدون)', 0, 250, 10, Math.round((d.pamt ?? .6) * 100), '٪')}
+      <div class="lb" style="margin:8px 0 6px"><span class="sub">الضباب المتحرك</span></div>${chips([['مطفي', 0], ['خفيف', 1], ['متوسط', 2], ['كثيف', 3]], d.mist ?? 0, 'dmist')}
+      ${tg('reduce', 'الوضع الخفيف: بدون حركة (للأجهزة البطيئة)', !!d.reduce)}${tg('effect', 'تأثير العمق عموماً', d.effect !== false)}`;
   }
   function newsBody() {
     const d = dd(), cur = d.rss || [RSS[0][0]], custom = cur.filter(u => !RSS.some(r => r[0] === u));

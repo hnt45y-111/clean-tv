@@ -37,7 +37,7 @@
 
   var root = null, mounted = false, built = false;
   var D = {
-    bg: 'haibat', effect: true, reduce: false, dock: null, hidden: [], prov: 0, cs: 'glass', w: {}, bgo: {}, users: [], dbgs: [], order: null, off: [], nsp: 3, pspd: 450, pamt: 1, mist: 1, sig: '', pvSel: null, rss: [RSS[0][0]], f: 'dock', di: 0, ti: 0, gi: 0, drawer: false,
+    bg: 'haibat', effect: true, reduce: false, dock: null, hidden: [], prov: 0, cs: 'glass', w: {}, bgo: {}, users: [], dbgs: [], order: null, off: [], nsp: 3, pspd: 450, pamt: 1, mist: 1, sig: '', probed: false, pvSel: null, rss: [RSS[0][0]], f: 'dock', di: 0, ti: 0, gi: 0, drawer: false,
     menu: null, pick: null, mv: false, ask: null, edit: null, waitPick: false
   };
   var timers = {}, scenes = {}, lpT = null, lpFired = false, news = [], games = [], gameI = 0, lastKeyAt = 0, heldN = 0;
@@ -62,7 +62,7 @@
   function placeBy(id) { var l = allPlaces(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return l[0]; }
   function placeIdx(id) { var l = placeList(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return i; return 0; }
   function bgo(id) { return D.bgo[id] || (D.bgo[id] = {}); }
-  function motionOn(id) { return !D.reduce && bgo(id).motion !== false; }
+  function motionOn(id) { return !D.reduce && bgo(id).motion === true; }
   function depthOn(p) { return D.effect && bgo(p.id).depth !== false && (!p.user || !!(p.user.sky && p.user.ok !== false)); }
   function wState(id) { return D.w[id] || (D.w[id] = { x: 0, y: 0, sx: 1, sy: 1, h: false }); }
 
@@ -87,13 +87,13 @@
     var cs = pick('cs', 'glass'); D.cs = CSTY.some(function (c) { return c[0] === cs; }) ? cs : 'glass';
     D.w = pick('w', {}); D.bgo = pick('bgo', {});
     D.rss = pick('rss', [RSS[0][0]]);
-    D.nsp = clamp(+pick('nsp', 3) || 3, 1, 10); D.pspd = clamp(+pick('pspd', 450) || 450, 120, 1400); D.pamt = clamp(+pick('pamt', 1), 0, 2.5); D.mist = clamp(+pick('mist', 1), 0, 3);
-    if (isNaN(D.pamt)) D.pamt = 1; if (isNaN(D.mist)) D.mist = 1;
+    D.nsp = clamp(+pick('nsp', 3) || 3, 1, 10); D.pspd = clamp(+pick('pspd', 350) || 350, 120, 1400); D.pamt = clamp(+pick('pamt', .6), 0, 2.5); D.mist = clamp(+pick('mist', 0), 0, 3);
+    if (isNaN(D.pamt)) D.pamt = .6; if (isNaN(D.mist)) D.mist = 0; D.probed = !!st.probed;
   }
   function hashStr(t) { var h = 5381, i; for (i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return String(h >>> 0); }
   function saveCfg() {
     var A = api(); if (A && A.preview) return;
-    try { localStorage.setItem(KEY, JSON.stringify({ sig: D.sig, bg: D.bg, effect: D.effect, reduce: D.reduce, dock: D.dock, hidden: D.hidden, prov: D.prov, cs: D.cs, w: D.w, bgo: D.bgo, users: D.users, rss: D.rss, order: D.order, off: D.off, nsp: D.nsp, pspd: D.pspd, pamt: D.pamt, mist: D.mist })); } catch (e) {}
+    try { localStorage.setItem(KEY, JSON.stringify({ sig: D.sig, bg: D.bg, effect: D.effect, reduce: D.reduce, dock: D.dock, hidden: D.hidden, prov: D.prov, cs: D.cs, w: D.w, bgo: D.bgo, users: D.users, rss: D.rss, order: D.order, off: D.off, nsp: D.nsp, pspd: D.pspd, pamt: D.pamt, mist: D.mist, probed: D.probed })); } catch (e) {}
   }
 
   /* ---------------------------------------------------------------- apps and the dock */
@@ -233,20 +233,33 @@
     im.onerror = function () { cb(''); };
     im.src = p.user.src;
   }
+  /* is the part of the picture behind the clock light or dark? (the clock then takes dark or white ink, so it can always be read) */
+  function lumFrom(d, w, h) {
+    var x0 = Math.floor(w * .25), x1 = Math.ceil(w * .75), y0 = Math.floor(h * .12), y1 = Math.ceil(h * .45), sum = 0, n = 0, x, y;
+    for (y = y0; y < y1; y++) for (x = x0; x < x1; x++) { var i = (y * w + x) * 4; sum += .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2]; n++; }
+    return n ? (sum / n > 150 ? 'light' : 'dark') : 'dark';
+  }
+  function lumOf(u, cb) {
+    if (!u) return cb('dark');
+    var im = new Image();
+    im.onload = function () { try { var c = document.createElement('canvas'); c.width = 48; c.height = 27; var x = c.getContext('2d'); x.drawImage(im, 0, 0, 48, 27); cb(lumFrom(x.getImageData(0, 0, 48, 27).data, 48, 27)); } catch (e) { cb('dark'); } };
+    im.onerror = function () { cb('dark'); };
+    im.src = u;
+  }
   function sceneEl(p) {
     var el = document.createElement('div'), moving = motionOn(p.id), dy = p.dy, src = p.user ? p.user.src : 'depth/' + p.id + '.jpg', fgSrc = p.user ? p.user.src : 'depth/' + p.id + '_fg.png';
     el.className = 'dp-sc' + (moving ? ' mot' : '') + (depthOn(p) ? '' : ' nofx');
     var fg = p.user ? (p.user.sky ? '<div class="dp-lyr dp-fgw"><img class="dp-fg" src="' + esc(fgSrc) + '" alt="" style="clip-path:' + clipPoly(p.user.sky) + ';-webkit-clip-path:' + clipPoly(p.user.sky) + '"></div>' : '') : '<div class="dp-lyr dp-fgw"><img class="dp-fg" src="' + fgSrc + '" alt=""></div>';
     var i = 'k' + Math.floor(Math.random() * 1e6), tf = clockXf(p, dy), tx = esc(clockText());
     el.innerHTML = '<div class="dp-lyr dp-bgw"><img class="dp-bg" src="' + esc(src) + '" alt=""></div>' +
-      '<div class="dp-mist"><i class="m1"></i><i class="m2"></i></div>' +
-      '<svg class="dp-clk" data-cs="' + D.cs + '" viewBox="0 0 1920 1080" aria-hidden="true"><defs><filter id="sh' + i + '" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity=".5"/></filter>' +
+      (D.mist > 0 && !D.reduce ? '<div class="dp-mist"><i class="m1"></i><i class="m2"></i></div>' : '') +
+      '<svg class="dp-clk" data-cs="' + D.cs + '" viewBox="0 0 1920 1080" aria-hidden="true"><defs>' +
       '<clipPath id="cp' + i + '"><text class="dp-ckc" x="960" y="' + (376 + dy) + '" text-anchor="middle" transform="' + tf + '">' + tx + '</text></clipPath>' +
       '<linearGradient id="gl' + i + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".55" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity=".22"/></linearGradient></defs>' +
-      '<g class="dp-fog" clip-path="url(#cp' + i + ')"><image class="dp-fogimg" width="1920" height="1080" preserveAspectRatio="xMidYMid slice" opacity=".96"/><rect width="1920" height="1080" fill="url(#gl' + i + ')" opacity=".75"/></g>' +
-      '<text class="dp-ck" x="960" y="' + (376 + dy) + '" text-anchor="middle" filter="url(#sh' + i + ')" style="--gl:url(#gl' + i + ')" transform="' + tf + '">' + tx + '</text></svg>' + fg +
+      '<g class="dp-fog" clip-path="url(#cp' + i + ')"><image class="dp-fogimg" width="1920" height="1080" preserveAspectRatio="xMidYMid slice" opacity=".96"/><rect width="1920" height="1080" fill="url(#gl' + i + ')" opacity=".75"/><rect class="dp-tint" width="1920" height="1080"/></g>' +
+      '<text class="dp-ck" x="960" y="' + (376 + dy) + '" text-anchor="middle" style="--gl:url(#gl' + i + ')" transform="' + tf + '">' + tx + '</text></svg>' + fg +
       '';
-    blurSrc(p, function (u) { var im = el.querySelector('.dp-fogimg'); if (im && u) im.setAttributeNS('http://www.w3.org/1999/xlink', 'href', u); });
+    blurSrc(p, function (u) { var im = el.querySelector('.dp-fogimg'); if (im && u) im.setAttributeNS('http://www.w3.org/1999/xlink', 'href', u); lumOf(u, function (l) { var sv = el.querySelector('.dp-clk'); if (sv) sv.setAttribute('data-lum', l); }); });
     el._p = p; return el;
   }
   function paintClocks() { var t = clockText(), l = document.querySelectorAll('#depth .dp-ck, #depth .dp-ckc'); for (var i = 0; i < l.length; i++) l[i].textContent = t; }
@@ -261,6 +274,7 @@
     var p = el._p; if (!p) return;
     el.classList.toggle('mot', motionOn(p.id)); el.classList.toggle('nofx', !depthOn(p));
   }
+  function rebuildScene() { if (!scenes.home) return; var id = D.bg; scenes.home = null; $('dpScenes').innerHTML = ''; showScene(id, $('dpScenes'), 'home'); }
   function refreshScenes() { for (var k in scenes) if (scenes[k] && scenes[k].el) classesOf(scenes[k].el); }
   function showScene(id, host, key) {
     var old = scenes[key]; if (old && old.id === id) return;
@@ -345,8 +359,22 @@
     if (!timers.n) timers.n = setInterval(function () { if (mounted) { loadMatches(); loadNews(); } }, 20 * 60000);
     timers.tsig = JSON.stringify((api().settings().tickerTeams) || []) + '|' + JSON.stringify((api().settings().tickerLeagues) || []); timers.nsig = JSON.stringify(D.rss);
     loadMatches(); loadNews();
+    var A1 = api(); if (A1 && !A1.preview && !D.reduce && !D.probed) setTimeout(probeSpeed, 2500);
     var A0 = api(); if (A0 && A0.preview && !timers.pv) { timers.pv = 1; root.addEventListener('click', previewTap); }
     document.body.classList.add('dp-on');
+  }
+  /* about a second of animation frames: under ~30 per second, the TV is too weak for the moving parts, so the light mode starts */
+  function slowFrames(times) { if (times.length < 8) return false; var dt = (times[times.length - 1] - times[0]) / (times.length - 1); return dt > 34; }
+  function probeSpeed() {
+    if (!mounted || !window.requestAnimationFrame) return;
+    var t = [], t0 = Date.now();
+    (function step(now) {
+      t.push(now || Date.now());
+      if (Date.now() - t0 < 1000 && t.length < 90) return window.requestAnimationFrame(step);
+      D.probed = true;
+      if (slowFrames(t)) { D.reduce = true; root.className = 'dp-reduce'; refreshScenes(); parallax(); toast('الشاشة ثقيلة على هالجهاز، شغّلت الوضع الخفيف. تقدر تغيّره من الإعدادات'); }
+      saveCfg();
+    })();
   }
   function unmount() {
     if (!mounted) return;
@@ -554,14 +582,14 @@
         { t: 'المحافظة', v: prov()[0], act: function () { D.menu = null; pickProv(openSettings); } },
         { t: 'شكل الساعة', v: (CSTY.filter(function (c) { return c[0] === D.cs; })[0] || [])[1], act: function () { D.menu = null; pickStyle(openSettings); } },
         { t: 'تأثير العمق', v: D.effect ? 'شغّال' : 'مطفي', act: function () { D.effect = !D.effect; saveCfg(); refreshScenes(); } },
-        { t: 'تقليل الحركة', v: D.reduce ? 'شغّال' : 'مطفي', act: function () { D.reduce = !D.reduce; saveCfg(); root.className = D.reduce ? 'dp-reduce' : ''; refreshScenes(); parallax(); } },
+        { t: 'الوضع الخفيف (بدون حركة، للأجهزة البطيئة)', v: D.reduce ? 'شغّال' : 'مطفي', act: function () { D.reduce = !D.reduce; D.probed = true; saveCfg(); root.className = D.reduce ? 'dp-reduce' : ''; rebuildScene(); parallax(); } },
         { t: 'تغيير الخلفية', v: placeBy(D.bg).n, act: function () { D.menu = null; drawMenu(); openPick(); } },
         { t: 'الفرق (شريط المباريات)', v: '', act: function () { D.menu = null; pickTeams(openSettings); } },
         { t: 'مصادر الأخبار', v: D.rss.length + ' مصدر', act: function () { D.menu = null; pickRss(openSettings); } },
         { t: 'سرعة شريط الأخبار', v: D.nsp + ' / 10', act: function () { D.nsp = D.nsp >= 10 ? 1 : D.nsp + 1; saveCfg(); newsSig = ''; renderNews(); } },
         { t: 'سرعة حركة الخلفية عند التنقل', v: D.pspd + ' م.ث', act: function () { var o = [200, 300, 450, 650, 900, 1200], i = o.indexOf(D.pspd); D.pspd = o[(i + 1) % o.length]; saveCfg(); parallax(); } },
         { t: 'شدة حركة الخلفية', v: Math.round(D.pamt * 100) + '٪', act: function () { var o = [0, .5, 1, 1.5, 2], i = o.indexOf(D.pamt); D.pamt = o[(i + 1) % o.length]; saveCfg(); parallax(); } },
-        { t: 'الضباب المتحرك', v: ['مطفي', 'خفيف', 'متوسط', 'كثيف'][D.mist | 0], act: function () { D.mist = ((D.mist | 0) + 1) % 4; saveCfg(); parallax(); } },
+        { t: 'الضباب المتحرك', v: ['مطفي', 'خفيف', 'متوسط', 'كثيف'][D.mist | 0], act: function () { D.mist = ((D.mist | 0) + 1) % 4; saveCfg(); rebuildScene(); parallax(); } },
         { t: 'إظهار التطبيقات المخفية', v: hid ? hid + ' مخفي' : 'ماكو', act: function () { D.hidden = []; saveCfg(); toast('رجعت كل التطبيقات'); } },
         { t: 'إعدادات الواجهة الأصلية', v: '', act: function () { D.menu = null; drawMenu(); var A = api(); if (A) A.openSettings(); } },
         { t: 'إعدادات الجهاز', v: '', act: function () { D.menu = null; drawMenu(); var B = api(); if (B) B.sysSettings(); } }
@@ -584,7 +612,7 @@
     var btns = $('dpPickBtns').children, c = btns[P.i], off = 0;
     if (c) { off = c.offsetLeft + c.offsetWidth / 2 - 960; }
     $('dpPickBtns').style.transform = 'translateX(' + (-off) + 'px)';
-    var o = P.i < l.length ? bgo(id) : {}, mo = o.motion !== false, dp = o.depth !== false;
+    var o = P.i < l.length ? bgo(id) : {}, mo = o.motion === true, dp = o.depth !== false;
     $('dpPickOpts').innerHTML = P.i < l.length ? '<div class="dp-po' + (P.row === 'opts' && P.o === 0 ? ' focus' : '') + '">الخلفية: <b>' + (mo ? 'متحركة' : 'ثابتة') + '</b></div><div class="dp-po' + (P.row === 'opts' && P.o === 1 ? ' focus' : '') + '">تأثير العمق: <b>' + (dp ? 'شغّال' : 'مطفي') + '</b></div>' : '';
   }
   function pickKey(k) {
@@ -594,7 +622,7 @@
       var id = l[P.i].id;
       if (k === 'ArrowUp') P.row = 'places';
       else if (k === 'ArrowRight' || k === 'ArrowLeft') P.o = P.o ? 0 : 1;
-      else if (k === 'ok') { var o = bgo(id); if (P.o === 0) o.motion = o.motion === false; else o.depth = o.depth === false; saveCfg(); if (scenes.pick) classesOf(scenes.pick.el); if (scenes.home && D.bg === id) refreshScenes(); }
+      else if (k === 'ok') { var o = bgo(id); if (P.o === 0) o.motion = o.motion !== true; else o.depth = o.depth === false; saveCfg(); if (scenes.pick) classesOf(scenes.pick.el); if (scenes.home && D.bg === id) refreshScenes(); }
       return drawPick();
     }
     if (k === 'ArrowRight') P.i = (P.i + n - 1) % n;          /* RTL: right is the first place */
@@ -787,7 +815,8 @@
           var tsig = JSON.stringify(A.settings().tickerTeams || []) + '|' + JSON.stringify(A.settings().tickerLeagues || []), nsig = JSON.stringify(D.rss);
           if (tsig !== timers.tsig) { timers.tsig = tsig; loadMatches(); }
           if (nsig !== timers.nsig) { timers.nsig = nsig; loadNews(); }
-          var cur = scenes.home; if (cur && cur.id !== D.bg) { showScene(D.bg, $('dpScenes'), 'home'); } else refreshScenes();
+          var cur = scenes.home, hasM = !!(cur && cur.el.querySelector('.dp-mist'));
+          if (cur && cur.id !== D.bg) { showScene(D.bg, $('dpScenes'), 'home'); } else if (cur && hasM !== (D.mist > 0 && !D.reduce)) rebuildScene(); else refreshScenes();
           renderAll();
         }
       } else unmount();
@@ -800,6 +829,6 @@
     picked: picked,
     home: function () { D.drawer = false; D.menu = null; D.mv = false; D.ask = null; D.f = 'dock'; if (D.edit) exitEdit(); if (D.pick) { D.pick = null; $('dpPick').className = ''; } if (mounted) { drawMenu(); renderAll(); } },
     places: PLACES, provinces: PROVS, clockStyles: CSTY, widgets: WIDGETS,
-    _t: { newsCps: newsCps, setMatches: function (g, any, st) { games = g; gamesAny = any; gamesState = st; gameI = 0; renderMatches(); }, setNewsState: function (st) { newsState = st; newsSig = ''; renderNews(); }, allPlaces: allPlaces, setNews: function (l) { news = l; newsSig = ''; renderNews(); }, analyzeImage: analyzeImage, state: D, loadCfg: loadCfg, saveCfg: saveCfg, dockApps: dockApps, selPos: selPos, addDock: addDock, hideApp: hideApp, removeDock: removeDock, skylineFrom: skylineFrom, coverageOf: coverageOf, alphaFromSky: alphaFromSky, bestDy: bestDy, clipPoly: clipPoly, wState: wState, rectOf: rectOf, placeList: placeList, depthOn: depthOn, motionOn: motionOn, parseRss: parseRss, editKey: editKey, enterEdit: enterEdit, exitEdit: exitEdit, DEF: DEF }
+    _t: { lumFrom: lumFrom, slowFrames: slowFrames, newsCps: newsCps, setMatches: function (g, any, st) { games = g; gamesAny = any; gamesState = st; gameI = 0; renderMatches(); }, setNewsState: function (st) { newsState = st; newsSig = ''; renderNews(); }, allPlaces: allPlaces, setNews: function (l) { news = l; newsSig = ''; renderNews(); }, analyzeImage: analyzeImage, state: D, loadCfg: loadCfg, saveCfg: saveCfg, dockApps: dockApps, selPos: selPos, addDock: addDock, hideApp: hideApp, removeDock: removeDock, skylineFrom: skylineFrom, coverageOf: coverageOf, alphaFromSky: alphaFromSky, bestDy: bestDy, clipPoly: clipPoly, wState: wState, rectOf: rectOf, placeList: placeList, depthOn: depthOn, motionOn: motionOn, parseRss: parseRss, editKey: editKey, enterEdit: enterEdit, exitEdit: exitEdit, DEF: DEF }
   };
 })();
