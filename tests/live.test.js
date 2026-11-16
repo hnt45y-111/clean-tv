@@ -25,6 +25,7 @@ function makePage(opts = {}) {
       { n: 'العراقية', c: 'iq', g: 'ent', u: 'http://a/3.m3u8' }],
     CH_GROUPS: [['iq', 'العراق'], ['qa', 'قطر']],
     __getSettings: () => opts.settings || {},
+    __fetchText: opts.fetchText || undefined,
     Android: {
       siteChannels: () => JSON.stringify(saved),
       siteDelete: k => { calls.push('del ' + k); saved = saved.filter(o => o.u + '|' + o.n !== k); },
@@ -232,4 +233,15 @@ test('it also finds a last channel that was inside a private list', () => {
 test('nothing saved, or a folder that is gone: it simply opens as usual', () => {
   assert.strictEqual(makePage({ last: { f: 'مجلد محذوف', k: 'x|y' } }).Live.open(), undefined);
   const t = makePage({ last: { f: 'مجلد محذوف', k: 'x|y' } }); t.Live.open(); assert.strictEqual(t.onCat(), 'كل القنوات');
+});
+
+test('server probe names the kind of server (Xtream, wrong login, Cloudflare block)', async () => {
+  const kinds = [['{"user_info":{"auth":1},"server_info":{}}', 'xtream'], ['{"user_info":{"auth":0}}', 'badlogin'], ['ERR:رد الخادم 403 · Cloudflare موقّفة دومين السيرفر', 'cf']];
+  for (const [body, kind] of kinds) {
+    const t = makePage({ settings: { xtream: { host: 'srv.test:8080', user: 'u', pass: 'p' } }, fetchText: () => Promise.resolve(body) });
+    const r = await t.win.__xtProbe({ xtream: { host: 'srv.test:8080', user: 'u', pass: 'p' } });
+    assert.strictEqual(r.kind, kind); assert.ok(r.msg.length > 0);
+  }
+  const t2 = makePage({ fetchText: () => Promise.resolve('<html>x</html>') });
+  assert.strictEqual((await t2.win.__xtProbe({ xtream: { host: 'a.b', user: 'u', pass: 'p' } })).kind, 'web');
 });
