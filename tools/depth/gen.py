@@ -265,7 +265,168 @@ def constantine():
     sub += '<path d="M0,1080 L0,1030 C500,1000 900,1040 1300,1010 C1600,990 1800,1020 1920,1030 L1920,1080 Z" fill="#2c1a38"/>'
     return finish(bg, sub)
 
-SCENES = [('tassili', 'طاسيلي', tassili), ('taghit', 'تاغيت', taghit), ('djurdjura', 'جرجرة', djurdjura), ('timimoun', 'تيميمون', timimoun), ('ghardaia', 'غرداية', ghardaia), ('constantine', 'قسنطينة', constantine)]
+
+# =============================================================== Iraq 1. Haibat Sultan (Koya): twin-peaked rocky mountain
+def haibat():
+    r = rnd(71)
+    bg = sky([('0', '#2b2062'), ('.3', '#8b4392'), ('.58', '#f08488'), ('1', '#ffc08a')], sun=(1420, 580, 44, '#fff0d0', '#ffa08a'))
+    bg += cloud(420, 250, 420, 34, '#ffc8e0', .34) + cloud(1280, 200, 360, 30, '#c8a0f0', .3) + stars(r, 60, 260)
+    bg += ridge(r, 690, 60, '#8a4f86', rough=.58, peaks=[(300, 120, 220), (1580, 150, 260)], opacity=.85)
+    pk = [(300, 1080), (460, 840), (580, 640), (680, 500), (760, 400), (830, 330), (880, 300), (920, 330), (960, 390), (1010, 360), (1070, 300), (1130, 320), (1190, 400), (1260, 520), (1360, 700), (1480, 880), (1620, 1080)]
+    out = []
+    for i in range(len(pk) - 1):
+        a, b = pk[i], pk[i + 1]
+        for k in range(5):
+            t = k / 5; out.append((a[0] + (b[0] - a[0]) * t + r.uniform(-9, 9), a[1] + (b[1] - a[1]) * t + r.uniform(-8, 8)))
+    out.append(pk[-1])
+    sub = lit_poly(out, '#8a5a6a', '#e0a08c', '#3a2442', -1, 'hb')
+    for i in range(22):
+        x = r.uniform(520, 1400); y = r.uniform(430, 980)
+        sub += '<path d="M%.0f,%.0f l%.0f,%.0f" stroke="#33203f" stroke-opacity=".3" stroke-width="%d" stroke-linecap="round"/>' % (x, y, r.uniform(-50, 40), r.uniform(60, 150), r.randint(3, 8))
+    sub += '<path d="M0,1080 L0,940 C300,900 520,960 800,1000 C1100,1040 1500,940 1920,910 L1920,1080 Z" fill="#3b2a44"/>'
+    sub += '<path d="M0,1010 C400,980 900,1040 1300,1000 C1600,980 1800,1010 1920,1000 L1920,1080 L0,1080 Z" fill="#4c3a40" opacity=".9"/>'
+    return finish(bg, sub)
+
+# =============================================================== Iraq 2. Rawanduz: the gorge with its bridge
+def rawanduz():
+    r = rnd(72)
+    bg = sky([('0', '#2a2064'), ('.32', '#7d4096'), ('.6', '#ee7c98'), ('1', '#ffbe8e')], sun=(960, 560, 46, '#fff0d2', '#ff9aa0'))
+    bg += cloud(420, 260, 380, 32, '#ffc0e0', .33) + cloud(1480, 210, 320, 28, '#d0a0f0', .3) + stars(r, 55, 250)
+    bg += ridge(r, 720, 50, '#8a4d92', rough=.55, opacity=.8)
+    L = [(0, 1080), (0, 420), (150, 380), (330, 440), (470, 560), (560, 720), (620, 1080)]
+    R = [(1920, 1080), (1920, 400), (1760, 360), (1590, 430), (1450, 560), (1350, 730), (1300, 1080)]
+    sub = lit_poly(L, '#7c4a5e', '#d49aa0', '#33203e', -1, 'rl') + lit_poly(R, '#7c4a5e', '#d49aa0', '#33203e', -1, 'rr')
+    for (x0, x1, y0) in [(20, 440, 480), (1480, 1880, 450)]:
+        x = x0
+        while x < x1:
+            w = r.randint(40, 70); h = r.randint(30, 60)
+            sub += '<rect x="%d" y="%d" width="%d" height="%d" fill="%s"/>' % (x, y0 - h + 30 * math.sin(x / 80), w, h, ['#f0c0a8', '#e0a0b8', '#f4d8b0'][r.randint(0, 2)])
+            x += w + 4
+    # an arch bridge across the gorge
+    sub += '<path d="M440,600 Q960,100 1480,600 L1480,640 Q960,210 440,640 Z" fill="#33203e"/><rect x="440" y="584" width="1040" height="20" fill="#4a2c4a"/>'
+    for x in range(520, 1420, 60):
+        u = (x - 440) / 1040.0; top = 600 - 4 * u * (1 - u) * 400
+        sub += '<path d="M%d,%.0f V590" stroke="#33203e" stroke-width="6"/>' % (x, top + 20)
+    # waterfall glow
+    sub += '<path d="M940,720 L980,720 L1000,1080 L920,1080 Z" fill="#f4e0f0" opacity=".55"/>'
+    sub += '<path d="M0,1080 L0,1020 C500,990 900,1040 1300,1010 C1600,990 1800,1020 1920,1020 L1920,1080 Z" fill="#2e1c3a"/>'
+    return finish(bg, sub)
+
+# =============================================================== Iraq 3. Halgurd: the sharp snow peak
+def halgurd():
+    r = rnd(73)
+    bg = sky([('0', '#231c5a'), ('.3', '#7a3f94'), ('.58', '#e8708c'), ('1', '#ffbc8a')], sun=(420, 600, 40, '#fff2d6', '#ff9aa0'))
+    bg += cloud(1380, 250, 420, 32, '#ffd0e4', .34) + cloud(520, 190, 360, 28, '#c8a0f4', .3) + stars(r, 85, 300)
+    bg += ridge(r, 650, 80, '#7a4a88', rough=.62, peaks=[(300, 150, 200), (1620, 200, 240)], opacity=.85)
+    bg += ridge(r, 740, 60, '#5c3a76', rough=.6, peaks=[(1180, 80, 260)], opacity=.95)
+    pk = [(420, 1080), (560, 820), (680, 650), (770, 520), (840, 420), (890, 340), (935, 285), (960, 250), (985, 290), (1030, 360), (1090, 450), (1160, 560), (1240, 690), (1340, 830), (1520, 1080)]
+    out = []
+    for i in range(len(pk) - 1):
+        a, b = pk[i], pk[i + 1]
+        for k in range(5):
+            t = k / 5; out.append((a[0] + (b[0] - a[0]) * t + r.uniform(-7, 7), a[1] + (b[1] - a[1]) * t + r.uniform(-6, 6)))
+    out.append(pk[-1])
+    sub = lit_poly(out, '#664a92', '#c493b8', '#2a1c4e', -1, 'hg')
+    snow = [p for p in out if p[1] < 640]
+    sd = 'M' + ' L'.join('%.1f,%.1f' % p for p in snow) + ' L%.1f,%.1f ' % (snow[-1][0] - 30, snow[-1][1] + 90)
+    for x in range(int(snow[-1][0]) - 30, int(snow[0][0]), -34): sd += 'L%d,%d ' % (x, 540 + 70 * math.sin(x / 37.0) + r.uniform(-20, 20))
+    sub += '<path d="%sZ" fill="#fff0f6" opacity=".94"/>' % sd
+    for i in range(16):
+        x = r.uniform(640, 1260); y = r.uniform(600, 980)
+        sub += '<path d="M%.0f,%.0f l%.0f,%.0f" stroke="#2a1c4e" stroke-opacity=".28" stroke-width="%d" stroke-linecap="round"/>' % (x, y, r.uniform(-60, 40), r.uniform(70, 150), r.randint(3, 8))
+    sub += '<path d="M0,1080 L0,940 C300,890 520,950 780,1000 C1100,1040 1500,930 1920,900 L1920,1080 Z" fill="#33224d"/>'
+    return finish(bg, sub)
+
+# =============================================================== Iraq 4. Dukan Dam: the lake and the dam wall
+def dukan():
+    r = rnd(74)
+    bg = sky([('0', '#2a2064'), ('.3', '#8040a0'), ('.58', '#f08aa0'), ('1', '#ffc496')], sun=(1380, 560, 48, '#fff0d0', '#ffa0a0'))
+    bg += cloud(480, 240, 400, 32, '#ffc8e8', .34) + cloud(1560, 300, 280, 26, '#d0a8f4', .3) + stars(r, 50, 240)
+    bg += ridge(r, 650, 70, '#8c5496', rough=.58, peaks=[(240, 130, 210), (1640, 150, 240)], opacity=.85)
+    bg += ridge(r, 720, 46, '#6a4682', opacity=.95)
+    # the lake mirrors the sky
+    bg += '<defs><linearGradient id="lk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e88aa0"/><stop offset=".5" stop-color="#9a5aa0"/><stop offset="1" stop-color="#4a3068"/></linearGradient></defs><rect x="0" y="760" width="1920" height="320" fill="url(#lk)"/>'
+    for i in range(14): bg += '<rect x="%d" y="%d" width="%d" height="3" fill="#fff0e0" opacity="%.2f"/>' % (r.randint(0, 1700), r.randint(780, 1060), r.randint(80, 240), r.uniform(.1, .3))
+    # the dam: a long concrete wall with the control tower and spillway gates
+    sub = lit_poly([(520, 900), (560, 820), (1360, 820), (1400, 900)], '#c8a8b0', '#f4dcd0', '#5a4060', -1, 'dw')
+    sub += '<rect x="560" y="820" width="800" height="14" fill="#8c6a80"/>'
+    for gx in range(600, 1330, 90): sub += '<rect x="%d" y="838" width="52" height="64" rx="5" fill="#45304f" opacity=".85"/>' % gx
+    sub += lit_poly([(890, 820), (900, 400), (1020, 400), (1030, 820)], '#d8b8b8', '#fbe6d8', '#5c4262', -1, 'tw')
+    sub += lit_poly([(850, 400), (860, 290), (1060, 290), (1070, 400)], '#e4c8c4', '#fdeee0', '#604868', -1, 'tw2')
+    sub += '<rect x="900" y="312" width="120" height="44" rx="6" fill="#33203f" opacity=".8"/><path d="M960,290 V190" stroke="#33203f" stroke-width="7"/><circle cx="960" cy="186" r="11" fill="#ff8a70"/>'
+    sub += '<path d="M0,1080 L0,1000 C500,980 900,1030 1300,1000 C1600,985 1800,1010 1920,1010 L1920,1080 Z" fill="#33203f"/>'
+    return finish(bg, sub)
+
+# =============================================================== Iraq 5. Duhok and Amadiya: the town on its rock plateau
+def amadiya():
+    r = rnd(75)
+    bg = sky([('0', '#2a2062'), ('.32', '#8a4496'), ('.6', '#f08894'), ('1', '#ffc08c')], sun=(520, 600, 46, '#fff0d2', '#ffa08c'))
+    bg += cloud(1360, 250, 400, 32, '#ffc8e4', .34) + cloud(400, 220, 320, 28, '#c8a0f0', .3) + stars(r, 55, 240)
+    bg += ridge(r, 690, 70, '#8a4f90', rough=.56, peaks=[(1700, 160, 220)], opacity=.85) + ridge(r, 780, 44, '#6a4380', opacity=.95)
+    rock = [(560, 1080), (590, 760), (640, 640), (760, 600), (960, 590), (1160, 600), (1290, 640), (1340, 760), (1380, 1080)]
+    sub = lit_poly(rock, '#94626c', '#e0aa98', '#38203e', -1, 'ar')
+    for i in range(10):
+        y = 650 + i * 40
+        sub += '<path d="M%d,%d q%d,%d %d,%d" stroke="#38203e" stroke-opacity=".25" stroke-width="3" fill="none"/>' % (620, y, 160, r.randint(-10, 10), 700, r.randint(-8, 8))
+    # the old town on top: stepped houses, a gate tower and a minaret
+    x = 640
+    while x < 1280:
+        w = r.randint(60, 100); h = r.randint(50, 90)
+        sub += '<rect x="%d" y="%d" width="%d" height="%d" fill="%s"/><rect x="%d" y="%d" width="%d" height="%d" fill="#8a5a6a" opacity=".5"/>' % (x, 600 - h, w, h + 10, ['#f4cfb0', '#e6b0b4', '#f7dcb0'][r.randint(0, 2)], x + w * .65, 600 - h, w * .35, h + 10)
+        x += w - 4
+    sub += lit_poly([(1020, 600), (1034, 300), (1126, 300), (1140, 600)], '#e8c0a8', '#fde4cc', '#5c4260', -1, 'mnr')
+    sub += '<path d="M1020,300 L1080,200 L1140,300 Z" fill="#c07080"/><circle cx="1080" cy="190" r="11" fill="#fff3da"/>'
+    sub += '<path d="M1056,330 h48 v-30 a24,24 0 0 0 -48,0 z" fill="#33203f" opacity=".7"/><path d="M1056,470 h48 v-30 a24,24 0 0 0 -48,0 z" fill="#33203f" opacity=".7"/>'
+    sub += lit_poly([(700, 600), (712, 380), (840, 380), (852, 600)], '#dcae9c', '#f8d4bc', '#5a4060', -1, 'gt') + crenel(706, 380, 140, 6, 16, '#a8707c')
+    sub += '<path d="M796,600 v-70 a14,14 0 0 1 28,0 v70 z" fill="#33203f" opacity=".8"/>'
+    sub += '<path d="M0,1080 L0,1000 C500,970 900,1030 1300,1000 C1600,985 1800,1010 1920,1010 L1920,1080 Z" fill="#33203f"/>'
+    return finish(bg, sub)
+
+# =============================================================== Iraq 6. Shatt al-Arab: river, palms and a dhow
+def shatt():
+    r = rnd(76)
+    bg = sky([('0', '#2c2262'), ('.3', '#8a4294'), ('.58', '#f4846e'), ('1', '#ffb870')], sun=(960, 640, 56, '#fff0c8', '#ff9a68'))
+    bg += cloud(420, 260, 420, 32, '#ffc0b0', .34) + cloud(1500, 220, 340, 28, '#e0a0d8', .3) + stars(r, 45, 220)
+    bg += ridge(r, 770, 30, '#8a4a70', rough=.4, opacity=.7)
+    bg += '<defs><linearGradient id="rv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb070"/><stop offset=".5" stop-color="#d0607a"/><stop offset="1" stop-color="#4a2c5c"/></linearGradient></defs><rect x="0" y="790" width="1920" height="290" fill="url(#rv)"/>'
+    for i in range(18): bg += '<rect x="%d" y="%d" width="%d" height="3" fill="#fff0d8" opacity="%.2f"/>' % (r.randint(300, 1500), r.randint(800, 1060), r.randint(60, 260), r.uniform(.12, .35))
+    sub = ''
+    # tall date palms on both banks
+    for (px, py, h, lean) in [(400, 1010, 820, -30), (560, 1020, 560, 30), (1500, 1015, 860, 30), (1360, 1025, 540, -20), (930, 1000, 760, 20)]:
+        sub += palm(px, py, h, lean, '#2a1a30', r)
+    # a dhow with a lateen sail
+    sub += '<path d="M1020,930 Q1200,990 1420,930 L1380,900 L1060,900 Z" fill="#2e1c34"/><path d="M1200,900 V690 L1360,890 Z" fill="#f6d2b0" opacity=".95"/><path d="M1200,900 V690" stroke="#2e1c34" stroke-width="5"/>'
+    sub += '<path d="M0,1080 L0,1030 C500,1010 900,1050 1300,1020 C1600,1005 1800,1030 1920,1030 L1920,1080 Z" fill="#2c1a36"/>'
+    return finish(bg, sub)
+
+# =============================================================== Iraq 7. The marshes of Dhi Qar: a reed mudhif on the water
+def ahwar():
+    r = rnd(77)
+    bg = sky([('0', '#2a2064'), ('.3', '#8a4496'), ('.58', '#f08a8e'), ('1', '#ffc690')], sun=(1380, 640, 52, '#fff0d0', '#ffa08e'))
+    bg += cloud(520, 250, 420, 32, '#ffc8e0', .34) + cloud(1480, 200, 320, 28, '#d4a8f0', .3) + stars(r, 55, 240)
+    bg += ridge(r, 790, 22, '#8c5078', rough=.4, opacity=.6)
+    bg += '<defs><linearGradient id="mw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4a088"/><stop offset=".5" stop-color="#b86088"/><stop offset="1" stop-color="#4c3064"/></linearGradient></defs><rect x="0" y="800" width="1920" height="280" fill="url(#mw)"/>'
+    for i in range(20): bg += '<rect x="%d" y="%d" width="%d" height="3" fill="#fff0d8" opacity="%.2f"/>' % (r.randint(100, 1700), r.randint(810, 1060), r.randint(80, 260), r.uniform(.12, .32))
+    sub = ''
+    # the mudhif: a barrel-vaulted reed house (ribs of bundled reeds)
+    cx, base = 900, 930
+    sub += '<path d="M%d,%d C%d,%d %d,%d %d,%d L%d,%d C%d,%d %d,%d %d,%d Z" fill="#b8905a"/>' % (cx - 340, base, cx - 330, 430, cx + 330, 430, cx + 340, base, cx + 340, base + 30, cx + 330, 560, cx - 330, 560, cx - 340, base + 30)
+    sub += lit_poly([(cx - 340, base + 30), (cx - 326, 520), (cx - 200, 360), (cx, 290), (cx + 200, 360), (cx + 326, 520), (cx + 340, base + 30)], '#c89a5e', '#f0cc90', '#5a3c48', -1, 'md')
+    for i in range(-5, 6):
+        x = cx + i * 58
+        sub += '<path d="M%d,%d Q%d,%d %d,%d" stroke="#6a4a3a" stroke-width="7" fill="none" opacity=".75"/>' % (x, base + 20, x + i * 8, 560 - abs(i) * 6, x + i * 3, 300 + abs(i) * 30)
+    for k in range(6): sub += '<path d="M%d,%d Q%d,%d %d,%d" stroke="#6a4a3a" stroke-width="5" fill="none" opacity=".5"/>' % (cx - 336, 640 + k * 50, cx, 600 + k * 50, cx + 336, 640 + k * 50)
+    sub += '<path d="M%d,%d a110,150 0 0 1 220,0 v150 h-220 z" fill="#2e1c34" opacity=".9"/>' % (cx - 110, base - 150)
+    # reeds around and a slim boat
+    for i in range(46):
+        x = r.uniform(80, 1840); h = r.uniform(150, 420); y0 = r.uniform(930, 1030)
+        if abs(x - cx) < 360 and y0 < 1000: continue
+        sub += '<path d="M%.0f,%.0f q%.0f,%.0f %.0f,%.0f" stroke="#3a2438" stroke-width="%d" fill="none" stroke-linecap="round"/>' % (x, y0, r.uniform(-20, 20), -h * .5, r.uniform(-40, 40), -h, r.randint(3, 6))
+    sub += '<path d="M1180,1000 Q1360,1050 1560,990 L1520,970 L1220,972 Z" fill="#2e1c34"/><path d="M1500,975 L1560,900" stroke="#2e1c34" stroke-width="6"/>'
+    sub += '<path d="M0,1080 L0,1040 C500,1020 900,1060 1300,1034 C1600,1020 1800,1040 1920,1040 L1920,1080 Z" fill="#2c1a36"/>'
+    return finish(bg, sub)
+
+SCENES = [('haibat', 'هيبت سلطان', haibat), ('rawanduz', 'رواندوز', rawanduz), ('halgurd', 'حلگورد', halgurd), ('dukan', 'سد دوكان', dukan), ('amadiya', 'دهوك وعمادية', amadiya), ('shatt', 'شط العرب', shatt), ('ahwar', 'أهوار ذي قار', ahwar), ('tassili', 'طاسيلي', tassili), ('taghit', 'تاغيت', taghit), ('djurdjura', 'جرجرة', djurdjura), ('timimoun', 'تيميمون', timimoun), ('ghardaia', 'غرداية', ghardaia), ('constantine', 'قسنطينة', constantine)]
 if __name__ == '__main__':
     import os
     os.makedirs('./svg', exist_ok=True)
