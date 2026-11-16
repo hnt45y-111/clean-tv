@@ -262,7 +262,7 @@ function live(o) {
   try { const w = frameWin(); if (w && w.__live) w.__live(o); } catch (e) {
     try { const f = $('#pvf'); if (f && f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ __live: o }), '*'); } catch (e2) {}
   }
-  const keys = Object.keys(o || {}).filter(k => k !== 'select');
+  const keys = Object.keys(o || {}).filter(k => k !== 'select' && k !== 'dsel');
   if (!keys.length) return;
   const quick = keys.every(k => k === 'layout');
   clearTimeout(pvReloadT);

@@ -2021,8 +2021,9 @@
     getText: function (u) { return getTextAny(u); },
     pickImage: function () { return !!(HAS_ANDROID && A.pickImage && A.pickImage()); },
     upcoming: function () {
-      if (PREVIEW) return Promise.resolve([{ lg: 'الدوري الإسباني', h: 'ريال مدريد', a: 'برشلونة', at: Date.now() + 86400000 }, { lg: 'دوري أبطال أوروبا', h: 'ليفربول', a: 'آرسنال', at: Date.now() + 3 * 86400000 }]);
-      var sel = pickSel(); return sel.any ? loadFavUpcoming(sel).catch(function () { return []; }) : Promise.resolve([]);
+      var sel = pickSel();
+      if (PREVIEW) return Promise.resolve({ any: true, list: [{ lg: 'الدوري الإسباني', h: 'ريال مدريد', a: 'برشلونة', at: Date.now() + 86400000 }, { lg: 'دوري أبطال أوروبا', h: 'ليفربول', a: 'آرسنال', at: Date.now() + 3 * 86400000 }] });
+      return sel.any ? loadFavUpcoming(sel).then(function (l) { return { any: true, list: l }; }, function () { return { any: true, list: [] }; }) : Promise.resolve({ any: false, list: [] });
     },
     teams: function () { return (settings.tickerNames || []).slice(); },
     addTeam: function (name) { settings.tickerTeams = (settings.tickerTeams || []).concat(['n:' + nn(name)]); settings.tickerNames = (settings.tickerNames || []).concat([name]); favUp.key = ''; saveSettings(); },
@@ -2285,6 +2286,7 @@
       Object.keys(o.settings).forEach(function (k) { settings[k] = o.settings[k]; });
       applyTheme(); refreshNews(true); renderClub(); renderTopbar(); applyLayout(); renderApps(); refreshLive();
     }
+    if (o.dsel !== undefined && window.Depth && window.Depth.previewSelect) window.Depth.previewSelect(o.dsel);
     if (o.bg || o.settings) { buildBgList(); bgCur = ''; showBg(); }
     if (o.select !== undefined) {
       qa('.editing').forEach(function (e) { e.classList.remove('editing'); });

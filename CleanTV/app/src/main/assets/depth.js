@@ -6,6 +6,7 @@
   'use strict';
   /* ---------------------------------------------------------------- data */
   var PLACES = [
+    { id: 'snow', n: 'قمة ثلجية', c: 'صورة حقيقية', dy: 0, user: { src: 'depth/snow.jpg', blur: 'depth/snow_b.jpg', ok: true, sky: [0.786, 0.802, 0.801, 0.792, 0.781, 0.778, 0.77, 0.764, 0.749, 0.739, 0.729, 0.718, 0.707, 0.7, 0.694, 0.688, 0.685, 0.68, 0.679, 0.676, 0.674, 0.672, 0.669, 0.663, 0.657, 0.647, 0.632, 0.625, 0.618, 0.611, 0.607, 0.601, 0.599, 0.599, 0.597, 0.594, 0.583, 0.573, 0.571, 0.569, 0.562, 0.558, 0.551, 0.542, 0.531, 0.519, 0.507, 0.499, 0.491, 0.484, 0.476, 0.468, 0.457, 0.45, 0.443, 0.435, 0.42, 0.41, 0.406, 0.401, 0.397, 0.393, 0.388, 0.383, 0.379, 0.374, 0.369, 0.365, 0.36, 0.355, 0.35, 0.344, 0.34, 0.334, 0.33, 0.324, 0.319, 0.314, 0.308, 0.302, 0.295, 0.289, 0.281, 0.275, 0.269, 0.261, 0.255, 0.25, 0.245, 0.241, 0.236, 0.233, 0.234, 0.236, 0.238, 0.241, 0.246, 0.256, 0.268, 0.279, 0.289, 0.3, 0.311, 0.322, 0.333, 0.344, 0.356, 0.368, 0.377, 0.386, 0.395, 0.405, 0.422, 0.456, 0.468, 0.486, 0.494, 0.497, 0.497, 0.497, 0.498, 0.506, 0.515, 0.525, 0.531, 0.531, 0.529, 0.52, 0.517, 0.516, 0.509, 0.496, 0.49, 0.485, 0.48, 0.479, 0.476, 0.47, 0.465, 0.464, 0.466, 0.47, 0.475, 0.481, 0.485, 0.49, 0.492, 0.493, 0.493, 0.491, 0.486, 0.484, 0.485, 0.49, 0.497, 0.506, 0.516, 0.529, 0.543, 0.552, 0.566, 0.579, 0.591, 0.606, 0.623, 0.632, 0.632, 0.632, 0.64, 0.65, 0.668, 0.681, 0.699, 0.717, 0.727, 0.737, 0.747, 0.76, 0.769, 0.779, 0.785, 0.792, 0.795, 0.8, 0.806, 0.811, 0.818, 0.834, 0.856, 0.866, 0.881, 0.886] } },
     { id: 'haibat', n: 'هيبت سلطان', c: 'العراق · كويسنجق', dy: 40 },
     { id: 'rawanduz', n: 'رواندوز', c: 'العراق · أربيل', dy: 20 },
     { id: 'halgurd', n: 'جبل حلگورد', c: 'العراق · أربيل', dy: 40 },
@@ -36,7 +37,7 @@
 
   var root = null, mounted = false, built = false;
   var D = {
-    bg: 'haibat', effect: true, reduce: false, dock: null, hidden: [], prov: 0, cs: 'glass', w: {}, bgo: {}, users: [], rss: [RSS[0][0]], f: 'dock', di: 0, ti: 0, gi: 0, drawer: false,
+    bg: 'haibat', effect: true, reduce: false, dock: null, hidden: [], prov: 0, cs: 'glass', w: {}, bgo: {}, users: [], dbgs: [], order: null, off: [], nsp: 3, pspd: 450, pamt: 1, mist: 1, sig: '', pvSel: null, rss: [RSS[0][0]], f: 'dock', di: 0, ti: 0, gi: 0, drawer: false,
     menu: null, pick: null, mv: false, ask: null, edit: null, waitPick: false
   };
   var timers = {}, scenes = {}, lpT = null, lpFired = false, news = [], games = [], gameI = 0, lastKeyAt = 0, heldN = 0;
@@ -46,8 +47,19 @@
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function weak() { try { return (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) || (navigator.deviceMemory && navigator.deviceMemory <= 1); } catch (e) { return false; } }
   function toast(m) { var A = api(); if (A) A.toast(m); }
-  function placeList() { return PLACES.concat(D.users.map(function (u, i) { return { id: u.id, n: u.n || 'صورتي ' + (i + 1), c: 'من جهازي', dy: u.dy || 0, user: u }; })); }
-  function placeBy(id) { var l = placeList(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return l[0]; }
+  /* every picture, in the user's order, without the ones switched off: the built-in ones, the ones sent from the phone with the design, and the ones picked on the TV */
+  function allPlaces() {
+    var l = PLACES.map(function (p) { return p; });
+    (D.dbgs || []).forEach(function (u, i) { l.push({ id: u.id, n: u.n || 'صورة ' + (i + 1), c: 'من التلفون', dy: u.dy || 0, user: u }); });
+    D.users.forEach(function (u, i) { l.push({ id: u.id, n: u.n || 'صورتي ' + (i + 1), c: 'من جهازي', dy: u.dy || 0, user: u }); });
+    if (D.order && D.order.length) {
+      var pos = {}; D.order.forEach(function (id, i) { pos[id] = i; });
+      l = l.map(function (p, i) { return [p, i]; }).sort(function (a, b) { var x = pos[a[0].id], y = pos[b[0].id]; x = x == null ? 1e4 + a[1] : x; y = y == null ? 1e4 + b[1] : y; return x - y; }).map(function (z) { return z[0]; });
+    }
+    return l;
+  }
+  function placeList() { var l = allPlaces().filter(function (p) { return D.off.indexOf(p.id) < 0 || p.id === D.bg; }); return l.length ? l : [PLACES[0]]; }
+  function placeBy(id) { var l = allPlaces(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return l[0]; }
   function placeIdx(id) { var l = placeList(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return i; return 0; }
   function bgo(id) { return D.bgo[id] || (D.bgo[id] = {}); }
   function motionOn(id) { return !D.reduce && bgo(id).motion !== false; }
@@ -56,23 +68,32 @@
 
   /* ---------------------------------------------------------------- saved choices (kept on the TV; a design can carry defaults in settings.depth) */
   function loadCfg() {
-    var A = api(), def = (A && A.settings().depth) || {}, st = {};
+    var A = api(), def = (A && A.settings().depth) || {}, st = {}, sig = JSON.stringify(def).length + ':' + hashStr(JSON.stringify(def));
     if (!(A && A.preview)) { try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st = {}; } }
-    var bg = st.bg != null ? st.bg : def.bg;
-    if (typeof bg === 'number') bg = OLD_ORDER[bg] || PLACES[0].id;
+    /* a design sent from the phone replaces what was chosen on the TV before it (otherwise the phone's choices would never show) */
+    if (st.sig !== sig) { st = { users: st.users }; }
+    function pick(k, d) { return st[k] != null ? st[k] : def[k] != null ? def[k] : d; }
+    D.sig = sig;
+    D.dbgs = (def.bgs || []).slice(0, 15);
     D.users = (st.users || []).slice(0, 6);
-    D.bg = placeList().some(function (p) { return p.id === bg; }) ? bg : PLACES[0].id;
-    D.effect = st.effect != null ? st.effect !== false : def.effect !== false;
+    D.order = pick('order', null); D.off = pick('off', []);
+    var bg = pick('bg', PLACES[0].id);
+    if (typeof bg === 'number') bg = OLD_ORDER[bg] || PLACES[0].id;
+    D.bg = allPlaces().some(function (p) { return p.id === bg; }) ? bg : PLACES[0].id;
+    D.effect = pick('effect', true) !== false;
     D.reduce = st.reduce != null ? !!st.reduce : def.reduce != null ? !!def.reduce : weak();
-    D.dock = st.dock || null; D.hidden = st.hidden || [];
-    D.prov = clamp(+(st.prov != null ? st.prov : def.prov) || 0, 0, PROVS.length - 1);
-    D.cs = CSTY.some(function (c) { return c[0] === (st.cs || def.cs); }) ? (st.cs || def.cs) : 'glass';
-    D.w = st.w || def.w || {}; D.bgo = st.bgo || {};
-    D.rss = st.rss || def.rss || [RSS[0][0]];
+    D.dock = st.dock || def.dock || null; D.hidden = pick('hidden', []);
+    D.prov = clamp(+pick('prov', 0) || 0, 0, PROVS.length - 1);
+    var cs = pick('cs', 'glass'); D.cs = CSTY.some(function (c) { return c[0] === cs; }) ? cs : 'glass';
+    D.w = pick('w', {}); D.bgo = pick('bgo', {});
+    D.rss = pick('rss', [RSS[0][0]]);
+    D.nsp = clamp(+pick('nsp', 3) || 3, 1, 10); D.pspd = clamp(+pick('pspd', 450) || 450, 120, 1400); D.pamt = clamp(+pick('pamt', 1), 0, 2.5); D.mist = clamp(+pick('mist', 1), 0, 3);
+    if (isNaN(D.pamt)) D.pamt = 1; if (isNaN(D.mist)) D.mist = 1;
   }
+  function hashStr(t) { var h = 5381, i; for (i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return String(h >>> 0); }
   function saveCfg() {
     var A = api(); if (A && A.preview) return;
-    try { localStorage.setItem(KEY, JSON.stringify({ bg: D.bg, effect: D.effect, reduce: D.reduce, dock: D.dock, hidden: D.hidden, prov: D.prov, cs: D.cs, w: D.w, bgo: D.bgo, users: D.users, rss: D.rss })); } catch (e) {}
+    try { localStorage.setItem(KEY, JSON.stringify({ sig: D.sig, bg: D.bg, effect: D.effect, reduce: D.reduce, dock: D.dock, hidden: D.hidden, prov: D.prov, cs: D.cs, w: D.w, bgo: D.bgo, users: D.users, rss: D.rss, order: D.order, off: D.off, nsp: D.nsp, pspd: D.pspd, pamt: D.pamt, mist: D.mist })); } catch (e) {}
   }
 
   /* ---------------------------------------------------------------- apps and the dock */
@@ -121,14 +142,14 @@
 
   /* ---------------------------------------------------------------- picking the front layer of a picture from the device:
      the sky is found from the top of every column, and what lies below the skyline is the standout subject (mountains, buildings, palms) */
-  function skylineFrom(d, w, h) {
-    var sky = [], x, y;
+  function skylineFrom(d, w, h, sens) {
+    var sky = [], x, y, T1 = 70 / (sens || 1), T2 = 40 / (sens || 1);
     function px(xx, yy) { var i = (yy * w + xx) * 4; return [d[i], d[i + 1], d[i + 2]]; }
     for (x = 0; x < w; x++) {
       var ref = px(x, 0), prev = ref, run = 0, stop = Math.floor(h * .9);
       for (y = 1; y < stop; y++) {
         var p = px(x, y), dist = Math.abs(p[0] - ref[0]) + Math.abs(p[1] - ref[1]) + Math.abs(p[2] - ref[2]), grad = Math.abs(p[0] - prev[0]) + Math.abs(p[1] - prev[1]) + Math.abs(p[2] - prev[2]);
-        if (dist > 70 || grad > 40) { run++; if (run >= 3) break; } else { run = 0; ref = [ref[0] * .8 + p[0] * .2, ref[1] * .8 + p[1] * .2, ref[2] * .8 + p[2] * .2]; }
+        if (dist > T1 || grad > T2) { run++; if (run >= 3) break; } else { run = 0; ref = [ref[0] * .8 + p[0] * .2, ref[1] * .8 + p[1] * .2, ref[2] * .8 + p[2] * .2]; }
         prev = p;
       }
       sky.push(Math.max(0, y - run) / h);
@@ -153,31 +174,33 @@
     if (best) return { dy: best.dy, ok: true, cov: best.c };
     return { dy: 40, ok: minC <= .3, cov: minC };
   }
-  function analyzeImage(src, cb) {
+  /* works out the front layer of a picture (the sky is found from the top; the subject is what rises into it) and the best clock height.
+     opts: sens (0.6 .. 1.6: higher finds more of the subject), off (-0.2 .. 0.2: moves the skyline up or down) */
+  function analyzeImage(src, opts, cb) {
+    if (typeof opts === 'function') { cb = opts; opts = {}; } opts = opts || {};
     var im = new Image();
     im.onload = function () {
       try {
         var W = 192, H = 108, cv = document.createElement('canvas'); cv.width = W; cv.height = H; var x = cv.getContext('2d');
         var ar = im.width / im.height, sw = ar > 16 / 9 ? im.height * 16 / 9 : im.width, sh = ar > 16 / 9 ? im.height : im.width * 9 / 16;
         x.drawImage(im, (im.width - sw) / 2, (im.height - sh) / 2, sw, sh, 0, 0, W, H);
-        var sky = skylineFrom(x.getImageData(0, 0, W, H).data, W, H);
-        if (!sky) return cb(null);
+        var blur = ''; try { var bc = document.createElement('canvas'); bc.width = 96; bc.height = 54; bc.getContext('2d').drawImage(cv, 0, 0, 96, 54); blur = bc.toDataURL('image/jpeg', .75); } catch (e0) {}
+        var sky = skylineFrom(x.getImageData(0, 0, W, H).data, W, H, opts.sens);
+        if (!sky) return cb({ sky: null, dy: 0, ok: false, cov: 0, blur: blur });
+        if (opts.off) sky = sky.map(function (v) { return clamp(v + opts.off, 0, .95); });
         var A = api(), alpha = alphaFromSky(sky, W, H), samples = [(A && A.clock()) || '٥:١٩', '١٠:٠٨', '١٢:٣٤'];
         var mc = document.createElement('canvas'); mc.width = 480; mc.height = 270; var mx = mc.getContext('2d');
         var res = bestDy(function (dy) {
           var worst = 0;
           samples.forEach(function (t) {
             mx.clearRect(0, 0, 480, 270); mx.font = '800 75px Tajawal, Plex, sans-serif'; mx.textAlign = 'center'; mx.fillStyle = '#fff'; mx.fillText(t, 240, (376 + dy) / 4);
-            var d = mx.getImageData(0, 0, 480, 270).data, ink = new Uint8Array(W * H), tot = new Uint8Array(W * H), i, j;
-            var inkPx = []; for (j = 0; j < 480 * 270; j++) if (d[j * 4 + 3] > 128) inkPx.push(j);
-            var ia = new Uint8Array(480 * 270); inkPx.forEach(function (j2) { ia[j2] = 1; });
-            /* the digit mask is finer than the sky mask: look each digit pixel up in the sky mask */
-            var cnt = 0, cv2 = 0; inkPx.forEach(function (j3) { var xx = Math.floor((j3 % 480) * W / 480), yy = Math.floor(Math.floor(j3 / 480) * H / 270); cnt++; if (alpha[yy * W + xx]) cv2++; });
-            worst = Math.max(worst, cnt ? cv2 / cnt : 0);
+            var d = mx.getImageData(0, 0, 480, 270).data, cnt = 0, cov = 0, j;
+            for (j = 0; j < 480 * 270; j++) if (d[j * 4 + 3] > 128) { cnt++; var xx = Math.floor((j % 480) * W / 480), yy = Math.floor(Math.floor(j / 480) * H / 270); if (alpha[yy * W + xx]) cov++; }
+            worst = Math.max(worst, cnt ? cov / cnt : 0);
           });
           return worst;
         });
-        cb({ sky: sky.filter(function (v, i) { return i % 2 === 0; }).map(function (v) { return Math.round(v * 1000) / 1000; }), dy: res.dy, ok: res.ok, cov: res.cov });
+        cb({ sky: sky.filter(function (v, i) { return i % 2 === 0; }).map(function (v) { return Math.round(v * 1000) / 1000; }), dy: res.dy, ok: res.ok, cov: res.cov, blur: blur });
       } catch (e) { cb(null); }
     };
     im.onerror = function () { cb(null); };
@@ -196,23 +219,42 @@
     if (D.cs === 'ital') t += ' skewX(-10)';
     return t + ' translate(-960,' + (-cy) + ')';
   }
+  /* the blurred copy of a picture that shows through the glass digits (a small file, so it costs nothing to draw) */
+  var blurCache = {};
+  function blurSrc(p, cb) {
+    if (!p.user) return cb('depth/' + p.id + '_b.jpg');
+    if (p.user.blur) return cb(p.user.blur);
+    if (blurCache[p.id]) return cb(blurCache[p.id]);
+    var im = new Image();
+    im.onload = function () {
+      try { var c = document.createElement('canvas'); c.width = 96; c.height = 54; c.getContext('2d').drawImage(im, 0, 0, 96, 54); blurCache[p.id] = c.toDataURL('image/jpeg', .8); } catch (e) { blurCache[p.id] = ''; }
+      cb(blurCache[p.id]);
+    };
+    im.onerror = function () { cb(''); };
+    im.src = p.user.src;
+  }
   function sceneEl(p) {
     var el = document.createElement('div'), moving = motionOn(p.id), dy = p.dy, src = p.user ? p.user.src : 'depth/' + p.id + '.jpg', fgSrc = p.user ? p.user.src : 'depth/' + p.id + '_fg.png';
     el.className = 'dp-sc' + (moving ? ' mot' : '') + (depthOn(p) ? '' : ' nofx');
     var fg = p.user ? (p.user.sky ? '<div class="dp-lyr dp-fgw"><img class="dp-fg" src="' + esc(fgSrc) + '" alt="" style="clip-path:' + clipPoly(p.user.sky) + ';-webkit-clip-path:' + clipPoly(p.user.sky) + '"></div>' : '') : '<div class="dp-lyr dp-fgw"><img class="dp-fg" src="' + fgSrc + '" alt=""></div>';
-    var i = 'k' + Math.floor(Math.random() * 1e6);
+    var i = 'k' + Math.floor(Math.random() * 1e6), tf = clockXf(p, dy), tx = esc(clockText());
     el.innerHTML = '<div class="dp-lyr dp-bgw"><img class="dp-bg" src="' + esc(src) + '" alt=""></div>' +
-      '<svg class="dp-clk" data-cs="' + D.cs + '" viewBox="0 0 1920 1080" aria-hidden="true"><defs><filter id="sh' + i + '" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity=".38"/></filter>' +
+      '<div class="dp-mist"><i class="m1"></i><i class="m2"></i></div>' +
+      '<svg class="dp-clk" data-cs="' + D.cs + '" viewBox="0 0 1920 1080" aria-hidden="true"><defs><filter id="sh' + i + '" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity=".5"/></filter>' +
+      '<clipPath id="cp' + i + '"><text class="dp-ckc" x="960" y="' + (376 + dy) + '" text-anchor="middle" transform="' + tf + '">' + tx + '</text></clipPath>' +
       '<linearGradient id="gl' + i + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".55" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity=".22"/></linearGradient></defs>' +
-      '<text class="dp-ck" x="960" y="' + (376 + dy) + '" text-anchor="middle" filter="url(#sh' + i + ')" style="--gl:url(#gl' + i + ')" transform="' + clockXf(p, dy) + '">' + esc(clockText()) + '</text></svg>' + fg;
+      '<g class="dp-fog" clip-path="url(#cp' + i + ')"><image class="dp-fogimg" width="1920" height="1080" preserveAspectRatio="xMidYMid slice" opacity=".96"/><rect width="1920" height="1080" fill="url(#gl' + i + ')" opacity=".75"/></g>' +
+      '<text class="dp-ck" x="960" y="' + (376 + dy) + '" text-anchor="middle" filter="url(#sh' + i + ')" style="--gl:url(#gl' + i + ')" transform="' + tf + '">' + tx + '</text></svg>' + fg +
+      '';
+    blurSrc(p, function (u) { var im = el.querySelector('.dp-fogimg'); if (im && u) im.setAttributeNS('http://www.w3.org/1999/xlink', 'href', u); });
     el._p = p; return el;
   }
-  function paintClocks() { var t = clockText(), l = document.querySelectorAll('#depth .dp-ck'); for (var i = 0; i < l.length; i++) l[i].textContent = t; }
+  function paintClocks() { var t = clockText(), l = document.querySelectorAll('#depth .dp-ck, #depth .dp-ckc'); for (var i = 0; i < l.length; i++) l[i].textContent = t; }
   function styleClocks() {
     var l = document.querySelectorAll('#depth .dp-sc'), i;
     for (i = 0; i < l.length; i++) {
-      var sv = l[i].querySelector('.dp-clk'), tx = l[i].querySelector('.dp-ck'), p = l[i]._p;
-      if (sv && tx && p) { sv.setAttribute('data-cs', D.cs); tx.setAttribute('transform', clockXf(p, p.dy)); sv.style.opacity = wState('clock').h && !D.edit ? 0 : ''; }
+      var sv = l[i].querySelector('.dp-clk'), tx = l[i].querySelector('.dp-ck'), tc = l[i].querySelector('.dp-ckc'), p = l[i]._p;
+      if (sv && tx && p) { sv.setAttribute('data-cs', D.cs); tx.setAttribute('transform', clockXf(p, p.dy)); if (tc) tc.setAttribute('transform', clockXf(p, p.dy)); sv.style.opacity = wState('clock').h && !D.edit ? 0 : ''; }
     }
   }
   function classesOf(el) {
@@ -232,9 +274,10 @@
   }
   function setPar(sc, pos) {
     if (!sc) return;
-    var amp = D.reduce ? 0 : 1, bg = sc.el.querySelector('.dp-bgw'), fg = sc.el.querySelector('.dp-fgw');
-    if (bg) bg.style.transform = 'translate3d(' + (pos * AMP_BG * amp).toFixed(1) + 'px,0,0)';
-    if (fg) fg.style.transform = 'translate3d(' + (pos * AMP_FG * amp).toFixed(1) + 'px,0,0)';
+    var amp = D.reduce ? 0 : D.pamt, bg = sc.el.querySelector('.dp-bgw'), fg = sc.el.querySelector('.dp-fgw'), ms = D.reduce ? 120 : D.pspd, ml = sc.el.querySelector('.dp-mist');
+    if (bg) { bg.style.transitionDuration = ms + 'ms'; bg.style.transform = 'translate3d(' + (pos * AMP_BG * amp).toFixed(1) + 'px,0,0)'; }
+    if (fg) { fg.style.transitionDuration = ms + 'ms'; fg.style.transform = 'translate3d(' + (pos * AMP_FG * amp).toFixed(1) + 'px,0,0)'; }
+    if (ml) { ml.style.transitionDuration = (ms * 1.3) + 'ms'; ml.style.transform = 'translate3d(' + (pos * AMP_FG * 1.6 * amp).toFixed(1) + 'px,0,0)'; ml.style.opacity = D.reduce ? 0 : String(Math.min(1, D.mist / 2)); }
   }
   function selPos() {
     var n, i;
@@ -260,17 +303,17 @@
       var r = rectOf(id), s = wState(id), extra = id === 'dock' && D.drawer ? -(r.y - 56) : 0;
       el.style.left = r.x + 'px'; el.style.top = r.y + 'px'; el.style.width = r.w + 'px'; el.style.height = r.h + 'px';
       el.style.transform = 'translate3d(' + s.x + 'px,' + (s.y + extra) + 'px,0) scale(' + s.sx + ',' + s.sy + ')';
-      el.className = 'dpw' + (s.h ? (D.edit ? ' ghost' : ' dp-gone') : '') + (D.edit ? ' ed' : '') + (D.edit && curW() === id ? ' sel' : '');
+      el.className = 'dpw' + (s.h ? (D.edit || D.pvSel ? ' ghost' : ' dp-gone') : '') + (D.edit || D.pvSel ? ' ed' : '') + ((D.edit || D.pvSel) && curW() === id ? ' sel' : '');
     });
     styleClocks();
     var fr = $('dpClockFrame');
     if (fr) {
       var cs = wState('clock'), r2 = DEF.clock, cy = r2.y + r2.h / 2;
       fr.style.left = (960 - r2.w / 2 * cs.sx + cs.x) + 'px'; fr.style.top = (cy - r2.h / 2 * cs.sy + cs.y) + 'px'; fr.style.width = (r2.w * cs.sx) + 'px'; fr.style.height = (r2.h * cs.sy) + 'px';
-      fr.className = D.edit ? 'ed' + (curW() === 'clock' ? ' sel' : '') + (cs.h ? ' ghost' : '') : '';
+      fr.className = D.edit || D.pvSel ? 'ed' + (curW() === 'clock' ? ' sel' : '') + (cs.h ? ' ghost' : '') : '';
     }
   }
-  function curW() { return D.edit ? WIDGETS[D.edit.i][0] : null; }
+  function curW() { return D.edit ? WIDGETS[D.edit.i][0] : D.pvSel; }
 
   /* ---------------------------------------------------------------- building the screen */
   function build() {
@@ -300,7 +343,9 @@
     renderAll();
     if (!timers.t) timers.t = setInterval(function () { if (mounted) { paintClocks(); renderMeta(); renderMatches(); } }, 10000);
     if (!timers.n) timers.n = setInterval(function () { if (mounted) { loadMatches(); loadNews(); } }, 20 * 60000);
+    timers.tsig = JSON.stringify((api().settings().tickerTeams) || []) + '|' + JSON.stringify((api().settings().tickerLeagues) || []); timers.nsig = JSON.stringify(D.rss);
     loadMatches(); loadNews();
+    var A0 = api(); if (A0 && A0.preview && !timers.pv) { timers.pv = 1; root.addEventListener('click', previewTap); }
     document.body.classList.add('dp-on');
   }
   function unmount() {
@@ -374,15 +419,20 @@
   function dayName(t) {
     try { return new Intl.DateTimeFormat('ar-IQ', { weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: TZ }).format(new Date(t)); } catch (e) { return ''; }
   }
+  var gamesAny = false, gamesState = 'loading', newsState = 'loading';
   function loadMatches() {
     var A = api(); if (!A || !A.upcoming) return;
-    A.upcoming().then(function (l) { games = l || []; renderMatches(); }, function () { games = []; renderMatches(); });
+    gamesState = 'loading'; renderMatches();
+    A.upcoming().then(function (r) { games = (r && r.list) || []; gamesAny = !!(r && r.any); gamesState = 'done'; renderMatches(); }, function () { games = []; gamesState = 'fail'; renderMatches(); });
   }
   function renderMatches() {
     var el = $('dpMatches'); if (!el) return;
-    var g = games[gameI % Math.max(1, games.length)];
-    if (!games.length) { el.innerHTML = '<span class="mi dim">' + (D.edit ? 'شريط المباريات: أضف فرقك من الإعدادات ← الفرق' : '') + '</span>'; el.className = 'dp-strip dp-glass' + (D.edit ? '' : ' empty'); return; }
     el.className = 'dp-strip dp-glass';
+    if (!games.length) {
+      var t = gamesState === 'loading' ? 'جاري تحميل المباريات…' : gamesState === 'fail' ? 'تعذّر جلب المباريات، تأكد من الإنترنت' : !gamesAny ? 'شريط المباريات: اختر فرقك من الإعدادات ← الفرق' : 'ماكو مباريات قادمة لفرقك خلال أسبوعين';
+      el.innerHTML = '<span class="mi dim">' + t + '</span>'; return;
+    }
+    var g = games[gameI % games.length];
     el.innerHTML = '<span class="mi"><b>' + esc(g.h) + '</b> × <b>' + esc(g.a) + '</b><em>' + esc(dayName(g.at)) + '</em><small>' + esc(g.lg || '') + '</small></span>';
     gameI++;
   }
@@ -400,18 +450,21 @@
   function loadNews() {
     var A = api(); if (!A || !A.getText) return;
     var urls = D.rss.slice(0, 4), got = [], left = urls.length;
-    if (!left) { news = []; renderNews(); return; }
+    if (!left) { news = []; newsState = 'none'; newsSig = ''; renderNews(); return; }
+    newsState = 'loading'; newsSig = ''; renderNews();
     urls.forEach(function (u) {
-      A.getText(u).then(function (t) { got = got.concat(parseRss(t || '')); }, function () {}).then(function () { if (--left === 0) { news = got.slice(0, 24); renderNews(); } });
+      A.getText(u).then(function (t) { got = got.concat(parseRss(t || '')); }, function () {}).then(function () { if (--left === 0) { news = got.slice(0, 24); newsState = news.length ? 'done' : 'fail'; newsSig = ''; renderNews(); } });
     });
   }
   var newsSig = '';
+  /* the speed: D.nsp 1 (very slow) .. 10 (fast), in letters per second; the default is a pace a person can read */
+  function newsCps() { return 1.2 + D.nsp * .9; }
   function renderNews() {
     var el = $('dpNews'); if (!el) return;
-    var sig = news.join('|') + '|' + (D.edit ? 1 : 0); if (sig === newsSig) return; newsSig = sig;
-    if (!news.length) { el.innerHTML = '<span class="mi dim">' + (D.edit ? 'شريط الأخبار: اختر مصادر RSS من الإعدادات ← مصادر الأخبار' : '') + '</span>'; el.className = 'dp-strip dp-glass' + (D.edit ? '' : ' empty'); return; }
+    var sig = news.join('|') + '|' + newsState + '|' + D.nsp; if (sig === newsSig) return; newsSig = sig;
     el.className = 'dp-strip dp-glass';
-    var txt = news.map(function (t) { return '<span class="ni">' + esc(t) + '</span>'; }).join('<i class="sp">◆</i>'), dur = Math.max(30, news.join('').length / 11);
+    if (!news.length) { el.innerHTML = '<span class="mi dim">' + (newsState === 'loading' ? 'جاري تحميل الأخبار…' : newsState === 'none' ? 'شريط الأخبار: اختر مصادر RSS من الإعدادات ← مصادر الأخبار' : 'تعذّر جلب الأخبار، تأكد من الإنترنت') + '</span>'; return; }
+    var txt = news.map(function (t) { return '<span class="ni">' + esc(t) + '</span>'; }).join('<i class="sp">◆</i>'), chars = news.join('').length + news.length * 4, dur = Math.max(40, (chars + 40) / newsCps());
     el.innerHTML = '<div class="mq"><div class="mqi" style="animation-duration:' + dur.toFixed(0) + 's">' + txt + '<i class="sp">◆</i>' + txt + '</div></div>';
   }
   function renderAll() { renderMeta(); renderTop(); renderDock(); renderDrawer(); renderMatches(); applyWidgets(); parallax(); }
@@ -505,6 +558,10 @@
         { t: 'تغيير الخلفية', v: placeBy(D.bg).n, act: function () { D.menu = null; drawMenu(); openPick(); } },
         { t: 'الفرق (شريط المباريات)', v: '', act: function () { D.menu = null; pickTeams(openSettings); } },
         { t: 'مصادر الأخبار', v: D.rss.length + ' مصدر', act: function () { D.menu = null; pickRss(openSettings); } },
+        { t: 'سرعة شريط الأخبار', v: D.nsp + ' / 10', act: function () { D.nsp = D.nsp >= 10 ? 1 : D.nsp + 1; saveCfg(); newsSig = ''; renderNews(); } },
+        { t: 'سرعة حركة الخلفية عند التنقل', v: D.pspd + ' م.ث', act: function () { var o = [200, 300, 450, 650, 900, 1200], i = o.indexOf(D.pspd); D.pspd = o[(i + 1) % o.length]; saveCfg(); parallax(); } },
+        { t: 'شدة حركة الخلفية', v: Math.round(D.pamt * 100) + '٪', act: function () { var o = [0, .5, 1, 1.5, 2], i = o.indexOf(D.pamt); D.pamt = o[(i + 1) % o.length]; saveCfg(); parallax(); } },
+        { t: 'الضباب المتحرك', v: ['مطفي', 'خفيف', 'متوسط', 'كثيف'][D.mist | 0], act: function () { D.mist = ((D.mist | 0) + 1) % 4; saveCfg(); parallax(); } },
         { t: 'إظهار التطبيقات المخفية', v: hid ? hid + ' مخفي' : 'ماكو', act: function () { D.hidden = []; saveCfg(); toast('رجعت كل التطبيقات'); } },
         { t: 'إعدادات الواجهة الأصلية', v: '', act: function () { D.menu = null; drawMenu(); var A = api(); if (A) A.openSettings(); } },
         { t: 'إعدادات الجهاز', v: '', act: function () { D.menu = null; drawMenu(); var B = api(); if (B) B.sysSettings(); } }
@@ -565,7 +622,7 @@
     toast('أجهّز الصورة وأفصل العنصر البارز…');
     analyzeImage(src, function (res) {
       if (D.users.length >= 6) D.users.shift();
-      var u = { id: 'u' + Date.now(), n: 'صورتي ' + (D.users.length + 1), src: src, sky: res ? res.sky : null, dy: res ? res.dy : 0, ok: res ? res.ok : false };
+      var u = { id: 'u' + Date.now(), n: 'صورتي ' + (D.users.length + 1), src: src, sky: res ? res.sky : null, dy: res ? res.dy : 0, ok: res ? res.ok : false, blur: res ? res.blur : '' };
       D.users.push(u); D.bg = u.id; saveCfg();
       if (D.pick) { D.pick = null; $('dpPick').className = ''; scenes.pick = null; }
       scenes.home = null; $('dpScenes').innerHTML = ''; showScene(D.bg, $('dpScenes'), 'home'); renderAll();
@@ -577,9 +634,9 @@
   /* ---------------------------------------------------------------- edit mode: every part can be moved, resized and hidden */
   function enterEdit() {
     D.edit = { i: 0, mode: 'sel' }; D.drawer = false; D.f = 'dock';
-    renderNews(); renderMatches(); renderEdit();
+    renderEdit();
   }
-  function exitEdit() { D.edit = null; saveCfg(); newsSig = ''; renderNews(); renderMatches(); renderEdit(); }
+  function exitEdit() { D.edit = null; saveCfg(); renderEdit(); }
   function renderEdit() {
     var bar = $('dpEditBar');
     if (!D.edit || D.menu) { if (D.edit) { bar.className = ''; return renderAll(); } bar.className = ''; bar.innerHTML = ''; return renderAll(); }
@@ -597,7 +654,7 @@
       if (id === 'clock') { rows.push({ t: 'المحافظة', v: prov()[0], act: function () { D.menu = null; pickProv(editMenu); } }); rows.push({ t: 'شكل الساعة', v: (CSTY.filter(function (c) { return c[0] === D.cs; })[0] || [])[1], act: function () { D.menu = null; pickStyle(editMenu); } }); }
       if (id === 'date' || id === 'pray') rows.push({ t: 'المحافظة', v: prov()[0], act: function () { D.menu = null; pickProv(editMenu); } });
       if (id === 'matches') rows.push({ t: 'الفرق', v: '', act: function () { D.menu = null; pickTeams(editMenu); } });
-      if (id === 'news') rows.push({ t: 'مصادر الأخبار', v: '', act: function () { D.menu = null; pickRss(editMenu); } });
+      if (id === 'news') { rows.push({ t: 'مصادر الأخبار', v: '', act: function () { D.menu = null; pickRss(editMenu); } }); rows.push({ t: 'سرعة الأخبار', v: D.nsp + ' / 10', act: function () { D.nsp = D.nsp >= 10 ? 1 : D.nsp + 1; saveCfg(); newsSig = ''; renderNews(); } }); }
       if (id === 'dock') rows.push({ t: 'ترتيب التطبيقات', v: 'نقل · إضافة · إزالة · إخفاء', act: function () { exitEdit(); D.f = 'dock'; toast('اختر تطبيق واضغط OK مطولاً'); return 'close'; } });
       rows.push({ t: 'تحريك', act: function () { E.mode = 'move'; renderEdit(); return 'close'; } });
       rows.push({ t: 'الحجم', v: id === 'clock' ? 'عرض وارتفاع' : '', act: function () { E.mode = 'size'; renderEdit(); return 'close'; } });
@@ -625,6 +682,14 @@
       else if (k === 'back') return exitEdit();
     }
     renderEdit();
+  }
+
+  /* the phone's preview: a tap on a part selects it there (its sliders open in the phone's panel) */
+  function previewTap(e) {
+    var r = root.getBoundingClientRect(), k = r.width / 1920, x = (e.clientX - r.left) / k, y = (e.clientY - r.top) / k, t = e.target, id = null;
+    while (t && t !== root) { if (t.id && t.id.indexOf('dpw-') === 0) { id = t.id.slice(4); break; } t = t.parentNode; }
+    if (!id) { var c = wState('clock'), d = DEF.clock, cx = 960 + c.x, cy = d.y + d.h / 2 + c.y; if (Math.abs(x - cx) < d.w / 2 * c.sx && Math.abs(y - cy) < d.h / 2 * c.sy) id = 'clock'; }
+    if (id) { D.pvSel = id; applyWidgets(); try { window.parent.postMessage({ __dsel: id }, '*'); } catch (e2) {} }
   }
 
   /* ---------------------------------------------------------------- keys */
@@ -703,15 +768,38 @@
     lpFired = false;
   }, true);
 
+  /* the phone's editor asks this page to work out a picture's front layer (it has the fonts and the clock) and gets the answer back */
+  window.addEventListener('message', function (e) {
+    var d = e.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (x) { return; } }
+    if (!d || !d.__depthAnalyze) return;
+    var q = d.__depthAnalyze, src = e.source;
+    analyzeImage(q.src, q.opts || {}, function (res) { try { src.postMessage(JSON.stringify({ __depthResult: { id: q.id, res: res } }), '*'); } catch (x) {} });
+  });
+
   window.Depth = {
     on: function () { var A = api(); return mounted && !!A && A.settings().skin === 'depth'; },
-    sync: function () { var A = api(); if (!A) return; if (A.settings().skin === 'depth') { if (!mounted) mount(); else { loadCfg(); renderAll(); } } else unmount(); },
+    sync: function () {
+      var A = api(); if (!A) return;
+      if (A.settings().skin === 'depth') {
+        if (!mounted) mount();
+        else {
+          loadCfg(); root.className = D.reduce ? 'dp-reduce' : ''; styleClocks();
+          var tsig = JSON.stringify(A.settings().tickerTeams || []) + '|' + JSON.stringify(A.settings().tickerLeagues || []), nsig = JSON.stringify(D.rss);
+          if (tsig !== timers.tsig) { timers.tsig = tsig; loadMatches(); }
+          if (nsig !== timers.nsig) { timers.nsig = nsig; loadNews(); }
+          var cur = scenes.home; if (cur && cur.id !== D.bg) { showScene(D.bg, $('dpScenes'), 'home'); } else refreshScenes();
+          renderAll();
+        }
+      } else unmount();
+    },
+    previewSelect: function (id) { D.pvSel = id || null; if (mounted) applyWidgets(); },
+    analyze: analyzeImage,
     key: key,
     apps: function () { if (mounted) renderAll(); },
     paint: function () { if (mounted) { paintClocks(); renderMeta(); } },
     picked: picked,
     home: function () { D.drawer = false; D.menu = null; D.mv = false; D.ask = null; D.f = 'dock'; if (D.edit) exitEdit(); if (D.pick) { D.pick = null; $('dpPick').className = ''; } if (mounted) { drawMenu(); renderAll(); } },
     places: PLACES, provinces: PROVS, clockStyles: CSTY, widgets: WIDGETS,
-    _t: { setNews: function (l) { news = l; newsSig = ''; renderNews(); }, analyzeImage: analyzeImage, state: D, loadCfg: loadCfg, saveCfg: saveCfg, dockApps: dockApps, selPos: selPos, addDock: addDock, hideApp: hideApp, removeDock: removeDock, skylineFrom: skylineFrom, coverageOf: coverageOf, alphaFromSky: alphaFromSky, bestDy: bestDy, clipPoly: clipPoly, wState: wState, rectOf: rectOf, placeList: placeList, depthOn: depthOn, motionOn: motionOn, parseRss: parseRss, editKey: editKey, enterEdit: enterEdit, exitEdit: exitEdit, DEF: DEF }
+    _t: { newsCps: newsCps, setMatches: function (g, any, st) { games = g; gamesAny = any; gamesState = st; gameI = 0; renderMatches(); }, setNewsState: function (st) { newsState = st; newsSig = ''; renderNews(); }, allPlaces: allPlaces, setNews: function (l) { news = l; newsSig = ''; renderNews(); }, analyzeImage: analyzeImage, state: D, loadCfg: loadCfg, saveCfg: saveCfg, dockApps: dockApps, selPos: selPos, addDock: addDock, hideApp: hideApp, removeDock: removeDock, skylineFrom: skylineFrom, coverageOf: coverageOf, alphaFromSky: alphaFromSky, bestDy: bestDy, clipPoly: clipPoly, wState: wState, rectOf: rectOf, placeList: placeList, depthOn: depthOn, motionOn: motionOn, parseRss: parseRss, editKey: editKey, enterEdit: enterEdit, exitEdit: exitEdit, DEF: DEF }
   };
 })();
