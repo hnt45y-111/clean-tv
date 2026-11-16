@@ -363,10 +363,12 @@ function osPanelWire(box, S) {
         <input id="xtPass" dir="ltr" placeholder="كلمة المرور" value="${esc((S.xtream || {}).pass || '')}" style="margin-top:6px">
         <input id="xtName" placeholder="اسم المجلد (مثلاً: اشتراكي)" value="${esc((S.xtream || {}).name || '')}" style="margin-top:6px">
         <div class="chips" style="margin-top:6px"><button class="chip ${(S.xtream || {}).out === 'm3u8' ? '' : 'on'}" data-xo="ts">بث TS (الأكثر توافقاً)</button><button class="chip ${(S.xtream || {}).out === 'm3u8' ? 'on' : ''}" data-xo="m3u8">بث HLS</button></div>
+        <div class="sub" style="margin:8px 2px 2px">لهذا المشترك: شنو ينضاف من الاشتراك؟</div>
+        <div class="chips"><button class="chip ${(S.xtream || {}).live === false ? '' : 'on'}" data-xt="live">قنوات البث ← قنواتي</button><button class="chip ${(S.xtream || {}).vod === false ? '' : 'on'}" data-xt="vod">أفلام ومسلسلات ← تطبيق الأفلام</button></div>
         <div class="sub" style="margin:4px 2px">الأفلام والمسلسلات من نفس الاشتراك تطلع بتطبيق الأفلام والمسلسلات. الحساب يبقى على التلفاز وما يدخل أي ملف بالمشروع.</div>
         <div class="row" style="margin-top:10px;gap:8px"><button class="btn sec" style="flex:1" id="myOk">${ic('save')} حفظ</button><button class="btn ghost" id="myClr">امسح</button></div></div>`;
       p.insertBefore(my, box.nextSibling);
-      my.addEventListener('click', e => { const c = e.target.closest('[data-xo]'); if (!c) return; tap(); my.querySelectorAll('[data-xo]').forEach(b => b.classList.toggle('on', b === c)); });
+      my.addEventListener('click', e => { const t = e.target.closest('[data-xt]'); if (t) { tap(); t.classList.toggle('on'); return; } const c = e.target.closest('[data-xo]'); if (!c) return; tap(); my.querySelectorAll('[data-xo]').forEach(b => b.classList.toggle('on', b === c)); });
       /* the movies and series app: its name and its sections */
       const DEFSEC = [['foreign', 'أفلام أجنبية', 'collection:feature_films'], ['arabic', 'أفلام عربية', ''], ['series', 'مسلسلات', 'collection:classic_tv'], ['fun', 'ترفيه', 'collection:animationandcartoons'], ['cook', 'طبخ', '']];
       const secs = (S.vodSections && S.vodSections.length) ? S.vodSections : DEFSEC.map(([id, n, ia]) => ({ id, n, ia, links: '' }));
@@ -384,7 +386,7 @@ function osPanelWire(box, S) {
         S.vodSections = list; const nm = $('#vodName').value.trim(); if (nm) S.vodName = nm.slice(0, 30); else delete S.vodName;
         changed(); live({ settings: S }); toast('انحفظ تطبيق الأفلام والمسلسلات');
       };
-      $('#myOk').onclick = () => { tap(); const xh = $('#xtHost').value.trim(), xu = $('#xtUser').value.trim(), xp = $('#xtPass').value.trim(); if (xh && xu && xp) S.xtream = { host: xh, user: xu, pass: xp, name: $('#xtName').value.trim() || 'اشتراكي', out: (my.querySelector('[data-xo].on') || {}).dataset ? my.querySelector('[data-xo].on').dataset.xo : 'ts' }; else delete S.xtream; const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
+      $('#myOk').onclick = () => { tap(); const xh = $('#xtHost').value.trim(), xu = $('#xtUser').value.trim(), xp = $('#xtPass').value.trim(); if (xh && xu && xp) S.xtream = { host: xh, user: xu, pass: xp, name: $('#xtName').value.trim() || 'اشتراكي', out: (my.querySelector('[data-xo].on') || {}).dataset ? my.querySelector('[data-xo].on').dataset.xo : 'ts', live: !!my.querySelector('[data-xt="live"].on'), vod: !!my.querySelector('[data-xt="vod"].on') }; else delete S.xtream; const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
       $('#myFile').onclick = () => {
         tap();
         run('pick', { mode: 'm3u' }).then(t0 => {

@@ -67,9 +67,11 @@
   }
 
   /* ---------------------------------------------------------------- the user's own IPTV account: its films and series */
-  function xt() { var x = S().xtream; if (!x || !x.host || !x.user || !x.pass) return null; var h = String(x.host).trim().replace(/\/+$/, ''); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; return { host: h, user: String(x.user).trim(), pass: String(x.pass).trim() }; }
+  function xt() { var x = S().xtream; if (!x || !x.host || !x.user || !x.pass || x.vod === false) return null; var h = String(x.host).trim().replace(/\/+$/, ''); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; return { host: h, user: String(x.user).trim(), pass: String(x.pass).trim() }; }
   function xtApi(x, a, extra) { return x.host + '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + '&action=' + a + (extra || ''); }
-  function xtJson(x, a, extra) { return get(xtApi(x, a, extra)).then(function (t) { try { return JSON.parse(t); } catch (e) { return null; } }); }
+  var xtErr = '';
+  function xtJson(x, a, extra) { return get(xtApi(x, a, extra)).then(function (t) { if (String(t).indexOf('ERR:') === 0) xtErr = String(t).slice(4); try { return JSON.parse(t); } catch (e) { return null; } }); }
+  function xtUa(x) { try { return (window.Android && window.Android.getPref && window.Android.getPref('uaOk|' + x.host.replace(/^https?:\/\//i, '').replace(/[:\/].*$/, ''))) || ''; } catch (e) { return ''; } }
   function xtSections(cb) {
     var x = xt(); if (!x) return cb([]);
     var key = 'vodXt:' + x.host + '|' + x.user, c = cacheGet(key, 6 * 3600000); if (c) return cb(c);
@@ -82,7 +84,9 @@
       }
       build(r[0], r[1], 'xm', '🎬 حسابي', function (o) { return { t: 'xm', n: o.name, id: o.stream_id, ext: o.container_extension || 'mp4', img: o.stream_icon || '' }; });
       build(r[2], r[3], 'xs', '📺 حسابي', function (o) { return { t: 'xs', n: o.name, id: o.series_id, img: o.cover || '' }; });
-      cacheSet(key, out); cb(out);
+      if (out.length) cacheSet(key, out);
+      else out.push({ id: 'xerr', n: '⚠️ حسابي IPTV', items: null, ia: '', links: '', hint: 'تعذّر جلب أفلام ومسلسلات الحساب' + (xtErr ? ' (' + xtErr + ')' : '') + '. تأكد من الرابط والمنفذ والمستخدم وكلمة المرور وأن الاشتراك فعّال، ثم اضغط «تحديث القائمة»' });
+      cb(out);
     }, function () { cb([]); });
   }
 
@@ -101,9 +105,14 @@
     };
     if (sec.ia) iaItems(sec.ia, done); else done([], '');
   }
+  var REFRESH = { id: '__refresh', n: '🔄 تحديث القائمة', hint: 'اضغط OK لتحديث الأفلام والمسلسلات من المصادر ومن حساب IPTV' };
+  function refresh() {
+    try { var del = []; for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && (k.indexOf('vodXt:') === 0 || k.indexOf('vodIa:') === 0)) del.push(k); } del.forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {}
+    xtErr = ''; st.si = 0; if (window.toastMsg) window.toastMsg('جاري تحديث القائمة…'); load();
+  }
   function load() {
-    st.secs = baseSections(); st.si = clampI(st.si, st.secs.length); st.items = []; st.msg = 'جاري التحميل…'; draw();
-    xtSections(function (xs) { st.secs = baseSections().concat(xs); drawSecs(); });
+    st.secs = baseSections().concat([REFRESH]); st.si = clampI(st.si, st.secs.length); st.items = []; st.msg = 'جاري التحميل…'; draw();
+    xtSections(function (xs) { st.secs = baseSections().concat(xs, [REFRESH]); drawSecs(); });
     select(st.si);
   }
   function clampI(i, n) { return Math.max(0, Math.min(Math.max(0, n - 1), i)); }
@@ -111,6 +120,7 @@
   function select(i) {
     st.si = i; st.gi = 0; st.off = 0; st.sub = null; st.items = []; st.msg = 'جاري التحميل…'; var mine = ++tok, sec = st.secs[i]; draw();
     if (!sec) return;
+    if (sec.id === '__refresh') { st.msg = sec.hint; return draw(); }
     loadSection(sec, function (items, err) { if (mine !== tok) return; st.items = items; st.msg = items.length ? '' : (err || sec.hint || 'القسم فاضي'); draw(); });
   }
 
@@ -123,16 +133,16 @@
     if (it.t === 'yt') return toPlayer([{ n: it.n, u: it.u, yt: true }]);
     if (it.t === 'url') return toPlayer([{ n: it.n, u: it.u }]);
     var x = xt();
-    if (it.t === 'xm' && x) return toPlayer([{ n: it.n, u: x.host + '/movie/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + it.id + '.' + it.ext }]);
+    if (it.t === 'xm' && x) return toPlayer([{ n: it.n, ua: xtUa(x), u: x.host + '/movie/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + it.id + '.' + it.ext }]);
     if (it.t === 'xs' && x) {
       st.msg = 'جاري تحميل الحلقات…'; draw();
       return xtJson(x, 'get_series_info', '&series_id=' + it.id).then(function (j) {
         var eps = [], seasons = (j && j.episodes) || {};
-        Object.keys(seasons).sort(function (a, b) { return a - b; }).forEach(function (sn) { (seasons[sn] || []).forEach(function (e) { eps.push({ t: 'xe', n: 'الموسم ' + sn + ' · الحلقة ' + (e.episode_num || '') + (e.title ? ' · ' + e.title : ''), u: x.host + '/series/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + e.id + '.' + (e.container_extension || 'mp4') }); }); });
+        Object.keys(seasons).sort(function (a, b) { return a - b; }).forEach(function (sn) { (seasons[sn] || []).forEach(function (e) { eps.push({ t: 'xe', ua: xtUa(x), n: 'الموسم ' + sn + ' · الحلقة ' + (e.episode_num || '') + (e.title ? ' · ' + e.title : ''), u: x.host + '/series/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + e.id + '.' + (e.container_extension || 'mp4') }); }); });
         st.msg = eps.length ? '' : 'ماكو حلقات لهذا المسلسل'; st.sub = { back: { items: st.items, gi: st.gi }, title: it.n }; st.items = eps; st.gi = 0; st.off = 0; draw();
       }, function () { st.msg = 'تعذّر جلب الحلقات'; draw(); });
     }
-    if (it.t === 'xe') return toPlayer([{ n: it.n, u: it.u }]);
+    if (it.t === 'xe') return toPlayer([{ n: it.n, u: it.u, ua: it.ua || '' }]);
     if (it.t === 'ia') {
       if (window.toastMsg) window.toastMsg('جاري تجهيز الفيلم…');
       return get('https://archive.org/metadata/' + encodeURIComponent(it.id)).then(function (t) {
@@ -178,6 +188,7 @@
     if (st.f === 'sec') {
       if (k === 'ArrowUp' && st.si > 0) select(st.si - 1);
       else if (k === 'ArrowDown' && st.si < st.secs.length - 1) select(st.si + 1);
+      else if (k === 'ok' && st.secs[st.si] && st.secs[st.si].id === '__refresh') refresh();
       else if ((k === 'ArrowLeft' || k === 'ok') && st.items.length) { st.f = 'grid'; draw(); }
       return;
     }

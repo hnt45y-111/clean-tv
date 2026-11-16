@@ -72,30 +72,32 @@
   }
   function readCache() { try { return JSON.parse(localStorage.getItem('myChLists') || '{}') || {}; } catch (e) { return {}; } }
   /* an IPTV account of the Xtream kind (server, user, password) that the user owns: its live channels come as one folder, one sub-folder per category */
-  function xtOf(S) { var x = S && S.xtream; if (!x || !x.host || !x.user || !x.pass) return null; var h = String(x.host).trim().replace(/\/+$/, ''); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; return { host: h, user: String(x.user).trim(), pass: String(x.pass).trim(), out: x.out === 'm3u8' ? 'm3u8' : 'ts', name: x.name || 'IPTV' }; }
+  function xtOf(S) { var x = S && S.xtream; if (!x || !x.host || !x.user || !x.pass || x.live === false) return null; var h = String(x.host).trim().replace(/\/+$/, ''); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; return { host: h, user: String(x.user).trim(), pass: String(x.pass).trim(), out: x.out === 'm3u8' ? 'm3u8' : 'ts', name: x.name || 'IPTV' }; }
   function xtApi(x, action) { return x.host + '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + (action ? '&action=' + action : ''); }
   function xtStreamUrl(x, id) { return x.host + '/live/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + id + '.' + x.out; }
   function xtKey(x) { return x.host + '|' + x.user; }
   function xtRead() { try { return JSON.parse(localStorage.getItem('myXt') || 'null'); } catch (e) { return null; } }
   var xtState = '';     /* '' | 'loading' | 'fail:…' */
-  function xtPull(S) {
+  function xtUa(x) { try { return (window.Android && window.Android.getPref && window.Android.getPref('uaOk|' + x.host.replace(/^https?:\/\//i, '').replace(/[:\/].*$/, ''))) || ''; } catch (e) { return ''; } }
+  function xtPull(S, force) {
     var x = xtOf(S); if (!x || !window.__fetchText) return;
-    var c = xtRead(); if (c && c.k === xtKey(x) && Date.now() - c.t < 6 * 3600000) return;
+    var c = xtRead(); if (!force && c && c.k === xtKey(x) && Date.now() - c.t < 6 * 3600000) return;
     xtState = 'loading'; cust.key = '';
     window.__fetchText(xtApi(x, 'get_live_categories')).then(function (ct) {
       var cats = {}; try { (JSON.parse(ct) || []).forEach(function (o) { cats[o.category_id] = o.category_name; }); } catch (e) {}
       return window.__fetchText(xtApi(x, 'get_live_streams')).then(function (st) {
         var arr = null; try { arr = JSON.parse(st); } catch (e) {}
-        if (!arr || !arr.length) { xtState = 'fail:' + (String(st).indexOf('ERR:') === 0 ? String(st).slice(4) : 'الحساب ما رجّع قنوات (تأكد من الرابط والمستخدم)'); return; }
+        if (!arr || !arr.length) { var er = String(st).indexOf('ERR:') === 0 ? String(st).slice(4) : 'الحساب ما رجّع قنوات (تأكد من الرابط والمستخدم)'; if (/403|401/.test(er)) er += ' · السيرفر رفض الطلب: تأكد من الرابط والمنفذ واسم المستخدم وكلمة المرور، وأن الاشتراك فعّال وما متجاوز عدد الأجهزة'; xtState = 'fail:' + er; if (force && window.toastMsg) window.toastMsg('تعذّر التحديث: ' + er); return; }
         var names = [], idx = {}, items = [];
         arr.forEach(function (o) { var cn = cats[o.category_id] || 'بدون مجموعة'; if (idx[cn] == null) { idx[cn] = names.length; names.push(cn); } items.push([String(o.name || '').trim(), o.stream_id, idx[cn], o.stream_icon || '']); });
-        try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
+        try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; if (force && window.toastMsg) window.toastMsg('تم تحديث IPTV: ' + items.length + ' قناة'); } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
       });
     }).then(function () { cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); }, function () { xtState = 'fail:تعذّر الاتصال بالسيرفر'; cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); });
   }
   function xtItems(x) {
     var c = xtRead(); if (!c || c.k !== xtKey(x)) return [];
-    return c.items.map(function (r) { return { n: r[0], u: xtStreamUrl(x, r[1]), grp: c.cats[r[2]], l: r[3], c: 'my', g: guessCat(r[0] + ' ' + c.cats[r[2]]) }; });
+    var ua = xtUa(x);
+    return c.items.map(function (r) { return { n: r[0], u: xtStreamUrl(x, r[1]), ua: ua, grp: c.cats[r[2]], l: r[3], c: 'my', g: guessCat(r[0] + ' ' + c.cats[r[2]]) }; });
   }
   function linksOf(S) {
     var out = [];
@@ -306,6 +308,7 @@
   /* the tools sit in their own row, apart from the four ways to show the channels */
   function tools() {
     var l = [{ id: 'search', n: 'بحث', on: !!st.q }, { id: 'edit', n: 'ترتيب القنوات', on: st.edit }];
+    if (xtOf((window.__getSettings && window.__getSettings()) || {})) l.push({ id: 'xt', n: xtState === 'loading' ? 'جاري التحديث…' : 'تحديث IPTV', on: false });
     if (siteCh().length) l.push({ id: 'del', n: 'حذف قناة محفوظة', on: st.del });
     return l;
   }
@@ -384,7 +387,8 @@
         else if (k === 'ok') {
           var id = tl[st.ti].id;
           if (id === 'search') { startSearch(); return; }
-          if (id === 'edit') { st.edit = !st.edit; st.del = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.edit ? 'وضع الترتيب شغّال' : 'وضع الترتيب انطفى'); }
+          if (id === 'xt') { if (xtState !== 'loading') { if (window.toastMsg) window.toastMsg('جاري تحديث قنوات IPTV…'); xtPull((window.__getSettings && window.__getSettings()) || {}, true); } }
+          else if (id === 'edit') { st.edit = !st.edit; st.del = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.edit ? 'وضع الترتيب شغّال' : 'وضع الترتيب انطفى'); }
           else if (id === 'del') { st.del = !st.del; st.edit = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.del ? 'اضغط OK على القناة المحفوظة حتى تنحذف' : 'انطفى وضع الحذف'); }
         }
       } else if (st.f === 'cat') {

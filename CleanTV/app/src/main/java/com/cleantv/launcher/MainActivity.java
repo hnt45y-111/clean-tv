@@ -1053,13 +1053,23 @@ public class MainActivity extends Activity {
                     String res = "";
                     try {
                         String u = url;
-                        for (int hop = 0; hop < 6; hop++) {
+                        /* some IPTV panels answer 403 to player names they do not know: try the common ones, remember the one that worked */
+                        String host0 = ""; try { host0 = new URL(url).getHost(); } catch (Throwable ig) {}
+                        String known = Media.prefs(MainActivity.this).getString("uaOk|" + host0, "");
+                        java.util.ArrayList<String> UAS = new java.util.ArrayList<>();
+                        if (known.length() > 0) UAS.add(known);
+                        for (String x : new String[]{"VLC/3.0.20 LibVLC/3.0.20", "IPTVSmartersPro", "okhttp/4.12.0", "Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "Lavf/60.3.100", "TiviMate/4.7.0 (Android 11)"}) if (!UAS.contains(x)) UAS.add(x);
+                        int uaI = 0;
+                        for (int hop = 0; hop < 12; hop++) {
                             HttpURLConnection con = (HttpURLConnection) new URL(u).openConnection();
                             con.setInstanceFollowRedirects(false);
                             con.setConnectTimeout(12000);
                             con.setReadTimeout(25000);
-                            con.setRequestProperty("User-Agent", "VLC/3.0.20 LibVLC/3.0.20");
+                            con.setRequestProperty("User-Agent", UAS.get(uaI));
+                            con.setRequestProperty("Accept", "*/*");
                             int code = con.getResponseCode();
+                            if ((code == 403 || code == 401 || code == 406 || code == 451 || code == 520) && uaI < UAS.size() - 1) { uaI++; u = url; con.disconnect(); continue; }
+                            if (code >= 200 && code < 300 && !UAS.get(uaI).equals(known)) Media.prefs(MainActivity.this).edit().putString("uaOk|" + host0, UAS.get(uaI)).apply();
                             if (code >= 300 && code < 400 && con.getHeaderField("Location") != null) {
                                 u = new URL(new URL(u), con.getHeaderField("Location")).toString();
                                 con.disconnect();
