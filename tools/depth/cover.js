@@ -5,7 +5,7 @@ const FONT = process.argv[2] || 'DejaVu Sans';
   const AR = t => t.replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
   const times = ['12:00', '10:08', '11:11', '8:45', '1:23', '12:58', '9:41', '7:07', '3:30', '6:15', '5:19', '2:17', '4:44'].map(AR);
   const res = {};
-  const scenes = ['tassili', 'taghit', 'djurdjura', 'timimoun', 'ghardaia', 'constantine'];
+  const scenes = ['haibat', 'rawanduz', 'halgurd', 'dukan', 'amadiya', 'shatt', 'ahwar', 'tassili', 'taghit', 'djurdjura', 'timimoun', 'ghardaia', 'constantine'];
   const cfg = JSON.parse(process.argv[3] || '{}');
   for (const id of scenes) {
     const dx = (cfg[id] || {}).dx || 0, dy = (cfg[id] || {}).dy || 0;

@@ -445,6 +445,7 @@
     else toast('دز صورك للتلفزيون بتطبيق LocalSend، وبعدها ارجع هنا', 5000);
   }
   window.onImagePicked = function (path) {
+    if (window.Depth && window.Depth.picked && window.Depth.picked(path)) return;
     if (!path) { toast('ما تم اختيار صورة'); return; }
     if (picker.target) { customIcons[picker.target] = path; save('customIcons', customIcons); loadMine(); closeModal(); renderApps(); toast('تم تغيير الأيقونة'); return; }
     loadMine(); bgPinned = path; save('bgPinned', path); setBg(path); closeModal(); toast('تمت إضافة الصورة وتثبيتها خلفية');
@@ -1998,13 +1999,13 @@
   window.__setLayer = function (l) { layer = l; };
   window.__getSettings = function () { return settings; };
   /* «واجهة العمق» (depth.js) reaches the launcher only through this */
-  function depthPrayer() {
+  function depthPrayer(lat, lon) {
     if (!window.PRAY) return null;
-    var now = new Date(), t = prayerFor(now), h = nowHoursBaghdad(), list = [['الفجر', t.fajr], ['الظهر', t.dhuhr], ['المغرب', t.maghrib]], next = null, left;
+    var now = new Date(), t = lat != null ? window.PRAY.compute(baghdadYMD(now), lat, lon, 3) : prayerFor(now), h = nowHoursBaghdad(), list = [['الفجر', t.fajr], ['الظهر', t.dhuhr], ['المغرب', t.maghrib]], next = null, left;
     list.forEach(function (p) { if (!next && p[1] > h) next = p; });
-    if (!next) { var tm = prayerFor(new Date(now.getTime() + DAY)); next = ['الفجر', tm.fajr]; left = tm.fajr + 24 - h; } else left = next[1] - h;
+    if (!next) { var tm = lat != null ? window.PRAY.compute(baghdadYMD(new Date(now.getTime() + DAY)), lat, lon, 3) : prayerFor(new Date(now.getTime() + DAY)); next = ['الفجر', tm.fajr]; left = tm.fajr + 24 - h; } else left = next[1] - h;
     var mins = Math.max(0, Math.round(left * 60)), lh = Math.floor(mins / 60), lm = mins % 60;
-    return { name: next[0], time: hoursToText(next[1]), left: 'باقي ' + (lh > 0 ? nf.format(lh) + ' ساعة' + (lm ? ' و' + nf.format(lm) + ' دقيقة' : '') : nf.format(lm) + ' دقيقة') };
+    return { maghribPassed: h >= t.maghrib, name: next[0], time: hoursToText(next[1]), left: 'باقي ' + (lh > 0 ? nf.format(lh) + ' ساعة' + (lm ? ' و' + nf.format(lm) + ' دقيقة' : '') : nf.format(lm) + ' دقيقة') };
   }
   window.__depthApi = {
     preview: PREVIEW,
@@ -2013,9 +2014,19 @@
     label: function (a) { return appName(a); },
     icon: function (a) { return customIcons[a.pkg] || a.icon || ''; },
     launch: function (pkg) { launchApp(pkg); },
-    hijri: function () { try { return hijriText(new Date()); } catch (e) { return ''; } },
+    hijri: function (off) { try { return hijriText(new Date(Date.now() + (off || 0) * DAY)); } catch (e) { return ''; } },
     clock: function () { return clockParts(new Date()).hm; },
-    prayer: depthPrayer,
+    prayer: function () { return depthPrayer(); },
+    prayerAt: depthPrayer,
+    getText: function (u) { return getTextAny(u); },
+    pickImage: function () { return !!(HAS_ANDROID && A.pickImage && A.pickImage()); },
+    upcoming: function () {
+      if (PREVIEW) return Promise.resolve([{ lg: 'الدوري الإسباني', h: 'ريال مدريد', a: 'برشلونة', at: Date.now() + 86400000 }, { lg: 'دوري أبطال أوروبا', h: 'ليفربول', a: 'آرسنال', at: Date.now() + 3 * 86400000 }]);
+      var sel = pickSel(); return sel.any ? loadFavUpcoming(sel).catch(function () { return []; }) : Promise.resolve([]);
+    },
+    teams: function () { return (settings.tickerNames || []).slice(); },
+    addTeam: function (name) { settings.tickerTeams = (settings.tickerTeams || []).concat(['n:' + nn(name)]); settings.tickerNames = (settings.tickerNames || []).concat([name]); favUp.key = ''; saveSettings(); },
+    removeTeam: function (name) { var i = (settings.tickerNames || []).indexOf(name); if (i < 0) return; settings.tickerNames.splice(i, 1); var k = 'n:' + nn(name); settings.tickerTeams = (settings.tickerTeams || []).filter(function (t) { return String(t) !== k; }); favUp.key = ''; saveSettings(); },
     toast: function (m) { toast(m, 3500); },
     layer: function () { return layer; },
     press: function () { pressFx(); },
