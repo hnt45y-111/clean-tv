@@ -149,7 +149,7 @@
     $('hm').textContent = c.hm; $('ampm').textContent = c.p;
     $('greg').textContent = fmtGreg.format(now);
     $('hijri').textContent = hijriText(now);
-
+    if (window.Depth) window.Depth.paint();
   }
 
   // ---------- Prayer times ----------
@@ -668,6 +668,7 @@
       : mode === 'kidsel' ? 'تطبيقات الأطفال: OK حتى تسمح أو تمنع · رجوع للحفظ' : mode === 'icon' ? 'تغيير الأيقونة: اختار التطبيق واضغط OK · رجوع للخروج'
       : kids.on ? (kids.limit ? 'باقي ' + nf.format(kidsRemaining()) + ' دقيقة مشاهدة اليوم' : '') : '';
     renderOs();
+    if (window.Depth) window.Depth.apps();
     nav.refresh();
   }
   function saveOrder() { order = apps.map(function (a) { return a.pkg; }); save('appOrder', order); }
@@ -1390,6 +1391,7 @@
     var b = document.body, sk = settings.skin || 'classic', st = b.style;
     if (sk === 'classic') b.removeAttribute('data-skin'); else b.setAttribute('data-skin', sk);
     if (typeof customIcons !== 'undefined') renderOs();
+    if (window.Depth) window.Depth.sync();
     /* a design can carry its own CSS (imported launchers, or written in the phone app) and it is applied last */
     var uc = $('userCss'), css = typeof settings.css === 'string' ? settings.css.slice(0, 60000) : '';
     if (uc && uc.textContent !== css) uc.textContent = css;
@@ -1995,6 +1997,31 @@
   var layer = 'main';
   window.__setLayer = function (l) { layer = l; };
   window.__getSettings = function () { return settings; };
+  /* «واجهة العمق» (depth.js) reaches the launcher only through this */
+  function depthPrayer() {
+    if (!window.PRAY) return null;
+    var now = new Date(), t = prayerFor(now), h = nowHoursBaghdad(), list = [['الفجر', t.fajr], ['الظهر', t.dhuhr], ['المغرب', t.maghrib]], next = null, left;
+    list.forEach(function (p) { if (!next && p[1] > h) next = p; });
+    if (!next) { var tm = prayerFor(new Date(now.getTime() + DAY)); next = ['الفجر', tm.fajr]; left = tm.fajr + 24 - h; } else left = next[1] - h;
+    var mins = Math.max(0, Math.round(left * 60)), lh = Math.floor(mins / 60), lm = mins % 60;
+    return { name: next[0], time: hoursToText(next[1]), left: 'باقي ' + (lh > 0 ? nf.format(lh) + ' ساعة' + (lm ? ' و' + nf.format(lm) + ' دقيقة' : '') : nf.format(lm) + ' دقيقة') };
+  }
+  window.__depthApi = {
+    preview: PREVIEW,
+    settings: function () { return settings; },
+    apps: function () { return visibleApps(); },
+    label: function (a) { return appName(a); },
+    icon: function (a) { return customIcons[a.pkg] || a.icon || ''; },
+    launch: function (pkg) { launchApp(pkg); },
+    hijri: function () { try { return hijriText(new Date()); } catch (e) { return ''; } },
+    clock: function () { return clockParts(new Date()).hm; },
+    prayer: depthPrayer,
+    toast: function (m) { toast(m, 3500); },
+    layer: function () { return layer; },
+    press: function () { pressFx(); },
+    openSettings: function () { openSettings(); },
+    sysSettings: function () { if (HAS_ANDROID && A.openSettings) A.openSettings(); else toast('إعدادات الجهاز: تحتاج الشاشة نفسها'); }
+  };
   window.__fetchText = function (u) { return (HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u); };
   window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   var nav = (function () {
@@ -2160,6 +2187,7 @@
     if (layer === 'search') return searchKey(k);
     if (layer === 'quran') return quranKey(k);
     if (layer === 'pin') return pinKey(k);
+    if (layer === 'main' && window.Depth && window.Depth.on()) return window.Depth.key(k);
     if (k.indexOf('Arrow') === 0) nav.arrow(k);
     else if (k === 'ok') nav.ok();
     else if (k === 'back') nav.back();
@@ -2193,6 +2221,7 @@
   window.onHomePressed = function () {
     lastInput = Date.now(); if (saverOn) stopSaver();
     if (layer === 'edit') closeEdit(); else if (layer !== 'main') closeModal();
+    if (window.Depth && window.Depth.on()) window.Depth.home();
     nav.home();
   };
   window.onAppResume = function () {

@@ -1,0 +1,65 @@
+/* «واجهة العمق» (depth.js): everything lives inside #depth, and only shows when the skin is on */
+body[data-skin="depth"] #content, body[data-skin="depth"] .bgimg, body[data-skin="depth"] .bgshade, body[data-skin="depth"] #osGlow,
+body[data-skin="depth"] #osArt, body[data-skin="depth"] #clubBg, body[data-skin="depth"] .bgfallback, body[data-skin="depth"] #brandStrip, body[data-skin="depth"] #credit { display: none !important; }
+#depth { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 4; display: none; overflow: hidden; direction: rtl; font-family: var(--font); color: #fff; background: #0b0a1c; text-shadow: 0 2px 14px rgba(0,0,0,.45); }
+#dpScenes { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
+.dp-sc { position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: 0; transition: opacity .6s ease; overflow: hidden; }
+.dp-sc.on { opacity: 1; }
+.dp-lyr { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transition: transform .6s cubic-bezier(.2,.7,.2,1); will-change: transform; }
+.dp-bg, .dp-fg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.05); animation: dpz 50s ease-in-out infinite alternate; will-change: transform; }
+@keyframes dpz { from { transform: scale(1.05); } to { transform: scale(1.10); } }
+.dp-reduce .dp-bg, .dp-reduce .dp-fg { animation: none; }
+.dp-reduce .dp-lyr, .dp-reduce .dp-sc { transition-duration: .15s; }
+.dp-nofx .dp-fgw { display: none; }
+.dp-clk { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+.dp-ck { font: 800 300px 'Tajawal', 'Plex', system-ui, sans-serif; fill: rgba(255,255,255,.85); letter-spacing: -4px; }
+.dp-glow { position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: 0; transition: opacity .5s ease; pointer-events: none; mix-blend-mode: screen; }
+.dp-reduce .dp-glow { transition-duration: .1s; }
+.dp-glass { background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(26px) saturate(1.3); backdrop-filter: blur(26px) saturate(1.3); border: 1px solid rgba(255,255,255,.28); box-shadow: 0 14px 40px rgba(0,0,0,.28); }
+#dpDate { position: absolute; top: 58px; left: 0; right: 0; text-align: center; font-size: 38px; font-weight: 500; letter-spacing: .3px; }
+#dpPlace { position: absolute; top: 112px; left: 50%; transform: translateX(-50%); font-size: 26px; font-weight: 500; padding: 6px 22px; border-radius: 999px; border: 2px solid transparent; white-space: nowrap; }
+#dpPlace i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #ffb070; margin-left: 10px; box-shadow: 0 0 12px #ffb070; }
+#dpPlace small { opacity: .75; font-size: 22px; }
+#dpPlace.focus { border-color: #fff; background: rgba(255,255,255,.18); }
+#dpPray { position: absolute; left: 70px; top: 54px; padding: 16px 28px 18px; border-radius: 30px; min-width: 250px; }
+#dpPray .pk { font-size: 20px; opacity: .8; } #dpPray .pn { font-size: 32px; font-weight: 700; margin-top: 2px; } #dpPray .pn b { font-weight: 800; margin-right: 8px; } #dpPray .ps { font-size: 20px; opacity: .85; margin-top: 2px; }
+#dpTop { position: absolute; right: 70px; top: 54px; display: flex; gap: 16px; align-items: flex-start; }
+.dp-circ { position: relative; width: 78px; height: 78px; border-radius: 50%; background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); border: 1px solid rgba(255,255,255,.28); display: grid; place-items: center; transition: transform .2s ease, box-shadow .2s ease; }
+.dp-circ svg { width: 36px; height: 36px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dp-circ.off svg { stroke: #ff9a8a; }
+.dp-circ span { position: absolute; top: 90px; font-size: 22px; white-space: nowrap; background: rgba(0,0,0,.45); padding: 3px 14px; border-radius: 12px; }
+.dp-circ.focus { transform: scale(1.14); box-shadow: 0 0 0 4px rgba(255,255,255,.92), 0 0 34px rgba(255,255,255,.55); }
+#dpDock { position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%); z-index: 6; display: flex; gap: 22px; padding: 0 36px; height: 144px; align-items: center; border-radius: 999px; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+#dpDock.up { transform: translate(-50%, -820px); }
+.dp-reduce #dpDock { transition-duration: .1s; }
+.dp-it { transition: transform .2s ease; }
+.dp-it.focus { transform: scale(1.25); }
+.dp-it.mv { transform: scale(1.25) translateY(-14px); }
+.dp-ic { position: relative; display: grid; place-items: center; overflow: hidden; transition: box-shadow .2s ease; }
+.dp-ic img { width: 100%; height: 100%; object-fit: contain; padding: 8%; box-sizing: border-box; }
+.dp-ic b { font-size: 44px; color: #fff; font-weight: 700; }
+.dp-it.focus .dp-ic, .dp-gi.focus .dp-ic { box-shadow: 0 0 0 4px rgba(255,255,255,.95), 0 0 38px rgba(255,255,255,.65); }
+.dp-empty { font-size: 26px; opacity: .8; padding: 0 30px; }
+#dpName { position: absolute; left: 0; right: 0; text-align: center; font-size: 30px; font-weight: 600; opacity: 0; transition: opacity .2s ease; z-index: 6; pointer-events: none; }
+#dpName.on { opacity: 1; }
+#dpDrawer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; opacity: 0; pointer-events: none; background: rgba(8,6,22,.82); -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px); transition: opacity .3s ease; overflow: hidden; }
+#dpDrawer.on { opacity: 1; }
+#dpDrawerGrid { position: absolute; top: 250px; left: 110px; right: 110px; display: grid; grid-template-columns: repeat(10, 1fr); row-gap: 56px; justify-items: center; transition: transform .25s ease; }
+.dp-gi { transition: transform .2s ease; }
+.dp-gi.focus { transform: scale(1.22); }
+#dpDrawerName { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; font-size: 46px; font-weight: 700; }
+#dpMenu, #dpPanel { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 9; display: none; padding: 22px 26px; border-radius: 34px; width: 560px; background: rgba(28,24,60,.82); }
+#dpPanel { width: 700px; }
+#dpMenu.on, #dpPanel.on { display: block; }
+#depth .mt { font-size: 36px; font-weight: 700; margin-bottom: 12px; padding: 0 12px; }
+#depth .mo { font-size: 32px; font-weight: 500; padding: 14px 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; }
+#depth .mo em { font-style: normal; font-size: 26px; opacity: .8; }
+#depth .mo.focus { background: rgba(255,255,255,.26); box-shadow: inset 0 0 0 2px rgba(255,255,255,.7); }
+#dpPick { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 10; display: none; background: linear-gradient(180deg, #0e1738, #070b1f); }
+#dpPick.on { display: block; }
+#dpPickBox { position: absolute; left: 50%; top: 110px; width: 1056px; height: 594px; margin-left: -528px; border-radius: 46px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,.18); background: #101830; }
+#dpPickBox .dp-sc { top: 0; left: 0; right: auto; bottom: auto; width: 1920px; height: 1080px; transform: scale(.55); transform-origin: 0 0; transition: opacity .3s ease; }
+#dpPickBtns { position: absolute; left: 0; right: 0; top: 770px; display: flex; gap: 18px; justify-content: center; }
+.dp-pb { font-size: 34px; font-weight: 600; padding: 16px 40px; border-radius: 999px; background: rgba(255,255,255,.12); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.25); transition: transform .2s ease, background .2s ease; }
+.dp-pb.focus { background: rgba(255,255,255,.3); transform: scale(1.1); box-shadow: 0 0 0 3px rgba(255,255,255,.9), 0 0 30px rgba(255,255,255,.4); }
+#dpPickHint { position: absolute; left: 0; right: 0; bottom: 60px; text-align: center; font-size: 26px; opacity: .7; }
