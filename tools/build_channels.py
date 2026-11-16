@@ -232,6 +232,27 @@ T = [
  ('أبوظبي الرياضية 2', 'ae', 'sport', '', 'ftv', r'^Abu Dhabi Sports 2', r'orange\.com'),
  ('الشارقة الرياضية', 'ae', 'sport', '', 'ae', r'^Sharjah Sports', r'itworkscdn\.net'),
  ('الأردن الرياضية', 'jo', 'sport', '', 'jo', r'^Jordan Sport', r'ercdn\.net'),
+ # more films, series and entertainment (free streams of the broadcasters themselves)
+ ('ميكس هوليوود', 'eg', 'movies', '', 'eg', r'^Mix Hollywood', r'myco\.io'),
+ ('الشلال أفلام', 'ae', 'movies', '', 'ae', r'^Al Shallal TV', r'amagi\.tv'),
+ ('ستوري تشانل', 'ma', 'movies', '', 'ma', r'^StoryChannel TV', r'cdnsun\.net'),
+ ('أرشيف الأردن', 'jo', 'movies', '', 'jo', r'^Jordan Archive', r'fasttvcdn\.com'),
+ ('كنال دي دراما', 'int', 'movies', '', 'tr', r'^Kanal D Drama', r'amagi\.tv'),
+ ('الشرقية', 'iq', 'movies', '', 'iq', r'^Al Sharqiya \(1080p\)', r'indexforce\.com'),
+ ('SBC السعودية', 'sa', 'movies', '', 'sa', r'^SBC \(1080p\)', r'edgenextcdn\.net'),
+ ('لنا', 'lb', 'movies', '', 'lb', r'^Lana TV', r'streamlane\.tv'),
+ ('مطبخ الأردن', 'jo', 'ent', '', 'jo', r'^Jordan Kitchen', r'fasttvcdn\.com'),
+ ('أغاني الأردن', 'jo', 'ent', '', 'jo', r'^Jordan Songs', r'fasttvcdn\.com'),
+ ('سياحة الأردن', 'jo', 'ent', '', 'jo', r'^Jordan Tourism', r'fasttvcdn\.com'),
+ ('السعودية الآن', 'sa', 'ent', '', 'sa', r'^Al Saudiya Alaan', r'edgenextcdn\.net'),
+ ('الوسطى', 'ae', 'ent', '', 'ae', r'^Al Wousta TV', r'itworkscdn\.net'),
+ ('الشرقية من كلباء', 'ae', 'ent', '', 'ae', r'^Al Sharqiya Min Kabla', r'itworkscdn\.net'),
+ ('مارينا', 'kw', 'ent', '', 'kw', r'^Marina TV', r'gulfsat\.com'),
+ ('أغاني أغاني', 'lb', 'ent', '', 'lb', r'^Aghani Aghani', r'streamlane\.tv'),
+ ('ماجد المهندس', 'sa', 'ent', '', 'sa', r'^Majid Al Mohandis', r'edgenextcdn\.net'),
+ ('رابح صقر', 'sa', 'ent', '', 'sa', r'^Rabeh Saqer', r'edgenextcdn\.net'),
+ ('2M المغربية', 'ma', 'ent', '', 'ma', r'^2M Monde \+1', r'cloudfront\.net'),
+ ('كوردسات', 'iq', 'ent', '', 'iq', r'^Kurdsat \(1080p\)', r'akamaized\.net'),
 ]
 GROUPS = [('iq', 'العراق'), ('sa', 'السعودية'), ('ae', 'الإمارات'), ('qa', 'قطر'), ('kw', 'الكويت'), ('om', 'عُمان'), ('bh', 'البحرين'), ('jo', 'الأردن'), ('lb', 'لبنان'), ('ps', 'فلسطين'), ('sy', 'سوريا'), ('ye', 'اليمن'), ('sd', 'السودان'), ('mr', 'موريتانيا'), ('so', 'الصومال'), ('eg', 'مصر'), ('ma', 'المغرب'), ('dz', 'الجزائر'), ('tn', 'تونس'), ('ly', 'ليبيا'), ('int', 'دولية')]
 logos = {}

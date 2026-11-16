@@ -26,7 +26,7 @@ test('الأقسام الافتراضية والاسم المخصص', async () =
   const { sb, els } = page({ vodName: 'سينما' }, { 'advancedsearch': JSON.stringify({ response: { docs: [{ identifier: 'f1', title: 'فيلم قديم', year: 1950 }] } }) });
   sb.Vod.open(); await tick();
   assert.strictEqual(els.vdTitle.textContent, 'سينما');
-  assert.strictEqual(sb.Vod._t.state.secs.length, 5);
+  assert.strictEqual(sb.Vod._t.state.secs.length, 6);
   assert.match(els.vdGrid.innerHTML, /فيلم قديم/);
 });
 test('تشغيل عنصر أرشيف يختار ملف mp4', async () => {
