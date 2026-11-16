@@ -253,6 +253,27 @@ T = [
  ('رابح صقر', 'sa', 'ent', '', 'sa', r'^Rabeh Saqer', r'edgenextcdn\.net'),
  ('2M المغربية', 'ma', 'ent', '', 'ma', r'^2M Monde \+1', r'cloudfront\.net'),
  ('كوردسات', 'iq', 'ent', '', 'iq', r'^Kurdsat \(1080p\)', r'akamaized\.net'),
+ # films and series from the owners' free ad-supported channels
+ ('زي سينما كلاسيك', 'int', 'movies', '', 'in', r'^Zee Cine Classic', r'amagi\.tv'),
+ ('زي كوميديا', 'int', 'movies', '', 'in', r'^Zee Comedy Nation', r'amagi\.tv'),
+ ('زي دل سي (مسلسلات)', 'int', 'movies', '', 'in', r'^Zee Dil Se', r'amagi\.tv'),
+ ('زي أفلام رعب', 'int', 'movies', '', 'in', r'^Zee Horror Nights', r'amagi\.tv'),
+ ('زي ساوث فليكس', 'int', 'movies', '', 'in', r'^Zee South Flix', r'amagi\.tv'),
+ ('B4U أفلام', 'int', 'movies', '', 'in', r'^B4U Movies \(1080p\)', r'amagi\.tv'),
+ ('B4U كادَك', 'int', 'movies', '', 'in', r'^B4U Kadak \(1080p\)', r'amagi\.tv'),
+ ('شيمارو بوليوود', 'int', 'movies', '', 'us', r'^Shemaroo Bollywood', r'amagi\.tv'),
+ ('MBC دراما أمريكا', 'int', 'movies', 'mbc', 'us', r'^MBC Drama USA', r'edgenextcdn\.net'),
+ ('فيلم رايز مسلسلات كلاسيك', 'int', 'movies', '', 'us', r'^FilmRise Classic TV', r'cloudfront\.net'),
+ ('سوني أكشن', 'int', 'movies', '', 'fr', r'^Sony One Hits Action', r'amazonaws\.com'),
+ ('أفلام نوار', 'int', 'movies', '', 'us', r'^TVS Film Noir', r'bozztv\.com'),
+ ('أفلام كلاسيكية', 'int', 'movies', '', 'us', r'^TVS Classic Movies', r'bozztv\.com'),
+ ('أفلام ويسترن', 'int', 'movies', '', 'us', r'^TVS Western Movie', r'bozztv\.com'),
+ ('أفلام زمان', 'int', 'movies', '', 'us', r'^TVS Nostalgia Movies', r'bozztv\.com'),
+ ('سينما السيارات', 'int', 'movies', '', 'us', r'^TVS Drive In Movie', r'bozztv\.com'),
+ ('كوميديا كلاسيك', 'int', 'movies', '', 'us', r'^TVS Comedy Network', r'bozztv\.com'),
+ ('بوكيت فيلمز (أفلام قصيرة)', 'int', 'movies', '', 'in', r'^Pocket Films', r'akamaized\.net'),
+ ('موفي كلوب', 'int', 'movies', '', 'in', r'^The Movie Club \+2', r'cloudfront\.net'),
+ ('ماغنيفيسنت أفلام', 'int', 'movies', '', 'us', r'^Magnificent Movies', r'b-cdn\.net'),
 ]
 GROUPS = [('iq', 'العراق'), ('sa', 'السعودية'), ('ae', 'الإمارات'), ('qa', 'قطر'), ('kw', 'الكويت'), ('om', 'عُمان'), ('bh', 'البحرين'), ('jo', 'الأردن'), ('lb', 'لبنان'), ('ps', 'فلسطين'), ('sy', 'سوريا'), ('ye', 'اليمن'), ('sd', 'السودان'), ('mr', 'موريتانيا'), ('so', 'الصومال'), ('eg', 'مصر'), ('ma', 'المغرب'), ('dz', 'الجزائر'), ('tn', 'تونس'), ('ly', 'ليبيا'), ('int', 'دولية')]
 logos = {}
