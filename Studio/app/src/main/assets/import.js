@@ -370,22 +370,12 @@ function osPanelWire(box, S) {
       p.insertBefore(my, box.nextSibling);
       my.addEventListener('click', e => { const t = e.target.closest('[data-xt]'); if (t) { tap(); t.classList.toggle('on'); return; } const c = e.target.closest('[data-xo]'); if (!c) return; tap(); my.querySelectorAll('[data-xo]').forEach(b => b.classList.toggle('on', b === c)); });
       /* the movies and series app: its name and its sections */
-      const DEFSEC = [['foreign', 'أفلام أجنبية', 'collection:feature_films'], ['arabic', 'أفلام عربية', ''], ['series', 'مسلسلات', 'collection:classic_tv'], ['fun', 'ترفيه', 'collection:animationandcartoons'], ['cook', 'طبخ', '']];
-      const secs = (S.vodSections && S.vodSections.length) ? S.vodSections : DEFSEC.map(([id, n, ia]) => ({ id, n, ia, links: '' }));
       const vod = document.createElement('div');
-      const secHtml = x => `<div class="vsec" data-id="${esc(x.id || '')}" style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)"><input class="vn" placeholder="اسم القسم" value="${esc(x.n || '')}"><input class="via" dir="ltr" placeholder="مجموعة archive.org (مثال collection:feature_films)" value="${esc(x.ia || '')}" style="margin-top:6px"><textarea class="vl" dir="ltr" spellcheck="false" placeholder="روابط رسمية، واحد بكل سطر (قائمة تشغيل يوتيوب، فيديو، mp4، m3u8). تقدر تكتب: الاسم | الرابط" style="width:100%;min-height:70px;margin-top:6px;font:12.5px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)">${esc(x.links || '')}</textarea></div>`;
-      vod.innerHTML = `<div class="panel"><h2>تطبيق الأفلام والمسلسلات</h2><p class="sub" style="margin-top:-4px">يطلع بقائمة التطبيقات باسم تحدده إنت. المصادر مجانية ومرخّصة فقط: مكتبة archive.org (ملك عام) وروابطك الرسمية واشتراكك. الأقسام الفاضية تنتظر روابطك.</p>
+      vod.innerHTML = `<div class="panel"><h2>تطبيق الأفلام والمسلسلات</h2><p class="sub" style="margin-top:-4px">يطلع بقائمة التطبيقات، ويستورد أفلامه ومسلسلاته من حساب IPTV فوق فقط.</p>
         <label class="f">اسم التطبيق</label><input id="vodName" placeholder="الأفلام والمسلسلات" value="${esc(S.vodName || '')}">
-        <div id="vodSecs">${secs.map(secHtml).join('')}</div>
-        <div class="row" style="margin-top:12px;gap:8px"><button class="btn sec" style="flex:1" id="vodAdd">＋ قسم جديد</button><button class="btn sec" style="flex:1" id="vodSave">${ic('save')} حفظ</button></div></div>`;
+        <div class="row" style="margin-top:12px"><button class="btn sec" style="flex:1" id="vodSave">${ic('save')} حفظ الاسم</button></div></div>`;
       p.insertBefore(vod, my.nextSibling);
-      $('#vodAdd').onclick = () => { tap(); const d = document.createElement('div'); d.innerHTML = secHtml({ id: 'c' + Date.now(), n: '', ia: '', links: '' }); $('#vodSecs').appendChild(d.firstChild); };
-      $('#vodSave').onclick = () => {
-        tap();
-        const list = [...vod.querySelectorAll('.vsec')].map(e => ({ id: e.dataset.id || 'c' + Math.random().toString(36).slice(2, 7), n: e.querySelector('.vn').value.trim(), ia: e.querySelector('.via').value.trim(), links: e.querySelector('.vl').value.slice(0, 20000) })).filter(x => x.n);
-        S.vodSections = list; const nm = $('#vodName').value.trim(); if (nm) S.vodName = nm.slice(0, 30); else delete S.vodName;
-        changed(); live({ settings: S }); toast('انحفظ تطبيق الأفلام والمسلسلات');
-      };
+      $('#vodSave').onclick = () => { tap(); delete S.vodSections; const nm = $('#vodName').value.trim(); if (nm) S.vodName = nm.slice(0, 30); else delete S.vodName; changed(); live({ settings: S }); toast('انحفظ اسم التطبيق'); };
       $('#myOk').onclick = () => { tap(); const xh = $('#xtHost').value.trim(), xu = $('#xtUser').value.trim(), xp = $('#xtPass').value.trim(); if (xh && xu && xp) S.xtream = { host: xh, user: xu, pass: xp, name: $('#xtName').value.trim() || 'اشتراكي', out: (my.querySelector('[data-xo].on') || {}).dataset ? my.querySelector('[data-xo].on').dataset.xo : 'ts', live: !!my.querySelector('[data-xt="live"].on'), vod: !!my.querySelector('[data-xt="vod"].on') }; else delete S.xtream; const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
       $('#myFile').onclick = () => {
         tap();
