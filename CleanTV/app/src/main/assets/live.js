@@ -21,6 +21,19 @@
     return list.map(function (x, i) { return [x, i]; }).sort(function (a, b) { var pa = pos[keyFn(a[0])], pb = pos[keyFn(b[0])]; pa = pa == null ? 1e6 + a[1] : pa; pb = pb == null ? 1e6 + b[1] : pb; return pa - pb; }).map(function (p) { return p[0]; });
   }
   var CATS = [['all', 'كل القنوات'], ['news', 'أخبار'], ['sport', 'رياضة'], ['movies', 'أفلام ومسلسلات'], ['docs', 'وثائقية'], ['ent', 'منوعات وترفيه'], ['mbc', 'باقة MBC المجانية'], ['karbala', 'باقة قنوات كربلاء'], ['kids', 'أطفال'], ['quran', 'قرآن ومرجعيات'], ['iq', 'قنوات عراقية']];
+  /* the channels the user starred, and the last ones he watched: kept on the TV */
+  function jget(k) { try { return JSON.parse(localStorage.getItem(k) || '[]') || []; } catch (e) { return []; } }
+  function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function slim(c) { return { n: c.n, u: c.u, i: c.i || '', l: c.l || '', g: c.g || '', c: c.c || '', p: c.p || '', r: c.r || '', ua: c.ua || '', grp: c.grp || '' }; }
+  function favs() { return jget('lvFav'); }
+  function isFav(c) { var k = c.u + '|' + c.n; return favs().some(function (f) { return f.u + '|' + f.n === k; }); }
+  function toggleFav(c) {
+    var l = favs(), k = c.u + '|' + c.n, had = l.some(function (f) { return f.u + '|' + f.n === k; });
+    l = had ? l.filter(function (f) { return f.u + '|' + f.n !== k; }) : [slim(c)].concat(l).slice(0, 200);
+    jset('lvFav', l); return !had;
+  }
+  function pushRecent(c) { var k = c.u + '|' + c.n; jset('lvRecent', [slim(c)].concat(jget('lvRecent').filter(function (f) { return f.u + '|' + f.n !== k; })).slice(0, 24)); }
+  var ICON = { all: '📺', news: '📰', sport: '⚽', movies: '🎬', docs: '🌍', ent: '🎭', mbc: '✨', karbala: '🕌', kids: '🧸', quran: '📖', sites: '🌐' };
   function cats() {
     var l = CATS.map(function (c) { return { id: c[0], n: c[1], kind: 'cat' }; });
     if (sitesList().length) l.push({ id: 'sites', n: 'مواقع القنوات', kind: 'sites' });
@@ -29,7 +42,10 @@
     (window.CH_GROUPS || []).forEach(function (g) { if (seen[g[0]] && g[0] !== 'iq') l.push({ id: g[0], n: 'قنوات ' + g[1], kind: 'grp' }); });
     /* the user's own channels live in one folder, always the last one */
     if (custom().lists.length) l.push({ id: 'my', n: '📁 قنواتي الخاصة', kind: 'my' });
-    return sortBy(l, ORD.cats, function (c) { return c.id; });
+    l = sortBy(l, ORD.cats, function (c) { return c.id; });
+    if (jget('lvRecent').length) l.push({ id: 'recent', n: '🕘 آخر ما شاهدت', kind: 'recent' });
+    if (favs().length) l.push({ id: 'fav', n: '⭐ المفضلة', kind: 'fav' });
+    return l;
   }
   /* the user's own channels (licensed streams he adds from the phone app: pasted M3U text or a link to a list) */
   var cust = { lists: [], list: [], groups: [], key: '' };
@@ -223,6 +239,8 @@
   }
   function rawFilter(cid) {
     var all = (window.CHANNELS || []).concat(siteCh());
+    if (cid === 'fav') return favs();
+    if (cid === 'recent') return jget('lvRecent');
     if (cid === 'sites') return sitesList().map(function (u) { return { n: siteHost(u), sub: 'يفتح الموقع وتختار القناة منه', u: u, site: 1, c: 'my' }; });
     if (cid === 'my') {
       var Ls = custom().lists;
@@ -252,7 +270,7 @@
     st.list = st.q ? searchList(st.q) : filter(cid);
     if (st.gi >= st.list.length) st.gi = Math.max(0, st.list.length - 1);
     var from = Math.max(0, Math.min(st.ci - 3, cs.length - 8)), html = '';
-    for (var q = from; q < Math.min(cs.length, from + 8); q++) html += '<div class="lv-cat' + (q === st.ci ? ' on' : '') + (st.f === 'cat' && q === st.ci ? ' focus' : '') + (st.pick === 'cat' && q === st.ci ? ' moving' : '') + '">' + esc(cs[q].n) + '</div>';
+    for (var q = from; q < Math.min(cs.length, from + 8); q++) html += '<div data-ic="' + (ICON[cs[q].id] || (cs[q].kind === 'grp' ? '📡' : '')) + '" class="lv-cat' + (q === st.ci ? ' on' : '') + (st.f === 'cat' && q === st.ci ? ' focus' : '') + (st.pick === 'cat' && q === st.ci ? ' moving' : '') + '">' + esc(cs[q].n) + '</div>';
     $('lvCats').innerHTML = html;
     var vh = ''; VIEWS.forEach(function (v, i) { vh += '<div class="lv-vw' + (i === st.vi ? ' on' : '') + (st.f === 'view' && i === st.hi ? ' focus' : '') + '">' + v[1] + '</div>'; });
     var tl = tools(), th = '';
@@ -261,12 +279,12 @@
     $('lvViews').innerHTML = vh; $('lvGrid').setAttribute('data-v', VIEWS[st.vi][0]);
     var key = st.ver + '|' + (st.q || '') + '|' + VIEWS[st.vi][0] + '|' + cid + '|' + (st.fold || '') + '|' + (st.sub || '') + '|' + st.list.length + '|' + (st.list[0] ? st.list[0].n + st.list[0].u + (st.list[0].sub || '') : '');
     var grid = $('lvGrid');
-    if (st.key !== key) { st.key = key;
+    if (st.key !== key) { st.key = key; var FK = {}; favs().forEach(function (f) { FK[f.u + '|' + f.n] = 1; }); var isFavQ = function (c) { return FK[c.u + '|' + c.n]; };
     grid.innerHTML = st.list.length ? st.list.map(function (c, i) {
       var tint = 'hsl(' + hue(c.n) + ',28%,24%)', ini = c.folder ? '📁' : c.n.replace(/^ال/, '').replace(/\s/g, '').slice(0, 2);
       var logo = c.i ? '<img class="lv-img" loading="lazy" decoding="async" src="logos/' + esc(c.i) + '.png" alt="" onerror="this.parentNode.removeChild(this)">' : c.l ? '<img class="lv-img" loading="lazy" decoding="async" src="' + esc(c.l) + '" alt="" onerror="this.parentNode.removeChild(this)">' : '';
       return '<div class="lv-ch' + (st.f === 'grid' && i === st.gi ? ' focus' : '') + '"><div class="lv-art" style="background:' + tint + '"><b>' + esc(ini) + '</b>' + logo + '</div>' +
-        '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(subOf(c)) + '</div></div></div>';
+        (c.u && !c.folder && !c.site && isFavQ(c) ? '<i class="lv-star">★</i>' : '') + '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(subOf(c)) + '</div></div></div>';
     }).join('') : '<div class="lv-empty">' + (st.q ? 'ماكو قناة بهذا الاسم' : 'ماكو قنوات بهذا القسم') + '</div>';
     }
     /* only move the focus ring: rebuilding every card (and reloading its logo) on each key press made it slow */
@@ -275,7 +293,7 @@
     if (want && want !== pf) want.classList.add('focus');
     [].forEach.call(grid.querySelectorAll('.moving'), function (e) { if (e !== want) e.classList.remove('moving'); });
     if (want) want.classList.toggle('moving', st.pick === 'ch');
-    var hint = $('lvHint'); if (hint) { if (!hint._d) hint._d = hint.textContent; hint.textContent = st.edit ? 'وضع الترتيب: OK يمسك الفولدر أو القناة · الأسهم تحرّكه · OK يثبّته · من «ترتيب القنوات» تطفّي الوضع' : st.del ? 'وضع الحذف: OK على قناة محفوظة من موقع يحذفها · من «حذف قناة محفوظة» تطفّي الوضع' : hint._d; }
+    var hint = $('lvHint'); if (hint) { if (!hint._d) hint._d = hint.textContent; hint.textContent = st.favm ? 'وضع المفضلة: OK على القناة يضيفها للمفضلة أو يشيلها · من «⭐ مفضلة» تطفّي الوضع' : st.edit ? 'وضع الترتيب: OK يمسك الفولدر أو القناة · الأسهم تحرّكه · OK يثبّته · من «ترتيب القنوات» تطفّي الوضع' : st.del ? 'وضع الحذف: OK على قناة محفوظة من موقع يحذفها · من «حذف قناة محفوظة» تطفّي الوضع' : hint._d; }
     var f = grid.querySelector('.focus'), wrap = $('lvGridWrap');
     if (f && wrap) {
       var H = wrap.clientHeight, t = f.offsetTop, h = f.offsetHeight, o = st.off;
@@ -325,6 +343,8 @@
       else if (window.toastMsg) window.toastMsg('هذي مو قناة محفوظة من موقع');
       return;
     }
+    if (st.favm) { var on = toggleFav(cur); st.key = null; if (window.toastMsg) window.toastMsg(on ? '⭐ انضافت للمفضلة: ' + cur.n : 'انشالت من المفضلة: ' + cur.n); draw(); return; }
+    pushRecent(cur);
     var pk = packFor(cur);
     if (window.Android && window.Android.playLive) window.Android.playLive(JSON.stringify(pk), pk.idx);
     else if (window.toastMsg) window.toastMsg('التشغيل يحتاج الشاشة نفسها');
@@ -340,9 +360,10 @@
   }
   /* the tools sit in their own row, apart from the four ways to show the channels */
   function tools() {
-    var l = [{ id: 'search', n: 'بحث', on: !!st.q }, { id: 'edit', n: 'ترتيب القنوات', on: st.edit }];
-    if (xtOf((window.__getSettings && window.__getSettings()) || {})) l.push({ id: 'xt', n: xtState === 'loading' ? 'جاري التحديث…' : 'تحديث IPTV', on: false });
+    var l = [{ id: 'search', n: '🔎 بحث', on: !!st.q }, { id: 'edit', n: '↕ ترتيب القنوات', on: st.edit }];
+    if (xtOf((window.__getSettings && window.__getSettings()) || {})) l.push({ id: 'xt', n: xtState === 'loading' ? 'جاري التحديث…' : '🔄 تحديث IPTV', on: false });
     if (siteCh().length) l.push({ id: 'del', n: 'حذف قناة محفوظة', on: st.del });
+    l.push({ id: 'fav', n: '⭐ مفضلة', on: !!st.favm }); l.push({ id: 'rand', n: '🎲 عشوائي', on: false });
     return l;
   }
   function searchBox() { return $('lvSearch'); }
@@ -420,9 +441,11 @@
         else if (k === 'ok') {
           var id = tl[st.ti].id;
           if (id === 'search') { startSearch(); return; }
-          if (id === 'xt') { if (xtState !== 'loading') { if (window.toastMsg) window.toastMsg('جاري تحديث قنوات IPTV…'); xtPull((window.__getSettings && window.__getSettings()) || {}, true); } }
-          else if (id === 'edit') { st.edit = !st.edit; st.del = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.edit ? 'وضع الترتيب شغّال' : 'وضع الترتيب انطفى'); }
-          else if (id === 'del') { st.del = !st.del; st.edit = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.del ? 'اضغط OK على القناة المحفوظة حتى تنحذف' : 'انطفى وضع الحذف'); }
+          if (id === 'fav') { st.favm = !st.favm; st.edit = false; st.del = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.favm ? 'اضغط OK على أي قناة حتى تنضاف للمفضلة أو تنشال' : 'انطفى وضع المفضلة'); }
+          else if (id === 'rand') { var pool = (window.CHANNELS || []); if (pool.length) { var rc = pool[Math.floor(Math.random() * pool.length)]; st.favm = false; st.ci = 0; st.fold = null; st.sub = null; st.q = ''; st.list = filter('all'); var ri = 0; st.list.forEach(function (c, i) { if (c.u === rc.u && c.n === rc.n) ri = i; }); st.gi = ri; st.f = 'grid'; play(); return; } }
+          else if (id === 'xt') { if (xtState !== 'loading') { if (window.toastMsg) window.toastMsg('جاري تحديث قنوات IPTV…'); xtPull((window.__getSettings && window.__getSettings()) || {}, true); } }
+          else if (id === 'edit') { st.edit = !st.edit; st.favm = false; st.del = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.edit ? 'وضع الترتيب شغّال' : 'وضع الترتيب انطفى'); }
+          else if (id === 'del') { st.del = !st.del; st.favm = false; st.edit = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.del ? 'اضغط OK على القناة المحفوظة حتى تنحذف' : 'انطفى وضع الحذف'); }
         }
       } else if (st.f === 'cat') {
         if (st.edit && st.pick === 'cat') {

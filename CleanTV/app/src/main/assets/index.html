@@ -908,52 +908,67 @@
 
   /* ---- «قنواتي» ---- */
   #vodModal { background: #15181B; direction: rtl; font-family: var(--font); }
-  #vdHead { position: absolute; top: 40px; right: 70px; left: 70px; display: flex; align-items: baseline; gap: 28px; }
-  #vdHead .vd-t { font-family: var(--kufi); font-weight: 700; font-size: 60px; color: #EFE7D4; }
-  #vdSub { font-size: 30px; color: #D9822B; } #vdCount { font-size: 24px; color: #B8BDC2; margin-right: auto; }
-  #vdSecs { position: absolute; top: 140px; right: 70px; width: 380px; }
-  .vd-sec { padding: 20px 26px; margin-bottom: 8px; border-radius: 14px; font-size: 32px; color: #B8BDC2; border: 3px solid transparent; }
-  .vd-sec.on { color: #EFE7D4; background: #20252A; } .vd-sec.focus { border-color: #D9822B; }
-  #vdGridWrap { position: absolute; top: 140px; right: 490px; left: 70px; bottom: 90px; overflow: hidden; }
-  #vdGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; will-change: transform; }
-  .vd-card { border-radius: 14px; border: 3px solid transparent; padding: 8px; content-visibility: auto; contain-intrinsic-size: auto 330px; }
-  .vd-card.focus { border-color: #D9822B; background: #20252A; }
-  .vd-art { position: relative; height: 220px; border-radius: 10px; background: #2A3036; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-  .vd-art b { font-family: var(--kufi); font-size: 70px; color: #5A636B; } .vd-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .vd-n { margin-top: 10px; font-size: 26px; color: #EFE7D4; line-height: 1.3; max-height: 68px; overflow: hidden; } .vd-y { font-size: 22px; color: #B8BDC2; }
-  .vd-empty { grid-column: 1 / -1; padding: 120px 40px; text-align: center; font-size: 34px; color: #B8BDC2; line-height: 1.6; }
-  #vdHint { position: absolute; bottom: 28px; right: 70px; left: 70px; font-size: 24px; color: #8B939A; }
+  #vodModal::before { content: ""; position: absolute; inset: 0; background: radial-gradient(1100px 500px at 15% -10%, rgba(217,130,43,.18), transparent 60%), linear-gradient(180deg, #1B1F23 0, #15181B 46%); pointer-events: none; }
+  #vdHead { position: absolute; top: 36px; right: 70px; left: 70px; display: flex; align-items: baseline; gap: 26px; }
+  #vdHead .vd-t { font-family: var(--kufi); font-weight: 700; font-size: 54px; color: #EFE7D4; }
+  #vdSub { font-size: 28px; color: #D9822B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 700px; } #vdCount { font-size: 24px; color: #B8BDC2; margin-right: auto; }
+  #vdTabs { position: absolute; top: 122px; right: 70px; left: 70px; display: flex; gap: 10px; align-items: center; }
+  .vd-tab { font-size: 25px; font-weight: 600; padding: 10px 22px; border-radius: 999px; color: #B8BDC2; background: #23282D; border: 2px solid rgba(239,231,212,.08); white-space: nowrap; }
+  .vd-tab.tool { background: transparent; border-style: dashed; border-color: rgba(184,189,194,.4); }
+  .vd-tab.tool:nth-child(4) { margin-right: auto; }
+  .vd-tab.on { color: #15181B; background: #EFE7D4; border-color: #EFE7D4; } .vd-tab.tool.on { background: #D9822B; border-color: #D9822B; border-style: solid; }
+  .vd-tab.focus { border: 2px solid #EFE7D4; box-shadow: 0 0 0 3px #D9822B; color: #EFE7D4; background: #2A3036; } .vd-tab.on.focus { color: #15181B; background: #E8A25E; }
+  #vdSearch { display: none; position: absolute; top: 44px; left: 70px; width: 420px; font: 600 26px/1.2 var(--font); color: #EFE7D4; background: #23282D; border: 2px solid #D9822B; border-radius: 14px; padding: 12px 18px; direction: rtl; outline: none; z-index: 3; }
+  #vdSearch.on { display: block; }
+  #vdSecs { position: absolute; top: 200px; right: 70px; width: 360px; bottom: 90px; overflow: hidden; padding: 12px; background: rgba(35,40,45,.55); border: 1px solid rgba(239,231,212,.08); border-radius: 22px; box-sizing: border-box; }
+  .vd-sec { padding: 14px 18px; margin-bottom: 6px; border-radius: 12px; font-size: 26px; color: #B8BDC2; border: 2px solid transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vd-sec.on { color: #EFE7D4; background: linear-gradient(90deg, rgba(217,130,43,.28), rgba(217,130,43,.06)); box-shadow: inset -5px 0 0 #D9822B; } .vd-sec.focus { border-color: #D9822B; background: #2A3036; color: #EFE7D4; }
+  #vdGridWrap { position: absolute; top: 200px; right: 460px; left: 60px; bottom: 90px; overflow: hidden; padding: 0 12px; }
+  #vodModal[data-nocat="1"] #vdSecs { display: none; } #vodModal[data-nocat="1"] #vdGridWrap { right: 60px; }
+  #vdGrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; padding: 12px 0; transition: transform .2s ease-out; }
+  .vd-card { border-radius: 16px; border: 3px solid transparent; padding: 6px; content-visibility: auto; contain-intrinsic-size: auto 350px; min-width: 0; }
+  .vd-card.focus { border-color: #D9822B; background: #2A3036; box-shadow: 0 16px 36px rgba(217,130,43,.25); }
+  .vd-art { position: relative; aspect-ratio: 2 / 3; border-radius: 12px; background: linear-gradient(160deg, #2F363D, #20252A); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .vd-card.ep .vd-art { aspect-ratio: 16 / 10; }
+  .vd-art b { font-family: var(--kufi); font-size: 60px; color: #5A636B; } .vd-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .vd-star { position: absolute; top: 6px; left: 10px; font-style: normal; font-size: 28px; color: #D9822B; text-shadow: 0 2px 6px #000; }
+  .vd-tag { position: absolute; bottom: 8px; right: 8px; font-style: normal; font-size: 18px; padding: 3px 10px; border-radius: 999px; background: rgba(21,24,27,.85); color: #EFE7D4; }
+  .vd-n { margin-top: 8px; font-size: 22px; color: #EFE7D4; line-height: 1.3; height: 58px; overflow: hidden; }
+  .vd-empty { grid-column: 1 / -1; padding: 120px 40px; text-align: center; font-size: 32px; color: #B8BDC2; line-height: 1.7; }
+  #vdHint { position: absolute; bottom: 28px; right: 70px; left: 70px; font-size: 21px; color: #8B939A; padding: 10px 20px; background: rgba(35,40,45,.55); border-radius: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #liveModal { background: #15181B; direction: rtl; font-family: var(--font); }
-  #lvHead { position: absolute; top: 48px; right: 96px; display: flex; align-items: center; gap: 24px; }
-  #lvHead svg { width: 84px; height: 84px; }
-  #lvHead .lv-t { font-family: var(--kufi); font-weight: 700; font-size: 64px; line-height: 1; }
-  #lvHead .lv-st { font-size: 26px; color: var(--ink-3); margin-top: 8px; }
-  #lvCats { position: absolute; top: 200px; right: 96px; width: 360px; bottom: 120px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
-  .lv-cat { font-size: 30px; font-weight: 600; padding: 16px 24px; border-radius: 8px; color: var(--ink-2); border: 2px solid transparent; }
-  .lv-cat.on { background: #23282D; color: var(--ink); box-shadow: inset -6px 0 0 #D9822B; }
-  .lv-cat.focus { border-color: #D9822B; background: #2A3036; }
-  #lvGridWrap { position: absolute; top: 184px; right: 500px; left: 76px; bottom: 96px; overflow: hidden; padding: 0 20px; }
-  #lvGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; padding: 16px 0; transition: transform .22s ease-out; }
-  .lv-ch { content-visibility: auto; contain-intrinsic-size: auto 130px; display: flex; align-items: center; gap: 18px; padding: 14px 16px; border-radius: 16px; background: #23282D; border: 1px solid rgba(184,189,194,.22); min-height: 124px; min-width: 0; }
-  .lv-ch.focus { box-shadow: 0 0 0 4px #15181B, 0 0 0 8px #D9822B; background: #2A3036; position: relative; z-index: 2; }
-  .lv-art { flex: none; width: 104px; height: 104px; border-radius: 12px; display: grid; place-items: center; position: relative; overflow: hidden; }
+  #liveModal::before { content: ""; position: absolute; inset: 0; background: radial-gradient(1200px 520px at 85% -10%, rgba(217,130,43,.20), transparent 60%), linear-gradient(180deg, #1B1F23 0, #15181B 46%); pointer-events: none; }
+  #lvHead { position: absolute; top: 40px; right: 80px; display: flex; align-items: center; gap: 22px; }
+  #lvHead svg { width: 78px; height: 78px; padding: 10px; border-radius: 22px; background: linear-gradient(140deg, #D9822B, #8A4E14); box-shadow: 0 10px 30px rgba(217,130,43,.35); }
+  #lvHead .lv-t { font-family: var(--kufi); font-weight: 700; font-size: 60px; line-height: 1; color: #EFE7D4; }
+  #lvHead .lv-st { font-size: 24px; color: #B8BDC2; margin-top: 8px; }
+  #lvHead .lv-st span { color: #D9822B; font-weight: 700; }
+  #lvCats { position: absolute; top: 190px; right: 80px; width: 380px; bottom: 100px; overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding: 14px; background: rgba(35,40,45,.55); border: 1px solid rgba(239,231,212,.08); border-radius: 24px; box-sizing: border-box; }
+  .lv-cat { font-size: 28px; font-weight: 600; padding: 15px 20px; border-radius: 14px; color: #B8BDC2; border: 2px solid transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lv-cat[data-ic]:not([data-ic=""])::before { content: attr(data-ic); margin-left: 12px; }
+  .lv-cat.on { background: linear-gradient(90deg, rgba(217,130,43,.28), rgba(217,130,43,.06)); color: #EFE7D4; box-shadow: inset -5px 0 0 #D9822B; }
+  .lv-cat.focus { border-color: #D9822B; background: #2A3036; color: #EFE7D4; }
+  #lvGridWrap { position: absolute; top: 184px; right: 490px; left: 60px; bottom: 96px; overflow: hidden; padding: 0 20px; }
+  #lvGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 16px 0; transition: transform .22s ease-out; }
+  .lv-ch { content-visibility: auto; contain-intrinsic-size: auto 130px; position: relative; display: flex; align-items: center; gap: 16px; padding: 14px 16px; border-radius: 20px; background: linear-gradient(160deg, #272D33, #1E2327); border: 1px solid rgba(239,231,212,.07); min-height: 104px; box-sizing: border-box; }
+  .lv-ch.focus { box-shadow: 0 0 0 3px #15181B, 0 0 0 7px #D9822B, 0 18px 40px rgba(217,130,43,.28); background: linear-gradient(160deg, #343B42, #262C31); z-index: 2; }
+  .lv-star { position: absolute; top: 8px; left: 12px; font-style: normal; font-size: 26px; color: #D9822B; z-index: 3; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  .lv-art { flex: none; width: 100px; height: 100px; border-radius: 16px; display: grid; place-items: center; position: relative; overflow: hidden; }
   .lv-art b { font-family: var(--kufi); font-size: 38px; color: #EFE7D4; }
   .lv-art .lv-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; padding: 8px; background: #EFE7D4; box-sizing: border-box; }
   .lv-tx { min-width: 0; flex: 1; }
-  .lv-n { font-size: 28px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .lv-s { font-size: 20px; color: var(--ink-3); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-  #lvViews { position: absolute; top: 64px; left: 96px; display: flex; gap: 10px; }
-  .lv-vw { font-size: 24px; font-weight: 600; padding: 10px 20px; border-radius: 8px; color: var(--ink-2); background: #23282D; border: 2px solid transparent; }
-  .lv-vw.on { color: var(--ink); box-shadow: inset 0 -4px 0 #D9822B; }
-  .lv-vw.focus { border-color: #D9822B; background: #2A3036; }
-  #lvTools { position: absolute; top: 118px; left: 96px; display: flex; gap: 10px; }
-  .lv-tl { font-size: 22px; font-weight: 600; padding: 8px 18px; border-radius: 999px; color: var(--ink-2); background: transparent; border: 2px dashed rgba(184,189,194,.45); }
+  .lv-n { font-size: 27px; font-weight: 700; line-height: 1.3; color: #EFE7D4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .lv-s { font-size: 20px; color: #8B939A; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #lvViews { position: absolute; top: 52px; left: 80px; display: flex; gap: 6px; padding: 6px; background: rgba(35,40,45,.7); border-radius: 16px; }
+  .lv-vw { font-size: 22px; font-weight: 600; padding: 9px 18px; border-radius: 11px; color: #B8BDC2; border: 2px solid transparent; }
+  .lv-vw.on { color: #15181B; background: #EFE7D4; }
+  .lv-vw.focus { border-color: #D9822B; box-shadow: 0 0 0 3px rgba(217,130,43,.4); }
+  #lvTools { position: absolute; top: 122px; left: 80px; display: flex; gap: 10px; }
+  .lv-tl { font-size: 22px; font-weight: 600; padding: 9px 18px; border-radius: 999px; color: #EFE7D4; background: #23282D; border: 2px solid rgba(239,231,212,.10); white-space: nowrap; }
   .lv-tl.on { color: #15181B; background: #D9822B; border-color: #D9822B; }
-  .lv-tl.focus { border: 2px solid #EFE7D4; box-shadow: 0 0 0 3px #D9822B; color: #EFE7D4; background: #2A3036; }
+  .lv-tl.focus { border-color: #EFE7D4; box-shadow: 0 0 0 3px #D9822B; background: #2A3036; }
   .lv-tl.on.focus { color: #15181B; background: #E8A25E; }
-  /* four ways to show the channels */
-  #lvGrid[data-v="list"] { grid-template-columns: 1fr; gap: 14px; }
+  #lvGrid[data-v="list"] { grid-template-columns: 1fr; gap: 12px; }
   #lvGrid[data-v="list"] .lv-ch { min-height: 92px; padding: 10px 18px; }
   #lvGrid[data-v="list"] .lv-art { width: 72px; height: 72px; }
   #lvGrid[data-v="list"] .lv-art b { font-size: 28px; }
@@ -961,22 +976,22 @@
   #lvGrid[data-v="list"] .lv-s { font-size: 22px; margin-top: 2px; }
   #lvGrid[data-v="big"] { grid-template-columns: repeat(3, 1fr); gap: 26px; }
   #lvGrid[data-v="big"] .lv-ch { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px; min-height: 0; }
-  #lvGrid[data-v="big"] .lv-art { width: 100%; height: 168px; border-radius: 10px; }
+  #lvGrid[data-v="big"] .lv-art { width: 100%; height: 168px; border-radius: 14px; }
   #lvGrid[data-v="big"] .lv-art b { font-size: 56px; }
   #lvGrid[data-v="big"] .lv-n { text-align: center; -webkit-line-clamp: 1; }
   #lvGrid[data-v="big"] .lv-s { text-align: center; }
   #lvGrid[data-v="logos"] { grid-template-columns: repeat(6, 1fr); gap: 16px; }
-  #lvGrid[data-v="logos"] .lv-ch { flex-direction: column; align-items: stretch; gap: 8px; padding: 8px; min-height: 0; border-radius: 12px; }
-  #lvGrid[data-v="logos"] .lv-art { width: 100%; height: 112px; border-radius: 8px; }
+  #lvGrid[data-v="logos"] .lv-ch { flex-direction: column; align-items: stretch; gap: 8px; padding: 8px; min-height: 0; border-radius: 16px; }
+  #lvGrid[data-v="logos"] .lv-art { width: 100%; height: 112px; border-radius: 12px; }
   #lvGrid[data-v="logos"] .lv-art b { font-size: 36px; }
   #lvGrid[data-v="logos"] .lv-n { font-size: 20px; text-align: center; -webkit-line-clamp: 1; }
   #lvGrid[data-v="logos"] .lv-s { display: none; }
   .lv-cat.moving { background: #D9822B; color: #15181B; }
   .lv-ch.moving { box-shadow: 0 0 0 4px #15181B, 0 0 0 8px #EFE7D4; transform: scale(1.03); z-index: 3; }
-  #lvSearch { display: none; position: absolute; top: 118px; left: 560px; width: 460px; font: 600 26px/1.2 var(--font); color: var(--ink); background: #23282D; border: 2px solid #D9822B; border-radius: 8px; padding: 10px 16px; direction: rtl; outline: none; }
+  #lvSearch { display: none; position: absolute; top: 52px; left: 640px; width: 420px; font: 600 26px/1.2 var(--font); color: #EFE7D4; background: #23282D; border: 2px solid #D9822B; border-radius: 14px; padding: 12px 18px; direction: rtl; outline: none; }
   #lvSearch.on { display: block; }
-  .lv-empty { grid-column: 1 / -1; font-size: 32px; color: var(--ink-3); padding: 60px; text-align: center; }
-  #lvHint { position: absolute; bottom: 44px; right: 96px; left: 96px; font-size: 22px; color: var(--ink-3); }
+  .lv-empty { grid-column: 1 / -1; font-size: 32px; color: #8B939A; padding: 60px; text-align: center; }
+  #lvHint { position: absolute; bottom: 36px; right: 80px; left: 80px; font-size: 21px; color: #8B939A; padding: 10px 20px; background: rgba(35,40,45,.55); border-radius: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* ---- live scores ticker (identity) ---- */
   #liveTicker { height: 64px; background: #15181B; border-top: 2px solid #B8BDC2; }
   #liveTicker .lt-badge { background: #C8402F; border-radius: 0; font-family: var(--kufi); font-size: 28px; padding: 0 28px; }
@@ -1105,8 +1120,8 @@
   </div></div>
 
   <div id="pairBox"><div class="p-t">ربط الموبايل بمدير الشاشات</div><div class="p-code" id="pairCode"></div><div class="p-s" id="pairSub"></div><div id="pairQr"></div></div>
-  <div class="modal" id="vodModal"><div id="vdHead"><div class="vd-t" id="vdTitle"></div><div id="vdSub"></div><div id="vdCount"></div></div><div id="vdSecs"></div><div id="vdGridWrap"><div id="vdGrid"></div></div><div id="vdHint">الأسهم للتنقل · OK تشغيل · رجوع للقائمة أو الخروج · الأقسام والروابط من تطبيق مدير الشاشة</div></div>
-  <div class="modal" id="liveModal"><div id="lvHead"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg><div><div class="lv-t">قنواتي</div><div class="lv-st">بث مباشر مجاني بدون اشتراك · <span id="lvCount"></span></div></div></div><div id="lvViews"></div><div id="lvTools"></div><input id="lvSearch" type="text" placeholder="ابحث عن قناة…" autocomplete="off"><div id="lvCats"></div><div id="lvGridWrap"><div id="lvGrid"></div></div><div id="lvHint">OK تشغيل · الأسهم للتنقل · فوق القائمة: طريقة العرض ثم الأدوات (بحث · ترتيب · حذف) · داخل القناة: فوق وتحت للتنقل بين القنوات · رجوع للخروج</div></div>
+  <div class="modal" id="vodModal"><div id="vdHead"><div class="vd-t" id="vdTitle"></div><div id="vdSub"></div><div id="vdCount"></div></div><div id="vdTabs"></div><input id="vdSearch" type="text" placeholder="ابحث عن فيلم أو مسلسل…" autocomplete="off"><div id="vdSecs"></div><div id="vdGridWrap"><div id="vdGrid"></div></div><div id="vdHint"></div></div>
+  <div class="modal" id="liveModal"><div id="lvHead"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg><div><div class="lv-t">قنواتي</div><div class="lv-st">بث مباشر مجاني بدون اشتراك · <span id="lvCount"></span></div></div></div><div id="lvViews"></div><div id="lvTools"></div><input id="lvSearch" type="text" placeholder="ابحث عن قناة…" autocomplete="off"><div id="lvCats"></div><div id="lvGridWrap"><div id="lvGrid"></div></div><div id="lvHint">OK تشغيل · فوق القائمة: العرض والأدوات (بحث · مفضلة · عشوائي · ترتيب · تحديث) · داخل القناة: يمين القنوات، يسار المجلدات · رجوع للخروج</div></div>
   <div id="liveTicker"></div>
   <div id="brandStrip"></div>
   <div id="toast"></div>
