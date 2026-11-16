@@ -581,10 +581,14 @@
   var apps = [], order = load('appOrder', null), hidden = load('appHidden', []), mode = 'normal';
   var LIVE_PKG = '__live';
   var LIVE_APP = { pkg: LIVE_PKG, label: 'قنواتي', color: '#D9822B', icon: 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z' fill='#EFE7D4'/><path d='M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z' fill='#EFE7D4'/><rect x='8' y='34' width='84' height='58' rx='12' fill='#EFE7D4'/><rect x='15' y='41' width='70' height='44' rx='5' fill='#B5681F'/><path d='M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><path d='M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><path d='M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><circle cx='50' cy='63' r='2.2' fill='#D9822B'/><rect x='20' y='92' width='8' height='4' fill='#EFE7D4'/><rect x='72' y='92' width='8' height='4' fill='#EFE7D4'/></svg>") };
+  var VOD_PKG = '__vod';
+  var VOD_APP = { pkg: VOD_PKG, label: 'الأفلام والمسلسلات', color: '#B5681F', icon: 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='20' width='80' height='60' rx='10' fill='#EFE7D4'/><rect x='17' y='27' width='66' height='46' rx='4' fill='#15181B'/><path d='M43 38 L63 50 L43 62 Z' fill='#D9822B'/><rect x='10' y='20' width='80' height='6' fill='#B8BDC2'/></svg>") };
   function sortApps(list) {
     var ord = order || DEFAULT_ORDER;
     if (!list.some(function (a) { return a.pkg === LIVE_PKG; })) list.push(LIVE_APP);
-    function rank(p) { var i = ord.indexOf(p); return i < 0 ? (p === LIVE_PKG ? -1 : 999) : i; }
+    VOD_APP.label = String((settings && settings.vodName) || '').trim() || 'الأفلام والمسلسلات';
+    if (!list.some(function (a) { return a.pkg === VOD_PKG; })) list.push(VOD_APP);
+    function rank(p) { var i = ord.indexOf(p); return i < 0 ? (p === LIVE_PKG ? -1 : p === VOD_PKG ? -1 : 999) : i; }
     return list.sort(function (a, b) { return rank(a.pkg) - rank(b.pkg) || a.label.localeCompare(b.label, 'ar'); });
   }
   var DEMO_FALLBACK = [['يوتيوب', '#e50914'], ['نتفلكس', '#b20710'], ['شاهد', '#1fb36a'], ['المتجر', '#01875f'], ['ديزني', '#113ccf'], ['سبوتيفاي', '#1db954'], ['الملفات', '#5b6b8c'], ['الإعدادات', '#607d8b'], ['كودي', '#17b2e7'], ['VLC', '#ff8800']];
@@ -642,6 +646,7 @@
   }
   function launchApp2(pkg) {
     if (pkg === LIVE_PKG) { if (window.Live) window.Live.open(); return; }
+    if (pkg === VOD_PKG) { if (window.Vod) window.Vod.open(); return; }
     if (!kidsBeforeLaunch()) return;
     pushRecent(pkg);
     if (HAS_ANDROID) { if (!A.launch(pkg)) toast('ما گدرت أفتح هذا التطبيق'); } else toast('فتح: ' + pkg);
@@ -1996,6 +2001,7 @@
   window.__setLayer = function (l) { layer = l; };
   window.__getSettings = function () { return settings; };
   window.__fetchText = function (u) { return (HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u); };
+  window.__closeVod = function () { var m = document.getElementById('vodModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   var nav = (function () {
     var rowEls = qa('#content .row');
@@ -2153,6 +2159,7 @@
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
     clickSound(); if (k === 'ok') pressFx();
     if (layer === 'live') return window.Live.key(k);
+    if (layer === 'vod') return window.Vod.key(k);
     if (layer === 'bg') return pickerKey(k);
     if (layer === 'power') return powerKey(k);
     if (layer === 'edit') return editKey(k);

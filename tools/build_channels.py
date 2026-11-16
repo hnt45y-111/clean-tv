@@ -185,6 +185,8 @@ T = [
  ('الرشيد', 'iq', 'ent', '', 'iq', r'^Al Rasheed TV', r'livaat\.com'),
  ('MBC مود', 'sa', 'ent', 'mbc', 'sa', r'^MBC Mood', r'edgenextcdn\.net'),
  ('MBC+ دراما', 'sa', 'movies', 'mbc', 'sa', r'^MBC\+ Drama', r'edgenextcdn\.net'),
+ ('MBC Persia', 'ae', 'ent', 'mbc', 'ae', r'^MBC Persia \(1080p\)', r'edgenextcdn\.net'),
+ ('MBC Bollywood', 'ae', 'ent', 'mbc', 'ae', r'^MBC Bollywood', r'edgenextcdn\.net'),
  ('MTV لبنان', 'lb', 'ent', '', 'lb', r'^MTV Lebanon', r'edgenextcdn\.net'),
  ('OTV لبنان', 'lb', 'ent', '', 'lb', r'^OTV', r'hibridcdn\.net'),
  ('المستقبل', 'lb', 'ent', '', 'lb', r'^Future TV', r'kwikmotion\.com'),

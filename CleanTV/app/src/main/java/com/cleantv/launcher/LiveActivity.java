@@ -10,7 +10,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
@@ -68,6 +67,7 @@ public class LiveActivity extends Activity {
     private final List<Boolean> yts = new ArrayList<>();
     private final List<String> fNames = new ArrayList<>();
     private final List<int[]> fIdx = new ArrayList<>();
+    private boolean vod;      // a film or episode: seek and pause instead of zapping
     private int curFolder, selFolder, chSel, focusCol, downHandled = -1;
     private boolean panelOpen;
     private FrameLayout root;
@@ -77,6 +77,10 @@ public class LiveActivity extends Activity {
     private boolean ytFell;
     private LinearLayout listPanel;
     private ListView fList, cList;
+    private View vDiv;
+    private TextView listTitle, listHint;
+    private int mode;                 // 0 no list, 1 channels (right arrow), 2 folders (left arrow)
+    private boolean foChOpen;         // in the folders list: a folder was chosen and its channels are showing
     private BaseAdapter fAd, cAd;
     private final android.util.LruCache<String, Bitmap> logoCache = new android.util.LruCache<>(120);
 
@@ -98,7 +102,7 @@ public class LiveActivity extends Activity {
             String raw = PACK != null ? PACK : getIntent().getStringExtra("list");
             raw = raw == null ? "[]" : raw.trim();
             JSONArray a, fo = null;
-            if (raw.startsWith("{")) { JSONObject ob = new JSONObject(raw); a = ob.getJSONArray("list"); fo = ob.optJSONArray("folders"); curFolder = ob.optInt("fold", 0); }
+            if (raw.startsWith("{")) { JSONObject ob = new JSONObject(raw); a = ob.getJSONArray("list"); fo = ob.optJSONArray("folders"); curFolder = ob.optInt("fold", 0); vod = ob.optInt("vod", 0) == 1; }
             else a = new JSONArray(raw);
             for (int i = 0; i < a.length(); i++) {
                 JSONObject o = a.getJSONObject(i);
@@ -241,6 +245,8 @@ public class LiveActivity extends Activity {
     private void play(int i) {
         if (urls.isEmpty()) return;
         idx = (i + urls.size()) % urls.size();
+        // the last folder and channel are kept, so the next start opens on them
+        try { Media.prefs(this).edit().putString("liveLast", new JSONObject().put("f", fNames.get(curFolder)).put("k", urls.get(idx) + "|" + names.get(idx)).toString()).apply(); } catch (Throwable ignored) { }
         String n = names.get(idx);
         nameV.setText(n);
         subV.setText(subs.get(idx));
@@ -338,7 +344,7 @@ public class LiveActivity extends Activity {
         LinearLayout head = new LinearLayout(this);
         head.setOrientation(LinearLayout.VERTICAL);
         head.setPadding(dp(26), dp(18), dp(26), dp(12));
-        TextView title = ptv(34, IVORY, kufi); title.setText("قنواتي");
+        TextView title = ptv(34, IVORY, kufi); title.setText("قنواتي"); listTitle = title;
         listCount = ptv(14, CHROME, plexR);
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2); cl.topMargin = dp(6);
         head.addView(title); head.addView(listCount, cl);
@@ -347,15 +353,16 @@ public class LiveActivity extends Activity {
         cols.setOrientation(LinearLayout.HORIZONTAL);
         cols.setPadding(dp(14), 0, dp(14), 0);
         fList = newList(); cList = newList();
-        cols.addView(fList, new LinearLayout.LayoutParams(0, -1, 0.34f));
-        View vl = new View(this); vl.setBackgroundColor(Color.parseColor("#3A4046"));
+        // right to left: the channels first (towards the middle of the screen), then the divider, then the folders (at the edge)
+        cols.addView(cList, new LinearLayout.LayoutParams(0, -1, 0.6f));
+        vDiv = new View(this); vDiv.setBackgroundColor(Color.parseColor("#3A4046"));
         LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(dp(1), -1); vp.setMargins(dp(8), dp(4), dp(8), dp(4));
-        cols.addView(vl, vp);
-        cols.addView(cList, new LinearLayout.LayoutParams(0, -1, 0.66f));
+        cols.addView(vDiv, vp);
+        cols.addView(fList, new LinearLayout.LayoutParams(0, -1, 0.4f));
         listPanel.addView(cols, new LinearLayout.LayoutParams(-1, 0, 1f));
-        TextView hint = ptv(13, CHROME, plexR); hint.setText("OK تشغيل · ◄ ► بين الفولدرات والقنوات · رجوع للإغلاق");
-        hint.setPadding(dp(26), dp(10), dp(26), dp(14));
-        listPanel.addView(hint, new LinearLayout.LayoutParams(-1, -2));
+        listHint = ptv(13, CHROME, plexR);
+        listHint.setPadding(dp(26), dp(10), dp(26), dp(14));
+        listPanel.addView(listHint, new LinearLayout.LayoutParams(-1, -2));
         listPanel.setVisibility(View.GONE);
         root.addView(listPanel, new FrameLayout.LayoutParams(pw, -1, Gravity.START));
 
@@ -437,39 +444,76 @@ public class LiveActivity extends Activity {
     }
 
     private void refreshPanel() {
-        listCount.setText("بث مباشر مجاني · " + fIdx.get(selFolder).length + " قناة");
+        listCount.setText(mode == 2 && !foChOpen ? fNames.size() + " مجلد" : fNames.get(selFolder) + " · " + fIdx.get(selFolder).length + " قناة");
         fAd.notifyDataSetChanged(); cAd.notifyDataSetChanged();
     }
 
-    private void openPanel() {
-        panelOpen = true; selFolder = curFolder; focusCol = 1;
-        chSel = Math.max(0, posIn(fIdx.get(selFolder), idx));
-        h.removeCallbacks(hide); panel.setVisibility(View.GONE);
-        listPanel.setVisibility(View.VISIBLE);
-        refreshPanel(); scrollList(fList, selFolder); scrollList(cList, chSel);
+    /* right arrow: the channels of the folder that is playing, as a list on the right.
+       left arrow: all the folders on the left; choosing one shows its channels next to it. OK only chooses. */
+    private void layoutPanel() {
+        int w = getResources().getDisplayMetrics().widthPixels;
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) listPanel.getLayoutParams();
+        LinearLayout.LayoutParams fl = (LinearLayout.LayoutParams) fList.getLayoutParams(), cl = (LinearLayout.LayoutParams) cList.getLayoutParams();
+        if (mode == 1) {
+            lp.gravity = Gravity.START; lp.width = Math.round(w * 0.34f);
+            fList.setVisibility(View.GONE); vDiv.setVisibility(View.GONE); cList.setVisibility(View.VISIBLE); cl.weight = 1f;
+            listTitle.setText("القنوات"); listHint.setText("▲ ▼ تنقل · OK تشغيل القناة · رجوع للإغلاق");
+        } else {
+            lp.gravity = Gravity.END; lp.width = Math.round(w * (foChOpen ? 0.62f : 0.27f));
+            fList.setVisibility(View.VISIBLE); vDiv.setVisibility(foChOpen ? View.VISIBLE : View.GONE); cList.setVisibility(foChOpen ? View.VISIBLE : View.GONE);
+            fl.weight = foChOpen ? 0.4f : 1f; cl.weight = 0.6f;
+            listTitle.setText("المجلدات"); listHint.setText(foChOpen ? "▲ ▼ تنقل · OK تشغيل · ► القنوات ◄ المجلدات · رجوع" : "▲ ▼ تنقل · OK اختيار المجلد · رجوع للإغلاق");
+        }
+        listPanel.setLayoutParams(lp); fList.setLayoutParams(fl); cList.setLayoutParams(cl);
     }
 
-    private void closePanel() { panelOpen = false; listPanel.setVisibility(View.GONE); }
+    private void openChannels() {
+        mode = 1; panelOpen = true; selFolder = curFolder; focusCol = 1; foChOpen = false;
+        chSel = Math.max(0, posIn(fIdx.get(selFolder), idx));
+        h.removeCallbacks(hide); panel.setVisibility(View.GONE);
+        layoutPanel(); listPanel.setVisibility(View.VISIBLE);
+        refreshPanel(); scrollList(cList, chSel);
+    }
+
+    private void openFolders() {
+        mode = 2; panelOpen = true; selFolder = curFolder; focusCol = 0; foChOpen = false;
+        chSel = Math.max(0, posIn(fIdx.get(selFolder), idx));
+        h.removeCallbacks(hide); panel.setVisibility(View.GONE);
+        layoutPanel(); listPanel.setVisibility(View.VISIBLE);
+        refreshPanel(); scrollList(fList, selFolder);
+    }
+
+    private void closePanel() { panelOpen = false; mode = 0; foChOpen = false; listPanel.setVisibility(View.GONE); }
 
     private boolean panelKey(int code) {
         int[] cur = fIdx.get(selFolder);
         switch (code) {
-            case KeyEvent.KEYCODE_BACK: closePanel(); return true;
+            case KeyEvent.KEYCODE_BACK:
+                if (mode == 2 && foChOpen) { foChOpen = false; focusCol = 0; layoutPanel(); refreshPanel(); scrollList(fList, selFolder); }
+                else closePanel();
+                return true;
             case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_DPAD_DOWN: {
                 int dir = code == KeyEvent.KEYCODE_DPAD_DOWN ? 1 : -1;
                 if (focusCol == 0) {
                     int n = Math.max(0, Math.min(fNames.size() - 1, selFolder + dir));
-                    if (n != selFolder) { selFolder = n; chSel = Math.max(0, posIn(fIdx.get(n), idx)); refreshPanel(); scrollList(fList, selFolder); scrollList(cList, chSel); }
+                    if (n != selFolder) { selFolder = n; chSel = Math.max(0, posIn(fIdx.get(n), idx)); refreshPanel(); scrollList(fList, selFolder); if (foChOpen) scrollList(cList, chSel); }
                 } else {
                     chSel = Math.max(0, Math.min(cur.length - 1, chSel + dir)); refreshPanel(); scrollList(cList, chSel);
                 }
                 return true;
             }
-            case KeyEvent.KEYCODE_DPAD_RIGHT: focusCol = 0; refreshPanel(); return true;
-            case KeyEvent.KEYCODE_DPAD_LEFT: if (cur.length > 0) { focusCol = 1; refreshPanel(); } return true;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:      // folders sit on the left, their channels on the right of them
+                if (mode == 2 && foChOpen && focusCol == 0 && cur.length > 0) { focusCol = 1; refreshPanel(); }
+                return true;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                if (mode == 2 && foChOpen && focusCol == 1) { focusCol = 0; refreshPanel(); }
+                return true;
             case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER:
-                if (focusCol == 0) { if (cur.length > 0) { focusCol = 1; refreshPanel(); } }
-                else if (cur.length > 0) { curFolder = selFolder; failed = 0; int target = cur[Math.min(chSel, cur.length - 1)]; closePanel(); play(target); }
+                if (mode == 2 && focusCol == 0) {          // OK on a folder: show its channels
+                    foChOpen = true; focusCol = 1; chSel = Math.max(0, posIn(fIdx.get(selFolder), idx)); layoutPanel(); refreshPanel(); scrollList(cList, chSel);
+                } else if (cur.length > 0) {              // OK on a channel: play it
+                    curFolder = selFolder; failed = 0; int target = cur[Math.min(chSel, cur.length - 1)]; closePanel(); play(target);
+                }
                 return true;
             default: return false;
         }
@@ -477,25 +521,30 @@ public class LiveActivity extends Activity {
 
     private boolean handleKey(int code) {
         if (panelOpen) return panelKey(code);
+        if (vod && player != null) {
+            switch (code) {
+                case KeyEvent.KEYCODE_DPAD_RIGHT: player.seekTo(Math.max(0, player.getCurrentPosition() - 15000)); return true;
+                case KeyEvent.KEYCODE_DPAD_LEFT: player.seekTo(player.getCurrentPosition() + 15000); return true;
+                case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_DPAD_DOWN: return true;
+                case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: player.setPlayWhenReady(!player.getPlayWhenReady()); return true;
+                case KeyEvent.KEYCODE_BACK: finish(); return true;
+                default: break;
+            }
+        }
         switch (code) {
             case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_CHANNEL_UP: case KeyEvent.KEYCODE_PAGE_UP: zap(1); return true;
             case KeyEvent.KEYCODE_DPAD_DOWN: case KeyEvent.KEYCODE_CHANNEL_DOWN: case KeyEvent.KEYCODE_PAGE_DOWN: zap(-1); return true;
-            case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER:
-                // the OK that started this channel is still down (or repeating) when the player opens: it must not open the list
-                if (SystemClock.uptimeMillis() - born < 900 || okRepeat) return true;
-                openPanel(); return true;
+            case KeyEvent.KEYCODE_DPAD_RIGHT: openChannels(); return true;
+            case KeyEvent.KEYCODE_DPAD_LEFT: openFolders(); return true;
+            case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: return true;      // OK only chooses inside the lists
             case KeyEvent.KEYCODE_BACK: finish(); return true;
             default: return false;
         }
     }
 
-    private long born = SystemClock.uptimeMillis();
-    private boolean okRepeat;
-
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
         int code = e.getKeyCode();
-        okRepeat = (code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) && e.getRepeatCount() > 0;
         if (e.getAction() == KeyEvent.ACTION_DOWN) { if (handleKey(code)) { downHandled = code; return true; } }
         else if (e.getAction() == KeyEvent.ACTION_UP && downHandled == code) { downHandled = -1; return true; }
         return super.dispatchKeyEvent(e);

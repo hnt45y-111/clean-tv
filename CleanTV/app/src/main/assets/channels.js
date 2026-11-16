@@ -153,6 +153,8 @@ window.CHANNELS = [{"n":"الجزيرة","c":"qa","g":"news","u":"https://live-h
 {"n":"الرشيد","c":"iq","g":"ent","u":"https://media1.livaat.com/static/AL-RASHEED-HD/playlist.m3u8","i":"AlRasheedTV.iq"},
 {"n":"MBC مود","c":"sa","g":"ent","u":"https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-mood/78367bf48ccdba501d0d014a10c21031/index.m3u8","p":"mbc","i":"MBCMood.sa"},
 {"n":"MBC+ دراما","c":"sa","g":"movies","u":"https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-plus-drama/e37251ec2aac8f6c98f75cd0fa37cd28/index.m3u8","p":"mbc","i":"MBCPlusDrama.sa"},
+{"n":"MBC Persia","c":"ae","g":"ent","u":"https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-persia/818ee8e4b592dc497608f066d825bfb4/index.m3u8","p":"mbc"},
+{"n":"MBC Bollywood","c":"ae","g":"ent","u":"https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-bollywood/546eb40d7dcf9a209255dd2496903764/index.m3u8","p":"mbc"},
 {"n":"MTV لبنان","c":"lb","g":"ent","u":"https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mtv-lebanon/b8ebb2a5affb812f1541712adde10e26/index.m3u8","i":"MTVLebanon.lb"},
 {"n":"OTV لبنان","c":"lb","g":"ent","u":"https://otv.hibridcdn.net/otv/tv_abr/playlist.m3u8","i":"OTV.lb"},
 {"n":"المستقبل","c":"lb","g":"ent","u":"https://live.kwikmotion.com/futurelive/ftv.smil/playlist.m3u8","i":"FutureTV.lb"},

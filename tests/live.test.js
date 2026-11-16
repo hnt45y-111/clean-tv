@@ -15,7 +15,7 @@ function classList() {
 function makePage(opts = {}) {
   const els = {};
   const el = id => els[id] || (els[id] = { id, innerHTML: '', textContent: '', value: '', style: {}, children: [], clientHeight: 600, offsetTop: 0, offsetHeight: 100, classList: classList(), setAttribute() {}, querySelector() { return null; }, querySelectorAll() { return []; }, blur() {}, focus() {}, addEventListener() {} });
-  const store = {};
+  const store = Object.assign({}, opts.store || {});
   const calls = [];
   let saved = (opts.saved || []).slice();
   const win = {
@@ -29,7 +29,8 @@ function makePage(opts = {}) {
       siteChannels: () => JSON.stringify(saved),
       siteDelete: k => { calls.push('del ' + k); saved = saved.filter(o => o.u + '|' + o.n !== k); },
       openSite: u => calls.push('open ' + u),
-      playLive: (json, i) => calls.push({ play: i, pack: JSON.parse(json) })
+      playLive: (json, i) => calls.push({ play: i, pack: JSON.parse(json) }),
+      getPref: k => (k === 'liveLast' && opts.last ? JSON.stringify(opts.last) : '')
     },
     toastMsg: () => {}
   };
@@ -171,4 +172,64 @@ test('search finds channels by name, saved ones included', () => {
   t.Live.open();
   t.Live.search('محفوظة');
   assert.deepStrictEqual(t.names(), ['قناة محفوظة رياضة']);
+});
+
+function bigList(n, groups) {
+  let t = '#EXTM3U\n';
+  for (let i = 0; i < n; i++) t += '#EXTINF:-1 group-title="مجموعة ' + (i % groups) + '",قناة ' + i + '\nhttp://p/' + i + '.m3u8\n';
+  return t;
+}
+
+test('a big private list opens as sub-folders by group, and Back climbs out one level at a time', () => {
+  const t = makePage({ settings: { myM3u: bigList(60, 3) } });
+  t.Live.open();
+  t.goCat('📁 قنواتي الخاصة');
+  assert.deepStrictEqual(t.names(), ['قنواتي المضافة']);
+  t.keys('ok');
+  assert.deepStrictEqual(t.names(), ['مجموعة 0', 'مجموعة 1', 'مجموعة 2']);
+  t.keys('ok');
+  assert.strictEqual(t.names().length, 20);
+  t.keys('back'); assert.deepStrictEqual(t.names(), ['مجموعة 0', 'مجموعة 1', 'مجموعة 2']);
+  t.keys('back'); assert.deepStrictEqual(t.names(), ['قنواتي المضافة']);
+});
+
+test('a small list stays one flat folder', () => {
+  const t = makePage({ settings: { myM3u: bigList(10, 2) } });
+  t.Live.open(); t.goCat('📁 قنواتي الخاصة'); t.keys('ok');
+  assert.strictEqual(t.names().length, 10);
+});
+
+test('an IPTV (Xtream) account is one folder with a sub-folder per category, streams built from the account', () => {
+  const cache = { k: 'http://srv.test:8080|u1', t: Date.now(), cats: ['رياضة', 'أفلام'], items: [['قناة أ', 11, 0, ''], ['قناة ب', 12, 1, '']].concat(Array.from({ length: 40 }, (_, i) => ['عام ' + i, 100 + i, i % 2, ''])) };
+  const t = makePage({ settings: { xtream: { host: 'srv.test:8080', user: 'u1', pass: 'p 1', name: 'اشتراكي' } }, store: { myXt: JSON.stringify(cache) } });
+  t.Live.open(); t.goCat('📁 قنواتي الخاصة');
+  assert.deepStrictEqual(t.names(), ['اشتراكي']);
+  t.keys('ok'); assert.deepStrictEqual(t.names(), ['رياضة', 'أفلام']);
+  t.keys('ok'); assert.ok(t.names().includes('قناة أ'));
+  t.keys('ok');
+  const play = t.calls.find(c => c.play !== undefined);
+  assert.ok(play, 'plays');
+  const ch = play.pack.list[play.pack.idx];
+  assert.strictEqual(ch.u, 'http://srv.test:8080/live/u1/p%201/11.ts', 'the stream address is built from the account');
+  assert.ok(play.pack.list.length < 260, 'the hand-over to the player stays small');
+});
+
+test('it opens on the folder and the channel that played last', () => {
+  const t = makePage({ last: { f: 'رياضة', k: 'http://a/2.m3u8|قناة رياضة' } });
+  t.Live.open();
+  assert.strictEqual(t.onCat(), 'رياضة');
+  t.keys('ok');
+  const play = t.calls.find(c => c.play !== undefined); assert.strictEqual(play.pack.list[play.pack.idx].n, 'قناة رياضة');
+});
+
+test('it also finds a last channel that was inside a private list', () => {
+  const t = makePage({ settings: { myM3u: bigList(60, 3) }, last: { f: '📁 قنواتي المضافة · مجموعة 1', k: 'http://p/4.m3u8|قناة 4' } });
+  t.Live.open();
+  assert.strictEqual(t.onCat(), '📁 قنواتي الخاصة');
+  assert.ok(t.names().includes('قناة 4'));
+});
+
+test('nothing saved, or a folder that is gone: it simply opens as usual', () => {
+  assert.strictEqual(makePage({ last: { f: 'مجلد محذوف', k: 'x|y' } }).Live.open(), undefined);
+  const t = makePage({ last: { f: 'مجلد محذوف', k: 'x|y' } }); t.Live.open(); assert.strictEqual(t.onCat(), 'كل القنوات');
 });
