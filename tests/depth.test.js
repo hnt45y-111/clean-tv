@@ -57,9 +57,9 @@ test('remove and hide take an app off the dock; the choice is saved', () => {
 });
 
 test('saved choices are read back on the next start', () => {
-  const first = load();
+  const first = load(); first.t.loadCfg();
   first.t.dockApps(); first.t.hideApp('a'); first.t.state.bg = 'timimoun'; first.t.state.effect = false; first.t.state.reduce = true; first.t.saveCfg();
-  const next = load();                              // same TV, next boot
+  const next = load();                              // same TV, next boot, same design
   next.store.depthCfg = first.store.depthCfg;
   next.t.loadCfg();
   assert.strictEqual(next.t.state.bg, 'timimoun');
@@ -73,7 +73,7 @@ test('a design can carry the first choices; the TV\'s own choice wins afterwards
   const x = load({ settings: { depth: { bg: 'dukan', effect: false } } });
   x.t.loadCfg();
   assert.strictEqual(x.t.state.bg, 'dukan'); assert.strictEqual(x.t.state.effect, false);
-  x.store.depthCfg = JSON.stringify({ bg: 'shatt' });
+  x.t.state.bg = 'shatt'; x.t.saveCfg();             // the TV chooses under the same design
   x.t.loadCfg();
   assert.strictEqual(x.t.state.bg, 'shatt');
 });
@@ -97,20 +97,69 @@ test('one app only: the picture stays still', () => {
   t.dockApps(); t.state.di = 0; assert.strictEqual(t.selPos(), 0);
 });
 
-test('every place has its picture and its front layer, both 1920x1080, and a short file', () => {
+test('every place has its picture, a small blurred copy for the glass clock, and a front layer', () => {
   const { Depth } = load();
-  assert.strictEqual(Depth.places.length, 13);
-  assert.deepStrictEqual(plain(Depth.places.slice(0, 7).map(p => p.n)), ['هيبت سلطان', 'رواندوز', 'جبل حلگورد', 'سد دوكان', 'دهوك وعمادية', 'شط العرب', 'أهوار ذي قار']);
-  assert.deepStrictEqual(plain(Depth.places.slice(7).map(p => p.n)), ['طاسيلي', 'تاغيت', 'جرجرة', 'تيميمون', 'غرداية', 'قسنطينة']);
+  assert.strictEqual(Depth.places.length, 14);
+  assert.deepStrictEqual(plain(Depth.places.slice(0, 8).map(p => p.n)), ['قمة ثلجية', 'هيبت سلطان', 'رواندوز', 'جبل حلگورد', 'سد دوكان', 'دهوك وعمادية', 'شط العرب', 'أهوار ذي قار']);
+  assert.deepStrictEqual(plain(Depth.places.slice(8).map(p => p.n)), ['طاسيلي', 'تاغيت', 'جرجرة', 'تيميمون', 'غرداية', 'قسنطينة']);
   Depth.places.forEach(p => {
-    const jpg = path.join(ASSETS, 'depth', p.id + '.jpg'), png = path.join(ASSETS, 'depth', p.id + '_fg.png');
-    assert.ok(fs.existsSync(jpg) && fs.existsSync(png), p.id + ' files');
-    const b = fs.readFileSync(png);
-    assert.strictEqual(b.readUInt32BE(16), 1920); assert.strictEqual(b.readUInt32BE(20), 1080);
-    assert.strictEqual(b[25], 6, p.id + ' front layer must be RGBA (transparent)');
-    const j = fs.readFileSync(jpg); assert.ok(j[0] === 0xff && j[1] === 0xd8, p.id + ' is a jpeg');
-    assert.ok(j.length < 600 * 1024 && b.length < 600 * 1024, p.id + ' stays light for weak TVs');
+    const jpg = path.join(ASSETS, 'depth', p.id + '.jpg'), blur = path.join(ASSETS, 'depth', p.id + '_b.jpg'), png = path.join(ASSETS, 'depth', p.id + '_fg.png');
+    assert.ok(fs.existsSync(jpg) && fs.existsSync(blur), p.id + ' files');
+    const j = fs.readFileSync(jpg); assert.ok(j[0] === 0xff && j[1] === 0xd8, p.id + ' is a jpeg'); assert.ok(j.length < 600 * 1024, p.id + ' stays light for weak TVs');
+    assert.ok(fs.statSync(blur).size < 30 * 1024);
+    if (p.user) { assert.ok(p.user.sky && p.user.sky.length >= 96, p.id + ' front layer (skyline)'); }
+    else {
+      const b = fs.readFileSync(png);
+      assert.strictEqual(b.readUInt32BE(16), 1920); assert.strictEqual(b.readUInt32BE(20), 1080);
+      assert.strictEqual(b[25], 6, p.id + ' front layer must be RGBA (transparent)'); assert.ok(b.length < 600 * 1024);
+    }
   });
+});
+
+test('a design sent from the phone replaces the TV\'s old choices, but the TV keeps its own pictures', () => {
+  const x = load({ settings: { depth: { bg: 'dukan', cs: 'bold', prov: 7 } } });
+  x.t.state.users = [{ id: 'u1', src: 'x.jpg' }];
+  x.store.depthCfg = JSON.stringify({ sig: 'old-design', bg: 'shatt', cs: 'thin', prov: 3, users: [{ id: 'u1', src: 'x.jpg' }] });
+  x.t.loadCfg();
+  assert.strictEqual(x.t.state.bg, 'dukan'); assert.strictEqual(x.t.state.cs, 'bold'); assert.strictEqual(x.t.state.prov, 7);
+  assert.strictEqual(x.t.state.users.length, 1, 'pictures picked on the TV are kept');
+  x.t.saveCfg(); x.t.state.bg = 'ahwar'; x.t.saveCfg();                      // the TV chooses again under the same design
+  x.t.loadCfg(); assert.strictEqual(x.t.state.bg, 'ahwar', 'a choice made on the TV holds while the design is the same');
+});
+
+test('the phone decides the order and which pictures show; pictures sent from it join the list', () => {
+  const x = load({ settings: { depth: { order: ['constantine', 'snow'], off: ['haibat'], bgs: [{ id: 'p1', n: 'صورة من التلفون', src: 'data:image/jpeg;base64,AA==', sky: [.3, .3], ok: true, dy: 20 }] } } });
+  x.t.loadCfg();
+  const ids = plain(x.t.placeList().map(p => p.id));
+  assert.strictEqual(ids[0], 'constantine'); assert.strictEqual(ids[1], 'snow');
+  assert.ok(!ids.includes('haibat'), 'switched off'); assert.ok(ids.includes('p1'));
+  x.t.state.bg = 'haibat'; assert.ok(plain(x.t.placeList().map(p => p.id)).includes('haibat'), 'the one on screen is never removed from under it');
+});
+
+test('the news strip moves at a pace a person can read, and the pace is a setting', () => {
+  const x = load(); x.t.loadCfg();
+  const slow = x.t.newsCps(); assert.ok(slow >= 3 && slow <= 5, 'default about 4 letters a second, was ' + slow);
+  x.t.state.nsp = 10; assert.ok(x.t.newsCps() > slow * 2); x.t.state.nsp = 1; assert.ok(x.t.newsCps() < slow);
+});
+
+test('the strips never stay silently empty: they say what they are waiting for', () => {
+  const x = load();
+  x.t.setMatches([], false, 'done'); assert.ok(/اختر فرقك/.test(x.els.dpMatches.innerHTML));
+  x.t.setMatches([], true, 'done'); assert.ok(/ماكو مباريات/.test(x.els.dpMatches.innerHTML));
+  x.t.setMatches([], true, 'loading'); assert.ok(/جاري/.test(x.els.dpMatches.innerHTML));
+  x.t.setMatches([], true, 'fail'); assert.ok(/تعذّر/.test(x.els.dpMatches.innerHTML));
+  x.t.setMatches([{ h: 'ريال مدريد', a: 'برشلونة', at: Date.now() + 1e8, lg: 'الدوري' }], true, 'done'); assert.ok(/ريال مدريد/.test(x.els.dpMatches.innerHTML));
+  x.t.setNewsState('loading'); assert.ok(/جاري/.test(x.els.dpNews.innerHTML));
+  x.t.setNewsState('fail'); assert.ok(/تعذّر/.test(x.els.dpNews.innerHTML));
+  x.t.setNewsState('none'); assert.ok(/مصادر/.test(x.els.dpNews.innerHTML));
+});
+
+test('the phone editor has its «العمق» tab and its files are loaded', () => {
+  const sdir = path.join(__dirname, '../Studio/app/src/main/assets');
+  assert.ok(fs.existsSync(path.join(sdir, 'depth-studio.js')));
+  assert.ok(fs.readFileSync(path.join(sdir, 'index.html'), 'utf8').indexOf('depth-studio.js') > 0);
+  const js = fs.readFileSync(path.join(sdir, 'depth-studio.js'), 'utf8');
+  ['data-dbg', 'data-dup', 'data-dcs', 'data-dpv', 'pspd', 'nsp', 'data-drss', 'tickerTeamsSheet', '__dsel', 'bgimages'].forEach(k => assert.ok(js.indexOf(k) >= 0, k));
 });
 
 test('the 18 governorates, in Iraq, with the Baghdad default', () => {
@@ -200,7 +249,7 @@ test('RSS items are read from titles, duplicates dropped, at most eight', () => 
 
 test('credits name every picture', () => {
   const c = fs.readFileSync(path.join(__dirname, '../CREDITS.md'), 'utf8');
-  ['haibat', 'rawanduz', 'halgurd', 'dukan', 'amadiya', 'shatt', 'ahwar', 'tassili', 'taghit', 'djurdjura', 'timimoun', 'ghardaia', 'constantine'].forEach(id => assert.ok(c.indexOf(id + '.jpg') >= 0, id));
+  ['snow', 'haibat', 'rawanduz', 'halgurd', 'dukan', 'amadiya', 'shatt', 'ahwar', 'tassili', 'taghit', 'djurdjura', 'timimoun', 'ghardaia', 'constantine'].forEach(id => assert.ok(c.indexOf(id + '.jpg') >= 0, id));
 });
 
 test('the page loads the new files and the old skins stay in the studio lists', () => {

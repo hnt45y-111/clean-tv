@@ -16,7 +16,10 @@ body[data-skin="depth"] #osArt, body[data-skin="depth"] #clubBg, body[data-skin=
 .dp-clk { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity .3s ease-out; }
 .dp-ck { font: 800 300px 'Tajawal', 'Plex', system-ui, sans-serif; fill: rgba(255,255,255,.85); letter-spacing: -4px; }
 /* six looks for the clock */
-.dp-clk[data-cs="glass"] .dp-ck { fill: var(--gl); stroke: rgba(255,255,255,.85); stroke-width: 3px; }
+.dp-ckc { font: 800 300px 'Tajawal', 'Plex', system-ui, sans-serif; letter-spacing: -4px; }
+.dp-fog { display: none; }
+.dp-clk[data-cs="glass"] .dp-fog { display: inline; }
+.dp-clk[data-cs="glass"] .dp-ck { fill: none; stroke: rgba(255,255,255,.9); stroke-width: 3px; }
 .dp-clk[data-cs="normal"] .dp-ck { fill: rgba(255,255,255,.85); }
 .dp-clk[data-cs="bold"] .dp-ck { font-family: 'Kufi', 'Tajawal', sans-serif; font-weight: 700; stroke: rgba(255,255,255,.85); stroke-width: 9px; stroke-linejoin: round; paint-order: stroke; }
 .dp-clk[data-cs="thin"] .dp-ck { font-weight: 300; fill: rgba(255,255,255,.9); letter-spacing: 0; }
@@ -98,3 +101,13 @@ body[data-skin="depth"] #osArt, body[data-skin="depth"] #clubBg, body[data-skin=
 .dp-po { font-size: 30px; padding: 12px 30px; border-radius: 22px; background: rgba(255,255,255,.1); border: 2px solid transparent; transition: background .25s ease-out, border-color .25s ease-out; } .dp-po b { color: #ffd0a0; }
 .dp-po.focus { border-color: #fff; background: rgba(255,255,255,.26); }
 #dpPickHint { position: absolute; left: 0; right: 0; bottom: 60px; text-align: center; font-size: 25px; opacity: .65; }
+
+/* moving mist: two soft bands drifting slowly across the picture, behind the clock */
+.dp-mist { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; transition: transform .45s cubic-bezier(.22,.8,.2,1), opacity .4s ease-out; will-change: transform; opacity: .5; }
+.dp-mist i { position: absolute; left: -30%; width: 160%; border-radius: 50%; will-change: transform; }
+.dp-mist .m1 { top: 36%; height: 34%; background: radial-gradient(50% 50% at 50% 50%, rgba(255,255,255,.38), rgba(255,255,255,0) 70%); animation: dpm1 70s linear infinite alternate; }
+.dp-mist .m2 { top: 56%; height: 38%; background: radial-gradient(50% 50% at 50% 50%, rgba(255,235,245,.3), rgba(255,235,245,0) 70%); animation: dpm2 95s linear infinite alternate; }
+@keyframes dpm1 { from { transform: translate3d(-6%, 0, 0); } to { transform: translate3d(8%, 3%, 0); } }
+@keyframes dpm2 { from { transform: translate3d(7%, 0, 0); } to { transform: translate3d(-9%, -3%, 0); } }
+.dp-reduce .dp-mist i { animation: none; }
+.dp-sc.nofx .dp-mist { z-index: 0; }
