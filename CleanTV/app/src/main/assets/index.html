@@ -907,6 +907,22 @@
   body.tickeron #liveTicker { bottom: 22px; }
 
   /* ---- «قنواتي» ---- */
+  #vodModal { background: #15181B; direction: rtl; font-family: var(--font); }
+  #vdHead { position: absolute; top: 40px; right: 70px; left: 70px; display: flex; align-items: baseline; gap: 28px; }
+  #vdHead .vd-t { font-family: var(--kufi); font-weight: 700; font-size: 60px; color: #EFE7D4; }
+  #vdSub { font-size: 30px; color: #D9822B; } #vdCount { font-size: 24px; color: #B8BDC2; margin-right: auto; }
+  #vdSecs { position: absolute; top: 140px; right: 70px; width: 380px; }
+  .vd-sec { padding: 20px 26px; margin-bottom: 8px; border-radius: 14px; font-size: 32px; color: #B8BDC2; border: 3px solid transparent; }
+  .vd-sec.on { color: #EFE7D4; background: #20252A; } .vd-sec.focus { border-color: #D9822B; }
+  #vdGridWrap { position: absolute; top: 140px; right: 490px; left: 70px; bottom: 90px; overflow: hidden; }
+  #vdGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; will-change: transform; }
+  .vd-card { border-radius: 14px; border: 3px solid transparent; padding: 8px; content-visibility: auto; contain-intrinsic-size: auto 330px; }
+  .vd-card.focus { border-color: #D9822B; background: #20252A; }
+  .vd-art { position: relative; height: 220px; border-radius: 10px; background: #2A3036; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .vd-art b { font-family: var(--kufi); font-size: 70px; color: #5A636B; } .vd-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .vd-n { margin-top: 10px; font-size: 26px; color: #EFE7D4; line-height: 1.3; max-height: 68px; overflow: hidden; } .vd-y { font-size: 22px; color: #B8BDC2; }
+  .vd-empty { grid-column: 1 / -1; padding: 120px 40px; text-align: center; font-size: 34px; color: #B8BDC2; line-height: 1.6; }
+  #vdHint { position: absolute; bottom: 28px; right: 70px; left: 70px; font-size: 24px; color: #8B939A; }
   #liveModal { background: #15181B; direction: rtl; font-family: var(--font); }
   #lvHead { position: absolute; top: 48px; right: 96px; display: flex; align-items: center; gap: 24px; }
   #lvHead svg { width: 84px; height: 84px; }
@@ -918,7 +934,7 @@
   .lv-cat.focus { border-color: #D9822B; background: #2A3036; }
   #lvGridWrap { position: absolute; top: 184px; right: 500px; left: 76px; bottom: 96px; overflow: hidden; padding: 0 20px; }
   #lvGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; padding: 16px 0; transition: transform .22s ease-out; }
-  .lv-ch { display: flex; align-items: center; gap: 18px; padding: 14px 16px; border-radius: 16px; background: #23282D; border: 1px solid rgba(184,189,194,.22); min-height: 124px; min-width: 0; }
+  .lv-ch { content-visibility: auto; contain-intrinsic-size: auto 130px; display: flex; align-items: center; gap: 18px; padding: 14px 16px; border-radius: 16px; background: #23282D; border: 1px solid rgba(184,189,194,.22); min-height: 124px; min-width: 0; }
   .lv-ch.focus { box-shadow: 0 0 0 4px #15181B, 0 0 0 8px #D9822B; background: #2A3036; position: relative; z-index: 2; }
   .lv-art { flex: none; width: 104px; height: 104px; border-radius: 12px; display: grid; place-items: center; position: relative; overflow: hidden; }
   .lv-art b { font-family: var(--kufi); font-size: 38px; color: #EFE7D4; }
@@ -973,7 +989,6 @@
   /* anything else the design wants: its own CSS is added last (settings.css) */
 </style>
 <style id="userCss"></style>
-<link rel="stylesheet" href="depth.css">
 </head>
 <body>
 <div id="stage">
@@ -1090,6 +1105,7 @@
   </div></div>
 
   <div id="pairBox"><div class="p-t">ربط الموبايل بمدير الشاشات</div><div class="p-code" id="pairCode"></div><div class="p-s" id="pairSub"></div><div id="pairQr"></div></div>
+  <div class="modal" id="vodModal"><div id="vdHead"><div class="vd-t" id="vdTitle"></div><div id="vdSub"></div><div id="vdCount"></div></div><div id="vdSecs"></div><div id="vdGridWrap"><div id="vdGrid"></div></div><div id="vdHint">الأسهم للتنقل · OK تشغيل · رجوع للقائمة أو الخروج · الأقسام والروابط من تطبيق مدير الشاشة</div></div>
   <div class="modal" id="liveModal"><div id="lvHead"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg><div><div class="lv-t">قنواتي</div><div class="lv-st">بث مباشر مجاني بدون اشتراك · <span id="lvCount"></span></div></div></div><div id="lvViews"></div><div id="lvTools"></div><input id="lvSearch" type="text" placeholder="ابحث عن قناة…" autocomplete="off"><div id="lvCats"></div><div id="lvGridWrap"><div id="lvGrid"></div></div><div id="lvHint">OK تشغيل · الأسهم للتنقل · فوق القائمة: طريقة العرض ثم الأدوات (بحث · ترتيب · حذف) · داخل القناة: فوق وتحت للتنقل بين القنوات · رجوع للخروج</div></div>
   <div id="liveTicker"></div>
   <div id="brandStrip"></div>
@@ -1100,7 +1116,7 @@
 <script src="data.js"></script>
 <script src="channels.js"></script>
 <script src="live.js"></script>
-<script src="depth.js"></script>
+<script src="vod.js"></script>
 <script src="pray.js"></script>
 <script src="faith.js"></script>
 <script src="app.js"></script>

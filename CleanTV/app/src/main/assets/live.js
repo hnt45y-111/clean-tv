@@ -71,6 +71,32 @@
     return n;
   }
   function readCache() { try { return JSON.parse(localStorage.getItem('myChLists') || '{}') || {}; } catch (e) { return {}; } }
+  /* an IPTV account of the Xtream kind (server, user, password) that the user owns: its live channels come as one folder, one sub-folder per category */
+  function xtOf(S) { var x = S && S.xtream; if (!x || !x.host || !x.user || !x.pass) return null; var h = String(x.host).trim().replace(/\/+$/, ''); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; return { host: h, user: String(x.user).trim(), pass: String(x.pass).trim(), out: x.out === 'm3u8' ? 'm3u8' : 'ts', name: x.name || 'IPTV' }; }
+  function xtApi(x, action) { return x.host + '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + (action ? '&action=' + action : ''); }
+  function xtStreamUrl(x, id) { return x.host + '/live/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + id + '.' + x.out; }
+  function xtKey(x) { return x.host + '|' + x.user; }
+  function xtRead() { try { return JSON.parse(localStorage.getItem('myXt') || 'null'); } catch (e) { return null; } }
+  var xtState = '';     /* '' | 'loading' | 'fail:…' */
+  function xtPull(S) {
+    var x = xtOf(S); if (!x || !window.__fetchText) return;
+    var c = xtRead(); if (c && c.k === xtKey(x) && Date.now() - c.t < 6 * 3600000) return;
+    xtState = 'loading'; cust.key = '';
+    window.__fetchText(xtApi(x, 'get_live_categories')).then(function (ct) {
+      var cats = {}; try { (JSON.parse(ct) || []).forEach(function (o) { cats[o.category_id] = o.category_name; }); } catch (e) {}
+      return window.__fetchText(xtApi(x, 'get_live_streams')).then(function (st) {
+        var arr = null; try { arr = JSON.parse(st); } catch (e) {}
+        if (!arr || !arr.length) { xtState = 'fail:' + (String(st).indexOf('ERR:') === 0 ? String(st).slice(4) : 'الحساب ما رجّع قنوات (تأكد من الرابط والمستخدم)'); return; }
+        var names = [], idx = {}, items = [];
+        arr.forEach(function (o) { var cn = cats[o.category_id] || 'بدون مجموعة'; if (idx[cn] == null) { idx[cn] = names.length; names.push(cn); } items.push([String(o.name || '').trim(), o.stream_id, idx[cn], o.stream_icon || '']); });
+        try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
+      });
+    }).then(function () { cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); }, function () { xtState = 'fail:تعذّر الاتصال بالسيرفر'; cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); });
+  }
+  function xtItems(x) {
+    var c = xtRead(); if (!c || c.k !== xtKey(x)) return [];
+    return c.items.map(function (r) { return { n: r[0], u: xtStreamUrl(x, r[1]), grp: c.cats[r[2]], l: r[3], c: 'my', g: guessCat(r[0] + ' ' + c.cats[r[2]]) }; });
+  }
   function linksOf(S) {
     var out = [];
     String(S.myM3u || '').split(/\r?\n/).forEach(function (l) { l = l.trim(); if (isListLink(l)) out.push(l); });
@@ -80,7 +106,7 @@
   var loadState = {};   /* url -> 'loading' | 'fail' */
   function custom() {
     var S = (window.__getSettings && window.__getSettings()) || {}, cache = readCache(), links = linksOf(S);
-    var key = (S.myM3u || '').length + '|' + (S.channelsUrl || '') + '|' + JSON.stringify(ytTitles()).length + '|' + links.join(',') + '|' + links.map(function (u) { return (cache[u] || '').length + (loadState[u] || ''); }).join(',');
+    var xo = xtOf(S), xc = xo ? xtRead() : null, key = (xo ? xtKey(xo) + (xc ? xc.t : 0) + xtState : '') + '|' + (S.myM3u || '').length + '|' + (S.channelsUrl || '') + '|' + JSON.stringify(ytTitles()).length + '|' + links.join(',') + '|' + links.map(function (u) { return (cache[u] || '').length + (loadState[u] || ''); }).join(',');
     if (cust.key === key) return cust;
     var lists = [], mine = [];
     /* channels pasted straight into the box (text with #EXTINF, or single stream links) */
@@ -88,6 +114,7 @@
     String(S.channelsUrl || '').split(/[\s,]+/).forEach(function (l) { if (/^https?:\/\//i.test(l) && (isYT(l) || /\.m3u8(\?[^\s]*)?$/i.test(l))) own += '\n' + l; });
     mine = parseM3U(own);
     if (mine.length) lists.push({ key: 'own', name: 'قنواتي المضافة', items: mine, note: '' });
+    if (xo) { var xi = xtItems(xo); lists.push({ key: 'xt', name: xo.name, items: xi, note: xi.length ? '' : /^fail/.test(xtState) ? 'تعذّر: ' + xtState.slice(5) : 'جاري تحميل قنوات الحساب…' }); }
     links.forEach(function (u) {
       var items = parseM3U(cache[u] || ''), nm = listName(u);
       lists.push({ key: u, name: nm, items: items, note: items.length ? '' : /^fail/.test(loadState[u] || '') ? 'تعذّر جلب القائمة' + (loadState[u].length > 5 ? ': ' + loadState[u].slice(5) : '') : cache[u] ? 'الرد مو قائمة M3U فيها قنوات' : 'جاري تحميل القائمة…' });
@@ -100,6 +127,7 @@
   function pullUrl() {
     var S = (window.__getSettings && window.__getSettings()) || {};
     if (!window.__fetchText) return;
+    xtPull(S);
     /* names of YouTube links: asked once from YouTube and kept */
     var yts = [];
     (String(S.myM3u || '') + '\n' + String(S.channelsUrl || '').replace(/[\s,]+/g, '\n')).split(/\r?\n/).forEach(function (l) { l = l.trim(); if (/^https?:/i.test(l) && isYT(l) && !ytTitles()[l] && yts.indexOf(l) < 0) yts.push(l); });
@@ -135,7 +163,7 @@
     siteCache = out.map(function (o) { return { n: o.n, u: o.u, g: o.g || 'ent', p: o.p || '', r: o.r || '', ua: o.ua || '', c: o.c || 'my', sc: 1, ln: 'من المواقع' }; });
     return siteCache;
   }
-  function oidOf(cid) { return cid === 'my' ? (st.fold ? 'my:' + st.fold : 'my') : cid; }
+  function oidOf(cid) { return cid === 'my' ? (st.fold ? 'my:' + st.fold + (st.sub ? '§' + st.sub : '') : 'my') : cid; }
   function filter(cid) {
     var l = rawFilter(cid);
     if (l.length && !l[0].empty) l = sortBy(l, ORD.ch[oidOf(cid)], keyOf);
@@ -151,12 +179,28 @@
     });
     return out;
   }
+  /* a list with several groups (group-title, or an account's categories) opens as sub-folders, so no screen holds thousands of channels */
+  function groupsOf(L) {
+    if (L._gs !== undefined && L._gn === L.items.length) return L._gs;
+    var gs = [], idx = {}; L._gn = L.items.length;
+    L.items.forEach(function (c) { var g = c.grp || 'بدون مجموعة'; if (idx[g] == null) { idx[g] = gs.length; gs.push({ n: g, count: 0 }); } gs[idx[g]].count++; });
+    L._gs = (L.items.length > 30 && gs.length > 1 && gs.length <= 600) ? gs : null; return L._gs;
+  }
   function rawFilter(cid) {
     var all = (window.CHANNELS || []).concat(siteCh());
     if (cid === 'sites') return sitesList().map(function (u) { return { n: siteHost(u), sub: 'يفتح الموقع وتختار القناة منه', u: u, site: 1, c: 'my' }; });
     if (cid === 'my') {
       var Ls = custom().lists;
-      if (st.fold) { var F = Ls.filter(function (L) { return L.key === st.fold; })[0]; if (F) return F.items.length ? F.items : [{ n: F.note || 'القائمة فاضية', sub: '', empty: 1, u: '' }]; st.fold = null; }
+      if (st.fold) {
+        var F = Ls.filter(function (L) { return L.key === st.fold; })[0];
+        if (F) {
+          var gs = groupsOf(F);
+          if (gs && !st.sub) return gs.map(function (g) { return { folder: 1, sg: g.n, key: F.key + '§' + g.n, n: g.n, sub: g.count + ' قناة', u: '', c: 'my' }; });
+          var its = st.sub ? F.items.filter(function (c) { return (c.grp || 'بدون مجموعة') === st.sub; }) : F.items;
+          return its.length ? its : [{ n: F.note || 'القائمة فاضية', sub: '', empty: 1, u: '' }];
+        }
+        st.fold = null; st.sub = null;
+      }
       return Ls.map(function (L) { return { folder: 1, key: L.key, n: L.name, sub: L.items.length ? L.items.length + ' قناة' : L.note, u: '', c: 'my' }; });
     }
     if (cid === 'all') return all;
@@ -180,12 +224,12 @@
     tl.forEach(function (t, i) { th += '<div class="lv-tl' + (t.on ? ' on' : '') + (st.f === 'tool' && i === st.ti ? ' focus' : '') + '">' + t.n + '</div>'; });
     $('lvTools').innerHTML = th;
     $('lvViews').innerHTML = vh; $('lvGrid').setAttribute('data-v', VIEWS[st.vi][0]);
-    var key = st.ver + '|' + (st.q || '') + '|' + VIEWS[st.vi][0] + '|' + cid + '|' + (st.fold || '') + '|' + st.list.length + '|' + (st.list[0] ? st.list[0].n + st.list[0].u + (st.list[0].sub || '') : '');
+    var key = st.ver + '|' + (st.q || '') + '|' + VIEWS[st.vi][0] + '|' + cid + '|' + (st.fold || '') + '|' + (st.sub || '') + '|' + st.list.length + '|' + (st.list[0] ? st.list[0].n + st.list[0].u + (st.list[0].sub || '') : '');
     var grid = $('lvGrid');
     if (st.key !== key) { st.key = key;
     grid.innerHTML = st.list.length ? st.list.map(function (c, i) {
       var tint = 'hsl(' + hue(c.n) + ',28%,24%)', ini = c.folder ? '📁' : c.n.replace(/^ال/, '').replace(/\s/g, '').slice(0, 2);
-      var logo = c.i ? '<img class="lv-img" src="logos/' + esc(c.i) + '.png" alt="" onerror="this.parentNode.removeChild(this)">' : c.l ? '<img class="lv-img" src="' + esc(c.l) + '" alt="" onerror="this.parentNode.removeChild(this)">' : '';
+      var logo = c.i ? '<img class="lv-img" loading="lazy" decoding="async" src="logos/' + esc(c.i) + '.png" alt="" onerror="this.parentNode.removeChild(this)">' : c.l ? '<img class="lv-img" loading="lazy" decoding="async" src="' + esc(c.l) + '" alt="" onerror="this.parentNode.removeChild(this)">' : '';
       return '<div class="lv-ch' + (st.f === 'grid' && i === st.gi ? ' focus' : '') + '"><div class="lv-art" style="background:' + tint + '"><b>' + esc(ini) + '</b>' + logo + '</div>' +
         '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(subOf(c)) + '</div></div></div>';
     }).join('') : '<div class="lv-empty">' + (st.q ? 'ماكو قناة بهذا الاسم' : 'ماكو قنوات بهذا القسم') + '</div>';
@@ -217,7 +261,15 @@
     cs.forEach(function (ct) {
       if (ct.id === 'sites') return;
       if (ct.id === 'my') {
-        custom().lists.forEach(function (L) { if (L.items.length) { if (curId === 'my' && st.fold === L.key) fold = folders.length; folders.push({ n: '📁 ' + L.name, idx: sortBy(L.items, ORD.ch['my:' + L.key], keyOf).map(add) }); } });
+        custom().lists.forEach(function (L) {
+          if (!L.items.length) return;
+          var gs = groupsOf(L);
+          if (gs) {      /* a big list: the player gets the group that is open (or the first), the others stay in the browser, so the hand-over stays small */
+            var g0 = st.sub && curId === 'my' && st.fold === L.key ? st.sub : (cur.grp || gs[0].n);
+            if (curId === 'my' && st.fold === L.key) fold = folders.length;
+            folders.push({ n: '📁 ' + L.name + ' · ' + g0, idx: sortBy(L.items.filter(function (c) { return (c.grp || 'بدون مجموعة') === g0; }), ORD.ch['my:' + L.key + '§' + g0], keyOf).map(add) });
+          } else { if (curId === 'my' && st.fold === L.key) fold = folders.length; folders.push({ n: '📁 ' + L.name, idx: sortBy(L.items, ORD.ch['my:' + L.key], keyOf).map(add) }); }
+        });
       } else {
         var l = filter(ct.id); if (!l.length) return;
         if (ct.id === curId) fold = folders.length;
@@ -230,7 +282,7 @@
   function play() {
     if (!st.list.length) return;
     var cur = st.list[st.gi];
-    if (cur && cur.folder) { st.fold = cur.key; st.gi = 0; st.off = 0; st.key = null; draw(); return; }
+    if (cur && cur.folder) { if (cur.sg) st.sub = cur.sg; else st.fold = cur.key; st.gi = 0; st.off = 0; st.key = null; draw(); return; }
     if (cur && cur.empty) return;
     if (cur && cur.site) { if (window.Android && window.Android.openSite) window.Android.openSite(cur.u); else if (window.toastMsg) window.toastMsg('المتصفح يحتاج الشاشة نفسها'); return; }
     if (st.del) {
@@ -269,10 +321,32 @@
   }
   function onSearchInput() { var b = searchBox(); st.q = b.value.replace(/^\s+|\s+$/g, ''); st.gi = 0; st.off = 0; st.key = null; draw(); }
   document.addEventListener('DOMContentLoaded', function () { var b = searchBox(); if (b) b.addEventListener('input', onSearchInput); });
+  /* opens on the folder and the channel that were playing last (the player writes them whenever a channel starts) */
+  function restoreLast() {
+    var raw = ''; try { raw = (window.Android && window.Android.getPref && window.Android.getPref('liveLast')) || ''; } catch (e) {}
+    if (!raw) return;
+    var last; try { last = JSON.parse(raw); } catch (e) { return; }
+    if (!last || !last.f) return;
+    var cs = cats(), ci = -1, fold = null, sub = null, i;
+    for (i = 0; i < cs.length; i++) if (cs[i].n === last.f) { ci = i; break; }
+    if (ci < 0 && String(last.f).indexOf('📁 ') === 0) {
+      var nm = String(last.f).slice(3), myi = -1;
+      for (i = 0; i < cs.length; i++) if (cs[i].id === 'my') myi = i;
+      if (myi >= 0) custom().lists.forEach(function (L) { if (nm === L.name) fold = L.key; else if (nm.indexOf(L.name + ' · ') === 0) { fold = L.key; sub = nm.slice(L.name.length + 3); } });
+      if (fold) ci = myi;
+    }
+    if (ci < 0) return;
+    st.ci = ci; st.fold = fold; st.sub = sub;
+    var l = filter(cs[ci].id), gi = 0;
+    for (i = 0; i < l.length; i++) if (l[i].u + '|' + l[i].n === last.k) { gi = i; break; }
+    st.gi = gi; st.f = 'grid';
+  }
   var Live = {
+    restore: restoreLast,
     open: function () {
       st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.pick = null; st.del = false; siteCache = null; st.hi = st.vi; st.ti = 0; COLS = VIEWS[st.vi][2];
       ORD = loadOrd(); endSearch(true);
+      restoreLast();
       pullUrl();
       document.getElementById('liveModal').classList.add('on');
       if (window.__setLayer) window.__setLayer('live');
@@ -291,6 +365,7 @@
       if (k === 'back') {
         if (st.pick) { st.pick = null; draw(); return; }
         if (st.q) { endSearch(true); draw(); return; }
+        if (st.sub && cs[st.ci] && cs[st.ci].id === 'my') { st.sub = null; st.gi = 0; st.off = 0; st.key = null; st.f = 'grid'; draw(); return; }
         if (st.fold && cs[st.ci] && cs[st.ci].id === 'my') { st.fold = null; st.gi = 0; st.off = 0; st.key = null; st.f = 'grid'; draw(); return; }
         if (window.__closeLive) window.__closeLive(); return;
       }
@@ -316,8 +391,8 @@
         if (st.edit && st.pick === 'cat') {
           if (k === 'ArrowUp') moveCat(-1); else if (k === 'ArrowDown') moveCat(1); else if (k === 'ok' || k === 'ArrowLeft' || k === 'ArrowRight') st.pick = null;
         } else if (st.edit && k === 'ok') { st.pick = 'cat'; }
-        else if (k === 'ArrowUp') { if (st.ci === 0) st.f = 'tool'; else { st.ci--; st.gi = 0; st.off = 0; st.fold = null; st.q = ''; endSearch(true); } }
-        else if (k === 'ArrowDown') { st.ci = Math.min(cs.length - 1, st.ci + 1); st.gi = 0; st.off = 0; st.fold = null; st.q = ''; endSearch(true); }
+        else if (k === 'ArrowUp') { if (st.ci === 0) st.f = 'tool'; else { st.ci--; st.gi = 0; st.off = 0; st.fold = null; st.sub = null; st.q = ''; endSearch(true); } }
+        else if (k === 'ArrowDown') { st.ci = Math.min(cs.length - 1, st.ci + 1); st.gi = 0; st.off = 0; st.fold = null; st.sub = null; st.q = ''; endSearch(true); }
         else if (k === 'ArrowLeft' || k === 'ok') { if (st.list.length) st.f = 'grid'; }
       } else {
         if (st.edit && st.pick === 'ch') {
