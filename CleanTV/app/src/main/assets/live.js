@@ -111,6 +111,29 @@
     return next();
   }
   window.__xtFetch = xtFetch;
+  /* what kind of server is it? asked in a few plain requests, so the message says what to do instead of just «403» */
+  function xtKind(text) {
+    var t = String(text || ''), low = t.toLowerCase();
+    if (/^ERR:/.test(t)) return /cloudflare/i.test(t) ? 'cf' : 'err';
+    if (/"user_info"|"server_info"/.test(t)) return /"auth"\s*:\s*0/.test(t) ? 'badlogin' : 'xtream';
+    if (t.indexOf('#EXTM3U') >= 0) return 'm3u';
+    if (/stalker|stbapi|mag(?:\d+)?\b|\/c\/|portal\.php|ministra/.test(low)) return 'stalker';
+    if (/invalid|unauthorized|forbidden|expired|disabled|banned/.test(low)) return 'badlogin';
+    if (/<html|<!doctype/.test(low)) return 'web';
+    return t.trim() ? 'other' : 'empty';
+  }
+  var KIND_MSG = { xtream: 'السيرفر Xtream وشغّال', badlogin: 'السيرفر Xtream بس الدخول مرفوض: تأكد من اسم المستخدم وكلمة المرور وتاريخ الاشتراك', m3u: 'السيرفر يعطي قائمة M3U مباشرة: الصق رابط القائمة بخانة «رابط قائمة»', stalker: 'هذا سيرفر بوابة MAC/Stalker مو Xtream، وتطبيقنا يدعم Xtream فقط', cf: 'حماية Cloudflare تحجب السيرفر: اطلب عنوان بديل من المزوّد', web: 'العنوان يفتح صفحة موقع مو سيرفر Xtream: تأكد من العنوان والمنفذ', err: 'ما رد السيرفر: تأكد من العنوان والمنفذ ومن النت', empty: 'رد السيرفر فاضي', other: 'رد غير معروف من السيرفر' };
+  function xtProbe(x) {
+    var u = encodeURIComponent(x.user), p = encodeURIComponent(x.pass);
+    return xtFetch(x, '/player_api.php?username=' + u + '&password=' + p).then(function (a) {
+      var k = xtKind(a); if (k === 'xtream' || k === 'badlogin' || k === 'cf') return k;
+      return xtFetch(x, '/get.php?username=' + u + '&password=' + p + '&type=m3u_plus').then(function (b) {
+        var k2 = xtKind(b); if (k2 === 'm3u' || k2 === 'cf') return k2;
+        return xtFetch(x, '/c/').then(function (c) { var k3 = xtKind(c); return k3 === 'stalker' ? 'stalker' : (k === 'err' ? 'err' : k); });
+      });
+    });
+  }
+  window.__xtProbe = function (S) { var x = xtOf(S); return x ? xtProbe(x).then(function (k) { return { kind: k, msg: KIND_MSG[k] || '' }; }) : Promise.resolve({ kind: 'none', msg: 'ما اكو حساب IPTV' }); };
   function xtQ(x, action) { return '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + (action ? '&action=' + action : ''); }
   function xtStreamUrl(x, id) { if (/^https?:/i.test(String(id))) return id; return x.host + '/live/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + id + '.' + x.out; }
   function xtKey(x) { return x.host + '|' + x.user; }
@@ -135,7 +158,7 @@
         }
         return fin(st);
         function fin(st) {
-        if (!arr || !arr.length) { var er = String(st).indexOf('ERR:') === 0 ? String(st).slice(4) : 'الحساب ما رجّع قنوات (تأكد من الرابط والمستخدم)'; if (/403|401/.test(er) && !/Cloudflare/.test(er)) er += ' · السيرفر رفض الطلب: تأكد من الرابط والمنفذ واسم المستخدم وكلمة المرور، وأن الاشتراك فعّال وما متجاوز عدد الأجهزة'; xtState = 'fail:' + er; if (force && window.toastMsg) window.toastMsg('تعذّر التحديث: ' + er); return; }
+        if (!arr || !arr.length) { var er = String(st).indexOf('ERR:') === 0 ? String(st).slice(4) : 'الحساب ما رجّع قنوات (تأكد من الرابط والمستخدم)'; if (/403|401/.test(er) && !/Cloudflare/.test(er)) er += ' · السيرفر رفض الطلب: تأكد من الرابط والمنفذ واسم المستخدم وكلمة المرور، وأن الاشتراك فعّال وما متجاوز عدد الأجهزة'; return xtProbe(x).then(function (k) { if (KIND_MSG[k] && k !== 'xtream') er += ' · ' + KIND_MSG[k]; xtState = 'fail:' + er; if (force && window.toastMsg) window.toastMsg('تعذّر التحديث: ' + er); }); }
         var names = [], idx = {}, items = [];
         arr.forEach(function (o) { var cn = cats[o.category_id] || 'بدون مجموعة'; if (idx[cn] == null) { idx[cn] = names.length; names.push(cn); } items.push([String(o.name || '').trim(), o.stream_id, idx[cn], o.stream_icon || '']); });
         try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; if (force && window.toastMsg) window.toastMsg('تم تحديث IPTV: ' + items.length + ' قناة'); } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
