@@ -351,13 +351,28 @@ function osPanelWire(box, S) {
       my.innerHTML = `<div class="panel"><h2>قنواتي الخاصة</h2><p class="sub" style="margin-top:-4px">أضف قنواتك اللي عندك حق بثها (مثل اتفاقيتك مع beIN، أو قنوات ثانية). تطلع آخر شي بقنواتي داخل فولدر «قنواتي الخاصة»، وكل قائمة IPTV تصير فولدر لحاله وبيه قنواتها. الروابط تنحفظ بتصميمك وبشاشتك بس، وما تنرفع لأي مكان عام.</p>
         <label class="f">الصق روابط قوائم M3U (رابط بكل سطر، كل رابط يصير فولدر) أو نص قائمة كاملة</label>
         <textarea id="myM3u" dir="ltr" spellcheck="false" style="width:100%;min-height:140px;font:12.5px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)" placeholder="#EXTM3U&#10;#EXTINF:-1 group-title=&quot;beIN Sports&quot; tvg-logo=&quot;https://…/logo.png&quot;,beIN Sports 1&#10;https://…/stream.m3u8">${esc(S.myM3u || '')}</textarea>
+        <div class="row" style="margin:8px 0 0;gap:8px"><button class="btn sec" style="flex:1" id="myFile">${ic('file')} حمّل ملف m3u من الموبايل</button></div>
         <div class="sub" style="margin:6px 2px">${cnt ? 'فيها ' + cnt + ' رابط' : 'فارغة'} · روابط يوتيوب تنفتح بتطبيق يوتيوب</div>
         <label class="f" style="margin-top:8px">أو رابط قائمة تحدّثها إنت (يقراها التلفزيون كل مرة تفتح قنواتي)</label>
         <input id="chUrl" dir="ltr" placeholder="https://…/channels.m3u" value="${esc(S.channelsUrl || '')}">
+        <label class="f" style="margin-top:8px">مواقع قنوات (رابط موقع بكل سطر): يفتحها التلفزيون من «قنواتي ← مواقع القنوات»، تضغط على القناة بالموقع وتنحفظ بالمجلد اللي تختاره</label>
+        <textarea id="chSites" dir="ltr" spellcheck="false" style="width:100%;min-height:70px;font:13px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)" placeholder="https://…">${esc(S.chSites || '')}</textarea>
         <div class="row" style="margin-top:10px;gap:8px"><button class="btn sec" style="flex:1" id="myOk">${ic('save')} حفظ</button><button class="btn ghost" id="myClr">امسح</button></div></div>`;
       p.insertBefore(my, box.nextSibling);
-      $('#myOk').onclick = () => { tap(); const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
-      $('#myClr').onclick = () => { tap(); delete S.myM3u; delete S.channelsUrl; changed(); live({ settings: S }); designPanel(); };
+      $('#myOk').onclick = () => { tap(); const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
+      $('#myFile').onclick = () => {
+        tap();
+        run('pick', { mode: 'm3u' }).then(t0 => {
+          let t = String(t0 || '').replace(/^\uFEFF/, '');
+          if (!/#EXTINF|^https?:/im.test(t)) { toast('الملف مو قائمة m3u'); return; }
+          const old = $('#myM3u').value.trim(), n = (t.match(/#EXTINF/g) || []).length;
+          let all = (old ? old + '\n' : '') + t.trim();
+          if (all.length > 120000) { all = all.slice(0, 120000); all = all.slice(0, all.lastIndexOf('\n#EXTINF')); toast('الملف كبير: انحفظ أول ' + (all.match(/#EXTINF/g) || []).length + ' قناة'); }
+          else toast('انقرأت ' + n + ' قناة من الملف، اضغط حفظ');
+          $('#myM3u').value = all;
+        }).catch(() => {});
+      };
+      $('#myClr').onclick = () => { tap(); delete S.myM3u; delete S.channelsUrl; delete S.chSites; changed(); live({ settings: S }); designPanel(); };
       return;
     }
     if (D.tab !== 'theme') return;

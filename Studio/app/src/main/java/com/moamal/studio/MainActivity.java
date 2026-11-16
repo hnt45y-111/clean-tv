@@ -1167,7 +1167,7 @@ public class MainActivity extends Activity {
                     r.put("name", name);
                     if (mime != null) r.put("mime", mime);
                     result = r;
-                } else if ("backup".equals(mode)) {
+                } else if ("backup".equals(mode) || "m3u".equals(mode)) {
                     result = new String(Adb.readAll(new java.io.FileInputStream(f)), StandardCharsets.UTF_8);
                 } else if ("install".equals(mode)) {
                     prog("أثبّت " + name + " على الشاشة…");

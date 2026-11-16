@@ -9,7 +9,7 @@
   try { var sv = localStorage.getItem('lvView'); VIEWS.forEach(function (v, i) { if (v[0] === sv) st.vi = i; }); } catch (e) {}
   function setView(i) { st.vi = i; COLS = VIEWS[i][2]; try { localStorage.setItem('lvView', VIEWS[i][0]); } catch (e) {} st.off = 0; }
   COLS = VIEWS[st.vi][2];
-  st.hi = st.vi; st.edit = false; st.pick = null; st.q = ''; st.ver = 0;
+  st.hi = st.vi; st.ti = 0; st.edit = false; st.del = false; st.pick = null; st.q = ''; st.ver = 0;
   /* the user's own order of folders and channels (changed from the «ترتيب» chip) */
   function loadOrd() { try { var o = JSON.parse(localStorage.getItem('lvOrd') || '{}') || {}; o.cats = o.cats || []; o.ch = o.ch || {}; return o; } catch (e) { return { cats: [], ch: {} }; } }
   var ORD = loadOrd();
@@ -23,6 +23,7 @@
   var CATS = [['all', 'كل القنوات'], ['news', 'أخبار'], ['sport', 'رياضة'], ['movies', 'أفلام ومسلسلات'], ['docs', 'وثائقية'], ['ent', 'منوعات وترفيه'], ['mbc', 'باقة MBC المجانية'], ['karbala', 'باقة قنوات كربلاء'], ['kids', 'أطفال'], ['quran', 'قرآن ومرجعيات'], ['iq', 'قنوات عراقية']];
   function cats() {
     var l = CATS.map(function (c) { return { id: c[0], n: c[1], kind: 'cat' }; });
+    if (sitesList().length) l.push({ id: 'sites', n: 'مواقع القنوات', kind: 'sites' });
     var seen = {};
     (window.CHANNELS || []).forEach(function (c) { seen[c.c] = 1; });
     (window.CH_GROUPS || []).forEach(function (g) { if (seen[g[0]] && g[0] !== 'iq') l.push({ id: g[0], n: 'قنوات ' + g[1], kind: 'grp' }); });
@@ -119,6 +120,21 @@
       }, function () { loadState[u] = 'fail'; cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); });
     });
   }
+  /* websites that carry channels: opened in the in-app browser, the stream found there is saved as a normal channel */
+  function sitesList() {
+    var S = (window.__getSettings && window.__getSettings()) || {}, out = [];
+    String(S.chSites || '').split(/[\s,]+/).forEach(function (l) { if (/^https?:\/\//i.test(l) && out.indexOf(l) < 0) out.push(l); });
+    return out;
+  }
+  function siteHost(u) { return String(u).replace(/^https?:\/\//i, '').split('/')[0]; }
+  var siteCache = null;
+  function siteCh() {
+    if (siteCache) return siteCache;
+    var out = [];
+    try { out = JSON.parse((window.Android && window.Android.siteChannels && window.Android.siteChannels()) || '[]') || []; } catch (e) { out = []; }
+    siteCache = out.map(function (o) { return { n: o.n, u: o.u, g: o.g || 'ent', p: o.p || '', r: o.r || '', ua: o.ua || '', c: o.c || 'my', sc: 1, ln: 'من المواقع' }; });
+    return siteCache;
+  }
   function oidOf(cid) { return cid === 'my' ? (st.fold ? 'my:' + st.fold : 'my') : cid; }
   function filter(cid) {
     var l = rawFilter(cid);
@@ -129,14 +145,15 @@
   function searchList(q) {
     q = String(q || '').toLowerCase().replace(/^\s+|\s+$/g, ''); if (!q) return [];
     var out = [], seen = {};
-    (window.CHANNELS || []).concat((custom().lists || []).reduce(function (a, L) { return a.concat(L.items); }, [])).forEach(function (c) {
+    (window.CHANNELS || []).concat(siteCh()).concat((custom().lists || []).reduce(function (a, L) { return a.concat(L.items); }, [])).forEach(function (c) {
       var k = c.u + '|' + c.n; if (seen[k]) return;
       if (String(c.n).toLowerCase().indexOf(q) >= 0 || String(c.ln || '').toLowerCase().indexOf(q) >= 0) { seen[k] = 1; out.push(c); }
     });
     return out;
   }
   function rawFilter(cid) {
-    var all = window.CHANNELS || [];
+    var all = (window.CHANNELS || []).concat(siteCh());
+    if (cid === 'sites') return sitesList().map(function (u) { return { n: siteHost(u), sub: 'يفتح الموقع وتختار القناة منه', u: u, site: 1, c: 'my' }; });
     if (cid === 'my') {
       var Ls = custom().lists;
       if (st.fold) { var F = Ls.filter(function (L) { return L.key === st.fold; })[0]; if (F) return F.items.length ? F.items : [{ n: F.note || 'القائمة فاضية', sub: '', empty: 1, u: '' }]; st.fold = null; }
@@ -149,7 +166,7 @@
   }
   function grpName(code) { var g = (window.CH_GROUPS || []).filter(function (x) { return x[0] === code; })[0]; return g ? g[1] : ''; }
   var GN = { news: 'أخبار', sport: 'رياضة', movies: 'أفلام', docs: 'وثائقية', ent: 'منوعات', kids: 'أطفال', quran: 'قرآن' };
-  function subOf(c) { if (c.folder || c.empty) return c.sub || ''; return c.c === 'my' ? (c.grp || c.ln || 'قنواتي الخاصة') + (GN[c.g] ? ' · ' + GN[c.g] : '') : grpName(c.c) + (GN[c.g] ? ' · ' + GN[c.g] : ''); }
+  function subOf(c) { if (c.folder || c.empty || c.site) return c.sub || ''; return c.c === 'my' ? (c.grp || c.ln || 'قنواتي الخاصة') + (GN[c.g] ? ' · ' + GN[c.g] : '') : grpName(c.c) + (GN[c.g] ? ' · ' + GN[c.g] : ''); }
   function hue(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
   function draw() {
     var cs = cats(), cid = cs[st.ci].id;
@@ -159,8 +176,9 @@
     for (var q = from; q < Math.min(cs.length, from + 8); q++) html += '<div class="lv-cat' + (q === st.ci ? ' on' : '') + (st.f === 'cat' && q === st.ci ? ' focus' : '') + (st.pick === 'cat' && q === st.ci ? ' moving' : '') + '">' + esc(cs[q].n) + '</div>';
     $('lvCats').innerHTML = html;
     var vh = ''; VIEWS.forEach(function (v, i) { vh += '<div class="lv-vw' + (i === st.vi ? ' on' : '') + (st.f === 'view' && i === st.hi ? ' focus' : '') + '">' + v[1] + '</div>'; });
-    vh += '<div class="lv-vw' + (st.edit ? ' on' : '') + (st.f === 'view' && st.hi === VIEWS.length ? ' focus' : '') + '">ترتيب</div>';
-    vh += '<div class="lv-vw' + (st.q ? ' on' : '') + (st.f === 'view' && st.hi === VIEWS.length + 1 ? ' focus' : '') + '">بحث</div>';
+    var tl = tools(), th = '';
+    tl.forEach(function (t, i) { th += '<div class="lv-tl' + (t.on ? ' on' : '') + (st.f === 'tool' && i === st.ti ? ' focus' : '') + '">' + t.n + '</div>'; });
+    $('lvTools').innerHTML = th;
     $('lvViews').innerHTML = vh; $('lvGrid').setAttribute('data-v', VIEWS[st.vi][0]);
     var key = st.ver + '|' + (st.q || '') + '|' + VIEWS[st.vi][0] + '|' + cid + '|' + (st.fold || '') + '|' + st.list.length + '|' + (st.list[0] ? st.list[0].n + st.list[0].u + (st.list[0].sub || '') : '');
     var grid = $('lvGrid');
@@ -178,7 +196,7 @@
     if (want && want !== pf) want.classList.add('focus');
     [].forEach.call(grid.querySelectorAll('.moving'), function (e) { if (e !== want) e.classList.remove('moving'); });
     if (want) want.classList.toggle('moving', st.pick === 'ch');
-    var hint = $('lvHint'); if (hint) { if (!hint._d) hint._d = hint.textContent; hint.textContent = st.edit ? 'وضع الترتيب: OK يمسك الفولدر أو القناة · الأسهم تحرّكه · OK يثبّته · من «ترتيب» تطفّي الوضع' : hint._d; }
+    var hint = $('lvHint'); if (hint) { if (!hint._d) hint._d = hint.textContent; hint.textContent = st.edit ? 'وضع الترتيب: OK يمسك الفولدر أو القناة · الأسهم تحرّكه · OK يثبّته · من «ترتيب القنوات» تطفّي الوضع' : st.del ? 'وضع الحذف: OK على قناة محفوظة من موقع يحذفها · من «حذف قناة محفوظة» تطفّي الوضع' : hint._d; }
     var f = grid.querySelector('.focus'), wrap = $('lvGridWrap');
     if (f && wrap) {
       var H = wrap.clientHeight, t = f.offsetTop, h = f.offsetHeight, o = st.off;
@@ -197,6 +215,7 @@
       return pos[k];
     }
     cs.forEach(function (ct) {
+      if (ct.id === 'sites') return;
       if (ct.id === 'my') {
         custom().lists.forEach(function (L) { if (L.items.length) { if (curId === 'my' && st.fold === L.key) fold = folders.length; folders.push({ n: '📁 ' + L.name, idx: sortBy(L.items, ORD.ch['my:' + L.key], keyOf).map(add) }); } });
       } else {
@@ -213,6 +232,12 @@
     var cur = st.list[st.gi];
     if (cur && cur.folder) { st.fold = cur.key; st.gi = 0; st.off = 0; st.key = null; draw(); return; }
     if (cur && cur.empty) return;
+    if (cur && cur.site) { if (window.Android && window.Android.openSite) window.Android.openSite(cur.u); else if (window.toastMsg) window.toastMsg('المتصفح يحتاج الشاشة نفسها'); return; }
+    if (st.del) {
+      if (cur && cur.sc) { if (window.Android && window.Android.siteDelete) window.Android.siteDelete(cur.u + '|' + cur.n); siteCache = null; st.key = null; if (window.toastMsg) window.toastMsg('انحذفت: ' + cur.n); draw(); }
+      else if (window.toastMsg) window.toastMsg('هذي مو قناة محفوظة من موقع');
+      return;
+    }
     var pk = packFor(cur);
     if (window.Android && window.Android.playLive) window.Android.playLive(JSON.stringify(pk), pk.idx);
     else if (window.toastMsg) window.toastMsg('التشغيل يحتاج الشاشة نفسها');
@@ -225,6 +250,12 @@
   function moveItem(from, to) {
     var l = st.list.slice(), it = l.splice(from, 1)[0]; l.splice(to, 0, it);
     ORD.ch[oidOf(cats()[st.ci].id)] = l.map(keyOf); saveOrd();
+  }
+  /* the tools sit in their own row, apart from the four ways to show the channels */
+  function tools() {
+    var l = [{ id: 'search', n: 'بحث', on: !!st.q }, { id: 'edit', n: 'ترتيب القنوات', on: st.edit }];
+    if (siteCh().length) l.push({ id: 'del', n: 'حذف قناة محفوظة', on: st.del });
+    return l;
   }
   function searchBox() { return $('lvSearch'); }
   function startSearch() {
@@ -240,20 +271,21 @@
   document.addEventListener('DOMContentLoaded', function () { var b = searchBox(); if (b) b.addEventListener('input', onSearchInput); });
   var Live = {
     open: function () {
-      st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.pick = null; st.hi = st.vi; COLS = VIEWS[st.vi][2];
+      st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.pick = null; st.del = false; siteCache = null; st.hi = st.vi; st.ti = 0; COLS = VIEWS[st.vi][2];
       ORD = loadOrd(); endSearch(true);
       pullUrl();
       document.getElementById('liveModal').classList.add('on');
       if (window.__setLayer) window.__setLayer('live');
       draw();
     },
+    refresh: function () { siteCache = null; st.key = null; if (document.getElementById('liveModal').classList.contains('on')) draw(); },
     /* text typed from the phone (or the TV keyboard) */
     search: function (v) { startSearch(); var b = searchBox(); if (b) { b.value = v || ''; onSearchInput(); } },
     key: function (k) {
       var cs = cats(), box = searchBox();
       if (box && document.activeElement === box) {
         if (k === 'back') { endSearch(true); draw(); return; }
-        if (k === 'ok' || k === 'ArrowDown') { endSearch(false); st.f = st.list.length ? 'grid' : 'view'; st.gi = 0; draw(); return; }
+        if (k === 'ok' || k === 'ArrowDown') { endSearch(false); st.f = st.list.length ? 'grid' : 'tool'; st.gi = 0; draw(); return; }
         return;
       }
       if (k === 'back') {
@@ -263,20 +295,28 @@
         if (window.__closeLive) window.__closeLive(); return;
       }
       if (st.f === 'view') {
-        var N = VIEWS.length + 2;
-        if (k === 'ArrowRight') { st.hi = Math.max(0, st.hi - 1); if (st.hi < VIEWS.length) setView(st.hi); }
-        else if (k === 'ArrowLeft') { st.hi = Math.min(N - 1, st.hi + 1); if (st.hi < VIEWS.length) setView(st.hi); }
-        else if (k === 'ArrowDown') st.f = 'cat';
+        var N = VIEWS.length;
+        if (k === 'ArrowRight') { st.hi = Math.max(0, st.hi - 1); setView(st.hi); }
+        else if (k === 'ArrowLeft') { st.hi = Math.min(N - 1, st.hi + 1); setView(st.hi); }
+        else if (k === 'ArrowDown') st.f = 'tool';
+        else if (k === 'ok') st.f = 'tool';
+      } else if (st.f === 'tool') {
+        var tl = tools(), TN = tl.length; if (st.ti >= TN) st.ti = TN - 1;
+        if (k === 'ArrowRight') st.ti = Math.max(0, st.ti - 1);
+        else if (k === 'ArrowLeft') st.ti = Math.min(TN - 1, st.ti + 1);
+        else if (k === 'ArrowUp') st.f = 'view';
+        else if (k === 'ArrowDown') st.f = st.list.length ? 'grid' : 'cat';
         else if (k === 'ok') {
-          if (st.hi === VIEWS.length) { st.edit = !st.edit; st.pick = null; if (st.edit && window.toastMsg) window.toastMsg('وضع الترتيب شغّال'); }
-          else if (st.hi === VIEWS.length + 1) { startSearch(); return; }
-          else st.f = 'cat';
+          var id = tl[st.ti].id;
+          if (id === 'search') { startSearch(); return; }
+          if (id === 'edit') { st.edit = !st.edit; st.del = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.edit ? 'وضع الترتيب شغّال' : 'وضع الترتيب انطفى'); }
+          else if (id === 'del') { st.del = !st.del; st.edit = false; st.pick = null; if (window.toastMsg) window.toastMsg(st.del ? 'اضغط OK على القناة المحفوظة حتى تنحذف' : 'انطفى وضع الحذف'); }
         }
       } else if (st.f === 'cat') {
         if (st.edit && st.pick === 'cat') {
           if (k === 'ArrowUp') moveCat(-1); else if (k === 'ArrowDown') moveCat(1); else if (k === 'ok' || k === 'ArrowLeft' || k === 'ArrowRight') st.pick = null;
         } else if (st.edit && k === 'ok') { st.pick = 'cat'; }
-        else if (k === 'ArrowUp') { if (st.ci === 0) st.f = 'view'; else { st.ci--; st.gi = 0; st.off = 0; st.fold = null; st.q = ''; endSearch(true); } }
+        else if (k === 'ArrowUp') { if (st.ci === 0) st.f = 'tool'; else { st.ci--; st.gi = 0; st.off = 0; st.fold = null; st.q = ''; endSearch(true); } }
         else if (k === 'ArrowDown') { st.ci = Math.min(cs.length - 1, st.ci + 1); st.gi = 0; st.off = 0; st.fold = null; st.q = ''; endSearch(true); }
         else if (k === 'ArrowLeft' || k === 'ok') { if (st.list.length) st.f = 'grid'; }
       } else {
@@ -291,7 +331,7 @@
         } else if (st.edit && k === 'ok') { if (st.list.length && !st.list[st.gi].empty && !st.q) st.pick = 'ch'; }
         else if (k === 'ArrowRight') { if (st.gi % COLS === 0) st.f = 'cat'; else st.gi--; }
         else if (k === 'ArrowLeft') { if (st.gi + 1 < st.list.length && st.gi % COLS < COLS - 1) st.gi++; }
-        else if (k === 'ArrowUp') { if (st.gi - COLS >= 0) st.gi -= COLS; else st.f = 'view'; }
+        else if (k === 'ArrowUp') { if (st.gi - COLS >= 0) st.gi -= COLS; else st.f = 'tool'; }
         else if (k === 'ArrowDown') { if (st.gi + COLS < st.list.length) st.gi += COLS; else if (st.gi < st.list.length - 1) st.gi = st.list.length - 1; }
         else if (k === 'ok') { play(); return; }
       }

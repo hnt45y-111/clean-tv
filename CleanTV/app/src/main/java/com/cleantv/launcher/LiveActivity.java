@@ -326,7 +326,7 @@ public class LiveActivity extends Activity {
         kufi = font("ReemKufi.ttf", Typeface.DEFAULT_BOLD);
         plexB = font("PlexArabic-SemiBold.ttf", Typeface.DEFAULT_BOLD);
         plexR = font("PlexArabic-Regular.ttf", Typeface.DEFAULT);
-        int pw = Math.round(getResources().getDisplayMetrics().widthPixels * 0.5f);
+        int pw = Math.round(getResources().getDisplayMetrics().widthPixels * 0.36f);
         listPanel = new LinearLayout(this);
         listPanel.setOrientation(LinearLayout.VERTICAL);
         listPanel.setBackgroundColor(Color.parseColor("#F815181B"));

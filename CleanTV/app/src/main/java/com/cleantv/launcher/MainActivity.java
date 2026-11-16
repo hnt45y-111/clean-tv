@@ -280,6 +280,7 @@ public class MainActivity extends Activity {
         else if (web != null) {
             web.requestFocus();
             web.evaluateJavascript("window.onAppResume && window.onAppResume()", null);
+            web.evaluateJavascript("window.Live && Live.refresh && Live.refresh()", null);
             String pw = Media.prefs(this).getString("pendingWall", null);
             if (pw != null) {
                 Media.prefs(this).edit().remove("pendingWall").apply();
@@ -491,6 +492,18 @@ public class MainActivity extends Activity {
             Intent i = new Intent(MainActivity.this, LiveActivity.class).putExtra("idx", index);
             startActivity(i);
         }
+
+        /** «قنواتي» ← مواقع: the in-app browser that finds the stream of the channel you open and saves it */
+        @JavascriptInterface
+        public void openSite(String url) {
+            startActivity(new Intent(MainActivity.this, SiteActivity.class).putExtra("url", url));
+        }
+
+        @JavascriptInterface
+        public String siteChannels() { return SiteActivity.load(MainActivity.this).toString(); }
+
+        @JavascriptInterface
+        public void siteDelete(String key) { SiteActivity.remove(MainActivity.this, key); }
 
         @JavascriptInterface
         public boolean launch(String pkg) {
