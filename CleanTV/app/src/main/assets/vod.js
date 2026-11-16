@@ -67,10 +67,10 @@
   }
 
   /* ---------------------------------------------------------------- the user's own IPTV account: its films and series */
-  function xt() { var x = S().xtream; if (!x || !x.host || !x.user || !x.pass || x.vod === false) return null; var h = String(x.host).trim().replace(/\/+$/, ''); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; return { host: h, user: String(x.user).trim(), pass: String(x.pass).trim() }; }
+  function xt() { var x = S().xtream; if (!x || !x.host || !x.user || !x.pass || x.vod === false) return null; var h = String(x.host).trim(); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; h = h.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1'); try { var kb = localStorage.getItem('xtBase|' + h); if (kb) h = kb; } catch (e) {} return { host: h, host0: String(x.host).trim(), user: String(x.user).trim(), pass: String(x.pass).trim() }; }
   function xtApi(x, a, extra) { return x.host + '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + '&action=' + a + (extra || ''); }
   var xtErr = '';
-  function xtJson(x, a, extra) { return get(xtApi(x, a, extra)).then(function (t) { if (String(t).indexOf('ERR:') === 0) xtErr = String(t).slice(4); try { return JSON.parse(t); } catch (e) { return null; } }); }
+  function xtJson(x, a, extra) { return (window.__xtFetch ? window.__xtFetch(x, xtApi(x, a, extra).slice(x.host.length)) : get(xtApi(x, a, extra))).then(function (t) { if (String(t).indexOf('ERR:') === 0) xtErr = String(t).slice(4); try { return JSON.parse(t); } catch (e) { return null; } }); }
   function xtUa(x) { try { return (window.Android && window.Android.getPref && window.Android.getPref('uaOk|' + x.host.replace(/^https?:\/\//i, '').replace(/[:\/].*$/, ''))) || ''; } catch (e) { return ''; } }
   function xtSections(cb) {
     var x = xt(); if (!x) return cb([]);

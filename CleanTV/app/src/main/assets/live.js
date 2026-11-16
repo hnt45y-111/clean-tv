@@ -72,9 +72,31 @@
   }
   function readCache() { try { return JSON.parse(localStorage.getItem('myChLists') || '{}') || {}; } catch (e) { return {}; } }
   /* an IPTV account of the Xtream kind (server, user, password) that the user owns: its live channels come as one folder, one sub-folder per category */
-  function xtOf(S) { var x = S && S.xtream; if (!x || !x.host || !x.user || !x.pass || x.live === false) return null; var h = String(x.host).trim().replace(/\/+$/, ''); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; return { host: h, user: String(x.user).trim(), pass: String(x.pass).trim(), out: x.out === 'm3u8' ? 'm3u8' : 'ts', name: x.name || 'IPTV' }; }
+  function xtOf(S) { var x = S && S.xtream; if (!x || !x.host || !x.user || !x.pass || x.live === false) return null; var h = String(x.host).trim(); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; h = h.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1'); try { var kb = localStorage.getItem('xtBase|' + h); if (kb) h = kb; } catch (e) {} return { host: h, host0: String(x.host).trim(), user: String(x.user).trim(), pass: String(x.pass).trim(), out: x.out === 'm3u8' ? 'm3u8' : 'ts', name: x.name || 'IPTV' }; }
   function xtApi(x, action) { return x.host + '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + (action ? '&action=' + action : ''); }
-  function xtStreamUrl(x, id) { return x.host + '/live/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + id + '.' + x.out; }
+  /* a server that refuses one address may answer at the other (http/https, with or without the port): try them, keep the one that works */
+  function xtBases(x) {
+    var h = String(x.host0 || x.host).trim(); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; h = h.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1');
+    var alt = /^https:/i.test(h) ? h.replace(/^https:/i, 'http:') : h.replace(/^http:/i, 'https:'), l = [x.host, h, alt];
+    if (/:\d+$/.test(h)) { l.push(h.replace(/:\d+$/, '')); l.push(alt.replace(/:\d+$/, '')); }
+    return l.filter(function (v, i) { return v && l.indexOf(v) === i; });
+  }
+  function xtFetch(x, path) {
+    var bases = xtBases(x), i = 0, last = 'ERR:no';
+    function next() {
+      if (i >= bases.length) return Promise.resolve(last);
+      var b = bases[i++];
+      return window.__fetchText(b + path).then(function (t) {
+        if (String(t).indexOf('ERR:') === 0 || !String(t).trim()) { last = String(t).trim() ? t : 'ERR:رد فاضي'; return next(); }
+        if (b !== x.host) { try { var o0 = String(x.host0 || '').trim(); if (!/^https?:\/\//i.test(o0)) o0 = 'http://' + o0; localStorage.setItem('xtBase|' + o0.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1'), b); } catch (e) {} x.host = b; }
+        return t;
+      }, function () { return next(); });
+    }
+    return next();
+  }
+  window.__xtFetch = xtFetch;
+  function xtQ(x, action) { return '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + (action ? '&action=' + action : ''); }
+  function xtStreamUrl(x, id) { if (/^https?:/i.test(String(id))) return id; return x.host + '/live/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + id + '.' + x.out; }
   function xtKey(x) { return x.host + '|' + x.user; }
   function xtRead() { try { return JSON.parse(localStorage.getItem('myXt') || 'null'); } catch (e) { return null; } }
   var xtState = '';     /* '' | 'loading' | 'fail:…' */
@@ -83,14 +105,25 @@
     var x = xtOf(S); if (!x || !window.__fetchText) return;
     var c = xtRead(); if (!force && c && c.k === xtKey(x) && Date.now() - c.t < 6 * 3600000) return;
     xtState = 'loading'; cust.key = '';
-    window.__fetchText(xtApi(x, 'get_live_categories')).then(function (ct) {
+    xtFetch(x, xtQ(x, 'get_live_categories')).then(function (ct) {
       var cats = {}; try { (JSON.parse(ct) || []).forEach(function (o) { cats[o.category_id] = o.category_name; }); } catch (e) {}
-      return window.__fetchText(xtApi(x, 'get_live_streams')).then(function (st) {
+      return xtFetch(x, xtQ(x, 'get_live_streams')).then(function (st) {
         var arr = null; try { arr = JSON.parse(st); } catch (e) {}
+        if (!arr || !arr.length) {
+          /* the panel refused its API: the same account's plain list is the other door */
+          return xtFetch(x, '/get.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + '&type=m3u_plus&output=' + (x.out === 'm3u8' ? 'm3u8' : 'ts')).then(function (m3) {
+            var pl = String(m3).indexOf('#EXT') >= 0 ? parseM3U(m3).filter(function (o) { return !/\/(movie|series)\//i.test(o.u); }) : [];
+            if (pl.length) arr = pl.map(function (o) { return { name: o.n, stream_id: o.u, category_id: '~' + (o.grp || ''), stream_icon: o.l || '' }; }), pl.forEach(function (o) { cats['~' + (o.grp || '')] = o.grp || 'بدون مجموعة'; });
+            return fin(st);
+          });
+        }
+        return fin(st);
+        function fin(st) {
         if (!arr || !arr.length) { var er = String(st).indexOf('ERR:') === 0 ? String(st).slice(4) : 'الحساب ما رجّع قنوات (تأكد من الرابط والمستخدم)'; if (/403|401/.test(er)) er += ' · السيرفر رفض الطلب: تأكد من الرابط والمنفذ واسم المستخدم وكلمة المرور، وأن الاشتراك فعّال وما متجاوز عدد الأجهزة'; xtState = 'fail:' + er; if (force && window.toastMsg) window.toastMsg('تعذّر التحديث: ' + er); return; }
         var names = [], idx = {}, items = [];
         arr.forEach(function (o) { var cn = cats[o.category_id] || 'بدون مجموعة'; if (idx[cn] == null) { idx[cn] = names.length; names.push(cn); } items.push([String(o.name || '').trim(), o.stream_id, idx[cn], o.stream_icon || '']); });
         try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; if (force && window.toastMsg) window.toastMsg('تم تحديث IPTV: ' + items.length + ' قناة'); } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
+        }
       });
     }).then(function () { cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); }, function () { xtState = 'fail:تعذّر الاتصال بالسيرفر'; cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); });
   }
