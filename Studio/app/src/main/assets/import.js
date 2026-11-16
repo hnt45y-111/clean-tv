@@ -354,10 +354,12 @@ function osPanelWire(box, S) {
         <div class="sub" style="margin:6px 2px">${cnt ? 'فيها ' + cnt + ' رابط' : 'فارغة'} · روابط يوتيوب تنفتح بتطبيق يوتيوب</div>
         <label class="f" style="margin-top:8px">أو رابط قائمة تحدّثها إنت (يقراها التلفزيون كل مرة تفتح قنواتي)</label>
         <input id="chUrl" dir="ltr" placeholder="https://…/channels.m3u" value="${esc(S.channelsUrl || '')}">
+        <label class="f" style="margin-top:8px">مواقع قنوات (رابط موقع بكل سطر): يفتحها التلفزيون من «قنواتي ← مواقع القنوات»، تضغط على القناة بالموقع وتنحفظ بالمجلد اللي تختاره</label>
+        <textarea id="chSites" dir="ltr" spellcheck="false" style="width:100%;min-height:70px;font:13px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)" placeholder="https://…">${esc(S.chSites || '')}</textarea>
         <div class="row" style="margin-top:10px;gap:8px"><button class="btn sec" style="flex:1" id="myOk">${ic('save')} حفظ</button><button class="btn ghost" id="myClr">امسح</button></div></div>`;
       p.insertBefore(my, box.nextSibling);
-      $('#myOk').onclick = () => { tap(); const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
-      $('#myClr').onclick = () => { tap(); delete S.myM3u; delete S.channelsUrl; changed(); live({ settings: S }); designPanel(); };
+      $('#myOk').onclick = () => { tap(); const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
+      $('#myClr').onclick = () => { tap(); delete S.myM3u; delete S.channelsUrl; delete S.chSites; changed(); live({ settings: S }); designPanel(); };
       return;
     }
     if (D.tab !== 'theme') return;
