@@ -696,6 +696,7 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void quranStop() { Media.quranStop(); }
+        @JavascriptInterface public void quranVolume(float v) { Media.quranVolume(v); }
 
         @JavascriptInterface
         public String quranStatus() {

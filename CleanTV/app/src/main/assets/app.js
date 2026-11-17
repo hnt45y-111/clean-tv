@@ -1168,6 +1168,7 @@
       { id: 'move', label: 'ترتيب التطبيقات', icon: 'move', active: mode === 'move' },
       { id: 'hide', label: 'إخفاء وإظهار', icon: 'eye', active: mode === 'hide' },
       { id: 'kids', label: 'وضع الأطفال', icon: 'child' },
+      { id: 'bedtime', label: 'قصة قبل النوم', icon: 'moon' },
       { id: 'prefs', label: 'إعدادات الواجهة', icon: 'sliders' },
       { id: 'refresh', label: 'تحديث', icon: 'refresh' }
     ];
@@ -1960,6 +1961,31 @@
     if (on) el.textContent = (st.state === 'paused' ? '⏸ ' : st.state === 'loading' ? '⏳ ' : '▶ ') + st.title;
   }
 
+  // ---------- Bedtime story (for the kids, one button): dims the room, a calm recitation, fades out and returns home on its own ----------
+  var BEDTIME_MIN = 15, bedtimeT = null, bedtimeFade = null;
+  function startBedtime() {
+    var m = $('bedtimeModal'); if (!m) return;
+    m.classList.add('on'); layer = 'bedtime';
+    if (HAS_ANDROID && A.quranPlay) { try { A.quranVolume(1); } catch (e) {} playSurah(66); }   // سورة الملك: تُقرأ عادة قبل النوم
+    clearTimeout(bedtimeT); clearInterval(bedtimeFade);
+    bedtimeT = setTimeout(fadeBedtime, Math.max(1, BEDTIME_MIN - 0.5) * 60000);
+    toast('🌙 قصة قبل النوم: تخفت تدريجياً خلال ' + nf.format(BEDTIME_MIN) + ' دقيقة · أي زر يوقفها أول');
+  }
+  function fadeBedtime() {
+    if (!HAS_ANDROID || !A.quranVolume) return endBedtime();
+    var v = 1;
+    bedtimeFade = setInterval(function () {
+      v -= 0.08; try { A.quranVolume(Math.max(0, v)); } catch (e) {}
+      if (v <= 0) { clearInterval(bedtimeFade); endBedtime(); }
+    }, 2200);
+  }
+  function endBedtime() {
+    clearTimeout(bedtimeT); clearInterval(bedtimeFade); bedtimeT = bedtimeFade = null;
+    if (HAS_ANDROID && A.quranStop) { try { A.quranVolume(1); } catch (e) {} A.quranStop(); }
+    var m = $('bedtimeModal'); if (m) m.classList.remove('on');
+    layer = 'main'; renderNowPlaying();
+  }
+
   // ---------- Kids mode ----------
   var kids = load('kids', { on: false, pin: '', apps: [], limit: 120, used: {}, launchAt: 0 });
   function saveKids() { save('kids', kids); }
@@ -2172,6 +2198,7 @@
         else if (id === 'quran') openQuran();
         else if (id === 'themes') openThemes();
         else if (id === 'kids') toggleKids();
+        else if (id === 'bedtime') startBedtime();
         else if (id === 'prefs') openSettings();
         else if (id === 'bgnext') { if (bgPinned) { bgPinned = null; save('bgPinned', null); } bgManual++; showBg(); }
         else if (id === 'move') { moving = null; setMode(mode === 'move' ? 'normal' : 'move'); if (mode === 'normal') goRow(rowEls.length - 1); }
@@ -2211,6 +2238,7 @@
   function handleKey(k) {
     lastInput = Date.now();
     if (layer === 'greet') return window.__greetKey();
+    if (layer === 'bedtime') { endBedtime(); return; }
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
     clickSound(); if (k === 'ok') pressFx();
@@ -2253,6 +2281,7 @@
 
   window.__refreshBadges = function () { renderApps(); };
   window.__noteNet = noteNet;
+  window.__startBedtime = startBedtime;
   window.remoteKey = function (k) { handleKey(k); };
   window.onBackKey = function () { handleKey('back'); };
   window.onHomePressed = function () {

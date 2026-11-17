@@ -117,6 +117,12 @@ public class Media {
         }
     }
 
+    /** 0..1 — used to fade the recitation out gently (the bedtime-story mode) instead of cutting it off */
+    static void quranVolume(float v) {
+        if (quran == null) return;
+        try { quran.setVolume(v, v); } catch (Throwable ignored) { }
+    }
+
     static void quranToggle() {
         if (quran == null) return;
         try {

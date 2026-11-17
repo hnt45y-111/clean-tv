@@ -205,6 +205,15 @@
   @keyframes grLetter { 0% { opacity: 0; transform: translateY(46px) scale(.7) rotate(6deg); filter: brightness(2.2); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: brightness(1); } }
   .gr-rule { margin: 26px auto 0; width: 0; height: 4px; border-radius: 4px; background: linear-gradient(90deg, transparent, #D9822B, transparent); animation: grRule .9s ease forwards; }
   @keyframes grRule { from { width: 0; opacity: 0; } 40% { opacity: 1; } to { width: 420px; opacity: 1; } }
+  /* one button: the room dims, a calm recitation starts, and it all fades out on its own before bed */
+  #bedtimeModal { position: absolute; inset: 0; z-index: 380; display: none; background: radial-gradient(900px 600px at 50% 40%, #1a2240 0%, #0a0d1c 65%, #050611 100%); animation: grIn 1.4s ease both; }
+  #bedtimeModal.on { display: block; }
+  .bt-moon { position: absolute; top: 36%; left: 50%; transform: translate(-50%, -50%); font-size: 140px; filter: drop-shadow(0 0 40px rgba(239,231,212,.5)); animation: btFloat 6s ease-in-out infinite; }
+  @keyframes btFloat { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-14px); } }
+  .bt-stars { position: absolute; inset: 0; background-image: radial-gradient(2px 2px at 20% 30%, #EFE7D4, transparent), radial-gradient(2px 2px at 70% 20%, #EFE7D4, transparent), radial-gradient(1.5px 1.5px at 85% 55%, #EFE7D4, transparent), radial-gradient(2px 2px at 35% 70%, #EFE7D4, transparent), radial-gradient(1.5px 1.5px at 60% 80%, #EFE7D4, transparent), radial-gradient(1.5px 1.5px at 10% 60%, #EFE7D4, transparent); opacity: .5; animation: btTwinkle 3.2s ease-in-out infinite alternate; }
+  @keyframes btTwinkle { from { opacity: .25; } to { opacity: .65; } }
+  .bt-txt { position: absolute; bottom: 14%; left: 0; right: 0; text-align: center; font-family: var(--kufi); font-size: 44px; color: #EFE7D4; }
+  .bt-txt small { font-family: var(--font); font-size: 22px; color: #B8BDC2; display: block; margin-top: 10px; font-weight: 400; }
   .m-title { position: absolute; top: 54px; right: 96px; font-size: 40px; font-weight: 800; }
   .m-sub { position: absolute; top: 108px; right: 96px; font-size: 22px; color: var(--ink-3); }
   #bgGrid { position: absolute; top: 160px; right: 96px; left: 96px; bottom: 40px; overflow: hidden; }
@@ -1050,6 +1059,7 @@
 <body>
 <div id="stage">
   <div id="greetModal"></div>
+  <div id="bedtimeModal"><div class="bt-stars"></div><div class="bt-moon">🌙</div><div class="bt-txt">قصة قبل النوم<br><small>تخفت الإضاءة والصوت تدريجياً… نوم هنيء</small></div></div>
   <div class="bgfallback"></div>
   <div class="bgimg" id="bgA"></div>
   <div class="bgimg" id="bgB"></div>
