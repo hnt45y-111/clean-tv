@@ -75,7 +75,7 @@ public class LiveActivity extends Activity {
     private boolean panelOpen;
     private FrameLayout root;
     private SurfaceView sv;
-    private SubtitleView subs;
+    private SubtitleView ccView;
     private WebView yt;
     private String ytWatch;
     private boolean ytFell;
@@ -130,10 +130,10 @@ public class LiveActivity extends Activity {
         root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         sv = new SurfaceView(this);
         root.addView(sv, new FrameLayout.LayoutParams(-1, -1));
-        subs = new SubtitleView(this);
-        subs.setApplyEmbeddedStyles(false);
-        subs.setStyle(new CaptionStyleCompat(IVORY, Color.parseColor("#AA000000"), Color.TRANSPARENT, CaptionStyleCompat.EDGE_TYPE_OUTLINE, Color.BLACK, null));
-        root.addView(subs, new FrameLayout.LayoutParams(-1, -1));
+        ccView = new SubtitleView(this);
+        ccView.setApplyEmbeddedStyles(false);
+        ccView.setStyle(new CaptionStyleCompat(IVORY, Color.parseColor("#AA000000"), Color.TRANSPARENT, CaptionStyleCompat.EDGE_TYPE_OUTLINE, Color.BLACK, null));
+        root.addView(ccView, new FrameLayout.LayoutParams(-1, -1));
         applyQuietMode();
 
         state = tv(24, IVORY, false);
@@ -203,7 +203,7 @@ public class LiveActivity extends Activity {
                     h.removeCallbacks(hide); h.postDelayed(hide, 4000);
                 }
             }
-            @Override public void onCues(CueGroup cueGroup) { subs.setCues(cueGroup.cues); }
+            @Override public void onCues(CueGroup cueGroup) { ccView.setCues(cueGroup.cues); }
             @Override public void onVideoSizeChanged(VideoSize v) {
                 int hgt = v.height;
                 if (hgt <= 0) return;
@@ -230,7 +230,7 @@ public class LiveActivity extends Activity {
             int from = Integer.parseInt(p.getString("quietHour", "23")), to = Integer.parseInt(p.getString("quietEndHour", "7"));
             int hr = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
             boolean quiet = on && (from <= to ? (hr >= from && hr < to) : (hr >= from || hr < to));
-            subs.setFractionalTextSize(quiet ? SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * 1.6f : SubtitleView.DEFAULT_TEXT_SIZE_FRACTION);
+            ccView.setFractionalTextSize(quiet ? SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * 1.6f : SubtitleView.DEFAULT_TEXT_SIZE_FRACTION);
             if (quiet && player != null) player.setVolume(0.45f);
             else if (player != null) player.setVolume(1f);
         } catch (Throwable ignored) { }
