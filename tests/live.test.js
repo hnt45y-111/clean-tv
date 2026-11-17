@@ -31,7 +31,6 @@ function makePage(opts = {}) {
       siteDelete: k => { calls.push('del ' + k); saved = saved.filter(o => o.u + '|' + o.n !== k); },
       openSite: u => calls.push('open ' + u),
       playLive: (json, i) => calls.push({ play: i, pack: JSON.parse(json) }),
-      srv: () => opts.srv || '',
       getPref: k => (k === 'liveLast' && opts.last ? JSON.stringify(opts.last) : '')
     },
     toastMsg: () => {}
@@ -245,20 +244,4 @@ test('server probe names the kind of server (Xtream, wrong login, Cloudflare blo
   }
   const t2 = makePage({ fetchText: () => Promise.resolve('<html>x</html>') });
   assert.strictEqual((await t2.win.__xtProbe({ xtream: { host: 'a.b', user: 'u', pass: 'p' } })).kind, 'web');
-});
-
-test('an account with only a user and a password takes the server address from the hidden file (Android.srv)', () => {
-  const cache = { k: 'http://srv.test:8080|u1', t: Date.now(), cats: ['رياضة'], items: [['قناة أ', 11, 0, '']] };
-  const t = makePage({ srv: 'srv.test:8080', settings: { xtream: { user: 'u1', pass: 'p 1', name: 'اشتراكي' } }, store: { myXt: JSON.stringify(cache) } });
-  t.Live.open(); t.goCat('📁 قنواتي الخاصة');
-  assert.deepStrictEqual(t.names(), ['اشتراكي']);
-  t.keys('ok'); t.keys('ok'); t.keys('ok');
-  const play = t.calls.find(c => c.play !== undefined);
-  assert.ok(play, 'plays');
-  assert.strictEqual(play.pack.list[play.pack.idx].u, 'http://srv.test:8080/live/u1/p%201/11.ts');
-});
-
-test('without a server in the settings or in the hidden file there is no IPTV account', async () => {
-  const t = makePage({ settings: { xtream: { user: 'u1', pass: 'p' } } });
-  assert.strictEqual((await t.win.__xtProbe({ xtream: { user: 'u1', pass: 'p' } })).kind, 'none');
 });

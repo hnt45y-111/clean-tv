@@ -14,10 +14,10 @@
 
   /* ---------------------------------------------------------------- the account */
   function xt() {
-    var x = S().xtream; var xh = x ? (x.host || (window.__tvSrv ? window.__tvSrv() : '')) : ''; if (!x || !xh || !x.user || !x.pass || x.vod === false) return null;
-    var h = String(xh).trim(); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; h = h.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1');
+    var x = S().xtream; if (!x || !x.host || !x.user || !x.pass || x.vod === false) return null;
+    var h = String(x.host).trim(); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; h = h.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1');
     try { var kb = localStorage.getItem('xtBase|' + h); if (kb) h = kb; } catch (e) {}
-    return { host: h, host0: String(xh).trim(), user: String(x.user).trim(), pass: String(x.pass).trim() };
+    return { host: h, host0: String(x.host).trim(), user: String(x.user).trim(), pass: String(x.pass).trim() };
   }
   function xtUa(x) { try { return (window.Android && window.Android.getPref && window.Android.getPref('uaOk|' + x.host.replace(/^https?:\/\//i, '').replace(/[:\/].*$/, ''))) || ''; } catch (e) { return ''; } }
   function q(x, a, extra) { return '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + '&action=' + a + (extra || ''); }

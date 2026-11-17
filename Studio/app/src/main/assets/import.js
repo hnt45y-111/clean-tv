@@ -360,6 +360,8 @@ function osPanelWire(box, S) {
         <label class="f" style="margin-top:14px">اشتراك IPTV من نوع Xtream (اشتراكك أنت): قنواته الحية تطلع بقنواتي بمجلد، وبداخله مجلد لكل فئة</label>
         <input id="xtUser" dir="ltr" placeholder="اسم المستخدم" value="${esc((S.xtream || {}).user || '')}">
         <input id="xtPass" dir="ltr" placeholder="كلمة المرور" value="${esc((S.xtream || {}).pass || '')}" style="margin-top:6px">
+        <label class="f" style="margin-top:6px">عنوان السيرفر</label>
+        <input id="xtHost" dir="ltr" placeholder="http://server.com:8080" value="${esc(S.xtHost || (S.xtream || {}).host || '')}">
         <input id="xtName" placeholder="اسم المجلد (مثلاً: اشتراكي)" value="${esc((S.xtream || {}).name || '')}" style="margin-top:6px">
         <div class="chips" style="margin-top:6px"><button class="chip ${(S.xtream || {}).out === 'm3u8' ? '' : 'on'}" data-xo="ts">بث TS (الأكثر توافقاً)</button><button class="chip ${(S.xtream || {}).out === 'm3u8' ? 'on' : ''}" data-xo="m3u8">بث HLS</button></div>
         <div class="sub" style="margin:8px 2px 2px">لهذا المشترك: شنو ينضاف من الاشتراك؟</div>
@@ -375,7 +377,7 @@ function osPanelWire(box, S) {
         <div class="row" style="margin-top:12px"><button class="btn sec" style="flex:1" id="vodSave">${ic('save')} حفظ الاسم</button></div></div>`;
       p.insertBefore(vod, my.nextSibling);
       $('#vodSave').onclick = () => { tap(); delete S.vodSections; const nm = $('#vodName').value.trim(); if (nm) S.vodName = nm.slice(0, 30); else delete S.vodName; changed(); live({ settings: S }); toast('انحفظ اسم التطبيق'); };
-      $('#myOk').onclick = () => { tap(); const xh = srvHost(), xu = $('#xtUser').value.trim(), xp = $('#xtPass').value.trim(); delete S.xtHost; if (xu && xp && !xh) toast('السيرفر مو مضاف بالتطبيق'); if (xh && xu && xp) S.xtream = { host: xh, user: xu, pass: xp, name: $('#xtName').value.trim() || 'اشتراكي', out: (my.querySelector('[data-xo].on') || {}).dataset ? my.querySelector('[data-xo].on').dataset.xo : 'ts', live: !!my.querySelector('[data-xt="live"].on'), vod: !!my.querySelector('[data-xt="vod"].on') }; else delete S.xtream; const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
+      $('#myOk').onclick = () => { tap(); const xh = $('#xtHost').value.trim(), xu = $('#xtUser').value.trim(), xp = $('#xtPass').value.trim(); if (xh) S.xtHost = xh; else delete S.xtHost; if (xh && xu && xp) S.xtream = { host: xh, user: xu, pass: xp, name: $('#xtName').value.trim() || 'اشتراكي', out: (my.querySelector('[data-xo].on') || {}).dataset ? my.querySelector('[data-xo].on').dataset.xo : 'ts', live: !!my.querySelector('[data-xt="live"].on'), vod: !!my.querySelector('[data-xt="vod"].on') }; else delete S.xtream; const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
       $('#myFile').onclick = () => {
         tap();
         run('pick', { mode: 'm3u' }).then(t0 => {
@@ -475,6 +477,3 @@ function tickerLeaguesSheet(S, done) {
     if (e.target.closest('#tlOk')) { if (sel.size) S.tickerLeagues = [...sel]; else delete S.tickerLeagues; closeSheet(); changed(); live({ settings: S }); done(); }
   };
 }
-
-/* the server address is not typed anywhere: it ships inside the app as a masked file (assets/srv.dat) and only the bridge can read it */
-function srvHost() { try { return String((B.srv && B.srv()) || '').trim(); } catch (e) { return ''; } }

@@ -188,7 +188,6 @@ public class MainActivity extends Activity {
             try { if (!Accounts.session(MainActivity.this).optBoolean("admin")) return ""; } catch (Exception e) { return ""; }
             return Accounts.autoCode(code);
         }
-        @JavascriptInterface public String srv() { return Srv.get(MainActivity.this); }
         @JavascriptInterface public String kvGet(String k) { return kv(MainActivity.this).getString(k, null); }
         @JavascriptInterface public void kvSet(String k, String v) {
             if (v == null) kv(MainActivity.this).edit().remove(k).apply();
