@@ -104,8 +104,32 @@
     });
   }
   function getJSON(url) {
-    if (HAS_ANDROID) return bridgeAsync('fetchAsync', url).then(function (t) { try { return t ? JSON.parse(t) : null; } catch (e) { return null; } });
-    return fetch(url).then(function (r) { return r.json(); }).catch(function () { return null; });
+    var t0 = Date.now();
+    var p = HAS_ANDROID ? bridgeAsync('fetchAsync', url).then(function (t) { try { return t ? JSON.parse(t) : null; } catch (e) { return null; } })
+      : fetch(url).then(function (r) { return r.json(); }).catch(function () { return null; });
+    return p.then(function (r) { noteNet(Date.now() - t0, r != null); return r; });
+  }
+  // ---------- Connection quality: read off real round-trips the app was already making, not a cosmetic icon ----------
+  var netSamples = [];
+  function noteNet(ms, ok) {
+    netSamples.push(ok ? ms : -1); if (netSamples.length > 6) netSamples.shift();
+    renderNetQuality();
+  }
+  function renderNetQuality() {
+    var dot = $('netDot'), lbl = $('netLbl'); if (!dot) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) { dot.className = 'net-dot show bad'; dot.title = 'غير متصل بالإنترنت'; lbl.textContent = 'غير متصل بالإنترنت'; lbl.className = 'net-lbl' + (settings.netLabel === false ? '' : ' show'); return; }
+    if (!netSamples.length) { dot.classList.remove('show'); lbl.classList.remove('show'); return; }
+    var recent = netSamples.slice(-3), fails = recent.filter(function (v) { return v < 0; }).length;
+    var oks = recent.filter(function (v) { return v >= 0; });
+    var cls, txt;
+    if (fails === recent.length) { cls = 'bad'; txt = 'تعذّر الاتصال'; }
+    else {
+      var avg = oks.reduce(function (a, b) { return a + b; }, 0) / oks.length;
+      if (avg < 700 && fails === 0) { cls = 'good'; txt = 'الاتصال ممتاز'; }
+      else if (avg < 2200 && fails < 2) { cls = 'ok'; txt = 'الاتصال مقبول'; }
+      else { cls = 'bad'; txt = 'الاتصال ضعيف'; }
+    }
+    dot.className = 'net-dot show ' + cls; dot.title = txt; lbl.textContent = txt; lbl.className = 'net-lbl' + (settings.netLabel === false ? '' : ' show');
   }
 
   // ---------- Formats ----------
@@ -1370,7 +1394,7 @@
   // ---------- Alarms (adhan + match alerts) ----------
   var SETTINGS_DEFAULT = { adhanMode: 'sound', adhanFocus: 'pause', adhanFile: '', matchAlerts: true, reciter: 0, autoNext: true,
     theme: 'default', clickSound: false, saverApps: true, saverMin: 10, bgSources: null, bgInterval: 300,
-    ownerName: '', greetOn: true, quietHour: 23, quietEndHour: 7, quietOn: false, kidsBedtime: false, liveTint: true };
+    ownerName: '', greetOn: true, quietHour: 23, quietEndHour: 7, quietOn: false, kidsBedtime: false, liveTint: true, netLabel: true };
   var settings = load('settings', {});
   Object.keys(SETTINGS_DEFAULT).forEach(function (k) { if (settings[k] === undefined) settings[k] = SETTINGS_DEFAULT[k]; });
   function saveSettings() {
@@ -2020,7 +2044,10 @@
   var layer = 'main';
   window.__setLayer = function (l) { layer = l; };
   window.__getSettings = function () { return settings; };
-  window.__fetchText = function (u) { return (HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u); };
+  window.__fetchText = function (u) {
+    var t0 = Date.now();
+    return ((HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u)).then(function (t) { noteNet(Date.now() - t0, String(t || '').indexOf('ERR:') !== 0); return t; });
+  };
   window.__closeVod = function () { var m = document.getElementById('vodModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   var nav = (function () {
@@ -2224,6 +2251,7 @@
   });
 
   window.__refreshBadges = function () { renderApps(); };
+  window.__noteNet = noteNet;
   window.remoteKey = function (k) { handleKey(k); };
   window.onBackKey = function () { handleKey('back'); };
   window.onHomePressed = function () {
@@ -2280,6 +2308,7 @@
   loadBackgrounds(); loadApps(true); refreshMatches(false); refreshWeather(false); scheduleAll();
   nav.restoreFocus();
   if (!PREVIEW) setTimeout(function () { checkUpdate(false); }, 20000);
+  if (!PREVIEW && typeof window.addEventListener === 'function') { window.addEventListener('online', renderNetQuality); window.addEventListener('offline', renderNetQuality); renderNetQuality(); }
   if (!PREVIEW) setTimeout(function () { if (window.Live && window.Live.prefetch) window.Live.prefetch(); if (window.Vod && window.Vod.prefetch) window.Vod.prefetch(); }, 6000);
   if (!PREVIEW && settings.greetOn !== false) setTimeout(showGreet, 160);
   var gm = $('greetModal'); if (gm) gm.addEventListener('click', function () { closeGreet(true); });

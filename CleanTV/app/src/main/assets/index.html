@@ -76,7 +76,15 @@
   /* Hero */
   .hero { display: flex; justify-content: space-between; align-items: stretch; height: 480px; gap: 60px; }
   .time-block { display: flex; flex-direction: column; justify-content: center; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
-  .owner { font-family: var(--clockfont); font-size: 36px; font-weight: 700; color: var(--gold-2); margin-bottom: 2px; }
+  .owner { font-family: var(--clockfont); font-size: 36px; font-weight: 700; color: var(--gold-2); }
+  .owner-row { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+  /* a quiet, honest read on the connection — not decoration: it reflects real round-trips to real servers */
+  .net-dot { width: 13px; height: 13px; border-radius: 50%; background: #6b7280; display: none; flex: none; box-shadow: 0 0 0 3px rgba(255,255,255,.06); transition: background .6s ease; }
+  .net-dot.show { display: inline-block; }
+  .net-dot.good { background: #3DBE6C; } .net-dot.ok { background: #D9822B; } .net-dot.bad { background: #D9463C; animation: netBad 1.6s ease-in-out infinite; }
+  @keyframes netBad { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  .net-lbl { font-family: var(--font); font-size: 18px; font-weight: 600; color: var(--ink-3); display: none; }
+  .net-lbl.show { display: inline; }
   .clock { display: flex; align-items: baseline; gap: 18px; line-height: 1; font-family: var(--clockfont); }
   .clock .hm { direction: ltr; unicode-bidi: isolate; font-size: 150px; font-weight: 300; }
   .clock .ampm { font-size: 48px; font-weight: 400; color: var(--ink-2); }
@@ -1048,7 +1056,7 @@
 
     <section class="hero">
       <div class="time-block" id="timeblock" data-edit="timeblock">
-        <div class="owner">مدير الشاشات</div>
+        <div class="owner-row"><div class="owner">مدير الشاشات</div><i class="net-dot" id="netDot" title=""></i><span class="net-lbl" id="netLbl"></span></div>
         <div class="clock"><span class="hm" id="hm">--:--</span><span class="ampm" id="ampm"></span></div>
         <div class="dates">
           <div class="date-line"><span class="tag">م</span><span id="greg"></span></div>
