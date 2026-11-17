@@ -171,9 +171,13 @@
     else if (k === 'ok') { if (st.list[st.gi]) play(st.list[st.gi]); return; }
     draw();
   }
+  /* a quiet signal on the app icon: did the account bring more films or episodes since the last time this app was opened? */
+  function vodSig() { try { return D.m && D.s ? D.m.items.length + D.s.items.length : 0; } catch (e) { return 0; } }
   window.Vod = {
     PKG: '__vod', name: appName,
-    open: function () { st.f = 'tab'; st.ti = st.tab; st.sub = null; st.key = ''; $('vodModal').classList.add('on'); if (window.__setLayer) window.__setLayer('vod'); pull(false); },
+    prefetch: function () { try { pull(false); } catch (e) {} },
+    hasNew: function () { try { return vodSig() > (+localStorage.getItem('vodSeenSig') || 0); } catch (e) { return false; } },
+    open: function () { st.f = 'tab'; st.ti = st.tab; st.sub = null; st.key = ''; $('vodModal').classList.add('on'); if (window.__setLayer) window.__setLayer('vod'); try { localStorage.setItem('vodSeenSig', String(vodSig())); if (window.__refreshBadges) window.__refreshBadges(); } catch (e) {} pull(false); },
     key: key,
     _t: { state: st, data: D }
   };

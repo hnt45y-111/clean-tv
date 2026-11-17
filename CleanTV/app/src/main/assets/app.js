@@ -682,7 +682,8 @@
       if (customIcons[a.pkg]) inner = '<div class="tile"><img class="custom" src="' + esc(customIcons[a.pkg]) + '" alt=""></div>';
       else if (a.banner && !(iconShape && a.icon)) inner = '<div class="tile"><img class="banner" src="' + a.banner + '" alt=""></div>';
       else inner = '<div class="tile ic" style="background:' + shade(a.color, .62) + '">' + (a.icon ? '<img src="' + a.icon + '" alt="">' : '') + '</div>';
-      return '<div class="item app' + (isHidden ? ' hidden-app' : '') + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + inner + '<span class="badge">' + (mode === 'kidsel' ? 'غير مسموح' : 'مخفي') + '</span><div class="name">' + esc(appName(a)) + '</div></div>';
+      var isNew = !isHidden && mode === 'normal' && ((a.pkg === LIVE_PKG && window.Live && window.Live.hasNew && window.Live.hasNew()) || (a.pkg === VOD_PKG && window.Vod && window.Vod.hasNew && window.Vod.hasNew()));
+      return '<div class="item app' + (isHidden ? ' hidden-app' : '') + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + inner + (isNew ? '<i class="new-pulse" title="محتوى جديد"></i>' : '') + '<span class="badge">' + (mode === 'kidsel' ? 'غير مسموح' : 'مخفي') + '</span><div class="name">' + esc(appName(a)) + '</div></div>';
     }).join('') || '<div class="item empty-card" data-kind="none">جاري تحميل التطبيقات…</div>';
     $('apps-hint').textContent = mode === 'move' ? 'وضع الترتيب: OK على التطبيق، حرّكه بالأسهم، وOK للتثبيت' : mode === 'hide' ? 'وضع الإخفاء: OK على التطبيق حتى تخفيه أو ترجعه'
       : mode === 'kidsel' ? 'تطبيقات الأطفال: OK حتى تسمح أو تمنع · رجوع للحفظ' : mode === 'icon' ? 'تغيير الأيقونة: اختار التطبيق واضغط OK · رجوع للخروج'
@@ -2222,6 +2223,7 @@
     e.preventDefault(); handleKey(k);
   });
 
+  window.__refreshBadges = function () { renderApps(); };
   window.remoteKey = function (k) { handleKey(k); };
   window.onBackKey = function () { handleKey('back'); };
   window.onHomePressed = function () {
@@ -2278,6 +2280,7 @@
   loadBackgrounds(); loadApps(true); refreshMatches(false); refreshWeather(false); scheduleAll();
   nav.restoreFocus();
   if (!PREVIEW) setTimeout(function () { checkUpdate(false); }, 20000);
+  if (!PREVIEW) setTimeout(function () { if (window.Live && window.Live.prefetch) window.Live.prefetch(); if (window.Vod && window.Vod.prefetch) window.Vod.prefetch(); }, 6000);
   if (!PREVIEW && settings.greetOn !== false) setTimeout(showGreet, 160);
   var gm = $('greetModal'); if (gm) gm.addEventListener('click', function () { closeGreet(true); });
   /* if the interface had to restart, say why (so the cause can be read off the screen) */

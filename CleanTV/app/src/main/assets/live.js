@@ -161,7 +161,7 @@
         if (!arr || !arr.length) { var er = String(st).indexOf('ERR:') === 0 ? String(st).slice(4) : 'الحساب ما رجّع قنوات (تأكد من الرابط والمستخدم)'; if (/403|401/.test(er) && !/Cloudflare/.test(er)) er += ' · السيرفر رفض الطلب: تأكد من الرابط والمنفذ واسم المستخدم وكلمة المرور، وأن الاشتراك فعّال وما متجاوز عدد الأجهزة'; return xtProbe(x).then(function (k) { if (KIND_MSG[k] && k !== 'xtream') er += ' · ' + KIND_MSG[k]; xtState = 'fail:' + er; if (force && window.toastMsg) window.toastMsg('تعذّر التحديث: ' + er); }); }
         var names = [], idx = {}, items = [];
         arr.forEach(function (o) { var cn = cats[o.category_id] || 'بدون مجموعة'; if (idx[cn] == null) { idx[cn] = names.length; names.push(cn); } items.push([String(o.name || '').trim(), o.stream_id, idx[cn], o.stream_icon || '']); });
-        try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; if (force && window.toastMsg) window.toastMsg('تم تحديث IPTV: ' + items.length + ' قناة'); } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
+        try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; if (window.__refreshBadges) window.__refreshBadges(); if (force && window.toastMsg) window.toastMsg('تم تحديث IPTV: ' + items.length + ' قناة'); } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
         }
       });
     }).then(function () { cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); }, function () { xtState = 'fail:تعذّر الاتصال بالسيرفر'; cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); });
@@ -421,8 +421,12 @@
     for (i = 0; i < l.length; i++) if (l[i].u + '|' + l[i].n === last.k) { gi = i; break; }
     st.gi = gi; st.f = 'grid';
   }
+  /* a quiet signal on the app icon: did more channels (the list, or the account) arrive since the last time قنواتي was opened? */
+  function liveSig() { var c = (window.CHANNELS || []).length, xc = 0; try { var m = JSON.parse(localStorage.getItem('myXt') || 'null'); if (m && m.items) xc = m.items.length; } catch (e) {} return c + xc; }
   var Live = {
     restore: restoreLast,
+    prefetch: function () { try { xtPull((window.__getSettings && window.__getSettings()) || {}); } catch (e) {} },
+    hasNew: function () { try { return liveSig() > (+localStorage.getItem('lvSeenSig') || 0); } catch (e) { return false; } },
     open: function () {
       st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.pick = null; st.del = false; siteCache = null; st.hi = st.vi; st.ti = 0; COLS = VIEWS[st.vi][2];
       ORD = loadOrd(); endSearch(true);
@@ -430,6 +434,7 @@
       pullUrl();
       document.getElementById('liveModal').classList.add('on');
       if (window.__setLayer) window.__setLayer('live');
+      try { localStorage.setItem('lvSeenSig', String(liveSig())); if (window.__refreshBadges) window.__refreshBadges(); } catch (e) {}
       draw();
     },
     refresh: function () { siteCache = null; st.key = null; if (document.getElementById('liveModal').classList.contains('on')) draw(); },

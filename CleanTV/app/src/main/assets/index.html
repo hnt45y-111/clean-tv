@@ -128,6 +128,9 @@
   .app.hidden-app .tile { opacity: .3; }
   .app .badge { position: absolute; top: 8px; left: 8px; z-index: 2; background: rgba(0,0,0,.75); color: #fff; font-size: 17px; font-weight: 700; padding: 4px 10px 2px; border-radius: 8px; display: none; }
   .app.hidden-app .badge { display: block; }
+  /* a quiet nudge that new channels or new films/series arrived, gone the moment the app is opened */
+  .new-pulse { position: absolute; top: 6px; left: 6px; z-index: 3; width: 20px; height: 20px; border-radius: 50%; background: #E0453C; box-shadow: 0 0 0 0 rgba(224,69,60,.7); animation: newPulse 1.8s ease-out infinite; }
+  @keyframes newPulse { 0% { box-shadow: 0 0 0 0 rgba(224,69,60,.65); } 70% { box-shadow: 0 0 0 11px rgba(224,69,60,0); } 100% { box-shadow: 0 0 0 0 rgba(224,69,60,0); } }
   .app.moving .tile { box-shadow: 0 0 0 5px var(--gold); }
   .app.moving::before { content: '◀ ▶'; position: absolute; top: -34px; left: 0; right: 0; text-align: center; color: var(--gold); font-size: 22px; direction: ltr; }
 
