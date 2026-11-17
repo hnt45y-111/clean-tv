@@ -346,6 +346,15 @@ function osPanelWire(box, S) {
         <div class="chips" style="margin-top:6px">${[['left', 'يسار'], ['center', 'وسط'], ['right', 'يمين']].map(([v, n]) => `<button class="chip ${(S.tickerAlign || 'center') === v ? 'on' : ''}" data-tka="${v}">${n}</button>`).join('')}</div>
         <div class="list" style="margin:14px 0 0"><div class="item tap" data-tk="news" style="padding:6px 0;min-height:0"><div class="t"><b>أخبار رياضية بالشريط</b><small>عناوين عربية عن فرقك ودورياتك تمر بنفس الشريط</small></div><div class="toggle ${S.tickerNews !== false ? 'on' : ''}"></div></div></div></div>`;
       p.insertBefore(box, p.firstChild); osPanelWire(box, S);
+      const gr = document.createElement('div');
+      gr.innerHTML = `<div class="panel"><h2>${ic('user')} الترحيب بالاسم</h2><p class="sub" style="margin-top:-4px">كل ما تفتح الشاشة، تكتب اسمك بحركة على الشاشة مع تحية حسب الوقت (صباح الخير، مساء الخير…). جرّبها بالمعاينة فوق.</p>
+        <label class="f">اسمك (يطلع بالتحية؛ اتركه فاضي إذا ما تريد اسم)</label><input id="ownerName" placeholder="مثلاً: أحمد" value="${esc(S.ownerName || '')}" maxlength="20">
+        <div class="list" style="margin-top:10px"><div class="item tap" id="greetTog" style="padding:6px 0;min-height:0"><div class="t"><b>تشغيل التحية عند كل فتح</b></div><div class="toggle ${S.greetOn !== false ? 'on' : ''}"></div></div></div>
+        <div class="row" style="margin-top:10px;gap:8px"><button class="btn sec full" id="ownerSave">${ic('save')} حفظ</button><button class="btn ghost full" id="greetPreview">${ic('play')} جرّب التحية الآن</button></div></div>`;
+      p.insertBefore(gr, p.firstChild);
+      $('#ownerSave').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); if (nm) S.ownerName = nm.slice(0, 20); else delete S.ownerName; changed(); live({ settings: S }); toast('انحفظ الاسم'); };
+      $('#greetTog').onclick = () => { tap(); S.greetOn = S.greetOn === false; $('#greetTog .toggle').classList.toggle('on', S.greetOn !== false); changed(); live({ settings: S }); };
+      $('#greetPreview').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); live({ settings: Object.assign({}, S, { ownerName: nm, greetOn: true }), action: 'greet' }); };
       const my = document.createElement('div');
       const cnt = (S.myM3u || '').split(/\r?\n/).filter(l => /^https?:/i.test(l.trim())).length;
       my.innerHTML = `<div class="panel"><h2>قنواتي الخاصة</h2><p class="sub" style="margin-top:-4px">أضف قنواتك اللي عندك حق بثها (مثل اتفاقيتك مع beIN، أو قنوات ثانية). تطلع آخر شي بقنواتي داخل فولدر «قنواتي الخاصة»، وكل قائمة IPTV تصير فولدر لحاله وبيه قنواتها. الروابط تنحفظ بتصميمك وبشاشتك بس، وما تنرفع لأي مكان عام.</p>

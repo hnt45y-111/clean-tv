@@ -173,6 +173,20 @@
   /* Modals */
   .modal { position: absolute; top:0;right:0;bottom:0;left:0; z-index: 70; background: rgba(3,4,7,.86); display: none; }
   .modal.on { display: block; }
+  /* the welcome: a strong, repeatable moment at every single launch, not a once-only splash */
+  #greetModal { position: absolute; inset: 0; z-index: 400; display: none; align-items: center; justify-content: center; background: radial-gradient(1100px 760px at 50% 48%, #262b22 0%, #15181B 58%, #0c0d0f 100%); opacity: 0; }
+  #greetModal.on { display: flex; opacity: 1; animation: grIn .5s ease both; }
+  #greetModal.out { opacity: 0; transform: scale(1.05); transition: opacity .5s ease, transform .5s ease; }
+  @keyframes grIn { from { opacity: 0; } to { opacity: 1; } }
+  #greetModal::before { content: ""; position: absolute; width: 900px; height: 900px; border-radius: 50%; background: radial-gradient(circle, rgba(217,130,43,.35), transparent 70%); animation: grBurst 2.6s ease-out both; }
+  @keyframes grBurst { 0% { transform: scale(.2); opacity: 0; } 35% { opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+  .gr-wrap { position: relative; text-align: center; direction: rtl; }
+  .gr-line { font-family: var(--kufi); font-size: 92px; font-weight: 700; color: #EFE7D4; white-space: nowrap; text-shadow: 0 0 40px rgba(217,130,43,.55); }
+  .gr-line.gr-name { color: #D9822B; margin-top: 6px; }
+  .gr-line span { display: inline-block; opacity: 0; transform: translateY(46px) scale(.7); animation: grLetter .62s cubic-bezier(.17,.89,.32,1.28) forwards; }
+  @keyframes grLetter { 0% { opacity: 0; transform: translateY(46px) scale(.7) rotate(6deg); filter: brightness(2.2); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: brightness(1); } }
+  .gr-rule { margin: 26px auto 0; width: 0; height: 4px; border-radius: 4px; background: linear-gradient(90deg, transparent, #D9822B, transparent); animation: grRule .9s ease forwards; }
+  @keyframes grRule { from { width: 0; opacity: 0; } 40% { opacity: 1; } to { width: 420px; opacity: 1; } }
   .m-title { position: absolute; top: 54px; right: 96px; font-size: 40px; font-weight: 800; }
   .m-sub { position: absolute; top: 108px; right: 96px; font-size: 22px; color: var(--ink-3); }
   #bgGrid { position: absolute; top: 160px; right: 96px; left: 96px; bottom: 40px; overflow: hidden; }
@@ -1007,6 +1021,7 @@
 </head>
 <body>
 <div id="stage">
+  <div id="greetModal"></div>
   <div class="bgfallback"></div>
   <div class="bgimg" id="bgA"></div>
   <div class="bgimg" id="bgB"></div>

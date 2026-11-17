@@ -244,6 +244,7 @@ public class LiveActivity extends Activity {
 
     private void play(int i) {
         if (urls.isEmpty()) return;
+        if (vod) saveVodPos();    // a film or episode: keep exactly where this one stopped before switching away
         idx = (i + urls.size()) % urls.size();
         // the last folder and channel are kept, so the next start opens on them
         try { Media.prefs(this).edit().putString("liveLast", new JSONObject().put("f", fNames.get(curFolder)).put("k", urls.get(idx) + "|" + names.get(idx)).toString()).apply(); } catch (Throwable ignored) { }
@@ -272,8 +273,26 @@ public class LiveActivity extends Activity {
         hideYT();
         player.setMediaItem(MediaItem.fromUri(urls.get(idx)));
         player.prepare();
+        if (vod) {
+            long saved = Media.prefs(this).getLong(vodKey(urls.get(idx)), 0);
+            if (saved > 4000) { player.seekTo(saved); state.setText("إكمال من حيث وقفت…"); }
+        }
         player.setPlayWhenReady(true);
+        if (vod) { h.removeCallbacks(vodPosTick); h.postDelayed(vodPosTick, 5000); }
     }
+
+    private String vodKey(String url) { return "vodPos|" + url.hashCode(); }
+    /** every film/episode remembers exactly where it stopped, so the next open picks up there — even after the TV was off for hours */
+    private void saveVodPos() {
+        try {
+            if (player == null || idx < 0 || idx >= urls.size()) return;
+            long pos = player.getCurrentPosition(), dur = player.getDuration();
+            String k = vodKey(urls.get(idx));
+            if (pos > 4000 && (dur <= 0 || pos < dur - 15000)) Media.prefs(this).edit().putLong(k, pos).apply();
+            else Media.prefs(this).edit().remove(k).apply();   // finished (or barely started): nothing to resume
+        } catch (Throwable ignored) { }
+    }
+    private final Runnable vodPosTick = new Runnable() { public void run() { if (vod) { saveVodPos(); h.postDelayed(this, 5000); } } };
 
     private static int posIn(int[] a, int ch) { for (int i = 0; i < a.length; i++) if (a[i] == ch) return i; return -1; }
 
@@ -640,6 +659,7 @@ public class LiveActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
+        if (vod) saveVodPos();
         if (player != null) { player.release(); player = null; }
         if (yt != null) { try { yt.destroy(); } catch (Throwable ignored) { } yt = null; }
         h.removeCallbacksAndMessages(null);

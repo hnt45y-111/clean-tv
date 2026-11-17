@@ -595,7 +595,7 @@
   function loadApps(force) {
     if (HAS_ANDROID) {
       if (!force && apps.length && !A.appsChanged()) return;
-      bridgeAsync('getAppsAsync').then(function (t) { var l = []; try { l = JSON.parse(t) || []; } catch (e) {} l.forEach(arLabel); apps = sortApps(l); renderApps(); });
+      bridgeAsync('getAppsAsync').then(function (t) { var l = []; try { l = JSON.parse(t) || []; } catch (e) {} l.forEach(arLabel); apps = sortApps(l); renderApps(); if (typeof nav !== 'undefined') nav.restoreFocus(); });
     } else if (window.__DEMO_APPS) { apps = sortApps(window.__DEMO_APPS.slice().map(arLabel)); renderApps(); }
     else if (PREVIEW) { apps = sortApps(DEMO_FALLBACK.map(function (n, i) { return arLabel({ pkg: 'demo.' + i, label: n[0], color: n[1] }); })); renderApps(); }
   }
@@ -1350,7 +1350,8 @@
 
   // ---------- Alarms (adhan + match alerts) ----------
   var SETTINGS_DEFAULT = { adhanMode: 'sound', adhanFocus: 'pause', adhanFile: '', matchAlerts: true, reciter: 0, autoNext: true,
-    theme: 'default', clickSound: false, saverApps: true, saverMin: 10, bgSources: null, bgInterval: 300 };
+    theme: 'default', clickSound: false, saverApps: true, saverMin: 10, bgSources: null, bgInterval: 300,
+    ownerName: '', greetOn: true, quietHour: 23, quietEndHour: 7, quietOn: false, kidsBedtime: false };
   var settings = load('settings', {});
   Object.keys(SETTINGS_DEFAULT).forEach(function (k) { if (settings[k] === undefined) settings[k] = SETTINGS_DEFAULT[k]; });
   function saveSettings() {
@@ -2006,7 +2007,7 @@
   var nav = (function () {
     var rowEls = qa('#content .row');
     var AR = rowEls.indexOf(document.getElementById('row-apps'));
-    var r = AR, idx = rowEls.map(function () { return 0; }), moving = null;
+    var r = AR, idx = rowEls.map(function () { return 0; }), moving = null, hfT = null;
     function homeRow() { return AR; }
     function goId(id) { var i = rowEls.indexOf(document.getElementById(id)); if (i >= 0) goRow(i); }
     function items(row) { return qa('.item', rowEls[row]); }
@@ -2022,6 +2023,7 @@
       if (r > 0) scrollTrack(r);
       osFocus(el);
       scrollPage();
+      if (!PREVIEW) { clearTimeout(hfT); hfT = setTimeout(function () { try { localStorage.setItem('homeFocus', JSON.stringify({ r: r, i: idx[r] })); } catch (e) {} }, 350); }
     }
     function scrollTrack(row) {
       var track = rowEls[row].querySelector('.track'); if (!track) return;
@@ -2142,7 +2144,13 @@
       if (mode !== 'normal') { var wasKidsel = mode === 'kidsel'; setMode('normal'); if (wasKidsel) toast('تم حفظ تطبيقات الأطفال (' + nf.format(kids.apps.length) + ')'); return; }
       r = homeRow(); idx[r] = 0; apply();
     }
-    return { refresh: apply, goRow: goRow, back: back, moveH: moveH, ok: ok, row: function () { return r; }, moving: function () { return moving; },
+    function restoreFocus() {
+      try {
+        var hf = JSON.parse(localStorage.getItem('homeFocus') || 'null');
+        if (hf && typeof hf.r === 'number' && hf.r >= 0 && hf.r < rowEls.length && rowVisible(hf.r) && !isRail(hf.r)) goRow(hf.r, hf.i || 0);
+      } catch (e) {}
+    }
+    return { refresh: apply, goRow: goRow, back: back, moveH: moveH, ok: ok, row: function () { return r; }, moving: function () { return moving; }, restoreFocus: restoreFocus,
       appsRow: function () { return AR; }, goId: goId, gridMove: gridMove, arrow: arrow, railHome: railHome, home: function () { moving = null; if (mode !== 'normal') setMode('normal'); r = homeRow(); idx[r] = 0; apply(); } };
   })();
 
@@ -2155,6 +2163,7 @@
   }
   function handleKey(k) {
     lastInput = Date.now();
+    if (layer === 'greet') return window.__greetKey();
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
     clickSound(); if (k === 'ok') pressFx();
@@ -2208,13 +2217,51 @@
     tick(); renderAdhan(); renderWisdom(); loadApps(false); refreshMatches(false); refreshDaily(); refreshWeather(false); renderNowPlaying();
   };
 
+  // ---------- Greeting (a strong, repeatable welcome: the owner's name, written in with motion, every single time the app opens) ----------
+  function greetPeriod(h) {
+    if (h >= 4 && h < 11) return 'صباح الخير';
+    if (h >= 11 && h < 17) return 'طاب يومك';
+    if (h >= 17 && h < 20) return 'مساء الخير';
+    return 'ليلة طيبة';
+  }
+  function greetWords() {
+    var h = new Date(Date.now() + 3 * 3600000).getUTCHours(); // Baghdad time, no Intl needed for a plain hour
+    var g = greetPeriod(h), nm = String(settings.ownerName || '').trim();
+    return nm ? [g + '،', nm] : [g];
+  }
+  var greetT = null, greetActive = false;
+  function closeGreet(skip) {
+    var m = $('greetModal'); if (!m || !greetActive) return;
+    greetActive = false; clearTimeout(greetT);
+    m.classList.add('out'); m.classList.remove('on');
+    setTimeout(function () { m.classList.remove('out'); m.innerHTML = ''; }, skip ? 0 : 500);
+    if (layer === 'greet') layer = 'main';
+  }
+  window.__greetKey = function () { closeGreet(true); return true; };
+  function showGreet() {
+    var m = $('greetModal'); if (!m) return;
+    var words = greetWords(), html = '<div class="gr-wrap">';
+    words.forEach(function (w, wi) {
+      html += '<div class="gr-line' + (wi === words.length - 1 && words.length > 1 ? ' gr-name' : '') + '">';
+      for (var i = 0; i < w.length; i++) { html += '<span style="animation-delay:' + (wi * w.length * 0.045 + i * 0.045 + (wi ? words[0].length * 0.045 + 0.12 : 0)).toFixed(3) + 's">' + (w.charAt(i) === ' ' ? '&nbsp;' : esc(w.charAt(i))) + '</span>'; }
+      html += '</div>';
+    });
+    var totalChars = words.join('').length;
+    html += '<div class="gr-rule" style="animation-delay:' + (totalChars * 0.045 + 0.35).toFixed(3) + 's"></div></div>';
+    m.innerHTML = html; m.classList.add('on'); greetActive = true; layer = 'greet';
+    clearTimeout(greetT); greetT = setTimeout(function () { closeGreet(false); }, 2900 + totalChars * 45);
+  }
+
   // ---------- Start ----------
   try { if (!PREVIEW) save('teamAr', NAMES); } catch (e) {}
   renderTopbar(); applyLayout(); applyTheme(); saveSettings();
   tick(); renderAdhan(); renderWisdom(); renderTools(); renderApps(); renderOccasions(); renderMatches();
   renderBigCount(); renderActs(); applyKids(); refreshNews(false); applyLayout();
   loadBackgrounds(); loadApps(true); refreshMatches(false); refreshWeather(false); scheduleAll();
+  nav.restoreFocus();
   if (!PREVIEW) setTimeout(function () { checkUpdate(false); }, 20000);
+  if (!PREVIEW && settings.greetOn !== false) setTimeout(showGreet, 160);
+  var gm = $('greetModal'); if (gm) gm.addEventListener('click', function () { closeGreet(true); });
   /* if the interface had to restart, say why (so the cause can be read off the screen) */
   if (HAS_ANDROID && A.lastCrash) setTimeout(function () { try { var c = A.lastCrash(); if (c) { var k = c.indexOf('|'); toast('الواجهة أعادت التشغيل بسبب: ' + c.slice(k + 1, k + 220), 20000); } } catch (e) {} }, 6000);
   setTimeout(pushConfig, 3000);
@@ -2253,6 +2300,7 @@
       applyTheme(); refreshNews(true); renderClub(); renderTopbar(); applyLayout(); renderApps(); refreshLive();
     }
     if (o.bg || o.settings) { buildBgList(); bgCur = ''; showBg(); }
+    if (o.action === 'greet') showGreet();
     if (o.select !== undefined) {
       qa('.editing').forEach(function (e) { e.classList.remove('editing'); });
       var el = o.select && editEl(o.select); if (el) el.classList.add('editing');
