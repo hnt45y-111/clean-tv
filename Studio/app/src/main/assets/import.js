@@ -358,11 +358,10 @@ function osPanelWire(box, S) {
         <label class="f" style="margin-top:8px">مواقع قنوات (رابط موقع بكل سطر): يفتحها التلفزيون من «قنواتي ← مواقع القنوات»، تضغط على القناة بالموقع وتنحفظ بالمجلد اللي تختاره</label>
         <textarea id="chSites" dir="ltr" spellcheck="false" style="width:100%;min-height:70px;font:13px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)" placeholder="https://…">${esc(S.chSites || '')}</textarea>
         <label class="f" style="margin-top:14px">اشتراك IPTV من نوع Xtream (اشتراكك أنت): قنواته الحية تطلع بقنواتي بمجلد، وبداخله مجلد لكل فئة</label>
-        ${(S.xtHost || (S.xtream || {}).host) ? `<div class="sub" style="margin:2px 2px 6px">السيرفر محفوظ ✓ · سجّل الدخول باسم المستخدم وكلمة المرور فقط</div>` : ''}
-        <input id="xtUser" dir="ltr" placeholder="اسم المستخدم" value="${esc((S.xtream || {}).user || '')}">
+        <label class="f" style="margin-top:2px">عنوان السيرفر</label>
+        <input id="xtHost" dir="ltr" placeholder="http://server.com:8080" value="${esc(S.xtHost || (S.xtream || {}).host || '')}">
+        <input id="xtUser" dir="ltr" style="margin-top:6px" placeholder="اسم المستخدم" value="${esc((S.xtream || {}).user || '')}">
         <input id="xtPass" dir="ltr" placeholder="كلمة المرور" value="${esc((S.xtream || {}).pass || '')}" style="margin-top:6px">
-        <details style="margin-top:6px" ${(S.xtHost || (S.xtream || {}).host) ? '' : 'open'}><summary class="sub" style="cursor:pointer;padding:4px 2px">عنوان السيرفر (ينكتب مرة وحدة ويبقى محفوظ على جهازك)</summary>
-        <input id="xtHost" dir="ltr" placeholder="http://server.com:8080" value="${esc(S.xtHost || (S.xtream || {}).host || '')}" style="margin-top:6px"></details>
         <input id="xtName" placeholder="اسم المجلد (مثلاً: اشتراكي)" value="${esc((S.xtream || {}).name || '')}" style="margin-top:6px">
         <div class="chips" style="margin-top:6px"><button class="chip ${(S.xtream || {}).out === 'm3u8' ? '' : 'on'}" data-xo="ts">بث TS (الأكثر توافقاً)</button><button class="chip ${(S.xtream || {}).out === 'm3u8' ? 'on' : ''}" data-xo="m3u8">بث HLS</button></div>
         <div class="sub" style="margin:8px 2px 2px">لهذا المشترك: شنو ينضاف من الاشتراك؟</div>

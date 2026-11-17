@@ -33,9 +33,11 @@
     jset('lvFav', l); return !had;
   }
   function pushRecent(c) { var k = c.u + '|' + c.n; jset('lvRecent', [slim(c)].concat(jget('lvRecent').filter(function (f) { return f.u + '|' + f.n !== k; })).slice(0, 24)); }
-  var ICON = { all: '📺', news: '📰', sport: '⚽', movies: '🎬', docs: '🌍', ent: '🎭', mbc: '✨', karbala: '🕌', kids: '🧸', quran: '📖', sites: '🌐' };
+  var ICON = { all: '📺', news: '📰', sport: '⚽', movies: '🎬', docs: '🌍', ent: '🎭', mbc: '✨', karbala: '🕌', kids: '🧸', quran: '📖', sites: '🌐', xshahid: '🎞', xosn: '📡' };
   function cats() {
     var l = CATS.map(function (c) { return { id: c[0], n: c[1], kind: 'cat' }; });
+    if (acctPick('shahid').length) l.push({ id: 'xshahid', n: 'شاهد', kind: 'cat' });
+    if (acctPick('osn').length) l.push({ id: 'xosn', n: 'OSN', kind: 'cat' });
     if (sitesList().length) l.push({ id: 'sites', n: 'مواقع القنوات', kind: 'sites' });
     var seen = {};
     (window.CHANNELS || []).forEach(function (c) { seen[c.c] = 1; });
@@ -86,7 +88,10 @@
     if (!n || /^(get|playlist|index|list)$/i.test(n)) n = u.replace(/^https?:\/\//, '').split('/')[0];
     return n;
   }
-  function readCache() { try { return JSON.parse(localStorage.getItem('myChLists') || '{}') || {}; } catch (e) { return {}; } }
+  /* the account list and the saved lists are big strings: parse them again only when they changed (they were parsed on every key press) */
+  var memo = {};
+  function memoJSON(k) { var raw; try { raw = localStorage.getItem(k); } catch (e) { return null; } var m = memo[k]; if (m && m.raw === raw) return m.v; var v = null; try { v = JSON.parse(raw || 'null'); } catch (e) {} memo[k] = { raw: raw, v: v }; return v; }
+  function readCache() { return memoJSON('myChLists') || {}; }
   /* an IPTV account of the Xtream kind (server, user, password) that the user owns: its live channels come as one folder, one sub-folder per category */
   function xtOf(S) { var x = S && S.xtream; if (!x || !x.host || !x.user || !x.pass || x.live === false) return null; var h = String(x.host).trim(); if (!/^https?:\/\//i.test(h)) h = 'http://' + h; h = h.replace(/^(https?:\/\/[^\/?#]+).*$/i, '$1'); try { var kb = localStorage.getItem('xtBase|' + h); if (kb) h = kb; } catch (e) {} return { host: h, host0: String(x.host).trim(), user: String(x.user).trim(), pass: String(x.pass).trim(), out: x.out === 'm3u8' ? 'm3u8' : 'ts', name: x.name || 'IPTV' }; }
   function xtApi(x, action) { return x.host + '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + (action ? '&action=' + action : ''); }
@@ -137,7 +142,7 @@
   function xtQ(x, action) { return '/player_api.php?username=' + encodeURIComponent(x.user) + '&password=' + encodeURIComponent(x.pass) + (action ? '&action=' + action : ''); }
   function xtStreamUrl(x, id) { if (/^https?:/i.test(String(id))) return id; return x.host + '/live/' + encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/' + id + '.' + x.out; }
   function xtKey(x) { return x.host + '|' + x.user; }
-  function xtRead() { try { return JSON.parse(localStorage.getItem('myXt') || 'null'); } catch (e) { return null; } }
+  function xtRead() { return memoJSON('myXt'); }
   var xtState = '';     /* '' | 'loading' | 'fail:…' */
   function xtUa(x) { try { return (window.Android && window.Android.getPref && window.Android.getPref('uaOk|' + x.host.replace(/^https?:\/\//i, '').replace(/[:\/].*$/, ''))) || ''; } catch (e) { return ''; } }
   function xtPull(S, force) {
@@ -279,27 +284,52 @@
       }
       return Ls.map(function (L) { return { folder: 1, key: L.key, n: L.name, sub: L.items.length ? L.items.length + ' قناة' : L.note, u: '', c: 'my' }; });
     }
+    if (cid === 'xshahid') return acctPick('shahid');
+    if (cid === 'xosn') return acctPick('osn');
+    if (cid === 'sport') return acctPick('bein').concat(all.filter(function (c) { return c.g === 'sport'; }));
     if (cid === 'all') return all;
     if (cid === 'mbc' || cid === 'karbala') return all.filter(function (c) { return c.p === cid; });
     if (cid === 'news' || cid === 'sport' || cid === 'quran' || cid === 'movies' || cid === 'docs' || cid === 'ent' || cid === 'kids') return all.filter(function (c) { return c.g === cid; });
     return all.filter(function (c) { return c.c === cid; });
   }
+  /* channels of the user's own IPTV account, picked by name: beIN Sports 1-9 then News go first inside «رياضة»; Shahid and OSN get a folder each (only when the account has them) */
+  var PICK = { bein: /(be\s?in|بي\s?[آاإ]ن)[\s_-]*(sports?|سبورت|رياضة)/i, shahid: /shahid|شاهد/i, osn: /\bosn\b|[أاإ]و\s?[إاأ]س\s?[إاأ]ن/i };
+  function beinRank(n) { var m = String(n).match(/(?:sports?|سبورت|رياضة)[\s_-]*(\d{1,2})\b/i); if (m) return +m[1]; return /news|أخبار|اخبار/i.test(n) ? 40 : 50; }
+  function beinOrder(l) { return l.map(function (x, i) { return [x, i]; }).sort(function (a, b) { return (beinRank(a[0].n) - beinRank(b[0].n)) || (a[1] - b[1]); }).map(function (p) { return p[0]; }); }
+  function acctPick(id) {
+    var c = custom(); if (!c._p) c._p = {};
+    if (c._p[id]) return c._p[id];
+    var out = [];
+    c.lists.forEach(function (L) { if (L.key === 'xt') L.items.forEach(function (it) { if (PICK[id].test(it.n)) out.push(it); }); });
+    return (c._p[id] = id === 'bein' ? beinOrder(out) : out);
+  }
   function grpName(code) { var g = (window.CH_GROUPS || []).filter(function (x) { return x[0] === code; })[0]; return g ? g[1] : ''; }
   var GN = { news: 'أخبار', sport: 'رياضة', movies: 'أفلام', docs: 'وثائقية', ent: 'منوعات', kids: 'أطفال', quran: 'قرآن' };
   function subOf(c) { if (c.folder || c.empty || c.site) return c.sub || ''; return c.c === 'my' ? (c.grp || c.ln || 'قنواتي الخاصة') + (GN[c.g] ? ' · ' + GN[c.g] : '') : grpName(c.c) + (GN[c.g] ? ' · ' + GN[c.g] : ''); }
   function hue(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
+  /* the cards of a freshly built grid slide in one after the other (CSS .fresh); OK on a card gives it a small press */
+  function restartAnim(el) { try { el.classList.remove('fresh'); void el.offsetWidth; el.classList.add('fresh'); } catch (e) {} }
+  function tapAnim(el) { try { var f = el.querySelector('.focus'); if (f) { f.classList.add('tap'); setTimeout(function () { f.classList.remove('tap'); }, 240); } } catch (e) {} }
+  /* a menu row is built once and afterwards only its classes change: the highlight can glide, and the TV does far less work per key press */
+  function row(el, items) {
+    var sig = '', i, k = el.children;
+    for (i = 0; i < items.length; i++) sig += items[i].s + '\u0001';
+    if (el._sig !== sig || !k || k.length !== items.length) { el._sig = sig; var h = ''; for (i = 0; i < items.length; i++) h += items[i].h; el.innerHTML = h; return; }
+    for (i = 0; i < items.length; i++) if (k[i].className !== items[i].c) k[i].className = items[i].c;
+  }
   function draw() {
     var cs = cats(), cid = cs[st.ci].id;
     st.list = st.q ? searchList(st.q) : filter(cid);
     if (st.gi >= st.list.length) st.gi = Math.max(0, st.list.length - 1);
-    var from = Math.max(0, Math.min(st.ci - 3, cs.length - 8)), html = '';
-    for (var q = from; q < Math.min(cs.length, from + 8); q++) html += '<div data-ic="' + (ICON[cs[q].id] || (cs[q].kind === 'grp' ? '📡' : '')) + '" class="lv-cat' + (q === st.ci ? ' on' : '') + (st.f === 'cat' && q === st.ci ? ' focus' : '') + (st.pick === 'cat' && q === st.ci ? ' moving' : '') + '">' + esc(cs[q].n) + '</div>';
-    $('lvCats').innerHTML = html;
-    var vh = ''; VIEWS.forEach(function (v, i) { vh += '<div class="lv-vw' + (i === st.vi ? ' on' : '') + (st.f === 'view' && i === st.hi ? ' focus' : '') + '">' + v[1] + '</div>'; });
-    var tl = tools(), th = '';
-    tl.forEach(function (t, i) { th += '<div class="lv-tl' + (t.on ? ' on' : '') + (st.f === 'tool' && i === st.ti ? ' focus' : '') + '">' + t.n + '</div>'; });
-    $('lvTools').innerHTML = th;
-    $('lvViews').innerHTML = vh; $('lvGrid').setAttribute('data-v', VIEWS[st.vi][0]);
+    var from = Math.max(0, Math.min(st.ci - 3, cs.length - 8)), ci = [];
+    for (var q = from; q < Math.min(cs.length, from + 8); q++) {
+      var ic = ICON[cs[q].id] || (cs[q].kind === 'grp' ? '📡' : ''), cc = 'lv-cat' + (q === st.ci ? ' on' : '') + (st.f === 'cat' && q === st.ci ? ' focus' : '') + (st.pick === 'cat' && q === st.ci ? ' moving' : '');
+      ci.push({ s: ic + cs[q].n, c: cc, h: '<div data-ic="' + ic + '" class="' + cc + '">' + esc(cs[q].n) + '</div>' });
+    }
+    row($('lvCats'), ci);
+    var vi = VIEWS.map(function (v, i) { var cc = 'lv-vw' + (i === st.vi ? ' on' : '') + (st.f === 'view' && i === st.hi ? ' focus' : ''); return { s: v[1], c: cc, h: '<div class="' + cc + '">' + v[1] + '</div>' }; });
+    var ti = tools().map(function (t, i) { var cc = 'lv-tl' + (t.on ? ' on' : '') + (st.f === 'tool' && i === st.ti ? ' focus' : ''); return { s: t.n, c: cc, h: '<div class="' + cc + '">' + t.n + '</div>' }; });
+    row($('lvTools'), ti); row($('lvViews'), vi); $('lvGrid').setAttribute('data-v', VIEWS[st.vi][0]);
     var key = st.ver + '|' + (st.q || '') + '|' + VIEWS[st.vi][0] + '|' + cid + '|' + (st.fold || '') + '|' + (st.sub || '') + '|' + st.list.length + '|' + (st.list[0] ? st.list[0].n + st.list[0].u + (st.list[0].sub || '') : '');
     var grid = $('lvGrid');
     if (st.key !== key) { st.key = key; var FK = {}; favs().forEach(function (f) { FK[f.u + '|' + f.n] = 1; }); var isFavQ = function (c) { return FK[c.u + '|' + c.n]; };
@@ -309,6 +339,7 @@
       return '<div class="lv-ch' + (st.f === 'grid' && i === st.gi ? ' focus' : '') + '"><div class="lv-art" style="background:' + tint + '"><b>' + esc(ini) + '</b>' + logo + '</div>' +
         (c.u && !c.folder && !c.site && isFavQ(c) ? '<i class="lv-star">★</i>' : '') + '<div class="lv-tx"><div class="lv-n">' + esc(c.n) + '</div><div class="lv-s">' + esc(subOf(c)) + '</div></div></div>';
     }).join('') : '<div class="lv-empty">' + (st.q ? 'ماكو قناة بهذا الاسم' : 'ماكو قنوات بهذا القسم') + '</div>';
+    restartAnim(grid);
     }
     /* only move the focus ring: rebuilding every card (and reloading its logo) on each key press made it slow */
     var kids = grid.children, pf = grid.querySelector('.focus'), want = (st.f === 'grid' && st.list.length) ? kids[st.gi] : null;
@@ -367,6 +398,7 @@
       return;
     }
     if (st.favm) { var on = toggleFav(cur); st.key = null; if (window.toastMsg) window.toastMsg(on ? '⭐ انضافت للمفضلة: ' + cur.n : 'انشالت من المفضلة: ' + cur.n); draw(); return; }
+    tapAnim($('lvGrid'));
     pushRecent(cur);
     var pk = packFor(cur);
     if (window.Android && window.Android.playLive) window.Android.playLive(JSON.stringify(pk), pk.idx);
