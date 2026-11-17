@@ -991,6 +991,31 @@
   #lvSearch { display: none; position: absolute; top: 52px; left: 640px; width: 420px; font: 600 26px/1.2 var(--font); color: #EFE7D4; background: #23282D; border: 2px solid #D9822B; border-radius: 14px; padding: 12px 18px; direction: rtl; outline: none; }
   #lvSearch.on { display: block; }
   .lv-empty { grid-column: 1 / -1; font-size: 32px; color: #8B939A; padding: 60px; text-align: center; }
+  /* motion layer for قنواتي + الأفلام: same language as the launcher (ivory on ink, copper focus). transform/opacity only, so the TV stays smooth */
+  @keyframes bxIn { from { opacity: 0; transform: translateY(26px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes bxPop { 0% { transform: scale(1.04); } 45% { transform: scale(.94); } 100% { transform: scale(1.04); } }
+  @keyframes bxSide { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+  #lvGrid.fresh > .lv-ch, #vdGrid.fresh > .vd-card { animation: bxIn .38s cubic-bezier(.2,.8,.2,1) both; }
+  #lvGrid.fresh > .lv-ch:nth-child(1), #vdGrid.fresh > .vd-card:nth-child(1) { animation-delay: 0s; }
+  #lvGrid.fresh > .lv-ch:nth-child(2), #vdGrid.fresh > .vd-card:nth-child(2) { animation-delay: .03s; }
+  #lvGrid.fresh > .lv-ch:nth-child(3), #vdGrid.fresh > .vd-card:nth-child(3) { animation-delay: .06s; }
+  #lvGrid.fresh > .lv-ch:nth-child(4), #vdGrid.fresh > .vd-card:nth-child(4) { animation-delay: .09s; }
+  #lvGrid.fresh > .lv-ch:nth-child(5), #vdGrid.fresh > .vd-card:nth-child(5) { animation-delay: .12s; }
+  #lvGrid.fresh > .lv-ch:nth-child(6), #vdGrid.fresh > .vd-card:nth-child(6) { animation-delay: .15s; }
+  #lvGrid.fresh > .lv-ch:nth-child(n+7), #vdGrid.fresh > .vd-card:nth-child(n+7) { animation-delay: .18s; }
+  #lvCats, #vdSecs, #lvGridWrap, #vdGridWrap { contain: layout paint; }
+  #lvGrid, #vdGrid { transition: transform .22s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+  .lv-ch, .vd-card, .lv-cat, .vd-sec, .vd-tab, .lv-tl, .lv-vw { transition: transform .16s ease-out, background-color .16s, color .16s, border-color .16s; }
+  .lv-ch.focus, .vd-card.focus { transform: scale(1.04); z-index: 2; }
+  .lv-cat.focus, .vd-sec.focus { transform: translateX(-8px); }
+  .lv-tl.focus, .vd-tab.focus, .lv-vw.focus { transform: translateY(-2px); }
+  .lv-ch.focus.tap, .vd-card.focus.tap { animation: bxPop .24s ease-out; }
+  .lv-ch.focus .lv-art, .vd-card.focus .vd-art { border-radius: 8px; }
+  .lv-art, .vd-art { border-radius: 16px 16px 4px 16px; }
+  #liveModal.on #lvHead, #vodModal.on #vdHead { animation: bxSide .35s ease-out both; }
+  #liveModal.on #lvCats, #vodModal.on #vdSecs { animation: bxSide .4s ease-out .05s both; }
+  .vd-card, .lv-ch { background: linear-gradient(160deg, #262B30, #1E2226); }
+  @media (prefers-reduced-motion: reduce) { #lvGrid.fresh > *, #vdGrid.fresh > * { animation: none; } }
   #lvHint { position: absolute; bottom: 36px; right: 80px; left: 80px; font-size: 21px; color: #8B939A; padding: 10px 20px; background: rgba(35,40,45,.55); border-radius: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* ---- live scores ticker (identity) ---- */
   #liveTicker { height: 64px; background: #15181B; border-top: 2px solid #B8BDC2; }
