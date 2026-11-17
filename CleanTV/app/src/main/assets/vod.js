@@ -5,7 +5,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var COLS = 6, PAGE = 60, TTL = 6 * 3600000;
-  var TABS = [{ id: 'm', n: '🎬 أفلام' }, { id: 's', n: '📺 مسلسلات' }, { id: 'fav', n: '⭐ المفضلة' }, { id: 'search', n: '🔎 بحث', tool: 1 }, { id: 'favm', n: '➕ إضافة للمفضلة', tool: 1 }, { id: 'refresh', n: '🔄 تحديث', tool: 1 }];
+  var TABS = [{ id: 'm', n: '🎬 أفلام' }, { id: 's', n: '📺 مسلسلات' }, { id: 'fav', n: '⭐ المفضلة' }, { id: 'search', n: '🔎 بحث', tool: 1 }, { id: 'favm', n: '➕ إضافة للمفضلة', tool: 1 }, { id: 'cinema', n: '🎭 وضع السينما', tool: 1 }, { id: 'refresh', n: '🔄 تحديث', tool: 1 }];
   var st = { f: 'tab', tab: 0, ti: 0, ci: 0, gi: 0, off: 0, q: '', favm: false, sub: null, msg: '', list: [], cats: [], key: '' };
   var D = { k: '', m: null, s: null, err: '', busy: false };
   function S() { return (window.__getSettings && window.__getSettings()) || {}; }
@@ -82,7 +82,7 @@
     if (!$('vodModal')) return;
     compute();
     $('vdTitle').textContent = appName();
-    var th = ''; TABS.forEach(function (t, i) { th += '<div class="vd-tab' + (t.tool ? ' tool' : '') + ((!t.tool && i === st.tab) || (t.id === 'favm' && st.favm) || (t.id === 'search' && st.q) ? ' on' : '') + (st.f === 'tab' && i === st.ti ? ' focus' : '') + '">' + t.n + '</div>'; });
+    var th = ''; TABS.forEach(function (t, i) { th += '<div class="vd-tab' + (t.tool ? ' tool' : '') + ((!t.tool && i === st.tab) || (t.id === 'favm' && st.favm) || (t.id === 'search' && st.q) || (t.id === 'cinema' && cinemaOn()) ? ' on' : '') + (st.f === 'tab' && i === st.ti ? ' focus' : '') + '">' + t.n + '</div>'; });
     $('vdTabs').innerHTML = th;
     var ch = '', from = Math.max(0, Math.min(st.ci - 4, st.cats.length - 10));
     for (var i = from; i < Math.min(st.cats.length, from + 10); i++) ch += '<div class="vd-sec' + (i === st.ci ? ' on' : '') + (st.f === 'cat' && i === st.ci ? ' focus' : '') + '">' + esc(st.cats[i].n) + '</div>';
@@ -109,9 +109,23 @@
   }
 
   /* ---------------------------------------------------------------- playing */
+  function cinemaOn() { try { return localStorage.getItem('vodCinema') === '1'; } catch (e) { return false; } }
+  /* a one-button show before a film: curtains open over a countdown, then the film starts — purely visual, nothing is skipped */
+  function playCinema(go) {
+    var fx = $('cinemaFx'); if (!fx) return go();
+    var n = 3;
+    fx.innerHTML = '<div class="cn-l"></div><div class="cn-r"></div><div class="cn-n">' + n + '</div>';
+    fx.classList.add('on');
+    var t = setInterval(function () {
+      n--;
+      if (n > 0) fx.innerHTML = '<div class="cn-l"></div><div class="cn-r"></div><div class="cn-n">' + n + '</div>';
+      else { clearInterval(t); fx.classList.add('open'); setTimeout(function () { fx.classList.remove('on', 'open'); fx.innerHTML = ''; go(); }, 900); }
+    }, 700);
+  }
   function toPlayer(item) {
     if (!window.Android || !window.Android.playLive) return toast('التشغيل يحتاج الشاشة نفسها');
-    window.Android.playLive(JSON.stringify({ vod: 1, list: [item], folders: [], fold: 0 }), 0);
+    var go = function () { window.Android.playLive(JSON.stringify({ vod: 1, list: [item], folders: [], fold: 0 }), 0); };
+    if (cinemaOn()) playCinema(go); else go();
   }
   function play(it) {
     if (st.favm && it.t !== 'xe') { var on = toggleFav(it); st.key = ''; toast(on ? '⭐ انضاف للمفضلة: ' + it.n : 'انشال من المفضلة: ' + it.n); return draw(); }
@@ -153,7 +167,8 @@
         var id = TABS[st.ti].id;
         if (id === 'search') return startSearch();
         if (id === 'favm') { st.favm = !st.favm; toast(st.favm ? 'اضغط OK على أي فيلم أو مسلسل حتى ينضاف للمفضلة' : 'انطفى وضع المفضلة'); }
-        else if (id === 'refresh') { toast('جاري التحديث…'); reset(); return pull(true); }
+        else if (id === 'cinema') { var on = !cinemaOn(); try { localStorage.setItem('vodCinema', on ? '1' : '0'); } catch (e) {} toast(on ? '🎭 وضع السينما شغّال: ستارة وعدّ تنازلي قبل كل فيلم' : 'وضع السينما انطفى'); }
+          else if (id === 'refresh') { toast('جاري التحديث…'); reset(); return pull(true); }
         else { st.tab = st.ti; st.ci = 0; endSearch(true); reset(); }
       }
       return draw();
