@@ -47,6 +47,13 @@
   .bgfallback { position: absolute; top:0;right:0;bottom:0;left:0; background: #15181B; }
   .bgimg { position: absolute; top:0;right:0;bottom:0;left:0; background-size: cover; background-position: center; opacity: 0; transition: opacity 2s ease; }
   .bgimg.on { opacity: 1; }
+  /* a living backdrop tied to the real clock (dawn, noon glare, sunset, night) and to real weather, over whatever picture or skin is showing */
+  #timeTint { position: absolute; top:0;right:0;bottom:0;left:0; z-index: 2; pointer-events: none; mix-blend-mode: soft-light; transition: background 9s linear; }
+  #rainFx { position: absolute; top:-20%;right:-5%;bottom:-5%;left:-5%; z-index: 3; pointer-events: none; opacity: 0; transition: opacity 2.5s ease;
+    background-image: repeating-linear-gradient(100deg, transparent 0 18px, rgba(200,215,235,.09) 18px 19px, transparent 19px 46px);
+    background-size: 100% 220%; animation: rainFall 1.1s linear infinite; }
+  body.wx-rain #rainFx { opacity: .4; }
+  @keyframes rainFall { from { background-position: 0 -120%; } to { background-position: 0 0%; } }
   .bgshade { position: absolute; top:0;right:0;bottom:0;left:0; background: var(--shade-tint, transparent);
     background-image:
       linear-gradient(270deg, rgba(5,6,9,.78) 0%, rgba(5,6,9,.32) 36%, rgba(5,6,9,0) 58%),
@@ -1025,6 +1032,8 @@
   <div class="bgfallback"></div>
   <div class="bgimg" id="bgA"></div>
   <div class="bgimg" id="bgB"></div>
+  <div id="timeTint"></div>
+  <div id="rainFx"></div>
   <div id="clubBg"></div>
   <div class="bgshade"></div>
   <div id="osGlow"></div><div id="osArt"></div>

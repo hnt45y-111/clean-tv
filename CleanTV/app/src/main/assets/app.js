@@ -149,6 +149,22 @@
     $('hm').textContent = c.hm; $('ampm').textContent = c.p;
     $('greg').textContent = fmtGreg.format(now);
     $('hijri').textContent = hijriText(now);
+    applyTimeTint();
+  }
+  /* a living backdrop: the colour of the sky right now, over the user's own picture or skin — dawn, noon glare, sunset, night */
+  var TINT_ANCHORS = [
+    [0, 'rgba(10,12,35,.55)', 'rgba(4,5,12,.65)'], [4, 'rgba(28,22,48,.5)', 'rgba(62,30,40,.5)'], [6, 'rgba(255,172,92,.35)', 'rgba(255,110,70,.4)'],
+    [9, 'rgba(255,221,150,.16)', 'rgba(200,212,255,.1)'], [13, 'rgba(255,255,255,.05)', 'rgba(200,220,255,.07)'], [17, 'rgba(255,200,120,.2)', 'rgba(255,140,90,.22)'],
+    [19, 'rgba(255,120,80,.4)', 'rgba(120,40,90,.45)'], [21, 'rgba(60,40,90,.45)', 'rgba(15,15,40,.55)'], [24, 'rgba(10,12,35,.55)', 'rgba(4,5,12,.65)']
+  ];
+  function parseRgba(s) { var m = s.match(/[\d.]+/g); return [+m[0], +m[1], +m[2], +m[3]]; }
+  function lerpRgba(a, b, t) { var pa = parseRgba(a), pb = parseRgba(b), o = []; for (var i = 0; i < 4; i++) o.push(pa[i] + (pb[i] - pa[i]) * t); return 'rgba(' + Math.round(o[0]) + ',' + Math.round(o[1]) + ',' + Math.round(o[2]) + ',' + o[3].toFixed(2) + ')'; }
+  function applyTimeTint() {
+    var el = $('timeTint'); if (!el || settings.liveTint === false) { if (el) el.style.background = ''; return; }
+    var h = nowHoursBaghdad(), i = 0;
+    while (i < TINT_ANCHORS.length - 1 && TINT_ANCHORS[i + 1][0] <= h) i++;
+    var a = TINT_ANCHORS[i], b = TINT_ANCHORS[Math.min(i + 1, TINT_ANCHORS.length - 1)], span = b[0] - a[0], t = span > 0 ? (h - a[0]) / span : 0;
+    el.style.background = 'linear-gradient(180deg, ' + lerpRgba(a[1], b[1], t) + ', ' + lerpRgba(a[2], b[2], t) + ')';
   }
 
   // ---------- Prayer times ----------
@@ -1335,8 +1351,10 @@
     getJSON('https://api.open-meteo.com/v1/forecast?latitude=' + c[1] + '&longitude=' + c[2] + '&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FBaghdad&forecast_days=4')
       .then(function (j) { if (j && j.current) { save('wxCache', { t: Date.now(), city: cityIdx, d: j }); renderWeather(j); } else if (cache) renderWeather(cache.d); });
   }
+  var RAIN_CODES = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99];
   function renderWeather(j) {
     if (!j || !j.current) return;
+    document.body.classList.toggle('wx-rain', settings.liveTint !== false && RAIN_CODES.indexOf(j.current.weather_code) >= 0);
     var c = window.CITIES[cityIdx] || window.CITIES[0], w = wx(j.current.weather_code), days = '';
     if (j.daily && j.daily.time) {
       for (var i = 1; i < Math.min(4, j.daily.time.length); i++) {
@@ -1351,7 +1369,7 @@
   // ---------- Alarms (adhan + match alerts) ----------
   var SETTINGS_DEFAULT = { adhanMode: 'sound', adhanFocus: 'pause', adhanFile: '', matchAlerts: true, reciter: 0, autoNext: true,
     theme: 'default', clickSound: false, saverApps: true, saverMin: 10, bgSources: null, bgInterval: 300,
-    ownerName: '', greetOn: true, quietHour: 23, quietEndHour: 7, quietOn: false, kidsBedtime: false };
+    ownerName: '', greetOn: true, quietHour: 23, quietEndHour: 7, quietOn: false, kidsBedtime: false, liveTint: true };
   var settings = load('settings', {});
   Object.keys(SETTINGS_DEFAULT).forEach(function (k) { if (settings[k] === undefined) settings[k] = SETTINGS_DEFAULT[k]; });
   function saveSettings() {
