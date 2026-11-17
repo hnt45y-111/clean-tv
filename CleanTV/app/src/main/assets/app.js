@@ -1402,6 +1402,7 @@
     if (HAS_ANDROID) {
       A.setPref('adhanMode', settings.adhanMode); A.setPref('adhanFocus', settings.adhanFocus); A.setPref('adhanFile', settings.adhanFile || '');
       A.setPref('saverApps', settings.saverApps && settings.saverOn !== false ? '1' : '0'); A.setPref('saverMin', String(settings.saverMin || 10));
+      A.setPref('quietOn', settings.quietOn ? '1' : '0'); A.setPref('quietHour', String(settings.quietHour != null ? settings.quietHour : 23)); A.setPref('quietEndHour', String(settings.quietEndHour != null ? settings.quietEndHour : 7));
     }
     applyTheme(); publishState();
   }

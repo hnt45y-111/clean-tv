@@ -355,6 +355,18 @@ function osPanelWire(box, S) {
       $('#ownerSave').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); if (nm) S.ownerName = nm.slice(0, 20); else delete S.ownerName; changed(); live({ settings: S }); toast('انحفظ الاسم'); };
       $('#greetTog').onclick = () => { tap(); S.greetOn = S.greetOn === false; $('#greetTog .toggle').classList.toggle('on', S.greetOn !== false); changed(); live({ settings: S }); };
       $('#greetPreview').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); live({ settings: Object.assign({}, S, { ownerName: nm, greetOn: true }), action: 'greet' }); };
+      const HRS = Array.from({ length: 24 }, (_, i) => i);
+      const hrChips = (key, cur) => `<div class="chips" id="${key}Chips">${HRS.map(h => `<button class="chip ${((S[key] != null ? S[key] : cur) === h) ? 'on' : ''}" data-hr="${key}:${h}">${h}</button>`).join('')}</div>`;
+      const qt = document.createElement('div');
+      qt.innerHTML = `<div class="panel"><h2>${ic('sun')} وضع الهدوء الليلي</h2><p class="sub" style="margin-top:-4px">بعد الساعة المحددة، صوت القنوات والأفلام ينخفض تلقائياً حتى ما يزعج النايمين بالبيت.</p>
+        <div class="list"><div class="item tap" id="quietTog" style="padding:6px 0;min-height:0"><div class="t"><b>تشغيل وضع الهدوء</b></div><div class="toggle ${S.quietOn ? 'on' : ''}"></div></div></div>
+        <div class="lb" style="margin:12px 0 4px"><span class="sub">يبدأ الساعة</span></div>${hrChips('quietHour', 23)}
+        <div class="lb" style="margin:12px 0 4px"><span class="sub">ينتهي الساعة</span></div>${hrChips('quietEndHour', 7)}
+        <button class="btn sec full" id="quietSave" style="margin-top:12px">${ic('save')} حفظ</button></div>`;
+      p.insertBefore(qt, p.firstChild);
+      qt.addEventListener('click', e => { const c = e.target.closest('[data-hr]'); if (!c) return; tap(); const [key, h] = c.dataset.hr.split(':'); S[key] = +h; qt.querySelectorAll('#' + key + 'Chips .chip').forEach(b => b.classList.toggle('on', b === c)); });
+      $('#quietTog').onclick = () => { tap(); S.quietOn = !S.quietOn; $('#quietTog .toggle').classList.toggle('on', S.quietOn); };
+      $('#quietSave').onclick = () => { tap(); changed(); live({ settings: S }); toast('انحفظ وضع الهدوء الليلي'); };
       const my = document.createElement('div');
       const cnt = (S.myM3u || '').split(/\r?\n/).filter(l => /^https?:/i.test(l.trim())).length;
       my.innerHTML = `<div class="panel"><h2>قنواتي الخاصة</h2><p class="sub" style="margin-top:-4px">أضف قنواتك اللي عندك حق بثها (مثل اتفاقيتك مع beIN، أو قنوات ثانية). تطلع آخر شي بقنواتي داخل فولدر «قنواتي الخاصة»، وكل قائمة IPTV تصير فولدر لحاله وبيه قنواتها. الروابط تنحفظ بتصميمك وبشاشتك بس، وما تنرفع لأي مكان عام.</p>

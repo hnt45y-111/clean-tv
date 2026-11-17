@@ -34,6 +34,9 @@ import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.HttpDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.common.text.CueGroup;
+import androidx.media3.ui.SubtitleView;
+import androidx.media3.ui.CaptionStyleCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -72,6 +75,7 @@ public class LiveActivity extends Activity {
     private boolean panelOpen;
     private FrameLayout root;
     private SurfaceView sv;
+    private SubtitleView subs;
     private WebView yt;
     private String ytWatch;
     private boolean ytFell;
@@ -126,6 +130,11 @@ public class LiveActivity extends Activity {
         root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         sv = new SurfaceView(this);
         root.addView(sv, new FrameLayout.LayoutParams(-1, -1));
+        subs = new SubtitleView(this);
+        subs.setApplyEmbeddedStyles(false);
+        subs.setStyle(new CaptionStyleCompat(IVORY, Color.parseColor("#AA000000"), Color.TRANSPARENT, CaptionStyleCompat.EDGE_TYPE_OUTLINE, Color.BLACK, null));
+        root.addView(subs, new FrameLayout.LayoutParams(-1, -1));
+        applyQuietMode();
 
         state = tv(24, IVORY, false);
         state.setGravity(Gravity.CENTER);
@@ -194,6 +203,7 @@ public class LiveActivity extends Activity {
                     h.removeCallbacks(hide); h.postDelayed(hide, 4000);
                 }
             }
+            @Override public void onCues(CueGroup cueGroup) { subs.setCues(cueGroup.cues); }
             @Override public void onVideoSizeChanged(VideoSize v) {
                 int hgt = v.height;
                 if (hgt <= 0) return;
@@ -206,7 +216,24 @@ public class LiveActivity extends Activity {
                 if (failed < 2) h.postDelayed(new Runnable() { public void run() { play(idx); } }, 2500);
             }
         });
+        applyQuietMode();
+        h.postDelayed(quietTick, 5 * 60000);
         play(idx);
+    }
+
+    private final Runnable quietTick = new Runnable() { public void run() { applyQuietMode(); h.postDelayed(this, 5 * 60000); } };
+    /** after the user's chosen hour at night, the sound drops on its own and subtitles grow — quiet, on by default off unless the phone app turned it on */
+    private void applyQuietMode() {
+        try {
+            android.content.SharedPreferences p = Media.prefs(this);
+            boolean on = p.getString("quietOn", "0").equals("1");
+            int from = Integer.parseInt(p.getString("quietHour", "23")), to = Integer.parseInt(p.getString("quietEndHour", "7"));
+            int hr = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+            boolean quiet = on && (from <= to ? (hr >= from && hr < to) : (hr >= from || hr < to));
+            subs.setFractionalTextSize(quiet ? SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * 1.6f : SubtitleView.DEFAULT_TEXT_SIZE_FRACTION);
+            if (quiet && player != null) player.setVolume(0.45f);
+            else if (player != null) player.setVolume(1f);
+        } catch (Throwable ignored) { }
     }
 
     /** the reason in a few words, so that a channel that does not play can be told apart: blocked, gone, no internet... */
