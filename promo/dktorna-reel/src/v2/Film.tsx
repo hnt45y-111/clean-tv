@@ -217,7 +217,14 @@ const FeatureScene: React.FC<{ i: number }> = ({ i }) => {
   const Scr = SCREENS[meta.key];
   const Icon = FEATURE_ICONS[meta.key];
   const words = SEG[`f${meta.n}`].words.map((w) => ({ ...w, s: w.s - tl.start, e: w.e - tl.start }));
-  const cues = tl.cues.map((c) => c.t - tl.start);
+  // never show a callout under the tile transition / before the phone has landed:
+  // keep each cue at its spoken moment, but not earlier than 0.9s, and spaced by >=0.35s
+  let prevCue = 0.55;
+  const cues = tl.cues.map((c) => {
+    const e = Math.max(c.t - tl.start, prevCue + 0.35);
+    prevCue = e;
+    return e;
+  });
   const numP = interpolate(t, [0.25, 0.6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeIn });
   const titleP = interpolate(t, [0.4, 0.95], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeOut });
   const sides: ("l" | "r")[] = ["r", "l", "r", "l"];
@@ -455,7 +462,7 @@ const Outro: React.FC<{ from: number }> = ({ from }) => {
   const shine = interpolate(t, [hk + 1.25, hk + 1.95], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const keys = FEATS.map((f) => f.key);
   const rot = t * 14;
-  const radius = interpolate(t, [from, Math.max(from + 0.05, FIN - 0.3), FIN], [950, 380, 60], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
+  const radius = interpolate(t, [from, Math.max(from + 0.02, FIN - 0.28), FIN], [380, 380, 60], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
   return (
     <AbsoluteFill style={{ background: C.lazurd, overflow: "hidden" }}>
       <BrickPattern id="ob" color={C.teen} opacity={0.07} offset={-t * 14} />

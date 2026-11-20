@@ -49,90 +49,69 @@ for f in feats:
 bounds.append(("outro", find_word("دكتورنا", idx + 1)))
 
 
-def quiet_cut(t0, t1):
-    """Quietest 10 ms point between t0 and t1 (seconds in the VO file)."""
-    a, b = int(t0 * SR), int(t1 * SR)
-    if b - a < 480:
-        return (t0 + t1) / 2
-    w = 480
-    best, bt = 1e9, (t0 + t1) / 2
-    for i in range(a, b - w, 96):
-        e = float((mono[i:i + w] ** 2).mean())
-        if e < best:
-            best, bt = e, (i + w / 2) / SR
-    return bt
-
+VO0 = 0.5  # the narration starts here and plays CONTINUOUSLY: never cut, never stretched
 
 segs = []
 for k, (name, wi) in enumerate(bounds):
     wj = bounds[k + 1][1] if k + 1 < len(bounds) else len(words)
-    ws = words[wi:wj]
-    v0 = 0.0 if k == 0 else quiet_cut(words[wi - 1]["end"] - 0.06, words[wi]["start"] + 0.04)
-    v1 = len(mono) / SR if wj >= len(words) else quiet_cut(words[wj - 1]["end"] - 0.06, words[wj]["start"] + 0.04)
-    segs.append({"id": name, "v0": v0, "v1": v1, "words": ws})
+    # a scene changes in the middle of the natural pause that already exists in the speech
+    v0 = 0.0 if k == 0 else (words[wi - 1]["end"] + words[wi]["start"]) / 2
+    segs.append({"id": name, "v0": v0, "words": words[wi:wj]})
+VO_LEN = len(mono) / SR
+for k, sg in enumerate(segs):
+    sg["v1"] = segs[k + 1]["v0"] if k + 1 < len(segs) else VO_LEN
+    sg["at"] = VO0 + sg["v0"]
+    sg["end"] = VO0 + sg["v1"]
 
-# ── layout on the video timeline
-t = 0.5
-drop = None
-for k, s in enumerate(segs):
-    if s["id"] == "intro1":
-        at = 0.5
-    elif s["id"] == "intro2":
-        at = segs[k - 1]["end"] + 1.15
-    else:
-        earliest = segs[k - 1]["end"] + (1.1 if s["id"] == "outro" else 0.62)
-        at = drop + math.ceil((earliest - drop) / BEAT) * BEAT
-    s["at"] = at
-    s["end"] = at + (s["v1"] - s["v0"])
-    if s["id"] == "intro2":
-        dk = next(w for w in s["words"] if "دكتورنا" in w["text"])
-        drop = at + (dk["start"] - s["v0"])
+intro2 = next(sg for sg in segs if sg["id"] == "intro2")
+drop = VO0 + next(w for w in intro2["words"] if "دكتورنا" in w["text"])["start"]
 
-TOTAL = segs[-1]["end"] + 4.6
+TOTAL = VO0 + VO_LEN + 3.6
 dsp.set_duration(TOTAL)
 N = dsp.cur_n()
 
 
-def vt(s, w):  # word → video seconds
-    return round(s["at"] + (w["start"] - s["v0"]), 3), round(s["at"] + (w["end"] - s["v0"]), 3)
+def vt(sg, w):  # word -> video seconds (voice time + fixed offset)
+    return round(VO0 + w["start"], 3), round(VO0 + w["end"], 3)
 
 
 timeline = {"total": round(TOTAL, 3), "drop": round(drop, 3), "beat": BEAT, "segments": [], "features": []}
-for s in segs:
+for sg in segs:
     timeline["segments"].append(
-        {"id": s["id"], "at": round(s["at"], 3), "end": round(s["end"], 3), "words": [{"w": w["text"], "s": vt(s, w)[0], "e": vt(s, w)[1]} for w in s["words"]]}
+        {"id": sg["id"], "at": round(sg["at"], 3), "end": round(sg["end"], 3), "words": [{"w": w["text"], "s": vt(sg, w)[0], "e": vt(sg, w)[1]} for w in sg["words"]]}
     )
-fsegs = [s for s in segs if s["id"].startswith("f")]
+fsegs = [sg for sg in segs if sg["id"].startswith("f")]
 outro = segs[-1]
-for i, (f, s) in enumerate(zip(feats, fsegs)):
-    start = s["at"] - 0.32  # transition centre
-    nxt = fsegs[i + 1]["at"] - 0.32 if i + 1 < len(fsegs) else outro["at"] - 0.45
+for i, (f, sg) in enumerate(zip(feats, fsegs)):
+    start = sg["at"]
+    nxt = fsegs[i + 1]["at"] if i + 1 < len(fsegs) else outro["at"]
     cues = []
     last = 0
     for c in f["callouts"]:
         cw = clean(c["word"])
-        ws = s["words"]
+        ws = sg["words"]
         j = next((j for j in range(last, len(ws)) if clean(ws[j]["text"]) == cw), None)
         if j is None:
             j = next((j for j in range(last, len(ws)) if clean(ws[j]["text"]).startswith(cw)), None)
         if j is None:
             j = next(j for j in range(last, len(ws)) if cw in clean(ws[j]["text"]))
         last = j + 1
-        cues.append({"label": c["label"], "t": vt(s, ws[j])[0]})
-    timeline["features"].append({"n": f["n"], "start": round(start, 3), "end": round(nxt, 3), "voAt": round(s["at"], 3), "voEnd": round(s["end"], 3), "cues": cues})
+        cues.append({"label": c["label"], "t": vt(sg, ws[j])[0]})
+    first_word = vt(sg, sg["words"][0])[0]
+    timeline["features"].append(
+        {"n": f["n"], "start": round(start, 3), "end": round(nxt, 3), "voAt": round(max(first_word, start + 0.55), 3), "voEnd": round(sg["end"], 3), "cues": cues}
+    )
 timeline["introEnd"] = timeline["features"][0]["start"]
-timeline["outroStart"] = round(outro["at"] - 0.45, 3)
+timeline["outroStart"] = round(outro["at"], 3)
 json.dump(timeline, open(f"{ROOT}/src/v2/timeline.json", "w"), ensure_ascii=False, indent=1)
-print("total", TOTAL, "drop", drop)
+print("total", TOTAL, "drop", drop, "(voice", round(VO_LEN, 1), "s, no silence inserted)")
 
-# ── voice track
+# ── voice track: ONE continuous clip, exactly as generated
 voice = dsp.buf()
-fade = int(0.008 * SR)
-for s in segs:
-    clip = vo[int(s["v0"] * SR): int(s["v1"] * SR)].copy()
-    clip[:fade] *= np.linspace(0, 1, fade)[:, None]
-    clip[-fade:] *= np.linspace(1, 0, fade)[:, None]
-    dsp.place(voice, clip, s["at"])
+clip = vo.copy()
+fi = int(0.01 * SR)
+clip[:fi] *= np.linspace(0, 1, fi)[:, None]
+dsp.place(voice, clip, VO0)
 voice = hp(voice, 70)
 # (no extra low-end: keep the approved voice natural)
 
