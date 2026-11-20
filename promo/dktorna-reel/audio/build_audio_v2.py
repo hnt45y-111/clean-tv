@@ -23,9 +23,9 @@ rng = np.random.default_rng(11)
 BPM = 96
 BEAT = 60 / BPM
 
-words = [w for w in json.load(open(f"{ROOT}/audio/vo_final_words.json"))["words"] if w["type"] == "word" and not w["text"].startswith("[")]
+words = [w for w in json.load(open(f"{ROOT}/audio/vo_moammal_words.json"))["words"] if w["type"] == "word" and not w["text"].startswith("[")]
 feats = json.load(open(f"{ROOT}/src/v2/features.json"))["features"]
-vo = load(f"{ROOT}/public/audio/vo_final.wav")
+vo = load(f"{ROOT}/public/audio/vo_moammal.mp3")
 mono = vo.mean(1)
 
 
