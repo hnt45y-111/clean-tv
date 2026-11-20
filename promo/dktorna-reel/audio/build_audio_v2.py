@@ -23,9 +23,9 @@ rng = np.random.default_rng(11)
 BPM = 96
 BEAT = 60 / BPM
 
-words = [w for w in json.load(open(f"{ROOT}/audio/vo_arafat_words.json"))["words"] if w["type"] == "word" and not w["text"].startswith("[")]
+words = [w for w in json.load(open(f"{ROOT}/audio/vo_bazzaz_words.json"))["words"] if w["type"] == "word" and not w["text"].startswith("[")]
 feats = json.load(open(f"{ROOT}/src/v2/features.json"))["features"]
-vo = load(f"{ROOT}/public/audio/vo_arafat.mp3")
+vo = load(f"{ROOT}/public/audio/vo_bazzaz.mp3")
 mono = vo.mean(1)
 
 
@@ -135,7 +135,6 @@ for s in segs:
     dsp.place(voice, clip, s["at"])
 voice = hp(voice, 70)
 # (no extra low-end: keep the approved voice natural)
-voice = voice + bp(voice, 2600, 5200) * 0.18  # presence
 
 # ── score
 music = dsp.buf()
