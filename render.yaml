@@ -1,8 +1,9 @@
+# نسخة تجريبية مجانية: بدون قرص دائم، فالبيانات تنمسح عند إعادة التشغيل (الحسابات التجريبية ترجع تلقائيًا)
 services:
   - type: web
     name: doctorna
     runtime: node
-    plan: starter
+    plan: free
     branch: ccr-4240d295-xmzhyg
     rootDir: Doctorna/server
     buildCommand: npm install
@@ -11,13 +12,9 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22.13.0
-      - key: DOCTORNA_DB
-        value: /data/doctorna.db
+      - key: DOCTORNA_DEMO
+        value: "1"
       - key: OWNER_PHONE
-        sync: false
+        value: "07700000001"
       - key: OWNER_PASSWORD
         sync: false
-    disk:
-      name: doctorna-data
-      mountPath: /data
-      sizeGB: 1
