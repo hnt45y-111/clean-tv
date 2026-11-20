@@ -118,8 +118,8 @@
   function liveCats() {
     var l = CATS.slice(), seen = {}, all = liveAll();
     all.forEach(function (c) { if (c.grp && !seen[c.grp]) { seen[c.grp] = 1; } });
-    var pre = [['fav', '⭐ المفضلة'], ['rec', '🕘 آخر ما شاهدت']];
-    var grps = Object.keys(seen).slice(0, 60).map(function (g) { return ['g:' + g, '📁 ' + g]; });
+    var pre = [['fav', 'المفضلة'], ['rec', 'آخر ما شاهدت']];
+    var grps = Object.keys(seen).slice(0, 60).map(function (g) { return ['g:' + g, g]; });
     return pre.concat(l).concat(grps);
   }
   function liveFilter() {
@@ -138,7 +138,7 @@
     var rows = cur.slice(0, s.more).map(function (c, i) { return '<div class="row" data-i="' + i + '">' + art(c) + '<div class="tx"><b>' + esc(c.n) + '</b><small>' + esc(c.grp || c.g && catName(c.g) || '') + '</small></div><span class="star' + (isFav(c) ? ' on' : '') + '" data-s="' + i + '">' + STAR + '</span></div>'; }).join('');
     var more = cur.length > s.more ? '<button class="btn sec" id="more">عرض المزيد (' + (cur.length - s.more) + ')</button>' : '';
     var empty = !cur.length ? '<div class="empty">' + (s.cat === 'fav' ? 'ماكو مفضلة بعد. اضغط النجمة جنب أي قناة.' : s.cat === 'rec' ? 'ما شاهدت شي بعد.' : s.q ? 'ماكو قناة بهذا الاسم' : !LIVE.loaded ? 'جاري التحميل…' : 'ماكو قنوات بهذا القسم' + (lastErr ? '<br>' + esc(lastErr) : '')) + '</div>' : '';
-    if (!keepTop) { $('top').innerHTML = searchBox(s.q, 'ابحث عن قناة…') + chips(liveCats(), s.cat, 'lc') + '<div class="tools"><button id="rnd">🎲 قناة عشوائية</button></div>'; bindSearch(s, drawLive); }
+    if (!keepTop) { $('top').innerHTML = searchBox(s.q, 'ابحث عن قناة…') + chips(liveCats(), s.cat, 'lc') + '<div class="tools"><button id="rnd">قناة عشوائية</button></div>'; bindSearch(s, drawLive); }
     $('main').innerHTML = rows + more + empty;
   }
   function catName(g) { for (var i = 0; i < CATS.length; i++) if (CATS[i][0] === g) return CATS[i][1]; return ''; }
@@ -149,7 +149,7 @@
     var s = st.vod; cur = vodFilter();
     var cards = cur.slice(0, s.more).map(function (c, i) { return '<div class="card" data-v="' + i + '" style="position:relative">' + art(c, true) + (isFav(c) ? '<span class="fv">' + STAR + '</span>' : '') + '<b>' + esc(c.n) + '</b></div>'; }).join('');
     var msg = !VOD.loaded ? 'جاري التحميل…' : (!xt() && !String(S.vodLinks || '').trim() && !(S.vodItems || []).length) ? 'أضف حساب IPTV أو رابط قائمة من الإعدادات (أو من «الربط الذكي»).' : lastErr ? 'تعذّر جلب المحتوى (' + esc(lastErr) + ')' : s.q ? 'ماكو نتيجة' : 'ماكو محتوى بهذا القسم';
-    if (!keepTop) { $('top').innerHTML = searchBox(s.q, 'ابحث عن فيلم أو مسلسل…') + chips([['m', '🎬 أفلام'], ['s', '📺 مسلسلات']], s.sub, 'vs') + chips(vodCats(), s.cat, 'vc') + '<div class="tools"><button id="vrf">🔄 تحديث القائمة</button></div>'; bindSearch(s, drawVod); }
+    if (!keepTop) { $('top').innerHTML = searchBox(s.q, 'ابحث عن فيلم أو مسلسل…') + chips([['m', 'أفلام'], ['s', 'مسلسلات']], s.sub, 'vs') + chips(vodCats(), s.cat, 'vc') + '<div class="tools"><button id="vrf">تحديث القائمة</button></div>'; bindSearch(s, drawVod); }
     $('main').innerHTML = (cur.length ? '<div class="grid">' + cards + '</div>' + (cur.length > s.more ? '<button class="btn sec" id="more" style="margin-top:10px">عرض المزيد</button>' : '') : '<div class="empty">' + msg + '</div>');
   }
 
@@ -187,7 +187,7 @@
       var out = $('smOut'); out.innerHTML = '<div class="res">جاري الفحص…</div>';
       window.SmartLink.identify($('smUrl').value).then(function (r) {
         var ok = !!r.apply, T = { live: 'للقنوات', vod: 'للأفلام والمسلسلات', both: 'للاثنين' };
-        out.innerHTML = '<div class="res"><b>' + (ok ? '✅ ' : 'ℹ️ ') + esc(r.label) + '</b><small>' + esc(r.detail) + '</small></div>' + (ok ? (r.targets || ['both']).map(function (t) { return '<button class="btn" data-t="' + t + '">أضفه ' + T[t] + '</button>'; }).join('') : '') + '<button class="btn sec" id="smLog">نسخ التشخيص</button>';
+        out.innerHTML = '<div class="res"><b>' + esc(r.label) + '</b><small>' + esc(r.detail) + '</small></div>' + (ok ? (r.targets || ['both']).map(function (t) { return '<button class="btn" data-t="' + t + '">أضفه ' + T[t] + '</button>'; }).join('') : '') + '<button class="btn sec" id="smLog">نسخ التشخيص</button>';
         [].forEach.call(out.querySelectorAll('[data-t]'), function (b) { b.onclick = function () { r.apply(S, b.getAttribute('data-t')); save(); refreshAll('انضاف ' + T[b.getAttribute('data-t')]); }; });
         $('smLog').onclick = function () { A.copy(window.SmartLink.logText(r)); toast('انسخ التشخيص'); };
       });
@@ -224,12 +224,12 @@
     var v = t.closest('[data-v]'); if (v) { var it2 = cur[+v.getAttribute('data-v')]; if (it2.t === 'xs') openSeries(it2); else playPack([it2], 0, true); }
   };
   var lp = null;
-  $('main').addEventListener('touchstart', function (e) { var v = e.target.closest('[data-v]'); if (!v) return; lp = setTimeout(function () { var it = cur[+v.getAttribute('data-v')]; toast(toggleFav(it) ? '⭐ انضاف للمفضلة' : 'انشال من المفضلة'); drawVod(true); lp = 'done'; }, 600); }, { passive: true });
+  $('main').addEventListener('touchstart', function (e) { var v = e.target.closest('[data-v]'); if (!v) return; lp = setTimeout(function () { var it = cur[+v.getAttribute('data-v')]; toast(toggleFav(it) ? 'انضاف للمفضلة' : 'انشال من المفضلة'); drawVod(true); lp = 'done'; }, 600); }, { passive: true });
   $('main').addEventListener('touchend', function (e) { if (lp === 'done') { e.preventDefault(); } clearTimeout(lp); lp = null; });
   $('main').addEventListener('touchmove', function () { clearTimeout(lp); lp = null; }, { passive: true });
   $('top').onclick = function (e) {
     var t = e.target.closest('[data-lc],[data-vs],[data-vc],#rnd,#vrf'); if (!t) return;
-    if (t.id === 'rnd') { var all = liveAll(); if (all.length) { var i = Math.floor(Math.random() * all.length); toast('🎲 ' + all[i].n); playPack(all, i, false); } return; }
+    if (t.id === 'rnd') { var all = liveAll(); if (all.length) { var i = Math.floor(Math.random() * all.length); toast(all[i].n); playPack(all, i, false); } return; }
     if (t.id === 'vrf') { toast('جاري التحديث…'); lastErr = ''; loadVod(true).then(function () { drawVod(); }); return; }
     if (t.hasAttribute('data-lc')) { st.live.cat = t.getAttribute('data-lc'); st.live.more = PAGE; st.live.q = ''; drawLive(); }
     else if (t.hasAttribute('data-vs')) { st.vod.sub = t.getAttribute('data-vs'); st.vod.cat = '*'; st.vod.more = PAGE; st.vod.q = ''; drawVod(); }

@@ -124,7 +124,7 @@ public class PlayerActivity extends Activity {
 
     private TextView label(int sp, boolean bold) {
         TextView t = new TextView(this);
-        t.setTextSize(sp); t.setTextColor(Color.parseColor("#EFE7D4")); t.setTypeface(bold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        t.setTextSize(sp); t.setTextColor(Color.WHITE); t.setTypeface(bold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
         t.setShadowLayer(6, 0, 2, Color.BLACK);
         return t;
     }
