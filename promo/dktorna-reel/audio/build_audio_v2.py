@@ -23,9 +23,9 @@ rng = np.random.default_rng(11)
 BPM = 96
 BEAT = 60 / BPM
 
-words = [w for w in json.load(open(f"{ROOT}/audio/vo2_words.json"))["words"] if w["type"] == "word" and not w["text"].startswith("[")]
+words = [w for w in json.load(open(f"{ROOT}/audio/vo_arafat_words.json"))["words"] if w["type"] == "word" and not w["text"].startswith("[")]
 feats = json.load(open(f"{ROOT}/src/v2/features.json"))["features"]
-vo = load(f"{ROOT}/public/audio/vo2.mp3")
+vo = load(f"{ROOT}/public/audio/vo_arafat.mp3")
 mono = vo.mean(1)
 
 
@@ -134,7 +134,7 @@ for s in segs:
     clip[-fade:] *= np.linspace(1, 0, fade)[:, None]
     dsp.place(voice, clip, s["at"])
 voice = hp(voice, 70)
-voice = voice + lp(voice, 180) * 0.35  # chest warmth
+# (no extra low-end: keep the approved voice natural)
 voice = voice + bp(voice, 2600, 5200) * 0.18  # presence
 
 # ── score
@@ -324,3 +324,13 @@ with wave.open(f"{ROOT}/public/audio/mix_v2.wav", "wb") as w:
     w.setframerate(SR)
     w.writeframes((mix * 32767).astype(np.int16).tobytes())
 print("wrote mix_v2.wav")
+
+# loudness for Instagram (~-14 LUFS, -1 dBTP)
+import os  # noqa: E402
+import subprocess  # noqa: E402
+
+_src = f"{ROOT}/public/audio/mix_v2.wav"
+_tmp = f"{ROOT}/public/audio/mix_v2_ln.wav"
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", _src, "-af", "loudnorm=I=-14:TP=-1.0:LRA=11", "-ar", "48000", _tmp], check=True)
+os.replace(_tmp, _src)
+print("loudness-normalised")
