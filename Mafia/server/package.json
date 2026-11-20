@@ -1,0 +1,17 @@
+{
+  "name": "mafia-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test --test-reporter=spec test/*.test.js"
+  },
+  "dependencies": {
+    "qrcode-generator": "^2.0.4",
+    "ws": "^8.23.0"
+  }
+}
