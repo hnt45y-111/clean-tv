@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: doctorna
+    runtime: node
+    plan: starter
+    branch: ccr-4240d295-xmzhyg
+    rootDir: Doctorna/server
+    buildCommand: npm install
+    startCommand: node src/server.js
+    healthCheckPath: /api/meta
+    envVars:
+      - key: NODE_VERSION
+        value: 22.13.0
+      - key: DOCTORNA_DB
+        value: /data/doctorna.db
+      - key: OWNER_PHONE
+        sync: false
+      - key: OWNER_PASSWORD
+        sync: false
+    disk:
+      name: doctorna-data
+      mountPath: /data
+      sizeGB: 1
