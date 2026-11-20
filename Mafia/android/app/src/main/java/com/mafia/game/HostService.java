@@ -63,7 +63,7 @@ public class HostService extends Service {
         wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "mafia:wifi"); wifiLock.acquire();
         new Thread(() -> {
             try {
-                Hub hub = new Hub(new File(getFilesDir(), "room.json")); hub.restore();
+                Hub hub = new Hub(new File(getFilesDir(), "room.json")); hub.lobbyGraceMs = 10 * 60_000L; hub.restore(); // هواتف اللاعبين قد تفقد الشبكة مؤقتاً
                 server = new Server(hub, this::asset, HostService::lanAddresses, () -> Json.obj("wifi", wifi, "error", hotspotError));
                 port = server.start(8080, 8099);
             } catch (Exception e) { port = -1; }

@@ -34,6 +34,9 @@ public final class Hub {
         String status = "lobby"; int round = 0; Match match;
         final List<Map<String, Object>> history = new ArrayList<>(); final Map<String, Object> scores = new LinkedHashMap<>();
         final Set<Long> banned = new HashSet<>(); Set<Long> left = new HashSet<>(); Map<String, Object> lastReport; long createdAt;
+        /** لاعبون بلا هاتف (أو لم يتصل هاتفهم): يضيفهم الراوي بالاسم ويكشف أدوارهم على هاتفه */
+        final LinkedHashMap<String, String> guests = new LinkedHashMap<>(); int nextGuest = 1;
+        int size() { return members.size() + guests.size(); }
     }
 
     private static final String B32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -122,7 +125,7 @@ public final class Hub {
         boolean tokenOk = parts.length > 1 && MessageDigest.isEqual(parts[1].getBytes(StandardCharsets.UTF_8), room.token.getBytes(StandardCharsets.UTF_8));
         if (!tokenOk) throw bad("bad_token");
         if (!room.status.equals("lobby")) throw bad("already_started");
-        if (room.members.size() >= room.settings.players) throw bad("room_full");
+        if (room.size() >= room.settings.players) throw bad("room_full");
         room.members.put(uid, memberFrom(uid));
         touch(room); broadcast(room, Json.obj("t", "event", "kind", "joined", "userId", uid));
     }
@@ -152,27 +155,44 @@ public final class Hub {
         if (!r.status.equals("lobby") && !r.status.equals("between")) throw bad("already_started");
         Map<String, Object> merged = r.settings.toMap(); merged.putAll(s);
         Settings.Result v = Settings.validate(merged); if (!v.ok) throw bad(v.errors.get(0));
-        if (v.settings.players < r.members.size()) throw bad("players_below_members");
+        if (v.settings.players < r.size()) throw bad("players_below_members");
         v.settings.visibility = "private"; r.settings = v.settings; touch(r); broadcast(r, null);
     }
     public synchronized void kick(long uid, long target) {
         Room r = needRoom(uid); needHost(r, uid); if (!r.members.containsKey(target)) throw bad("not_member");
         r.banned.add(target); removeMember(r, target, "kicked");
     }
+    public synchronized void addGuest(long uid, Object name) {
+        Room r = needRoom(uid); needHost(r, uid);
+        if (!r.status.equals("lobby") && !r.status.equals("between")) throw bad("already_started");
+        String n = cleanName(name); if (n.isEmpty()) throw bad("bad_name");
+        if (r.size() >= Settings.MAX_PLAYERS) throw bad("room_full");
+        if (r.size() >= r.settings.players) { Map<String, Object> st = r.settings.toMap(); st.put("players", (long) (r.size() + 1)); Settings.Result v = Settings.validate(st); if (v.ok) r.settings = v.settings; }
+        r.guests.put("g" + (r.nextGuest++), n); touch(r); broadcast(r, null);
+    }
+    public synchronized void removeGuest(long uid, Object id) {
+        Room r = needRoom(uid); needHost(r, uid);
+        if (!r.status.equals("lobby") && !r.status.equals("between")) throw bad("already_started");
+        if (r.guests.remove(String.valueOf(id)) == null) throw bad("not_member");
+        touch(r); broadcast(r, null);
+    }
+
     public synchronized void leave(long uid) { Room r = needRoom(uid); if (r.host == uid) { closeRoom(r, "host_left"); return; } removeMember(r, uid, "left"); }
     public synchronized void close(long uid) { Room r = needRoom(uid); needHost(r, uid); closeRoom(r, "closed"); }
     public synchronized void startMatch(long uid) { Room r = needRoom(uid); needHost(r, uid); beginRound(r); }
 
     void beginRound(Room room) {
         if (!room.status.equals("lobby") && !room.status.equals("between")) throw bad("already_started");
-        int count = room.members.size();
+        int count = room.size();
         if (count < Settings.MIN_PLAYERS) throw bad("not_enough_players");
         Map<String, Object> st = room.settings.toMap(); st.put("players", (long) count);
         if (room.settings.mafia * 2 >= count) st.put("mafia", (long) Settings.suggestMafia(count));
         Settings.Result v = Settings.validate(st); if (!v.ok) throw bad(v.errors.get(0));
         room.activeSettings = v.settings; room.round++; room.status = "playing"; room.left = new HashSet<>();
         List<String[]> ps = new ArrayList<>(); for (Member m : room.members.values()) ps.add(new String[] { String.valueOf(m.id), m.name });
+        for (Map.Entry<String, String> g : room.guests.entrySet()) ps.add(new String[] { g.getKey(), g.getValue() });
         room.match = Match.create(ps, v.settings, rnd, System.currentTimeMillis()); room.lastReport = null;
+        room.match.narratorDriven = true; // الأوفلاين: الراوي يسجّل كل شيء
         afterGameChange(room);
         broadcast(room, Json.obj("t", "event", "kind", "match_start", "round", (long) room.round));
         for (long id : room.members.keySet()) sendTo(id, Json.obj("t", "notif", "kind", "match_start", "room", room.code));
@@ -214,6 +234,9 @@ public final class Hub {
             case "closeVote": m.closeVote(); break;
             case "eliminate": m.eliminate(sid(p.get("id"))); break;
             case "endMatch": m.endMatch(); break;
+            case "record": m.recordNight(p.get("kind") == null ? null : String.valueOf(p.get("kind")), Json.truthy(p.get("target")) ? sid(p.get("target")) : null); break;
+            case "voteResult": m.recordVote(Json.truthy(p.get("target")) ? sid(p.get("target")) : null); break;
+            case "reveal": m.ackRole(sid(p.get("id"))); break; // الراوي عرض الدور على هاتفه
             default: throw bad("bad_cmd");
         }
         afterGameChange(room);
@@ -230,7 +253,7 @@ public final class Hub {
         Map<String, Object> entry = Json.obj("round", (long) room.round, "winner", m.winner, "cancelled", "cancelled".equals(m.endReason), "days", (long) m.day, "results", res, "names", names);
         if (m.winner != null) for (Map<String, Object> r : res) if (Json.truthy(r.get("won"))) { String id = (String) r.get("id"); room.scores.put(id, (Long) room.scores.getOrDefault(id, 0L) + 1); }
         room.history.add(entry); room.lastReport = entry;
-        boolean more = room.round < room.settings.rounds && room.members.size() >= Settings.MIN_PLAYERS;
+        boolean more = room.round < room.settings.rounds && room.size() >= Settings.MIN_PLAYERS;
         room.status = more ? "between" : "finished";
     }
 
@@ -253,7 +276,9 @@ public final class Hub {
                 "activeSettings", room.activeSettings == null ? null : room.activeSettings.toMap(), "host", room.host, "isHost", isHost, "me", uid, "startsAt", null, "serverTime", System.currentTimeMillis());
         if (isHost) v.put("joinKey", joinKey(room));
         v.put("hostInfo", h == null ? null : Json.obj("id", h.id, "name", h.name, "avatar", null, "uid", h.uid, "connected", online(h.id)));
-        v.put("members", members); v.put("scores", new LinkedHashMap<>(room.scores)); v.put("history", hist);
+        v.put("members", members);
+        List<Object> gs = new ArrayList<>(); for (Map.Entry<String, String> g : room.guests.entrySet()) gs.add(Json.obj("id", g.getKey(), "name", g.getValue()));
+        v.put("guests", gs); v.put("scores", new LinkedHashMap<>(room.scores)); v.put("history", hist);
         v.put("report", room.lastReport != null && (room.status.equals("between") || room.status.equals("finished")) ? room.lastReport : null);
         v.put("match", room.match != null && !room.status.equals("lobby") ? room.match.view(room.members.containsKey(uid) || isHost ? viewer : "none", System.currentTimeMillis()) : null);
         return v;
@@ -279,7 +304,7 @@ public final class Hub {
             List<Object> ms = new ArrayList<>(); for (Member m : r.members.values()) ms.add(Json.obj("id", m.id, "ready", m.ready));
             rs.add(Json.obj("code", r.code, "token", r.token, "host", r.host, "settings", r.settings.toMap(), "activeSettings", r.activeSettings == null ? null : r.activeSettings.toMap(),
                     "status", r.status, "round", (long) r.round, "history", new ArrayList<Object>(r.history), "scores", new LinkedHashMap<>(r.scores), "banned", new ArrayList<Object>(r.banned),
-                    "left", new ArrayList<Object>(r.left), "members", ms, "match", r.match == null ? null : r.match.toMap(), "createdAt", r.createdAt));
+                    "left", new ArrayList<Object>(r.left), "members", ms, "guests", new LinkedHashMap<String, Object>(r.guests), "nextGuest", (long) r.nextGuest, "match", r.match == null ? null : r.match.toMap(), "createdAt", r.createdAt));
         }
         return Json.obj("v", 1L, "savedAt", System.currentTimeMillis(), "nextUserId", nextUserId, "users", us, "rooms", rs);
     }
@@ -302,6 +327,8 @@ public final class Hub {
                 for (Object b : Json.list(m.get("banned"))) r.banned.add(lng(b));
                 for (Object b : Json.list(m.get("left"))) r.left.add(lng(b));
                 for (Object mo : Json.list(m.get("members"))) { Map<String, Object> mm = Json.map(mo); long id = lng(mm.get("id")); if (users.containsKey(id)) { Member mb = memberFrom(id); mb.ready = Json.truthy(mm.get("ready")); r.members.put(id, mb); } }
+                for (Map.Entry<String, Object> g : Json.map(m.get("guests")).entrySet()) r.guests.put(g.getKey(), String.valueOf(g.getValue()));
+                r.nextGuest = (int) Math.max(1, lng(m.get("nextGuest")));
                 if (m.get("match") != null) r.match = Match.fromMap(Json.map(m.get("match")), rnd);
                 r.lastReport = r.history.isEmpty() ? null : r.history.get(r.history.size() - 1);
                 rooms.put(r.code, r); n++;

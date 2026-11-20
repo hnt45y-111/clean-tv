@@ -29,6 +29,8 @@ public final class Match {
     public String speaker; Timer timer;
     Map<String, Object> lastNight, lastVote;
     public boolean sniperUsed = false; String lastSaved;
+    /** الأوفلاين: الراوي يسجّل أفعال الليل ونتيجة التصويت بنفسه (الإشارة باليد)، وهواتف اللاعبين لكشف الأدوار فقط */
+    public boolean narratorDriven = false;
     public String winner, endReason;
     final List<Map<String, Object>> log = new ArrayList<>();
     final Map<String, List<Map<String, Object>>> priv = new LinkedHashMap<>();
@@ -77,7 +79,22 @@ public final class Match {
         startTimer(settings.nightSeconds, now);
         log("night", Json.obj("n", (long) nights));
     }
+    /** الأدوار التي لم يُسجَّل فعلها بعد (وضع الراوي) */
+    public List<String> pendingRoles() {
+        List<String> out = new ArrayList<>(); if (night == null) return out;
+        for (String r : activeNightRoles()) if (!night.done.containsKey(r)) out.add(r);
+        return out;
+    }
+    public List<String> activeNightRoles() {
+        List<String> r = new ArrayList<>();
+        if (!aliveRole("mafia").isEmpty()) r.add("mafia");
+        if (!aliveRole("doctor").isEmpty()) r.add("doctor");
+        if (!aliveRole("detective").isEmpty()) r.add("detective");
+        if (!sniperUsed && !aliveRole("sniper").isEmpty()) r.add("sniper");
+        return r;
+    }
     public List<String> pendingNight() {
+        if (narratorDriven) return pendingRoles();
         List<String> out = new ArrayList<>(); if (night == null) return out;
         List<Player> need = new ArrayList<>(aliveRole("mafia")); need.addAll(aliveRole("doctor")); need.addAll(aliveRole("detective"));
         if (!sniperUsed) need.addAll(aliveRole("sniper"));
@@ -86,8 +103,38 @@ public final class Match {
     }
     public boolean nightComplete() { return "night".equals(phase) && pendingNight().isEmpty(); }
 
+    /** وضع الراوي: يسجّل ما أشار إليه صاحب الدور. يمكن تعديل الاختيار قبل إنهاء الليل. */
+    public Map<String, Object> recordNight(String kind, String target) {
+        need("night");
+        if (!narratorDriven) throw fail("forbidden");
+        Night n = night;
+        Player tgt = null;
+        if (target != null) { tgt = p(target); if (tgt == null || !tgt.alive) throw fail("bad_target"); }
+        if (kind == null) kind = "";
+        String role;
+        switch (kind) {
+            case "kill": role = "mafia"; if (aliveRole("mafia").isEmpty()) throw fail("forbidden");
+                if (tgt == null || tgt.role.equals("mafia")) throw fail("bad_target");
+                n.kill.clear(); n.kill.put("mafia", target); break;
+            case "save": role = "doctor"; if (aliveRole("doctor").isEmpty()) throw fail("forbidden");
+                if (tgt == null) throw fail("bad_target");
+                if (target.equals(lastSaved)) throw fail("same_save");
+                n.save = target; break;
+            case "investigate": { role = "detective"; List<Player> d = aliveRole("detective"); if (d.isEmpty()) throw fail("forbidden");
+                if (tgt == null || tgt.id.equals(d.get(0).id)) throw fail("bad_target");
+                n.investigate = target; break; }
+            case "shoot": { role = "sniper"; List<Player> sn = aliveRole("sniper"); if (sn.isEmpty() || sniperUsed) throw fail("forbidden");
+                if (tgt != null && tgt.id.equals(sn.get(0).id)) throw fail("bad_target");
+                n.shoot = target; n.shootSet = true; break; }
+            default: throw fail("bad_kind");
+        }
+        n.done.put(role, kind);
+        return Json.obj("pending", (long) pendingRoles().size());
+    }
+
     public void nightAction(String id, String kind, String target) {
         need("night");
+        if (narratorDriven) throw fail("forbidden"); // في الأوفلاين يسجّل الراوي
         Player x = p(id); if (x == null) throw fail("no_player");
         if (!x.alive) throw fail("dead");
         Night n = night;
@@ -137,6 +184,8 @@ public final class Match {
             if (killTarget.equals(n.save)) { saved = true; List<Player> d = aliveRole("doctor"); if (!d.isEmpty()) d.get(0).saved++; }
             else deaths.add(Json.obj("id", killTarget, "cause", "mafia"));
         }
+        if (narratorDriven && n.investigate != null) { Player it = p(n.investigate); List<Player> d = aliveRole("detective");
+            if (it != null && it.role.equals("mafia") && !d.isEmpty()) d.get(0).caught++; }
         List<Player> sns = aliveRole("sniper"); Player sn = sns.isEmpty() ? null : sns.get(0);
         if (sn != null && n.shoot != null) {
             sniperUsed = true; Player t = p(n.shoot);
@@ -185,8 +234,23 @@ public final class Match {
 
     // ---------- التصويت ----------
     public void beginVote(long now) { need("day"); phase = "vote"; speaker = null; votes = new LinkedHashMap<>(); startTimer(settings.voteSeconds, now); log("vote_start", null); }
+    /** وضع الراوي: التصويت باليد، والراوي يسجّل من خرج (أو لا أحد) */
+    public Map<String, Object> recordVote(String target) {
+        need("day", "vote");
+        if (!narratorDriven) throw fail("forbidden");
+        if (target != null) { Player t = p(target); if (t == null || !t.alive) throw fail("bad_target"); }
+        lastVote = Json.obj("day", (long) day, "votes", new LinkedHashMap<String, Object>(), "tally", new LinkedHashMap<String, Object>(), "abstain", 0L,
+                "eliminated", target, "tie", false, "manual", true);
+        if (target != null) kill(target, "vote");
+        phase = "voteResult"; speaker = null; votes = null; timer = null;
+        log("vote_result", Json.obj("eliminated", target));
+        checkWin();
+        return lastVote;
+    }
+
     public void castVote(String id, String target) {
         need("vote");
+        if (narratorDriven) throw fail("forbidden");
         Player x = p(id); if (x == null) throw fail("no_player");
         if (!x.alive) throw fail("dead");
         if (votes.containsKey(id)) throw fail("already_voted");
@@ -250,11 +314,17 @@ public final class Match {
         boolean showVote = phase.equals("voteResult") || ended || phase.equals("night") || phase.equals("day");
         v.put("lastVote", showVote && lastVote != null ? Json.obj("day", lastVote.get("day"), "tally", lastVote.get("tally"), "abstain", lastVote.get("abstain"),
                 "eliminated", lastVote.get("eliminated"), "tie", lastVote.get("tie"), "votes", lastVote.get("votes")) : null);
-        v.put("winner", winner); v.put("endReason", endReason);
+        v.put("winner", winner); v.put("endReason", endReason); v.put("narratorDriven", narratorDriven);
+        if (lastVote != null && v.get("lastVote") != null && Json.truthy(lastVote.get("manual"))) Json.map(v.get("lastVote")).put("manual", true);
         if (isN) {
             v.put("sniperUsed", sniperUsed);
             Map<String, Object> nv = null;
-            if (night != null && phase.equals("night")) {
+            if (night != null && phase.equals("night") && narratorDriven) {
+                Player it = p(night.investigate);
+                nv = Json.obj("mode", "narrator", "kill", night.kill.get("mafia"), "save", night.save, "cannotSave", lastSaved, "investigate", night.investigate,
+                        "investigateIsMafia", it == null ? null : (Object) it.role.equals("mafia"), "shoot", night.shoot, "shootSet", night.shootSet,
+                        "done", new LinkedHashMap<String, Object>(night.done), "pending", pendingRoles(), "roles", activeNightRoles());
+            } else if (night != null && phase.equals("night")) {
                 nv = Json.obj("kill", new LinkedHashMap<String, Object>(night.kill), "save", night.save, "investigate", night.investigate);
                 if (night.shootSet) nv.put("shoot", night.shoot);
                 nv.put("done", new LinkedHashMap<String, Object>(night.done)); nv.put("pending", pendingNight());
@@ -265,7 +335,7 @@ public final class Match {
             Map<String, Object> mv = Json.obj("id", me.id, "role", me.role, "alive", me.alive, "team", Settings.team(me.role));
             if (me.role.equals("mafia")) { List<Object> mates = new ArrayList<>(); for (Player x : players) if (x.role.equals("mafia") && !x.id.equals(me.id)) mates.add(x.id); mv.put("mates", mates); }
             mv.put("priv", priv.containsKey(me.id) ? priv.get(me.id) : new ArrayList<>());
-            if (phase.equals("night") && me.alive) {
+            if (phase.equals("night") && me.alive && !narratorDriven) {
                 mv.put("acted", night.done.containsKey(me.id));
                 if (me.role.equals("mafia")) mv.put("mafiaVotes", new LinkedHashMap<String, Object>(night.kill));
                 if (me.role.equals("sniper")) mv.put("sniperUsed", sniperUsed);
@@ -299,7 +369,7 @@ public final class Match {
         return Json.obj("settings", settings.toMap(), "startedAt", startedAt, "phase", phase, "day", (long) day, "nights", (long) nights, "players", ps, "night", nm,
                 "votes", votes == null ? null : new LinkedHashMap<String, Object>(votes), "speaker", speaker,
                 "timer", timer == null ? null : Json.obj("total", timer.total, "endsAt", timer.endsAt, "remaining", timer.remaining, "paused", timer.paused),
-                "lastNight", lastNight, "lastVote", lastVote, "sniperUsed", sniperUsed, "lastSaved", lastSaved, "winner", winner, "endReason", endReason, "log", new ArrayList<Object>(log), "priv", pr);
+                "lastNight", lastNight, "lastVote", lastVote, "sniperUsed", sniperUsed, "lastSaved", lastSaved, "narratorDriven", narratorDriven, "winner", winner, "endReason", endReason, "log", new ArrayList<Object>(log), "priv", pr);
     }
     private static long L(Object o) { Double d = Json.num(o); return d == null ? 0 : d.longValue(); }
     private static String S(Object o) { return o == null ? null : String.valueOf(o); }
@@ -320,7 +390,7 @@ public final class Match {
         x.speaker = S(m.get("speaker"));
         if (m.get("timer") != null) { Map<String, Object> tm = Json.map(m.get("timer")); Timer t = new Timer(); t.total = L(tm.get("total")); t.endsAt = L(tm.get("endsAt")); t.remaining = L(tm.get("remaining")); t.paused = Json.truthy(tm.get("paused")); x.timer = t; }
         x.lastNight = m.get("lastNight") == null ? null : Json.map(m.get("lastNight")); x.lastVote = m.get("lastVote") == null ? null : Json.map(m.get("lastVote"));
-        x.sniperUsed = Json.truthy(m.get("sniperUsed")); x.lastSaved = S(m.get("lastSaved")); x.winner = S(m.get("winner")); x.endReason = S(m.get("endReason"));
+        x.sniperUsed = Json.truthy(m.get("sniperUsed")); x.narratorDriven = Json.truthy(m.get("narratorDriven")); x.lastSaved = S(m.get("lastSaved")); x.winner = S(m.get("winner")); x.endReason = S(m.get("endReason"));
         for (Object o : Json.list(m.get("log"))) x.log.add(Json.map(o));
         for (Map.Entry<String, Object> e : Json.map(m.get("priv")).entrySet()) { List<Map<String, Object>> l = new ArrayList<>(); for (Object o : Json.list(e.getValue())) l.add(Json.map(o)); x.priv.put(e.getKey(), l); }
         return x;

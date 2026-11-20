@@ -19,25 +19,22 @@ const guest = async (app, name) => (await fetch(app.base + '/api/auth/guest', { 
 const mk = async (app, names) => Promise.all(names.map(async (n) => new Client(app, await guest(app, n)).connect()));
 const settle = (ms = 80) => new Promise((r) => setTimeout(r, ms));
 
+/** وضع الراوي: هو من يسجّل الليل ونتيجة التصويت؛ اللاعبون يكشفون أدوارهم فقط */
 async function playToEnd(host, players) {
   for (let guard = 0; guard < 40 && host.room.match.phase !== 'ended'; guard++) {
     const ph = host.room.match.phase; const alive = host.room.match.players.filter((p) => p.alive);
-    const me = (c) => alive.find((p) => p.id === String(c.user.id));
     if (ph === 'roles') { for (const c of players) await c.g('ack'); await host.g('beginNight'); }
     else if (ph === 'night') {
+      const n = host.room.match.narrator.night;
       const mafias = alive.filter((p) => p.role === 'mafia'); const targets = alive.filter((p) => p.role !== 'mafia');
-      for (const c of players) { const x = me(c); if (!x) continue;
-        if (x.role === 'mafia') await c.g('night', { kind: 'kill', target: targets[0].id });
-        else if (x.role === 'detective') await c.g('night', { kind: 'investigate', target: mafias[0].id });
-        else if (x.role === 'doctor') await c.g('night', { kind: 'save', target: targets[targets.length - 1].id }).catch(() => c.g('night', { kind: 'save', target: alive[0].id }));
-        else if (x.role === 'sniper') await c.g('night', { kind: 'shoot', target: null }); }
+      if (n.roles.includes('mafia')) await host.g('record', { kind: 'kill', target: targets[0].id });
+      if (n.roles.includes('doctor')) await host.g('record', { kind: 'save', target: targets[targets.length - 1].id }).catch(() => host.g('record', { kind: 'save', target: alive[0].id }));
+      if (n.roles.includes('detective')) { const det = alive.find((p) => p.role === 'detective'); await host.g('record', { kind: 'investigate', target: mafias.find((m) => m.id !== det.id)?.id || alive.find((p) => p.id !== det.id).id }); }
+      if (n.roles.includes('sniper')) await host.g('record', { kind: 'shoot', target: null });
       await host.until((h) => h.room.match.narrator.night.pending.length === 0);
       await host.g('resolveNight');
     } else if (ph === 'dawn') await host.g('beginDay');
-    else if (ph === 'day') { await host.g('setSpeaker', { id: alive[0].id }); await host.g('beginVote'); }
-    else if (ph === 'vote') { const maf = alive.find((p) => p.role === 'mafia');
-      for (const c of players) { const x = me(c); if (!x) continue; await c.g('vote', { target: x.id === maf.id ? alive.find((p) => p.id !== x.id).id : maf.id }); }
-      await host.g('closeVote'); }
+    else if (ph === 'day') { await host.g('setSpeaker', { id: alive[0].id }); await host.g('voteResult', { target: alive.find((p) => p.role === 'mafia').id }); }
     else if (ph === 'voteResult') await host.g('beginNight');
     await settle(60);
   }
@@ -79,26 +76,34 @@ test('local: only the host device may create rooms; token required; duplicates r
   for (const p of [a, b, c, d]) await p.ok({ t: 'room:join', key: joinKey.toLowerCase() });
   await host.ok({ t: 'room:start' }); await host.g('beginNight'); await settle();
   const ps = [a, b, c, d]; const maf = ps.find((p) => p.room.match.me.role === 'mafia');
-  const tgt = String(ps.find((p) => p !== maf).user.id);
-  await maf.g('night', { kind: 'kill', target: tgt });
-  assert.equal((await maf.send({ t: 'g', cmd: 'night', kind: 'kill', target: tgt })).error, 'already_acted');
-  const cit = ps.find((p) => p.room.match.me.role === 'citizen');
-  if (cit) assert.equal((await cit.send({ t: 'g', cmd: 'night', kind: 'kill', target: String(maf.user.id) })).error, 'forbidden');
-  assert.equal((await a.send({ t: 'g', cmd: 'beginDay' })).error, 'not_host');
-  // المحقق يرى نتيجة تحقيقه وحده
+  const tgt = ps.find((p) => p !== maf && p.room.match.me.role !== 'mafia');
+  // اللاعبون لا يسجّلون شيئاً في الأوفلاين: الراوي فقط
+  assert.equal((await maf.send({ t: 'g', cmd: 'night', kind: 'kill', target: String(tgt.user.id) })).error, 'forbidden');
+  assert.equal((await a.send({ t: 'g', cmd: 'record', kind: 'kill', target: String(tgt.user.id) })).error, 'not_host');
+  assert.equal((await host.send({ t: 'g', cmd: 'record', kind: 'kill', target: String(maf.user.id) })).error, 'bad_target');
+  await host.g('record', { kind: 'kill', target: String(tgt.user.id) });
+  await host.g('record', { kind: 'kill', target: String(tgt.user.id) }); // الراوي يستطيع تعديل اختياره
+  await settle();
+  let n = host.room.match.narrator.night;
+  assert.equal(n.kill, String(tgt.user.id)); assert.ok(!n.pending.includes('mafia'));
   const det = ps.find((p) => p.room.match.me.role === 'detective');
-  await det.g('night', { kind: 'investigate', target: String(maf.user.id) }); await settle();
-  assert.deepEqual(det.room.match.me.priv.at(-1), { type: 'investigation', night: 1, target: String(maf.user.id), isMafia: true });
-  for (const p of ps.filter((x) => x !== det)) assert.equal(p.room.match.me.priv.length, 0);
+  if (det && det !== maf) {
+    await host.g('record', { kind: 'investigate', target: String(maf.user.id) }); await settle();
+    assert.equal(host.room.match.narrator.night.investigateIsMafia, true);
+    for (const p of ps) assert.equal(p.room.match.me.priv.length, 0); // النتيجة للراوي فقط، يبلّغها بالإشارة
+    assert.equal(JSON.stringify(det.room.match).includes('investigateIsMafia'), false);
+  }
+  // الأسرار: كل لاعب يرى دوره (والمافيا زملاءها) فقط
+  for (const p of ps) assert.ok(p.room.match.players.filter((x) => x.role).length <= 2);
   await host.g('resolveNight'); await settle();
   if (host.room.match.phase === 'dawn') {
     await host.g('beginDay'); const live = host.room.match.players.find((p) => p.alive);
     await host.g('mute', { id: live.id, muted: true }); await settle();
     assert.equal(host.room.match.players.find((p) => p.id === live.id).manual, true);
-    await host.g('beginVote'); await settle();
-    const voter = ps.find((p) => p.room.match.me.alive); const other = host.room.match.players.find((p) => p.alive && p.id !== String(voter.user.id));
-    await voter.g('vote', { target: other.id });
-    assert.equal((await voter.send({ t: 'g', cmd: 'vote', target: other.id })).error, 'already_voted');
+    assert.ok((await a.send({ t: 'g', cmd: 'vote', target: live.id })).error); // لا تصويت من الهواتف
+    await host.g('voteResult', { target: live.id }); await settle();
+    assert.equal(host.room.match.lastVote.eliminated, live.id); assert.equal(host.room.match.lastVote.manual, true);
+    assert.equal(host.room.match.players.find((p) => p.id === live.id).alive, false);
   }
   [host, a, b, c, d].forEach((x) => x.close()); await app.close();
 });
@@ -186,4 +191,26 @@ test('local: another device on the network cannot create rooms or read the Wi-Fi
     ws.onmessage = (e) => { const x = JSON.parse(e.data); if (x.t === 'hello') ws.send(JSON.stringify({ t: 'room:create', mode: 'offline', settings: { players: 4, mafia: 1 }, rid: 1 })); if (x.t === 'ack') { ws.close(); res(x); } }; });
   assert.equal(ack.error, 'not_host');
   await app.close();
+});
+
+test('local: players without a phone are added by name; narrator reveals their role on his phone', async () => {
+  const app = await startJava();
+  const [host, a, b] = await mk(app, ['N', 'A', 'B']);
+  await host.ok({ t: 'room:create', mode: 'offline', settings: { players: 4, mafia: 1 } });
+  for (const p of [a, b]) await p.ok({ t: 'room:join', key: host.room.joinKey });
+  assert.equal((await a.send({ t: 'room:addGuest', name: 'X' })).error, 'not_host');
+  await host.ok({ t: 'room:addGuest', name: 'جدّو' }); await host.ok({ t: 'room:addGuest', name: 'سارة' });
+  await host.ok({ t: 'room:addGuest', name: 'زائد' }); await host.until((h) => h.room.guests.length === 3);
+  assert.equal(host.room.settings.players, 5); // يتوسّع العدد تلقائياً
+  await host.ok({ t: 'room:removeGuest', id: host.room.guests[2].id }); await host.until((h) => h.room.guests.length === 2);
+  await host.ok({ t: 'room:start' }); await settle();
+  const m = host.room.match; assert.equal(m.players.length, 4); assert.equal(m.narratorDriven, true);
+  const g = m.players.find((p) => p.name === 'جدّو'); assert.ok(g.role); assert.equal(g.seen, false);
+  await host.g('reveal', { id: g.id }); await settle();
+  assert.equal(host.room.match.players.find((p) => p.id === g.id).seen, true);
+  // اللاعبون لا يرون دور الضيف (إلا إن كانوا مافيا معاً)
+  for (const p of [a, b]) { const seenG = p.room.match.players.find((x) => x.id === g.id).role; if (seenG) assert.equal(seenG, 'mafia'); }
+  const room = await playToEnd(host, [a, b]);
+  assert.equal(room.match.phase, 'ended'); assert.ok(room.match.winner);
+  [host, a, b].forEach((x) => x.close()); await app.close();
 });

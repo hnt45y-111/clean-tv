@@ -175,6 +175,8 @@ public final class Server {
                 case "room:leave": hub.leave(uid); break;
                 case "room:close": hub.close(uid); break;
                 case "room:start": hub.startMatch(uid); break;
+                case "room:addGuest": hub.addGuest(uid, msg.get("name")); break;
+                case "room:removeGuest": hub.removeGuest(uid, msg.get("id")); break;
                 case "g": hub.game(uid, msg.get("cmd") == null ? null : String.valueOf(msg.get("cmd")), msg); break;
                 case "friends": c.send(Json.obj("t", "friends", "friends", new ArrayList<>(), "incoming", new ArrayList<>(), "outgoing", new ArrayList<>())); break;
                 case "report": extra = Json.obj("reports", 0L); break; // لا إدارة بلاغات في الوضع المحلي

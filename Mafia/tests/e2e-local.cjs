@@ -32,26 +32,34 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const errs = [];
     await login(u, n); P.push(u);
   }
   await sleep(1200); console.log('members', (await st(N)).n); await shot(N, 'L06-lobby-full'); await shot(P[0], 'L07-player-lobby');
+  // لاعب بلا هاتف يضيفه الراوي بالاسم
+  await N.p.click('text=إضافة لاعب بالاسم'); await N.p.fill('#guestname', 'جدّو'); await N.p.click('.sheet .btn.blue'); await sleep(400);
+  await N.p.click('.sheet button:has-text("إغلاق")'); await sleep(300); await shot(N, 'L06b-lobby-guest');
   await N.p.click('text=بدء اللعبة'); await sleep(1200);
   for (const u of P) await u.p.click('.flip'); await sleep(1000); await shot(P[0], 'L08-role');
   for (const u of P) await u.p.click('text=فهمت');
+  await sleep(500); await shot(N, 'L08b-narrator-roles');
+  // عرض دور الضيف على هاتف الراوي
+  await N.p.locator('.prow:has-text("جدّو") button').click(); await sleep(300); await shot(N, 'L08c-hand-over');
+  await N.p.click('text=اكشف دوري'); await sleep(400); await shot(N, 'L08d-guest-role');
+  await N.p.click('text=أخفيت دوري'); await sleep(500);
   for (let it = 0; it < 60; it++) {
     const s = await st(N); if (!s || s.phase === 'ended') break; const ph = s.phase;
     try {
       if (ph === 'roles') await N.p.click('text=ابدأ الليل');
       else if (ph === 'night') {
         await sleep(1700);
-        for (const u of P) { const x = await st(u); if (!x.alive || x.role === 'citizen') continue;
-          const rows = u.p.locator('.prow.pick'); if (!(await rows.count())) continue; await rows.first().click(); await u.p.locator('.btn.lg.grow').click(); }
-        await sleep(500); await N.p.click('text=إنهاء الليل وإعلان النتيجة'); await sleep(300);
+        const cards = N.p.locator('.card.col.accent'); const n = await cards.count();
+        for (let i = 0; i < n; i++) { await cards.nth(i).locator('button.chip.role').first().click(); await sleep(350); }
+        if (it < 3) { await shot(N, 'L09a-narrator-night'); await shot(P[0], 'L09b-player-night'); }
+        await N.p.click('text=إنهاء الليل وإعلان النتيجة'); await sleep(300);
         if (await N.p.locator('.sheet').count()) await N.p.locator('.sheet .btn.primary').click();
       } else if (ph === 'dawn') await N.p.click('text=ابدأ النهار');
-      else if (ph === 'day') { await sleep(1700); await N.p.locator('.prow.pick').first().click(); await sleep(300); if (it < 5) await shot(N, 'L09-narrator-day');
-        await N.p.click('.btn.primary:has-text("بدء التصويت")'); await sleep(300); await N.p.locator('.sheet .btn.blue').click(); }
-      else if (ph === 'vote') { await sleep(300);
-        for (const u of P) { const x = await st(u); if (!x.alive) continue; await u.p.locator('.prow.pick').first().click(); await u.p.locator('.btn.gold').click(); }
-        await sleep(400); await N.p.click('text=إغلاق التصويت وإعلان النتيجة'); }
-      else if (ph === 'voteResult') { await sleep(300); await N.p.click('text=ابدأ الليل'); }
+      else if (ph === 'day') { await sleep(1700); await N.p.locator('.prow.pick').first().click(); await sleep(300);
+        if (it < 5) { await shot(N, 'L09c-narrator-day'); await shot(P[1], 'L09d-player-day'); }
+        await N.p.click('text=تسجيل نتيجة التصويت'); await sleep(300); if (it < 5) await shot(N, 'L09e-vote-sheet');
+        await N.p.locator('.sheet .prow').first().click(); await sleep(300); await N.p.locator('.sheet .btn.primary:has-text("إخراج")').click(); }
+      else if (ph === 'voteResult') { await sleep(300); if (it < 6) await shot(N, 'L09f-vote-result'); await N.p.click('text=ابدأ الليل'); }
     } catch (e) { console.log('step err', ph, e.message.split('\n')[0]); await shot(N, 'Lerr'); break; }
     await sleep(500);
   }

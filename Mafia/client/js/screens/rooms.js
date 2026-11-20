@@ -116,7 +116,8 @@ export const lobby = () => {
   if (knownRoom !== R.code) { known.clear(); knownRoom = R.code; R.members.forEach((m) => known.add(m.id)); }
   const ready = R.members.filter((m) => m.ready).length; const me = R.members.find((m) => m.id === S.user.id);
   const base = cached('lan', loadBase, 60000);
-  const canStart = isHost && R.members.length >= MIN && (offline || R.members.every((m) => m.ready));
+  const guests = R.guests || []; const total = R.members.length + guests.length;
+  const canStart = isHost && total >= MIN && (offline || R.members.every((m) => m.ready));
   const leave = async () => { if (await confirmBox(isHost ? t('close_room') : t('leave_room'), isHost ? t('close_room_confirm') : t('leave_confirm'), isHost ? t('close_room') : t('leave_room'))) send({ t: isHost ? 'room:close' : 'room:leave' }); };
   const cd = R.auto && R.startsAt ? h('div', { class: 'card center' }, h('div', { class: 'small dim' }, t('auto_starts_in')), h('div', { class: 'code-big', 'data-cd': R.startsAt }, '…')) : null;
   const rows = R.members.map((m) => { const fresh = !known.has(m.id); known.add(m.id);
@@ -125,7 +126,7 @@ export const lobby = () => {
       isHost ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('kick'), onclick: async () => { if (await confirmBox(t('kick'), m.name, t('kick'))) act(null, { t: 'room:kick', userId: m.id }); } }, ic('x', 'sm'))
         : m.id !== S.user.id && !S.cfg.local ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('report'), onclick: () => reportSheet(m) }, ic('flag', 'sm')) : null); });
   const st = R.settings;
-  return [screen(topbar(offline ? t('offline_room') : t('lobby'), { back: leave, right: h('span', { class: 'chip' }, ic('users', 'sm'), h('span', { class: 'num' }, `${R.members.length}/${st.players}`)) }),
+  return [screen(topbar(offline ? t('offline_room') : t('lobby'), { back: leave, right: h('span', { class: 'chip' }, ic('users', 'sm'), h('span', { class: 'num' }, `${total}/${st.players}`)) }),
     isHost && offline && S.cfg.local ? wifiStep() : null,
     isHost && offline && (!S.cfg.local || qrStep === 2 || !S.cfg.wifi) ? h('div', { class: 'col' }, S.cfg.local && !S.cfg.wifi ? h('div', { class: 'banner red' }, ic('wifioff', 'sm'), t('hotspot_manual')) : null,
       S.cfg.local ? h('div', { class: 'small dim center' }, t('step2_hint')) : null,
@@ -141,9 +142,13 @@ export const lobby = () => {
       st.doctor && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.doctor } }, t('role_doctor')), st.detective && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.detective } }, t('role_detective')), st.sniper && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.sniper } }, t('role_sniper'))),
       h('div', { class: 'tiny dim' }, `${t('talk_time')} ${secLabel(st.talkSeconds)} · ${t('vote_time')} ${secLabel(st.voteSeconds)} · ${t('rounds')} ${st.rounds}`)),
       isHost ? h('button', { class: 'iconbtn', onclick: () => settingsSheet(), 'aria-label': t('edit') }, ic('edit')) : null),
+    isHost && S.cfg.local ? h('div', { class: 'col' }, h('div', { class: 'row between' }, h('h3', {}, t('nd_guests')), h('button', { class: 'btn sm', onclick: () => guestSheet() }, ic('plus', 'sm'), t('nd_add_guest'))),
+      h('div', { class: 'tiny dim' }, t('nd_guests_hint')),
+      guests.map((g) => h('div', { class: 'prow' }, avatar({ name: g.name }), h('div', { class: 'grow' }, h('div', { class: 'nm' }, g.name), h('div', { class: 'tiny dim' }, t('nd_no_phone'))),
+        h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, onclick: () => act(null, { t: 'room:removeGuest', id: g.id }) }, ic('x', 'sm'))))) : null,
     h('div', { class: 'col' }, h('div', { class: 'row between' }, h('h3', {}, t('players')), !offline && !R.auto ? h('span', { class: 'small dim num' }, `${ready}/${R.members.length} ${t('ready')}`) : null), rows.length ? rows : h('div', { class: 'card center dim small' }, t('waiting_players'))),
     h('div', { class: 'sp' }),
-    isHost ? h('div', { class: 'col' }, !canStart && h('div', { class: 'small dim center' }, R.members.length < MIN ? t('need_min', { n: MIN }) : t('wait_ready')),
+    isHost ? h('div', { class: 'col' }, !canStart && h('div', { class: 'small dim center' }, total < MIN ? t('need_min', { n: MIN }) : t('wait_ready')),
       h('button', { class: 'btn primary lg block', disabled: !canStart, onclick: (e) => act(e.currentTarget, { t: 'room:start' }) }, ic('play'), t('start_game')),
       h('button', { class: 'btn danger block', onclick: leave }, t('close_room')))
       : !offline && !R.auto && me ? h('button', { class: 'btn lg block ' + (me.ready ? '' : 'green'), onclick: (e) => act(e.currentTarget, { t: 'room:ready', ready: !me.ready }) }, ic('check'), me.ready ? t('cancel_ready') : t('im_ready'))
@@ -183,3 +188,10 @@ function settingsSheet() {
   sheet((a) => { const body = h('div', { class: 'col' }); const draw = () => { body.replaceChildren(settingsForm(d, { mode: R.mode, rerender: draw }), h('button', { class: 'btn primary lg block', disabled: !!validateDraft(d), onclick: async () => { if (await act(null, { t: 'room:settings', settings: d })) a.close(); } }, t('save'))); }; draw(); return [h('h2', {}, t('match_settings')), body]; });
 }
 export { settingsSheet };
+
+function guestSheet() {
+  sheet((a) => { const inp = h('input', { class: 'input', id: 'guestname', maxlength: 24, placeholder: t('player_name') });
+    const add = async () => { if (!inp.value.trim()) return; if (await act(null, { t: 'room:addGuest', name: inp.value })) { inp.value = ''; toast(t('nd_guest_added'), 'ok'); } };
+    setTimeout(() => inp.focus(), 50);
+    return [h('h2', {}, t('nd_add_guest')), h('p', { class: 'small dim' }, t('nd_guests_hint')), inp, h('div', { class: 'row' }, h('button', { class: 'btn blue grow', onclick: add }, ic('plus'), t('add')), h('button', { class: 'btn grow', onclick: a.close }, t('close')))]; });
+}
