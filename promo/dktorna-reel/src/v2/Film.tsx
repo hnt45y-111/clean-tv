@@ -19,12 +19,12 @@ const pad2 = (n: number) => ar(String(n).padStart(2, "0"));
 const col = (k: string) => (C as Record<string, string>)[k];
 
 // ───────────────────────────────────────── captions: phrase-level karaoke
-const phrasesOf = (words: W[]) => {
+const phrasesOf = (words: W[], maxWords = 4) => {
   const out: W[][] = [];
   let cur: W[] = [];
   words.forEach((w, i) => {
     cur.push(w);
-    const brk = /[،.:؟…]$/.test(w.w) || cur.length >= 5;
+    const brk = /[،.:؟…]$/.test(w.w) || cur.length >= maxWords;
     if (brk || i === words.length - 1) {
       out.push(cur);
       cur = [];
@@ -33,34 +33,49 @@ const phrasesOf = (words: W[]) => {
   return out;
 };
 
-const Caption: React.FC<{ words: W[]; t: number; color: string; dim: string; hi: string; top: number; size?: number }> = ({ words, t, color, dim, hi, top, size = 50 }) => {
+/** Reels-safe caption: one line, big, sits above Instagram's bottom UI; the word being spoken is highlighted. */
+const Caption: React.FC<{ words: W[]; t: number; color: string; dim: string; top: number; size?: number }> = ({ words, t, color, dim, top, size = 58 }) => {
   const ph = phrasesOf(words);
   const idx = ph.findIndex((p, i) => t < (ph[i + 1]?.[0].s ?? 1e9) - 0.05);
   const p = ph[Math.max(0, idx)];
   if (!p || t < p[0].s - 0.25) return null;
   const inP = interpolate(t, [p[0].s - 0.25, p[0].s], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeOut });
+  const chars = p.reduce((a, w) => a + w.w.length, 0);
+  const est = chars * size * 0.7 + (p.length - 1) * size * 0.3;
+  const fs = Math.min(size, size * (960 / Math.max(960, est)));
+  const cur = p.reduce((a, w, i) => (t >= w.s - 0.03 ? i : a), -1);
   return (
-    <div style={{ position: "absolute", top, left: 70, right: 70, display: "flex", justifyContent: "center" }}>
+    <div style={{ position: "absolute", top, left: 30, right: 30, display: "flex", justifyContent: "center" }}>
       <div
         style={{
           display: "flex",
-          flexWrap: "wrap",
           justifyContent: "center",
-          columnGap: size * 0.26,
+          whiteSpace: "nowrap",
+          columnGap: fs * 0.2,
           direction: "rtl",
           fontFamily: F.kufi,
-          fontWeight: 700,
-          fontSize: size,
-          lineHeight: 1.5,
+          fontWeight: 800,
+          fontSize: fs,
+          lineHeight: 1.45,
           opacity: inP,
           transform: `translateY(${(1 - inP) * 24}px)`,
         }}
       >
         {p.map((w, i) => {
-          const on = t >= w.s - 0.03;
+          const isCur = i === cur;
           const k = interpolate(t, [w.s - 0.03, w.s + 0.12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
           return (
-            <span key={i} style={{ color: on ? (i === p.length - 1 || /[،.:؟…]$/.test(w.w) ? hi : color) : dim, transform: `translateY(${(1 - k) * 6}px)`, display: "inline-block" }}>
+            <span
+              key={i}
+              style={{
+                display: "inline-block",
+                color: isCur ? C.lazurd : i < cur ? color : dim,
+                background: isCur ? C.tabuq : "transparent",
+                borderRadius: 4,
+                padding: `0 ${fs * 0.2}px`,
+                transform: `translateY(${(1 - k) * 6}px) scale(${isCur ? mix(k, 1, 1.06) : 1})`,
+              }}
+            >
               {w.w}
             </span>
           );
@@ -228,13 +243,13 @@ const FeatureScene: React.FC<{ i: number }> = ({ i }) => {
   const numP = interpolate(t, [0.25, 0.6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeIn });
   const titleP = interpolate(t, [0.4, 0.95], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeOut });
   const sides: ("l" | "r")[] = ["r", "l", "r", "l"];
-  const tops = [600, 830, 1060, 1280];
+  const tops = [560, 790, 1010, 1230];
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden", direction: "rtl" }}>
       {dark ? <BrickPattern id={`fb${i}`} color={C.teen} opacity={0.06} offset={-t * 18} /> : <Lattice id={`fl${i}`} opacity={0.045} color={C.lazurd} />}
       <Arches color={dark ? C.tabuq : C.lazurd} opacity={dark ? 0.25 : 0.12} t={t} />
       {/* header */}
-      <div style={{ position: "absolute", top: 135, right: 80, left: 80, display: "flex", alignItems: "center", gap: 34 }}>
+      <div style={{ position: "absolute", top: 118, right: 80, left: 80, display: "flex", alignItems: "center", gap: 34 }}>
         <div
           style={{
             fontFamily: F.logo,
@@ -272,12 +287,12 @@ const FeatureScene: React.FC<{ i: number }> = ({ i }) => {
           </div>
         </div>
       </div>
-      <div style={{ position: "absolute", top: 400, left: 0, right: 0 }}>
+      <div style={{ position: "absolute", top: 372, left: 0, right: 0 }}>
         <Progress n={meta.n} dark={dark} t={t} />
       </div>
       {/* phone */}
-      <div style={{ position: "absolute", top: 462, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
-        <Device t={t} dur={dur} width={520} dark={dark}>
+      <div style={{ position: "absolute", top: 424, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
+        <Device t={t} dur={dur} width={460} dark={dark}>
           <ClockCtx.Provider value={{ t, c: cues, vo: tl.voAt - tl.start, dur }}>
             <Scr />
           </ClockCtx.Provider>
@@ -286,7 +301,7 @@ const FeatureScene: React.FC<{ i: number }> = ({ i }) => {
       {tl.cues.map((c, k) => (
         <Callout key={k} i={k} label={c.label} at={cues[k]} t={t} side={sides[k]} top={tops[k]} accent={accent} dark={dark} />
       ))}
-      <Caption words={words} t={t} color={fg} dim={dark ? "rgba(241,232,216,0.32)" : "rgba(27,58,122,0.28)"} hi={C.tabuq} top={1550} size={46} />
+      <Caption words={words} t={t} color={fg} dim={dark ? "rgba(241,232,216,0.5)" : "rgba(27,58,122,0.42)"} top={1408} size={58} />
     </AbsoluteFill>
   );
 };
@@ -357,7 +372,7 @@ const IntroHook: React.FC = () => {
           );
         })}
       </div>
-      <Caption words={ws} t={t} color={C.teen} dim="rgba(241,232,216,0.3)" hi={C.tabuq} top={980} size={92} />
+      <Caption words={ws} t={t} color={C.teen} dim="rgba(241,232,216,0.5)" top={980} size={92} />
     </AbsoluteFill>
   );
 };
@@ -414,7 +429,7 @@ const IntroReveal: React.FC<{ from: number }> = ({ from }) => {
           ))}
         </div>
         {/* 16-tile preview grid: «ميزة، ميزة» */}
-        <div style={{ position: "absolute", top: 790, left: 160, right: 160, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 18, direction: "rtl" }}>
+        <div style={{ position: "absolute", top: 720, left: 200, right: 200, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 18, direction: "rtl" }}>
           {keys.map((k, i) => {
             const Ic = FEATURE_ICONS[k];
             const d = prog(frame, khalli + 0.1 + ((i % 4) + Math.floor(i / 4)) * 0.11, 0.45);
@@ -440,7 +455,7 @@ const IntroReveal: React.FC<{ from: number }> = ({ from }) => {
             );
           })}
         </div>
-        <Caption words={gridWords} t={t} color={C.teen} dim="rgba(241,232,216,0.3)" hi={C.tabuq} top={1560} size={56} />
+        <Caption words={gridWords} t={t} color={C.teen} dim="rgba(241,232,216,0.5)" top={1405} size={58} />
       </AbsoluteFill>
       <AbsoluteFill style={{ background: C.teen, opacity: flash }} />
     </AbsoluteFill>
@@ -496,7 +511,7 @@ const Outro: React.FC<{ from: number }> = ({ from }) => {
           <Wordmark size={190} />
         </div>
       </div>
-      <Caption words={ws.slice(1)} t={t} color={C.teen} dim="rgba(241,232,216,0.3)" hi={C.tabuq} top={1080} size={62} />
+      <Caption words={ws.slice(1)} t={t} color={C.teen} dim="rgba(241,232,216,0.5)" top={1080} size={62} />
       <div style={{ position: "absolute", top: 1260, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
         <div style={{ opacity: btn, transform: `translateY(${(1 - btn) * 80}px) scale(${press})` }}>
           <SlantButton w={720} h={130} bg={C.tabuq} color={C.lazurd} size={52} shine={shine}>
