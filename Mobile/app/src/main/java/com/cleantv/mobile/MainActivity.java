@@ -83,6 +83,12 @@ public class MainActivity extends Activity {
     private static final String[] UAS = { "VLC/3.0.20 LibVLC/3.0.20", "IPTVSmartersPro", "okhttp/4.12.0", "Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36" };
 
     class Bridge {
+        @JavascriptInterface public String deviceCode() { return Acct.deviceCode(MainActivity.this); }
+        @JavascriptInterface public boolean active() { return Acct.active(MainActivity.this); }
+        @JavascriptInterface public boolean activate(String code) { return Acct.activate(MainActivity.this, code); }
+        @JavascriptInterface public void share(final String t) {
+            runOnUiThread(() -> startActivity(Intent.createChooser(new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t), "مشاركة")));
+        }
         @JavascriptInterface public String getPref(String k) { return prefs.getString(k, ""); }
         @JavascriptInterface public void setPref(String k, String v) { prefs.edit().putString(k, v).apply(); }
         @JavascriptInterface public void toast(String t) { runOnUiThread(() -> Toast.makeText(MainActivity.this, t, Toast.LENGTH_SHORT).show()); }
@@ -94,6 +100,7 @@ public class MainActivity extends Activity {
         }
         /** text of a link (a playlist, a catalogue): answers window.__cb(id, text) — "ERR:…" if it failed. A refused request is tried again as other known players. */
         @JavascriptInterface public void fetchText(final String url, final String id) {
+            if (!Acct.active(MainActivity.this)) { js("window.__cb && window.__cb(" + JSONObject.quote(id) + ",\"ERR:التطبيق غير مفعّل\")"); return; }
             new Thread(() -> {
                 String res = "ERR:no";
                 for (int i = 0; i < UAS.length; i++) {
@@ -117,6 +124,7 @@ public class MainActivity extends Activity {
             }).start();
         }
         @JavascriptInterface public void play(String json, int idx) {
+            if (!Acct.active(MainActivity.this)) return;
             PlayerActivity.PACK = json;
             startActivity(new Intent(MainActivity.this, PlayerActivity.class).putExtra("idx", idx));
         }

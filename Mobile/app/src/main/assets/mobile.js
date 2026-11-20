@@ -106,6 +106,7 @@
   function ini(n) { return esc(String(n).replace(/^ال/, '').replace(/\s/g, '').slice(0, 2)); }
   function logoOf(c) { return c.i ? 'logos/' + c.i + '.png' : (c.l || c.img || ''); }
   function art(c, poster) { var u = logoOf(c); return '<div class="art' + (poster ? ' poster' : '') + '">' + ini(c.n) + (u ? '<img loading="lazy" src="' + esc(u) + '" alt="" onerror="this.remove()">' : '') + '</div>'; }
+  var STAR = '<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>';
   function chips(list, on, attr) { return '<div class="chips">' + list.map(function (c) { return '<div class="chip' + (c[0] === on ? ' on' : '') + '" data-' + attr + '="' + esc(c[0]) + '">' + esc(c[1]) + '</div>'; }).join('') + '</div>'; }
   function searchBox(q, ph) { return '<input class="search" id="q" type="search" placeholder="' + ph + '" value="' + esc(q) + '">'; }
   function bindSearch(o, redraw) { var q = $('q'); if (!q) return; q.oninput = function () { o.q = q.value.trim(); o.more = PAGE; var pos = q.selectionStart; redraw(true); var n = $('q'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } }; }
@@ -134,9 +135,9 @@
   }
   function drawLive(keepTop) {
     var s = st.live; cur = liveFilter();
-    var rows = cur.slice(0, s.more).map(function (c, i) { return '<div class="row" data-i="' + i + '">' + art(c) + '<div class="tx"><b>' + esc(c.n) + '</b><small>' + esc(c.grp || c.g && catName(c.g) || '') + '</small></div><span class="star' + (isFav(c) ? ' on' : '') + '" data-s="' + i + '">★</span></div>'; }).join('');
+    var rows = cur.slice(0, s.more).map(function (c, i) { return '<div class="row" data-i="' + i + '">' + art(c) + '<div class="tx"><b>' + esc(c.n) + '</b><small>' + esc(c.grp || c.g && catName(c.g) || '') + '</small></div><span class="star' + (isFav(c) ? ' on' : '') + '" data-s="' + i + '">' + STAR + '</span></div>'; }).join('');
     var more = cur.length > s.more ? '<button class="btn sec" id="more">عرض المزيد (' + (cur.length - s.more) + ')</button>' : '';
-    var empty = !cur.length ? '<div class="empty">' + (s.cat === 'fav' ? 'ماكو مفضلة بعد. اضغط ★ جنب أي قناة.' : s.cat === 'rec' ? 'ما شاهدت شي بعد.' : s.q ? 'ماكو قناة بهذا الاسم' : !LIVE.loaded ? 'جاري التحميل…' : 'ماكو قنوات بهذا القسم' + (lastErr ? '<br>' + esc(lastErr) : '')) + '</div>' : '';
+    var empty = !cur.length ? '<div class="empty">' + (s.cat === 'fav' ? 'ماكو مفضلة بعد. اضغط النجمة جنب أي قناة.' : s.cat === 'rec' ? 'ما شاهدت شي بعد.' : s.q ? 'ماكو قناة بهذا الاسم' : !LIVE.loaded ? 'جاري التحميل…' : 'ماكو قنوات بهذا القسم' + (lastErr ? '<br>' + esc(lastErr) : '')) + '</div>' : '';
     if (!keepTop) { $('top').innerHTML = searchBox(s.q, 'ابحث عن قناة…') + chips(liveCats(), s.cat, 'lc') + '<div class="tools"><button id="rnd">🎲 قناة عشوائية</button></div>'; bindSearch(s, drawLive); }
     $('main').innerHTML = rows + more + empty;
   }
@@ -146,7 +147,7 @@
   function vodFilter() { var s = st.vod, l = VOD[s.sub]; if (s.cat !== '*') l = l.filter(function (c) { return c.g === s.cat; }); if (s.q) { var w = s.q.toLowerCase(); l = VOD[s.sub].filter(function (c) { return String(c.n).toLowerCase().indexOf(w) >= 0; }); } return l; }
   function drawVod(keepTop) {
     var s = st.vod; cur = vodFilter();
-    var cards = cur.slice(0, s.more).map(function (c, i) { return '<div class="card" data-v="' + i + '">' + art(c, true) + '<b>' + (isFav(c) ? '⭐ ' : '') + esc(c.n) + '</b></div>'; }).join('');
+    var cards = cur.slice(0, s.more).map(function (c, i) { return '<div class="card" data-v="' + i + '" style="position:relative">' + art(c, true) + (isFav(c) ? '<span class="fv">' + STAR + '</span>' : '') + '<b>' + esc(c.n) + '</b></div>'; }).join('');
     var msg = !VOD.loaded ? 'جاري التحميل…' : (!xt() && !String(S.vodLinks || '').trim() && !(S.vodItems || []).length) ? 'أضف حساب IPTV أو رابط قائمة من الإعدادات (أو من «الربط الذكي»).' : lastErr ? 'تعذّر جلب المحتوى (' + esc(lastErr) + ')' : s.q ? 'ماكو نتيجة' : 'ماكو محتوى بهذا القسم';
     if (!keepTop) { $('top').innerHTML = searchBox(s.q, 'ابحث عن فيلم أو مسلسل…') + chips([['m', '🎬 أفلام'], ['s', '📺 مسلسلات']], s.sub, 'vs') + chips(vodCats(), s.cat, 'vc') + '<div class="tools"><button id="vrf">🔄 تحديث القائمة</button></div>'; bindSearch(s, drawVod); }
     $('main').innerHTML = (cur.length ? '<div class="grid">' + cards + '</div>' + (cur.length > s.more ? '<button class="btn sec" id="more" style="margin-top:10px">عرض المزيد</button>' : '') : '<div class="empty">' + msg + '</div>');
@@ -155,7 +156,7 @@
   function drawFav() {
     $('top').innerHTML = '';
     var l = favList(); cur = l;
-    $('main').innerHTML = l.length ? l.map(function (c, i) { return '<div class="row" data-f="' + i + '">' + art(c, !!c.t) + '<div class="tx"><b>' + esc(c.n) + '</b><small>' + (c.t ? (c.t === 'xs' ? 'مسلسل' : 'فيلم') : 'قناة') + '</small></div><span class="star on" data-fs="' + i + '">★</span></div>'; }).join('') : '<div class="empty">ماكو مفضلة بعد.<br>اضغط ★ جنب القنوات، أو اضغط مطوّلاً على فيلم.</div>';
+    $('main').innerHTML = l.length ? l.map(function (c, i) { return '<div class="row" data-f="' + i + '">' + art(c, !!c.t) + '<div class="tx"><b>' + esc(c.n) + '</b><small>' + (c.t ? (c.t === 'xs' ? 'مسلسل' : 'فيلم') : 'قناة') + '</small></div><span class="star on" data-fs="' + i + '">' + STAR + '</span></div>'; }).join('') : '<div class="empty">ماكو مفضلة بعد.<br>اضغط ★ جنب القنوات، أو اضغط مطوّلاً على فيلم.</div>';
   }
 
   function drawSet() {
@@ -245,8 +246,24 @@
     var close = function () { el.classList.add('out'); setTimeout(function () { el.classList.remove('on', 'out'); }, 500); };
     el.onclick = close; setTimeout(close, nm ? 3600 : 2900);
   }
-  applyName(); greet(); drawLive();
-  loadLive(false).then(function () { if (tab === 'live') drawLive(); });
-  loadVod(false).then(function () { if (tab === 'vod') drawVod(); });
+  /* the app opens only on a phone that was activated: the code is made in «مدير الشاشة» from this phone's device code */
+  function isActive() { try { return !!A.active(); } catch (e) { return false; } }
+  function showLock() {
+    var el = $('lock'), dev = '';
+    try { dev = A.deviceCode(); } catch (e) {}
+    el.innerHTML = '<div class="lk"><div class="mark"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="13" rx="3"/><path d="M8 3l4 4 4-4"/><circle cx="12" cy="13.5" r="1.6" fill="#fff" stroke="none"/><path d="M15.2 10.3a4.5 4.5 0 0 1 0 6.4M8.8 16.7a4.5 4.5 0 0 1 0-6.4"/></svg></div>' +
+      '<h2>تفعيل قنواتي</h2><p>ابعث رمز جهازك هذا لمدير الشاشة، وهو يرجّعلك كود التفعيل. يشتغل على موبايلك بس.</p>' +
+      '<div class="code">' + esc(dev) + '</div><button class="btn sec" id="lkShare">مشاركة رمز الجهاز</button>' +
+      '<input id="lkIn" maxlength="11" placeholder="XXXXX-XXXXX" autocapitalize="characters" autocomplete="off"><div class="msg" id="lkMsg"></div><button class="btn" id="lkGo">تفعيل</button></div>';
+    el.classList.add('on');
+    $('lkShare').onclick = function () { A.share('رمز جهازي لتفعيل «قنواتي موبايل»:\n' + dev); };
+    $('lkGo').onclick = function () {
+      var ok = false; try { ok = A.activate($('lkIn').value); } catch (e) {}
+      if (ok) { el.classList.remove('on'); begin(); }
+      else { $('lkMsg').textContent = 'الكود غير صحيح، أو مخصّص لجهاز ثاني'; var b = el.querySelector('.lk'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+    };
+  }
+  function begin() { applyName(); greet(); drawLive(); loadLive(false).then(function () { if (tab === 'live') drawLive(); }); loadVod(false).then(function () { if (tab === 'vod') drawVod(); }); }
+  if (isActive()) begin(); else showLock();
   window.__mobile = { S: S, parseM3U: parseM3U };
 })();

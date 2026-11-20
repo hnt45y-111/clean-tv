@@ -884,6 +884,10 @@ function openAdmin() {
       <p class="sub" style="margin-top:-4px">اشتراك مرة وحدة مدى الحياة. الصق رمز الجهاز اللي يطلع بتطبيق أوتو عند الشخص.</p>
       <input id="auCode" class="num" placeholder="XXXX-XXXX" autocapitalize="characters">
       <button class="btn pri full" id="auGo" style="margin-top:12px">${ic('key')} طلّع كود التفعيل</button><div id="auRes"></div></div>
+    <div class="panel" style="margin-top:14px"><h2 style="margin-top:0">📱 تفعيل «قنواتي موبايل»</h2>
+      <p class="sub" style="margin-top:-4px">اشتراك مرة وحدة مدى الحياة. الصق رمز الجهاز اللي يطلع بتطبيق قنواتي موبايل عند الشخص.</p>
+      <input id="moCode" class="num" placeholder="XXXX-XXXX" autocapitalize="characters">
+      <button class="btn pri full" id="moGo" style="margin-top:12px">${ic('key')} طلّع كود التفعيل</button><div id="moRes"></div></div>
     <h2>الحسابات اللي سويتها</h2>
     <div class="list">${acc.length ? acc.map(a => `<div class="item"><div class="t"><b>${esc(a.user)} <span class="sub num">${esc(a.code)}</span></b>
       <small>${a.exp ? (a.exp > now ? 'ينتهي ' : 'انتهى ') + fmtDate(a.exp) : 'مدى الحياة'}${a.note ? ' · ' + esc(a.note) : ''}</small></div>
@@ -900,6 +904,18 @@ function openAdmin() {
         <div class="row" style="margin-top:12px"><button class="btn sec" id="auCp">${ic('copy')} نسخ</button><button class="btn pri" id="auSh">مشاركة</button></div></div>`;
       $('#auCp').onclick = () => { B.copy(msg); toast('انسخ'); };
       $('#auSh').onclick = () => B.share(msg);
+    };
+    $('#moGo').onclick = () => {
+      const code = $('#moCode').value.trim().toUpperCase();
+      if (!/^[0-9A-Z]{4}-?[0-9A-Z]{4}$/.test(code)) return toast('رمز الجهاز لازم يكون ٨ أحرف');
+      const k = B.genMobile ? B.genMobile(code) : '';
+      if (!k) return toast('حدّث التطبيق أو سجّل كمدير');
+      const list = kv('issuedMobile', []); list.unshift({ code, k, at: Date.now() }); kvSet('issuedMobile', list.slice(0, 200));
+      const msg = `كود تفعيل «قنواتي موبايل»\n${k}\nمدى الحياة، ويشتغل على موبايلك بس.`;
+      $('#moRes').innerHTML = `<div class="genres"><div class="sub">كود التفعيل</div><b class="num">${esc(k)}</b>
+        <div class="row" style="margin-top:12px"><button class="btn sec" id="moCp">${ic('copy')} نسخ</button><button class="btn pri" id="moSh">مشاركة</button></div></div>`;
+      $('#moCp').onclick = () => { B.copy(msg); toast('انسخ'); };
+      $('#moSh').onclick = () => B.share(msg);
     };
     $('#gDur').onclick = e => { const c = e.target.closest('[data-d]'); if (!c) return; dur = +c.dataset.d; $('#gDur').querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); };
     $('#gGo').onclick = () => {
