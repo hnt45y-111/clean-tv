@@ -2471,16 +2471,15 @@
   window.__greetKey = function () { closeGreet(true); return true; };
   function showGreet() {
     var m = $('greetModal'); if (!m) return;
-    var words = greetWords(), html = '<div class="gr-wrap">';
-    words.forEach(function (w, wi) {
-      html += '<div class="gr-line' + (wi === words.length - 1 && words.length > 1 ? ' gr-name' : '') + '">';
-      for (var i = 0; i < w.length; i++) { html += '<span style="animation-delay:' + (wi * w.length * 0.045 + i * 0.045 + (wi ? words[0].length * 0.045 + 0.12 : 0)).toFixed(3) + 's">' + (w.charAt(i) === ' ' ? '&nbsp;' : esc(w.charAt(i))) + '</span>'; }
-      html += '</div>';
-    });
-    var totalChars = words.join('').length;
-    html += '<div class="gr-rule" style="animation-delay:' + (totalChars * 0.045 + 0.35).toFixed(3) + 's"></div></div>';
-    m.innerHTML = html; m.classList.add('on'); greetActive = true; layer = 'greet';
-    clearTimeout(greetT); greetT = setTimeout(function () { closeGreet(false); }, 2900 + totalChars * 45);
+    var w = greetWords(), g = String(w[0]).replace(/،$/, ''), nm = w[1] || '';
+    /* Arabic stays joined: each line is revealed whole (a wipe from the right), never cut into letters */
+    var dots = ''; for (var i = 0; i < 14; i++) dots += '<i style="left:' + (8 + Math.random() * 84).toFixed(1) + '%;top:' + (20 + Math.random() * 60).toFixed(1) + '%;animation-delay:' + (0.4 + Math.random() * 1.6).toFixed(2) + 's"></i>';
+    m.innerHTML = '<div class="gr-dots">' + dots + '</div><div class="gr-wrap">' +
+      '<div class="gr-line"><span>' + esc(g) + '</span></div>' +
+      (nm ? '<div class="gr-line gr-name"><span>' + esc(nm) + '</span></div>' : '') +
+      '<div class="gr-rule"><b></b></div></div>';
+    m.classList.add('on'); greetActive = true; layer = 'greet';
+    clearTimeout(greetT); greetT = setTimeout(function () { closeGreet(false); }, nm ? 4200 : 3400);
   }
 
   // ---------- Start ----------

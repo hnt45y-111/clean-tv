@@ -199,12 +199,22 @@
   #greetModal::before { content: ""; position: absolute; width: 900px; height: 900px; border-radius: 50%; background: radial-gradient(circle, rgba(217,130,43,.35), transparent 70%); animation: grBurst 2.6s ease-out both; }
   @keyframes grBurst { 0% { transform: scale(.2); opacity: 0; } 35% { opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
   .gr-wrap { position: relative; text-align: center; direction: rtl; }
-  .gr-line { font-family: var(--kufi); font-size: 92px; font-weight: 700; color: #EFE7D4; white-space: nowrap; text-shadow: 0 0 40px rgba(217,130,43,.55); }
-  .gr-line.gr-name { color: #D9822B; margin-top: 6px; }
-  .gr-line span { display: inline-block; opacity: 0; transform: translateY(46px) scale(.7); animation: grLetter .62s cubic-bezier(.17,.89,.32,1.28) forwards; }
-  @keyframes grLetter { 0% { opacity: 0; transform: translateY(46px) scale(.7) rotate(6deg); filter: brightness(2.2); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: brightness(1); } }
-  .gr-rule { margin: 26px auto 0; width: 0; height: 4px; border-radius: 4px; background: linear-gradient(90deg, transparent, #D9822B, transparent); animation: grRule .9s ease forwards; }
-  @keyframes grRule { from { width: 0; opacity: 0; } 40% { opacity: 1; } to { width: 420px; opacity: 1; } }
+  .gr-line { line-height: 1.35; white-space: nowrap; }
+  .gr-line span { display: inline-block; font-family: 'Amiri', var(--kufi); font-weight: 700; font-size: 128px; color: #EFE7D4; text-shadow: 0 0 36px rgba(217,130,43,.45), 0 4px 18px rgba(0,0,0,.6);
+    clip-path: inset(-60% -30% -60% 130%); animation: grWipe 1.15s cubic-bezier(.65,0,.25,1) .25s forwards, grGlow 3s ease-in-out 1.4s infinite alternate; padding: 0 20px; }
+  .gr-line.gr-name span { font-family: var(--kufi); font-size: 112px; margin-top: 4px; background: linear-gradient(100deg, #B5681F 0%, #E8A25E 35%, #FFF1D6 50%, #E8A25E 65%, #B5681F 100%); background-size: 250% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 0 26px rgba(217,130,43,.55)); clip-path: inset(-60% -30% -60% 130%);
+    animation: grWipe 1s cubic-bezier(.65,0,.25,1) 1.15s forwards, grShine 2.4s ease-in-out 2.1s infinite; }
+  @keyframes grWipe { from { clip-path: inset(-60% -30% -60% 130%); transform: translateY(14px); opacity: .2; } to { clip-path: inset(-60% -30% -60% -30%); transform: none; opacity: 1; } }
+  @keyframes grGlow { from { text-shadow: 0 0 30px rgba(217,130,43,.35), 0 4px 18px rgba(0,0,0,.6); } to { text-shadow: 0 0 60px rgba(217,130,43,.7), 0 4px 18px rgba(0,0,0,.6); } }
+  @keyframes grShine { 0% { background-position: 100% 0; } 100% { background-position: -150% 0; } }
+  .gr-rule { margin: 30px auto 0; width: 520px; height: 3px; position: relative; }
+  .gr-rule::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, #D9822B, transparent); transform: scaleX(0); animation: grRule 1s ease 1.7s forwards; }
+  .gr-rule b { position: absolute; top: 50%; left: 50%; width: 14px; height: 14px; margin: -7px; background: #E8A25E; transform: rotate(45deg) scale(0); box-shadow: 0 0 18px #D9822B; animation: grDia .5s ease 2.2s forwards; }
+  @keyframes grRule { to { transform: scaleX(1); } }
+  @keyframes grDia { to { transform: rotate(45deg) scale(1); } }
+  .gr-dots i { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #F3C98B; box-shadow: 0 0 12px #D9822B; opacity: 0; animation: grDot 2.6s ease-out forwards; }
+  @keyframes grDot { 0% { opacity: 0; transform: translateY(20px) scale(.4); } 30% { opacity: .9; } 100% { opacity: 0; transform: translateY(-90px) scale(1); } }
   /* family profiles */
   #profModal { position: absolute; inset: 0; z-index: 390; display: none; align-items: center; justify-content: center; background: radial-gradient(1100px 760px at 50% 45%, #22262b, #0c0d0f 75%); direction: rtl; }
   #profModal.on { display: flex; animation: grIn .4s ease both; }
