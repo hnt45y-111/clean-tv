@@ -9,3 +9,7 @@ CleanTV/app/src/main/assets/fonts/
 CleanTV/app/src/main/assets/bg/
 CleanTV/app/src/main/assets/qrcode.js
 CleanTV/app/src/main/assets/logos/
+
+# Mafia
+Mafia/server/node_modules/
+Mafia/server/data/
