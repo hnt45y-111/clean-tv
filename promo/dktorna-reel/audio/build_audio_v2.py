@@ -23,9 +23,9 @@ rng = np.random.default_rng(11)
 BPM = 96
 BEAT = 60 / BPM
 
-words = [w for w in json.load(open(f"{ROOT}/audio/vo_bazzaz_words.json"))["words"] if w["type"] == "word" and not w["text"].startswith("[")]
+words = [w for w in json.load(open(f"{ROOT}/audio/vo_final_words.json"))["words"] if w["type"] == "word" and not w["text"].startswith("[")]
 feats = json.load(open(f"{ROOT}/src/v2/features.json"))["features"]
-vo = load(f"{ROOT}/public/audio/vo_bazzaz.mp3")
+vo = load(f"{ROOT}/public/audio/vo_final.wav")
 mono = vo.mean(1)
 
 
@@ -242,6 +242,10 @@ ck = clock[: int((drop - 1.0) * SR)].copy()
 ck[: int(0.4 * SR)] *= np.linspace(0, 1, int(0.4 * SR))[:, None]
 ck[-int(0.8 * SR):] *= np.linspace(1, 0, int(0.8 * SR))[:, None]
 dsp.place(sfx, ck, 0.2, 0.35)
+# punchy opening: a hit lands with the first word so the video starts loud, not slow
+dsp.place(sfx, dsp.impact(0.5), VO0 - 0.06, 0.65)
+dsp.place(sfx, daf_dum(1.0), VO0 - 0.02, 0.8)
+dsp.place(sfx, daf_tak(0.9), VO0 + 0.30, 0.6)
 dsp.place(sfx, dsp.riser(1.3), drop - 1.35, 0.8)
 dsp.place(sfx, door[: int(4.5 * SR)], drop - 1.0, 0.4)
 dsp.place(sfx, dsp.reverse_swell(0.9), drop - 0.9, 0.8)

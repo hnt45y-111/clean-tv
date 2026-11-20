@@ -1,0 +1,1288 @@
+{
+ "words": [
+  {
+   "text": "كم",
+   "type": "word",
+   "start": 0,
+   "end": 0.209
+  },
+  {
+   "text": "مرة",
+   "type": "word",
+   "start": 0.232,
+   "end": 0.406
+  },
+  {
+   "text": "احتاجيت",
+   "type": "word",
+   "start": 0.43,
+   "end": 0.801
+  },
+  {
+   "text": "دكتور…",
+   "type": "word",
+   "start": 0.836,
+   "end": 1.231
+  },
+  {
+   "text": "وما",
+   "type": "word",
+   "start": 1.254,
+   "end": 1.463
+  },
+  {
+   "text": "عرفت",
+   "type": "word",
+   "start": 1.509,
+   "end": 1.741
+  },
+  {
+   "text": "وين",
+   "type": "word",
+   "start": 1.788,
+   "end": 1.892
+  },
+  {
+   "text": "تروح؟",
+   "type": "word",
+   "start": 1.974,
+   "end": 2.415
+  },
+  {
+   "text": "من",
+   "type": "word",
+   "start": 2.775,
+   "end": 2.879
+  },
+  {
+   "text": "اليوم…",
+   "type": "word",
+   "start": 2.903,
+   "end": 3.367
+  },
+  {
+   "text": "دكتورنا.",
+   "type": "word",
+   "start": 3.622,
+   "end": 4.249
+  },
+  {
+   "text": "حكيم",
+   "type": "word",
+   "start": 4.737,
+   "end": 5.027
+  },
+  {
+   "text": "المحلّة،",
+   "type": "word",
+   "start": 5.05,
+   "end": 5.526
+  },
+  {
+   "text": "بجيبك.",
+   "type": "word",
+   "start": 5.608,
+   "end": 6.177
+  },
+  {
+   "text": "خلّي",
+   "type": "word",
+   "start": 6.246,
+   "end": 6.478
+  },
+  {
+   "text": "أوريك",
+   "type": "word",
+   "start": 6.502,
+   "end": 6.838
+  },
+  {
+   "text": "شيسوي…",
+   "type": "word",
+   "start": 6.908,
+   "end": 7.5
+  },
+  {
+   "text": "ميزة،",
+   "type": "word",
+   "start": 7.976,
+   "end": 8.394
+  },
+  {
+   "text": "ميزة.",
+   "type": "word",
+   "start": 8.464,
+   "end": 8.858
+  },
+  {
+   "text": "أولاً،",
+   "type": "word",
+   "start": 8.882,
+   "end": 9.439
+  },
+  {
+   "text": "حسابك.",
+   "type": "word",
+   "start": 9.485,
+   "end": 10.194
+  },
+  {
+   "text": "سجّل",
+   "type": "word",
+   "start": 10.495,
+   "end": 10.832
+  },
+  {
+   "text": "كمريض،",
+   "type": "word",
+   "start": 10.867,
+   "end": 11.436
+  },
+  {
+   "text": "أو",
+   "type": "word",
+   "start": 11.494,
+   "end": 11.656
+  },
+  {
+   "text": "طبيب،",
+   "type": "word",
+   "start": 11.703,
+   "end": 12.109
+  },
+  {
+   "text": "أو",
+   "type": "word",
+   "start": 12.132,
+   "end": 12.249
+  },
+  {
+   "text": "صيدلية.",
+   "type": "word",
+   "start": 12.318,
+   "end": 12.934
+  },
+  {
+   "text": "وإذا",
+   "type": "word",
+   "start": 13.003,
+   "end": 13.27
+  },
+  {
+   "text": "الطبيب",
+   "type": "word",
+   "start": 13.305,
+   "end": 13.619
+  },
+  {
+   "text": "سجّلك",
+   "type": "word",
+   "start": 13.677,
+   "end": 14.036
+  },
+  {
+   "text": "گبل،",
+   "type": "word",
+   "start": 14.071,
+   "end": 14.466
+  },
+  {
+   "text": "تلگى",
+   "type": "word",
+   "start": 14.536,
+   "end": 14.791
+  },
+  {
+   "text": "سجلّك",
+   "type": "word",
+   "start": 14.838,
+   "end": 15.221
+  },
+  {
+   "text": "ينتظرك.",
+   "type": "word",
+   "start": 15.279,
+   "end": 15.882
+  },
+  {
+   "text": "ملف",
+   "type": "word",
+   "start": 16.44,
+   "end": 16.73
+  },
+  {
+   "text": "الطبيب:",
+   "type": "word",
+   "start": 16.788,
+   "end": 17.264
+  },
+  {
+   "text": "اسمه،",
+   "type": "word",
+   "start": 17.276,
+   "end": 17.67
+  },
+  {
+   "text": "تخصصه،",
+   "type": "word",
+   "start": 17.705,
+   "end": 18.181
+  },
+  {
+   "text": "عيادته",
+   "type": "word",
+   "start": 18.204,
+   "end": 18.599
+  },
+  {
+   "text": "على",
+   "type": "word",
+   "start": 18.622,
+   "end": 18.785
+  },
+  {
+   "text": "الخريطة،",
+   "type": "word",
+   "start": 18.808,
+   "end": 19.307
+  },
+  {
+   "text": "وعلامة",
+   "type": "word",
+   "start": 19.365,
+   "end": 19.83
+  },
+  {
+   "text": "التوثيق.",
+   "type": "word",
+   "start": 19.876,
+   "end": 20.515
+  },
+  {
+   "text": "ودوّر",
+   "type": "word",
+   "start": 20.933,
+   "end": 21.385
+  },
+  {
+   "text": "حسب",
+   "type": "word",
+   "start": 21.432,
+   "end": 21.722
+  },
+  {
+   "text": "التخصص،",
+   "type": "word",
+   "start": 21.757,
+   "end": 22.372
+  },
+  {
+   "text": "والمنطگة،",
+   "type": "word",
+   "start": 22.407,
+   "end": 23.011
+  },
+  {
+   "text": "والتگييم.",
+   "type": "word",
+   "start": 23.034,
+   "end": 23.731
+  },
+  {
+   "text": "جدول",
+   "type": "word",
+   "start": 24.16,
+   "end": 24.474
+  },
+  {
+   "text": "الدوام:",
+   "type": "word",
+   "start": 24.52,
+   "end": 25.101
+  },
+  {
+   "text": "تعرف",
+   "type": "word",
+   "start": 25.693,
+   "end": 26.018
+  },
+  {
+   "text": "الطبيب",
+   "type": "word",
+   "start": 26.076,
+   "end": 26.413
+  },
+  {
+   "text": "موجود",
+   "type": "word",
+   "start": 26.459,
+   "end": 26.784
+  },
+  {
+   "text": "اليوم",
+   "type": "word",
+   "start": 26.83,
+   "end": 27.121
+  },
+  {
+   "text": "لو",
+   "type": "word",
+   "start": 27.179,
+   "end": 27.307
+  },
+  {
+   "text": "لا…",
+   "type": "word",
+   "start": 27.388,
+   "end": 27.69
+  },
+  {
+   "text": "گبل",
+   "type": "word",
+   "start": 28.015,
+   "end": 28.247
+  },
+  {
+   "text": "لا",
+   "type": "word",
+   "start": 28.27,
+   "end": 28.351
+  },
+  {
+   "text": "تطلع",
+   "type": "word",
+   "start": 28.409,
+   "end": 28.676
+  },
+  {
+   "text": "من",
+   "type": "word",
+   "start": 28.735,
+   "end": 28.793
+  },
+  {
+   "text": "البيت.",
+   "type": "word",
+   "start": 28.839,
+   "end": 29.315
+  },
+  {
+   "text": "احجز",
+   "type": "word",
+   "start": 29.628,
+   "end": 29.977
+  },
+  {
+   "text": "دورك،",
+   "type": "word",
+   "start": 30.035,
+   "end": 30.488
+  },
+  {
+   "text": "وخذ",
+   "type": "word",
+   "start": 30.557,
+   "end": 30.836
+  },
+  {
+   "text": "رگمك.",
+   "type": "word",
+   "start": 30.894,
+   "end": 31.347
+  },
+  {
+   "text": "بطاگة",
+   "type": "word",
+   "start": 31.718,
+   "end": 32.101
+  },
+  {
+   "text": "بيها",
+   "type": "word",
+   "start": 32.148,
+   "end": 32.334
+  },
+  {
+   "text": "رگم",
+   "type": "word",
+   "start": 32.403,
+   "end": 32.705
+  },
+  {
+   "text": "وباركود،",
+   "type": "word",
+   "start": 32.775,
+   "end": 33.506
+  },
+  {
+   "text": "السكرتير",
+   "type": "word",
+   "start": 33.587,
+   "end": 34.18
+  },
+  {
+   "text": "يگراها…",
+   "type": "word",
+   "start": 34.249,
+   "end": 34.934
+  },
+  {
+   "text": "وتدخل.",
+   "type": "word",
+   "start": 35.526,
+   "end": 36.118
+  },
+  {
+   "text": "حتى",
+   "type": "word",
+   "start": 36.699,
+   "end": 36.978
+  },
+  {
+   "text": "المراجع",
+   "type": "word",
+   "start": 37.001,
+   "end": 37.489
+  },
+  {
+   "text": "اللي",
+   "type": "word",
+   "start": 37.524,
+   "end": 37.663
+  },
+  {
+   "text": "ما",
+   "type": "word",
+   "start": 37.709,
+   "end": 37.779
+  },
+  {
+   "text": "عنده",
+   "type": "word",
+   "start": 37.826,
+   "end": 38.046
+  },
+  {
+   "text": "تطبيق،",
+   "type": "word",
+   "start": 38.069,
+   "end": 38.487
+  },
+  {
+   "text": "الطبيب",
+   "type": "word",
+   "start": 38.511,
+   "end": 38.836
+  },
+  {
+   "text": "يضيفه",
+   "type": "word",
+   "start": 38.859,
+   "end": 39.172
+  },
+  {
+   "text": "بالعيادة،",
+   "type": "word",
+   "start": 39.196,
+   "end": 39.718
+  },
+  {
+   "text": "ويطبعله",
+   "type": "word",
+   "start": 39.776,
+   "end": 40.287
+  },
+  {
+   "text": "بطاگته.",
+   "type": "word",
+   "start": 40.333,
+   "end": 40.914
+  },
+  {
+   "text": "والحالة",
+   "type": "word",
+   "start": 40.995,
+   "end": 41.39
+  },
+  {
+   "text": "المستعجلة،",
+   "type": "word",
+   "start": 41.413,
+   "end": 42.226
+  },
+  {
+   "text": "إلها",
+   "type": "word",
+   "start": 42.33,
+   "end": 42.632
+  },
+  {
+   "text": "رگم",
+   "type": "word",
+   "start": 42.713,
+   "end": 42.934
+  },
+  {
+   "text": "خاص.",
+   "type": "word",
+   "start": 43.015,
+   "end": 43.607
+  },
+  {
+   "text": "راسل",
+   "type": "word",
+   "start": 44.002,
+   "end": 44.339
+  },
+  {
+   "text": "طبيبك،",
+   "type": "word",
+   "start": 44.397,
+   "end": 45.0
+  },
+  {
+   "text": "دز",
+   "type": "word",
+   "start": 45.105,
+   "end": 45.395
+  },
+  {
+   "text": "صورة",
+   "type": "word",
+   "start": 45.558,
+   "end": 45.848
+  },
+  {
+   "text": "حالتك،",
+   "type": "word",
+   "start": 45.883,
+   "end": 46.51
+  },
+  {
+   "text": "ويوصلك",
+   "type": "word",
+   "start": 46.754,
+   "end": 47.322
+  },
+  {
+   "text": "التشخيص…",
+   "type": "word",
+   "start": 47.381,
+   "end": 48.089
+  },
+  {
+   "text": "والعلاج",
+   "type": "word",
+   "start": 48.553,
+   "end": 49.134
+  },
+  {
+   "text": "يروح",
+   "type": "word",
+   "start": 49.296,
+   "end": 49.598
+  },
+  {
+   "text": "للصيدلية",
+   "type": "word",
+   "start": 49.668,
+   "end": 50.295
+  },
+  {
+   "text": "مباشرة.",
+   "type": "word",
+   "start": 50.329,
+   "end": 50.945
+  },
+  {
+   "text": "الصيدليات:",
+   "type": "word",
+   "start": 50.98,
+   "end": 51.816
+  },
+  {
+   "text": "اطلب",
+   "type": "word",
+   "start": 51.966,
+   "end": 52.326
+  },
+  {
+   "text": "دواك،",
+   "type": "word",
+   "start": 52.384,
+   "end": 52.93
+  },
+  {
+   "text": "أو",
+   "type": "word",
+   "start": 53.069,
+   "end": 53.232
+  },
+  {
+   "text": "خلّي",
+   "type": "word",
+   "start": 53.302,
+   "end": 53.522
+  },
+  {
+   "text": "الصيدلي",
+   "type": "word",
+   "start": 53.545,
+   "end": 53.998
+  },
+  {
+   "text": "يجيك",
+   "type": "word",
+   "start": 54.045,
+   "end": 54.323
+  },
+  {
+   "text": "للبيت،",
+   "type": "word",
+   "start": 54.416,
+   "end": 54.985
+  },
+  {
+   "text": "والتوصيل",
+   "type": "word",
+   "start": 55.089,
+   "end": 55.693
+  },
+  {
+   "text": "لباب",
+   "type": "word",
+   "start": 55.739,
+   "end": 56.006
+  },
+  {
+   "text": "دارك.",
+   "type": "word",
+   "start": 56.064,
+   "end": 56.564
+  },
+  {
+   "text": "أسعار",
+   "type": "word",
+   "start": 56.854,
+   "end": 57.33
+  },
+  {
+   "text": "الأدوية",
+   "type": "word",
+   "start": 57.376,
+   "end": 57.818
+  },
+  {
+   "text": "العراگية",
+   "type": "word",
+   "start": 57.841,
+   "end": 58.491
+  },
+  {
+   "text": "كلها",
+   "type": "word",
+   "start": 58.572,
+   "end": 58.839
+  },
+  {
+   "text": "بالتطبيق،",
+   "type": "word",
+   "start": 58.897,
+   "end": 59.594
+  },
+  {
+   "text": "وتشتري",
+   "type": "word",
+   "start": 59.629,
+   "end": 60.151
+  },
+  {
+   "text": "منه",
+   "type": "word",
+   "start": 60.186,
+   "end": 60.441
+  },
+  {
+   "text": "بدون",
+   "type": "word",
+   "start": 60.557,
+   "end": 60.813
+  },
+  {
+   "text": "ما",
+   "type": "word",
+   "start": 60.836,
+   "end": 60.906
+  },
+  {
+   "text": "تطلع.",
+   "type": "word",
+   "start": 60.964,
+   "end": 61.405
+  },
+  {
+   "text": "ملفك",
+   "type": "word",
+   "start": 61.707,
+   "end": 62.125
+  },
+  {
+   "text": "الطبي",
+   "type": "word",
+   "start": 62.171,
+   "end": 62.636
+  },
+  {
+   "text": "يظهر",
+   "type": "word",
+   "start": 62.717,
+   "end": 63.065
+  },
+  {
+   "text": "لأي",
+   "type": "word",
+   "start": 63.135,
+   "end": 63.344
+  },
+  {
+   "text": "طبيب",
+   "type": "word",
+   "start": 63.39,
+   "end": 63.646
+  },
+  {
+   "text": "تراجعه.",
+   "type": "word",
+   "start": 63.704,
+   "end": 64.273
+  },
+  {
+   "text": "كل",
+   "type": "word",
+   "start": 64.621,
+   "end": 64.807
+  },
+  {
+   "text": "دواء",
+   "type": "word",
+   "start": 64.842,
+   "end": 65.12
+  },
+  {
+   "text": "ينضاف",
+   "type": "word",
+   "start": 65.155,
+   "end": 65.492
+  },
+  {
+   "text": "بصورته",
+   "type": "word",
+   "start": 65.55,
+   "end": 66.026
+  },
+  {
+   "text": "وجرعته،",
+   "type": "word",
+   "start": 66.037,
+   "end": 66.746
+  },
+  {
+   "text": "وتحمّله",
+   "type": "word",
+   "start": 66.908,
+   "end": 67.454
+  },
+  {
+   "text": "بي",
+   "type": "word",
+   "start": 67.512,
+   "end": 67.64
+  },
+  {
+   "text": "دي",
+   "type": "word",
+   "start": 67.721,
+   "end": 67.802
+  },
+  {
+   "text": "إف.",
+   "type": "word",
+   "start": 67.837,
+   "end": 68.174
+  },
+  {
+   "text": "التحليل؟",
+   "type": "word",
+   "start": 68.638,
+   "end": 69.242
+  },
+  {
+   "text": "الطبيب",
+   "type": "word",
+   "start": 69.265,
+   "end": 69.741
+  },
+  {
+   "text": "يطلبه",
+   "type": "word",
+   "start": 69.811,
+   "end": 70.159
+  },
+  {
+   "text": "من",
+   "type": "word",
+   "start": 70.182,
+   "end": 70.287
+  },
+  {
+   "text": "التطبيق،",
+   "type": "word",
+   "start": 70.321,
+   "end": 70.832
+  },
+  {
+   "text": "والنتيجة",
+   "type": "word",
+   "start": 70.844,
+   "end": 71.366
+  },
+  {
+   "text": "توصله",
+   "type": "word",
+   "start": 71.436,
+   "end": 71.808
+  },
+  {
+   "text": "مباشرة،",
+   "type": "word",
+   "start": 71.842,
+   "end": 72.562
+  },
+  {
+   "text": "وتنحفظ",
+   "type": "word",
+   "start": 72.678,
+   "end": 73.235
+  },
+  {
+   "text": "بملفك.",
+   "type": "word",
+   "start": 73.305,
+   "end": 73.909
+  },
+  {
+   "text": "والتنبيهات:",
+   "type": "word",
+   "start": 74.315,
+   "end": 75.035
+  },
+  {
+   "text": "موعد",
+   "type": "word",
+   "start": 75.07,
+   "end": 75.325
+  },
+  {
+   "text": "مراجعتك،",
+   "type": "word",
+   "start": 75.36,
+   "end": 76.033
+  },
+  {
+   "text": "ووگت",
+   "type": "word",
+   "start": 76.056,
+   "end": 76.382
+  },
+  {
+   "text": "كل",
+   "type": "word",
+   "start": 76.428,
+   "end": 76.544
+  },
+  {
+   "text": "جرعة،",
+   "type": "word",
+   "start": 76.602,
+   "end": 77.148
+  },
+  {
+   "text": "باسم",
+   "type": "word",
+   "start": 77.368,
+   "end": 77.647
+  },
+  {
+   "text": "الدواء",
+   "type": "word",
+   "start": 77.67,
+   "end": 78.019
+  },
+  {
+   "text": "وصورته.",
+   "type": "word",
+   "start": 78.03,
+   "end": 78.541
+  },
+  {
+   "text": "وتگدر",
+   "type": "word",
+   "start": 78.785,
+   "end": 79.307
+  },
+  {
+   "text": "تحجي",
+   "type": "word",
+   "start": 79.342,
+   "end": 79.621
+  },
+  {
+   "text": "وياه",
+   "type": "word",
+   "start": 79.632,
+   "end": 79.865
+  },
+  {
+   "text": "بصوتك…",
+   "type": "word",
+   "start": 79.911,
+   "end": 80.492
+  },
+  {
+   "text": "احجزلي",
+   "type": "word",
+   "start": 80.898,
+   "end": 81.316
+  },
+  {
+   "text": "عند",
+   "type": "word",
+   "start": 81.339,
+   "end": 81.502
+  },
+  {
+   "text": "الدكتور",
+   "type": "word",
+   "start": 81.536,
+   "end": 81.931
+  },
+  {
+   "text": "سلام،",
+   "type": "word",
+   "start": 81.989,
+   "end": 82.454
+  },
+  {
+   "text": "يوم",
+   "type": "word",
+   "start": 82.593,
+   "end": 82.802
+  },
+  {
+   "text": "الأحد،",
+   "type": "word",
+   "start": 82.848,
+   "end": 83.301
+  },
+  {
+   "text": "الساعة",
+   "type": "word",
+   "start": 83.336,
+   "end": 83.731
+  },
+  {
+   "text": "خمسة.",
+   "type": "word",
+   "start": 83.777,
+   "end": 84.242
+  },
+  {
+   "text": "گيّم",
+   "type": "word",
+   "start": 84.543,
+   "end": 84.834
+  },
+  {
+   "text": "طبيبك",
+   "type": "word",
+   "start": 84.892,
+   "end": 85.333
+  },
+  {
+   "text": "وصيدليتك…",
+   "type": "word",
+   "start": 85.379,
+   "end": 86.25
+  },
+  {
+   "text": "حتى",
+   "type": "word",
+   "start": 86.471,
+   "end": 86.784
+  },
+  {
+   "text": "غيرك",
+   "type": "word",
+   "start": 86.819,
+   "end": 87.132
+  },
+  {
+   "text": "يعرف",
+   "type": "word",
+   "start": 87.214,
+   "end": 87.516
+  },
+  {
+   "text": "وين",
+   "type": "word",
+   "start": 87.574,
+   "end": 87.736
+  },
+  {
+   "text": "يروح.",
+   "type": "word",
+   "start": 87.748,
+   "end": 88.131
+  },
+  {
+   "text": "منتدى",
+   "type": "word",
+   "start": 88.526,
+   "end": 88.897
+  },
+  {
+   "text": "للناس،",
+   "type": "word",
+   "start": 88.92,
+   "end": 89.454
+  },
+  {
+   "text": "ومدوّنة",
+   "type": "word",
+   "start": 89.489,
+   "end": 90.047
+  },
+  {
+   "text": "يكتب",
+   "type": "word",
+   "start": 90.081,
+   "end": 90.325
+  },
+  {
+   "text": "بيها",
+   "type": "word",
+   "start": 90.348,
+   "end": 90.523
+  },
+  {
+   "text": "الأطباء",
+   "type": "word",
+   "start": 90.546,
+   "end": 91.068
+  },
+  {
+   "text": "الموثّقين",
+   "type": "word",
+   "start": 91.079,
+   "end": 91.648
+  },
+  {
+   "text": "باسمهم.",
+   "type": "word",
+   "start": 91.706,
+   "end": 92.345
+  },
+  {
+   "text": "وللسكري،",
+   "type": "word",
+   "start": 92.635,
+   "end": 93.471
+  },
+  {
+   "text": "والضغط،",
+   "type": "word",
+   "start": 93.494,
+   "end": 94.156
+  },
+  {
+   "text": "والربو…",
+   "type": "word",
+   "start": 94.191,
+   "end": 94.829
+  },
+  {
+   "text": "گسم",
+   "type": "word",
+   "start": 95.526,
+   "end": 95.816
+  },
+  {
+   "text": "خاص.",
+   "type": "word",
+   "start": 95.909,
+   "end": 96.606
+  },
+  {
+   "text": "نصايح",
+   "type": "word",
+   "start": 97.418,
+   "end": 97.836
+  },
+  {
+   "text": "من",
+   "type": "word",
+   "start": 97.929,
+   "end": 98.022
+  },
+  {
+   "text": "مختصين،",
+   "type": "word",
+   "start": 98.057,
+   "end": 98.788
+  },
+  {
+   "text": "وناس",
+   "type": "word",
+   "start": 98.847,
+   "end": 99.218
+  },
+  {
+   "text": "تساند",
+   "type": "word",
+   "start": 99.276,
+   "end": 99.624
+  },
+  {
+   "text": "بعضها.",
+   "type": "word",
+   "start": 99.682,
+   "end": 100.193
+  },
+  {
+   "text": "وادعُ",
+   "type": "word",
+   "start": 100.634,
+   "end": 101.087
+  },
+  {
+   "text": "صديقك،",
+   "type": "word",
+   "start": 101.145,
+   "end": 101.83
+  },
+  {
+   "text": "وخذ",
+   "type": "word",
+   "start": 101.946,
+   "end": 102.225
+  },
+  {
+   "text": "رصيد.",
+   "type": "word",
+   "start": 102.283,
+   "end": 102.829
+  },
+  {
+   "text": "نگاط",
+   "type": "word",
+   "start": 103.27,
+   "end": 103.665
+  },
+  {
+   "text": "على",
+   "type": "word",
+   "start": 103.723,
+   "end": 103.85
+  },
+  {
+   "text": "كل",
+   "type": "word",
+   "start": 103.92,
+   "end": 104.048
+  },
+  {
+   "text": "حجز،",
+   "type": "word",
+   "start": 104.117,
+   "end": 104.628
+  },
+  {
+   "text": "وخصومات",
+   "type": "word",
+   "start": 104.744,
+   "end": 105.371
+  },
+  {
+   "text": "أكثر.",
+   "type": "word",
+   "start": 105.406,
+   "end": 105.882
+  },
+  {
+   "text": "دكتورنا…",
+   "type": "word",
+   "start": 106.579,
+   "end": 107.299
+  },
+  {
+   "text": "كل",
+   "type": "word",
+   "start": 107.809,
+   "end": 108.018
+  },
+  {
+   "text": "اللي",
+   "type": "word",
+   "start": 108.065,
+   "end": 108.181
+  },
+  {
+   "text": "تحتاجه",
+   "type": "word",
+   "start": 108.227,
+   "end": 108.622
+  },
+  {
+   "text": "لصحتك،",
+   "type": "word",
+   "start": 108.645,
+   "end": 109.412
+  },
+  {
+   "text": "بمكان",
+   "type": "word",
+   "start": 109.586,
+   "end": 109.957
+  },
+  {
+   "text": "واحد.",
+   "type": "word",
+   "start": 110.015,
+   "end": 110.561
+  },
+  {
+   "text": "نزّله",
+   "type": "word",
+   "start": 111.165,
+   "end": 111.559
+  },
+  {
+   "text": "هسه…",
+   "type": "word",
+   "start": 111.583,
+   "end": 111.989
+  },
+  {
+   "text": "الحكيم",
+   "type": "word",
+   "start": 112.163,
+   "end": 112.546
+  },
+  {
+   "text": "موجود.",
+   "type": "word",
+   "start": 112.581,
+   "end": 113.324
+  }
+ ]
+}
