@@ -411,9 +411,11 @@ function osPanelWire(box, S) {
       const vod = document.createElement('div');
       vod.innerHTML = `<div class="panel"><h2>تطبيق الأفلام والمسلسلات</h2><p class="sub" style="margin-top:-4px">يطلع بقائمة التطبيقات، ويستورد أفلامه ومسلسلاته من حساب IPTV فوق فقط.</p>
         <label class="f">اسم التطبيق</label><input id="vodName" placeholder="الأفلام والمسلسلات" value="${esc(S.vodName || '')}">
-        <div class="row" style="margin-top:12px"><button class="btn sec" style="flex:1" id="vodSave">${ic('save')} حفظ الاسم</button></div></div>`;
+        <label class="f" style="margin-top:12px">رابط قائمة من مزوّدك (M3U) — رابط بكل سطر، تطلع أفلامه ومسلسلاته بنفس التطبيق</label>
+        <textarea id="vodLinks" dir="ltr" spellcheck="false" style="width:100%;min-height:70px;font:13px/1.5 monospace;border-radius:12px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.15)" placeholder="https://…">${esc(S.vodLinks || '')}</textarea>
+        <div class="row" style="margin-top:12px"><button class="btn sec" style="flex:1" id="vodSave">${ic('save')} حفظ</button></div></div>`;
       p.insertBefore(vod, my.nextSibling);
-      $('#vodSave').onclick = () => { tap(); delete S.vodSections; const nm = $('#vodName').value.trim(); if (nm) S.vodName = nm.slice(0, 30); else delete S.vodName; changed(); live({ settings: S }); toast('انحفظ اسم التطبيق'); };
+      $('#vodSave').onclick = () => { tap(); delete S.vodSections; const vl = $('#vodLinks').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (vl) S.vodLinks = vl; else delete S.vodLinks; const nm = $('#vodName').value.trim(); if (nm) S.vodName = nm.slice(0, 30); else delete S.vodName; changed(); live({ settings: S }); toast('انحفظ تطبيق الأفلام والمسلسلات'); };
       $('#myOk').onclick = () => { tap(); const xh = $('#xtHost').value.trim(), xu = $('#xtUser').value.trim(), xp = $('#xtPass').value.trim(); if (xh) S.xtHost = xh; else delete S.xtHost; if (xh && xu && xp) S.xtream = { host: xh, user: xu, pass: xp, name: $('#xtName').value.trim() || 'اشتراكي', out: (my.querySelector('[data-xo].on') || {}).dataset ? my.querySelector('[data-xo].on').dataset.xo : 'ts', live: !!my.querySelector('[data-xt="live"].on'), vod: !!my.querySelector('[data-xt="vod"].on') }; else delete S.xtream; const v = $('#myM3u').value.slice(0, 120000), u = $('#chUrl').value.trim(); if (v.trim()) S.myM3u = v; else delete S.myM3u; if (/^https?:/i.test(u)) S.channelsUrl = u; else delete S.channelsUrl; const sj = $('#chSites').value.split(/\s+/).filter(l => /^https?:\/\//i.test(l)).join('\n'); if (sj) S.chSites = sj; else delete S.chSites; changed(); live({ settings: S }); toast('انحفظت قنواتك'); designPanel(); };
       $('#myFile').onclick = () => {
         tap();
