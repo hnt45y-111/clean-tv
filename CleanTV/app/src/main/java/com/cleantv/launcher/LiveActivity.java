@@ -79,7 +79,7 @@ public class LiveActivity extends Activity {
         if (!Party.on(this)) return;
         try { JSONObject o = new JSONObject().put("t", t); if (k != null) o.put((String) k, v); Party.send(this, o); } catch (Throwable ignored) { }
     }
-    private static final int INK = Color.parseColor("#15181B"), IVORY = Color.parseColor("#EFE7D4"), COPPER = Color.parseColor("#D9822B"), CHROME = Color.parseColor("#B8BDC2");
+    private static final int INK = Color.parseColor("#000000"), IVORY = Color.parseColor("#FFFFFF"), COPPER = Color.parseColor("#FA0023"), CHROME = Color.parseColor("#A3A3A3");
     private final List<String> names = new ArrayList<>(), urls = new ArrayList<>(), ids = new ArrayList<>(), subs = new ArrayList<>(), refs = new ArrayList<>(), uas = new ArrayList<>(), logos = new ArrayList<>();
     private DefaultHttpDataSource.Factory httpFactory;
     private int idx, failed;
@@ -89,7 +89,7 @@ public class LiveActivity extends Activity {
     private ImageView logo;
     private TextView mono, nameV, subV, qualV, numV, state;
     private final Handler h = new Handler(Looper.getMainLooper());
-    private final Runnable hide = new Runnable() { public void run() { panel.animate().alpha(0f).setDuration(350).withEndAction(new Runnable() { public void run() { panel.setVisibility(View.GONE); } }).start(); } };
+    private final Runnable hide = new Runnable() { public void run() { panel.animate().alpha(0f).translationY(dp(24)).setDuration(300).withEndAction(new Runnable() { public void run() { panel.setVisibility(View.GONE); } }).start(); } };
     private float d;
     private final List<Boolean> yts = new ArrayList<>();
     private final List<String> fNames = new ArrayList<>();
@@ -167,19 +167,16 @@ public class LiveActivity extends Activity {
         // the info bar: a copper line on top, then ink; right edge to left edge
         panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
-        View line = new View(this); line.setBackgroundColor(COPPER);
-        panel.addView(line, new LinearLayout.LayoutParams(-1, dp(5)));
-        View line2 = new View(this); line2.setBackgroundColor(CHROME);
-        panel.addView(line2, new LinearLayout.LayoutParams(-1, dp(1)));
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setBackgroundColor(Color.parseColor("#F215181B"));
+        GradientDrawable rb = new GradientDrawable(); rb.setColor(Color.parseColor("#F2181818")); rb.setCornerRadius(dp(32));
+        row.setBackground(rb); row.setElevation(dp(14));
         row.setPadding(dp(32), dp(18), dp(32), dp(22));
         panel.addView(row, new LinearLayout.LayoutParams(-1, -2));
 
         logoBox = new FrameLayout(this);
-        GradientDrawable lb = new GradientDrawable(); lb.setColor(IVORY); lb.setCornerRadius(dp(10));
+        GradientDrawable lb = new GradientDrawable(); lb.setColor(IVORY); lb.setCornerRadius(dp(18));
         logoBox.setBackground(lb);
         mono = tv(30, INK, true); mono.setGravity(Gravity.CENTER);
         logoBox.addView(mono, new FrameLayout.LayoutParams(-1, -1));
@@ -198,8 +195,8 @@ public class LiveActivity extends Activity {
         col.addView(subV, sp);
         row.addView(col, new LinearLayout.LayoutParams(0, -2, 1f));
 
-        qualV = tv(20, INK, true);
-        GradientDrawable qb = new GradientDrawable(); qb.setColor(COPPER); qb.setCornerRadius(dp(6));
+        qualV = tv(18, IVORY, true);
+        GradientDrawable qb = new GradientDrawable(); qb.setColor(COPPER); qb.setCornerRadius(dp(40));
         qualV.setBackground(qb); qualV.setPadding(dp(16), dp(8), dp(16), dp(8)); qualV.setText("…");
         LinearLayout.LayoutParams ql = new LinearLayout.LayoutParams(-2, -2); ql.setMarginStart(dp(20));
         row.addView(qualV, ql);
@@ -208,6 +205,7 @@ public class LiveActivity extends Activity {
         row.addView(numV, nl);
 
         FrameLayout.LayoutParams pl = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM);
+        pl.setMargins(dp(28), 0, dp(28), dp(24));
         root.addView(panel, pl);
         buildListPanel();
         setContentView(root);
@@ -292,8 +290,9 @@ public class LiveActivity extends Activity {
     private void showPanel(long ms) {
         h.removeCallbacks(hide);
         panel.animate().cancel();
-        panel.setAlpha(1f);
+        if (panel.getVisibility() != View.VISIBLE || panel.getAlpha() < 1f) { panel.setAlpha(0f); panel.setTranslationY(dp(24)); }
         panel.setVisibility(View.VISIBLE);
+        panel.animate().alpha(1f).translationY(0f).setDuration(260).setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
         if (ms > 0) h.postDelayed(hide, ms);
     }
 
@@ -369,12 +368,12 @@ public class LiveActivity extends Activity {
         t.setTextSize(sp); t.setTextColor(color); t.setIncludeFontPadding(false); t.setTypeface(tf);
         return t;
     }
-    /** the same flat cards as the page: surf fill, thin chrome border, copper ring on focus */
+    /** flat dark rows like the page: no border at rest, a lighter pill when chosen, a white ring on focus */
     private GradientDrawable cardBg(boolean focused, boolean selected, int radiusDp) {
         GradientDrawable g = new GradientDrawable();
-        g.setColor(focused ? Color.parseColor("#2A3036") : selected ? Color.parseColor("#23282D") : Color.parseColor("#1D2125"));
+        g.setColor(focused ? Color.parseColor("#2E2E2E") : selected ? Color.parseColor("#262626") : Color.parseColor("#141414"));
         g.setCornerRadius(dp(radiusDp));
-        if (focused) g.setStroke(dp(3), COPPER); else g.setStroke(1, Color.parseColor("#3A4046"));
+        if (focused) g.setStroke(dp(2), IVORY); else g.setStroke(0, Color.TRANSPARENT);
         return g;
     }
 
@@ -411,15 +410,12 @@ public class LiveActivity extends Activity {
         int pw = Math.round(getResources().getDisplayMetrics().widthPixels * 0.36f);
         listPanel = new LinearLayout(this);
         listPanel.setOrientation(LinearLayout.VERTICAL);
-        listPanel.setBackgroundColor(Color.parseColor("#F815181B"));
-        View top = new View(this); top.setBackgroundColor(COPPER);
-        listPanel.addView(top, new LinearLayout.LayoutParams(-1, dp(6)));
-        View top2 = new View(this); top2.setBackgroundColor(CHROME);
-        listPanel.addView(top2, new LinearLayout.LayoutParams(-1, dp(1)));
+        GradientDrawable pbg = new GradientDrawable(); pbg.setColor(Color.parseColor("#F7050505")); pbg.setCornerRadius(dp(32));
+        listPanel.setBackground(pbg); listPanel.setElevation(dp(14));
         LinearLayout head = new LinearLayout(this);
         head.setOrientation(LinearLayout.VERTICAL);
-        head.setPadding(dp(26), dp(18), dp(26), dp(12));
-        TextView title = ptv(34, IVORY, kufi); title.setText("قنواتي"); listTitle = title;
+        head.setPadding(dp(28), dp(26), dp(28), dp(12));
+        TextView title = ptv(30, IVORY, plexB); title.setText("قنواتي"); listTitle = title;
         listCount = ptv(14, CHROME, plexR);
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2); cl.topMargin = dp(6);
         head.addView(title); head.addView(listCount, cl);
@@ -430,7 +426,7 @@ public class LiveActivity extends Activity {
         fList = newList(); cList = newList();
         // right to left: the channels first (towards the middle of the screen), then the divider, then the folders (at the edge)
         cols.addView(cList, new LinearLayout.LayoutParams(0, -1, 0.6f));
-        vDiv = new View(this); vDiv.setBackgroundColor(Color.parseColor("#3A4046"));
+        vDiv = new View(this); vDiv.setBackgroundColor(Color.parseColor("#262626"));
         LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(dp(1), -1); vp.setMargins(dp(8), dp(4), dp(8), dp(4));
         cols.addView(vDiv, vp);
         cols.addView(fList, new LinearLayout.LayoutParams(0, -1, 0.4f));
@@ -439,7 +435,8 @@ public class LiveActivity extends Activity {
         listHint.setPadding(dp(26), dp(10), dp(26), dp(14));
         listPanel.addView(listHint, new LinearLayout.LayoutParams(-1, -2));
         listPanel.setVisibility(View.GONE);
-        root.addView(listPanel, new FrameLayout.LayoutParams(pw, -1, Gravity.START));
+        FrameLayout.LayoutParams lpp = new FrameLayout.LayoutParams(pw, -1, Gravity.START); lpp.setMargins(dp(14), dp(14), dp(14), dp(14));
+        root.addView(listPanel, lpp);
 
         fAd = new BaseAdapter() {
             public int getCount() { return fNames.size(); }
@@ -459,9 +456,9 @@ public class LiveActivity extends Activity {
                 LinearLayout card = (LinearLayout) r.getChildAt(0);
                 View bar = card.getChildAt(0); TextView t = (TextView) card.getChildAt(1);
                 boolean sel = p == selFolder, foc = sel && focusCol == 0;
-                t.setText(fNames.get(p)); t.setTextColor(sel ? IVORY : Color.parseColor("#CFC8B8"));
-                bar.setBackgroundColor(sel ? COPPER : Color.TRANSPARENT);
-                GradientDrawable bg = cardBg(foc, sel, 8);
+                t.setText(fNames.get(p)); t.setTextColor(sel ? IVORY : Color.parseColor("#D0D0D0"));
+                bar.setBackgroundColor(Color.TRANSPARENT);
+                GradientDrawable bg = cardBg(foc, sel, 22);
                 if (!sel) { bg.setColor(Color.TRANSPARENT); bg.setStroke(0, Color.TRANSPARENT); }
                 card.setBackground(bg);
                 return r;
@@ -483,13 +480,13 @@ public class LiveActivity extends Activity {
                     ImageView im = new ImageView(LiveActivity.this); im.setScaleType(ImageView.ScaleType.FIT_CENTER); im.setPadding(dp(6), dp(6), dp(6), dp(6)); box.addView(im, new FrameLayout.LayoutParams(-1, -1));
                     LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(dp(58), dp(58)); bl.setMarginEnd(dp(14)); card.addView(box, bl);
                     LinearLayout col = new LinearLayout(LiveActivity.this); col.setOrientation(LinearLayout.VERTICAL);
-                    TextView n = ptv(19, IVORY, plexB); n.setSingleLine(true); n.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                    TextView n = ptv(20, IVORY, plexB); n.setSingleLine(true); n.setEllipsize(android.text.TextUtils.TruncateAt.END);
                     TextView sb = ptv(13, CHROME, plexR); sb.setSingleLine(true); sb.setEllipsize(android.text.TextUtils.TruncateAt.END);
                     LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-2, -2); sl.topMargin = dp(4);
                     col.addView(n); col.addView(sb, sl);
                     card.addView(col, new LinearLayout.LayoutParams(0, -2, 1f));
-                    TextView live = ptv(12, INK, kufi); live.setText("يعرض الآن"); live.setPadding(dp(10), dp(4), dp(10), dp(4));
-                    GradientDrawable lb = new GradientDrawable(); lb.setColor(COPPER); lb.setCornerRadius(dp(4)); live.setBackground(lb);
+                    TextView live = ptv(12, IVORY, plexB); live.setText("يعرض الآن"); live.setPadding(dp(10), dp(4), dp(10), dp(4));
+                    GradientDrawable lb = new GradientDrawable(); lb.setColor(COPPER); lb.setCornerRadius(dp(40)); live.setBackground(lb);
                     card.addView(live);
                     r.addView(card, new LinearLayout.LayoutParams(-1, -2));
                 } else r = (LinearLayout) v;
@@ -502,12 +499,12 @@ public class LiveActivity extends Activity {
                 String ini = nm.replaceFirst("^ال", "").replace(" ", "");
                 m.setText(ini.substring(0, Math.min(2, ini.length())));
                 Bitmap lg = logoFor(ids.get(ch));
-                GradientDrawable bb = new GradientDrawable(); bb.setCornerRadius(dp(8)); bb.setColor(lg != null ? IVORY : tintOf(nm)); box.setBackground(bb);
+                GradientDrawable bb = new GradientDrawable(); bb.setCornerRadius(dp(16)); bb.setColor(lg != null ? IVORY : tintOf(nm)); box.setBackground(bb);
                 im.setImageBitmap(lg);
                 ((TextView) col.getChildAt(0)).setText(nm);
                 ((TextView) col.getChildAt(1)).setText(subs.get(ch));
                 card.getChildAt(2).setVisibility(ch == idx ? View.VISIBLE : View.GONE);
-                card.setBackground(cardBg(focusCol == 1 && p == chSel, p == chSel, 12));
+                card.setBackground(cardBg(focusCol == 1 && p == chSel, p == chSel, 22));
                 return r;
             }
         };
@@ -571,7 +568,7 @@ public class LiveActivity extends Activity {
         mode = 1; panelOpen = true; selFolder = curFolder; focusCol = 1; foChOpen = false;
         chSel = Math.max(0, posIn(fIdx.get(selFolder), idx));
         h.removeCallbacks(hide); panel.setVisibility(View.GONE);
-        layoutPanel(); listPanel.setVisibility(View.VISIBLE);
+        layoutPanel(); slideIn();
         refreshPanel(); scrollList(cList, chSel);
     }
 
@@ -579,11 +576,24 @@ public class LiveActivity extends Activity {
         mode = 2; panelOpen = true; selFolder = curFolder; focusCol = 0; foChOpen = false;
         chSel = Math.max(0, posIn(fIdx.get(selFolder), idx));
         h.removeCallbacks(hide); panel.setVisibility(View.GONE);
-        layoutPanel(); listPanel.setVisibility(View.VISIBLE);
+        layoutPanel(); slideIn();
         refreshPanel(); scrollList(fList, selFolder);
     }
 
-    private void closePanel() { panelOpen = false; mode = 0; foChOpen = false; listPanel.setVisibility(View.GONE); pip(false); }
+    /** the sheet glides in from the edge it belongs to (transform + alpha only, smooth on weak boxes) */
+    private void slideIn() {
+        int w = ((FrameLayout.LayoutParams) listPanel.getLayoutParams()).width;
+        listPanel.animate().cancel();
+        listPanel.setVisibility(View.VISIBLE);
+        listPanel.setAlpha(0f); listPanel.setTranslationX((mode == 1 ? 1 : -1) * Math.min(w, dp(120)));
+        listPanel.animate().alpha(1f).translationX(0f).setDuration(240).setInterpolator(new android.view.animation.DecelerateInterpolator(1.8f)).start();
+    }
+
+    private void closePanel() {
+        panelOpen = false; int was = mode; mode = 0; foChOpen = false;
+        listPanel.animate().cancel(); pip(false);
+        listPanel.animate().alpha(0f).translationX((was == 1 ? 1 : -1) * dp(60)).setDuration(180).withEndAction(new Runnable() { public void run() { if (!panelOpen) listPanel.setVisibility(View.GONE); } }).start();
+    }
 
     private boolean panelKey(int code) {
         int[] cur = fIdx.get(selFolder);

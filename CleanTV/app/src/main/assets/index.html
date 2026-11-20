@@ -1106,6 +1106,31 @@
   #lvSearch { display: none; position: absolute; top: 52px; left: 640px; width: 420px; font: 600 26px/1.2 var(--font); color: #EFE7D4; background: #23282D; border: 2px solid #D9822B; border-radius: 14px; padding: 12px 18px; direction: rtl; outline: none; }
   #lvSearch.on { display: block; }
   .lv-empty { grid-column: 1 / -1; font-size: 32px; color: #8B939A; padding: 60px; text-align: center; }
+  /* motion layer for قنواتي + الأفلام: same language as the launcher (ivory on ink, copper focus). transform/opacity only, so the TV stays smooth */
+  @keyframes bxIn { from { opacity: 0; transform: translateY(26px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes bxPop { 0% { transform: scale(1.04); } 45% { transform: scale(.94); } 100% { transform: scale(1.04); } }
+  @keyframes bxSide { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+  #lvGrid.fresh > .lv-ch, #vdGrid.fresh > .vd-card { animation: bxIn .38s cubic-bezier(.2,.8,.2,1) both; }
+  #lvGrid.fresh > .lv-ch:nth-child(1), #vdGrid.fresh > .vd-card:nth-child(1) { animation-delay: 0s; }
+  #lvGrid.fresh > .lv-ch:nth-child(2), #vdGrid.fresh > .vd-card:nth-child(2) { animation-delay: .03s; }
+  #lvGrid.fresh > .lv-ch:nth-child(3), #vdGrid.fresh > .vd-card:nth-child(3) { animation-delay: .06s; }
+  #lvGrid.fresh > .lv-ch:nth-child(4), #vdGrid.fresh > .vd-card:nth-child(4) { animation-delay: .09s; }
+  #lvGrid.fresh > .lv-ch:nth-child(5), #vdGrid.fresh > .vd-card:nth-child(5) { animation-delay: .12s; }
+  #lvGrid.fresh > .lv-ch:nth-child(6), #vdGrid.fresh > .vd-card:nth-child(6) { animation-delay: .15s; }
+  #lvGrid.fresh > .lv-ch:nth-child(n+7), #vdGrid.fresh > .vd-card:nth-child(n+7) { animation-delay: .18s; }
+  #lvCats, #vdSecs, #lvGridWrap, #vdGridWrap { contain: layout paint; }
+  #lvGrid, #vdGrid { transition: transform .22s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+  .lv-ch, .vd-card, .lv-cat, .vd-sec, .vd-tab, .lv-tl, .lv-vw { transition: transform .16s ease-out, background-color .16s, color .16s, border-color .16s; }
+  .lv-ch.focus, .vd-card.focus { transform: scale(1.04); z-index: 2; }
+  .lv-cat.focus, .vd-sec.focus { transform: translateX(-8px); }
+  .lv-tl.focus, .vd-tab.focus, .lv-vw.focus { transform: translateY(-2px); }
+  .lv-ch.focus.tap, .vd-card.focus.tap { animation: bxPop .24s ease-out; }
+  .lv-ch.focus .lv-art, .vd-card.focus .vd-art { border-radius: 8px; }
+  .lv-art, .vd-art { border-radius: 16px 16px 4px 16px; }
+  #liveModal.on #lvHead, #vodModal.on #vdHead { animation: bxSide .35s ease-out both; }
+  #liveModal.on #lvCats, #vodModal.on #vdSecs { animation: bxSide .4s ease-out .05s both; }
+  .vd-card, .lv-ch { background: linear-gradient(160deg, #262B30, #1E2226); }
+  @media (prefers-reduced-motion: reduce) { #lvGrid.fresh > *, #vdGrid.fresh > * { animation: none; } }
   #lvHint { position: absolute; bottom: 36px; right: 80px; left: 80px; font-size: 21px; color: #8B939A; padding: 10px 20px; background: rgba(35,40,45,.55); border-radius: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* ---- live scores ticker (identity) ---- */
   #liveTicker { height: 64px; background: #15181B; border-top: 2px solid #B8BDC2; }
@@ -1117,6 +1142,76 @@
   #liveTicker .lt-m em { font-style: normal; color: #E8A25E; font-size: 22px; }
   #liveTicker .lt-sep { display: inline-block; width: 2px; height: 32px; padding: 0; background: rgba(184,189,194,.4); margin: 0 26px; font-size: 0; }
   /* anything else the design wants: its own CSS is added last (settings.css) */
+</style>
+<style id="rz">
+  /* Reezn-style look for قنواتي + الأفلام والمسلسلات: pure black, one red accent, soft pills, outline icons.
+     Looks and motion only: the keys, the focus order and every feature are untouched. */
+  #liveModal, #vodModal { --rz: #FA0023; --rz-s1: #121212; --rz-s2: #1A1A1A; --rz-s3: #262626; --rz-s4: #2E2E2E; --rz-t2: #A3A3A3; --rz-ring: 0 0 0 3px #000, 0 0 0 6px #fff; --spring: cubic-bezier(.34,1.35,.64,1); background: #000; }
+  #liveModal::before, #vodModal::before { background: radial-gradient(900px 380px at 50% -14%, rgba(250,0,35,.16), transparent 70%); }
+  /* titles */
+  #lvHead svg { background: var(--rz); box-shadow: none; border-radius: 26px; }
+  #lvHead svg * { fill: #fff; stroke: #fff; } #lvHead svg rect[fill="#15181B"] { fill: var(--rz); } #lvHead svg circle { fill: #fff; }
+  #lvHead .lv-t, #vdHead .vd-t { font-family: var(--font); font-weight: 800; color: #fff; letter-spacing: 0; }
+  #lvHead .lv-st, #vdSub { color: var(--rz-t2); } #lvHead .lv-st span, #vdCount { color: var(--rz); }
+  /* side lists (folders / sections) */
+  #lvCats, #vdSecs { background: #0B0B0B; border: 1px solid #1B1B1B; border-radius: 32px; padding: 16px; gap: 6px; }
+  .lv-cat, .vd-sec { color: #fff; font-weight: 700; border: 0; border-radius: 22px; padding: 16px 22px; background: transparent; display: flex; align-items: center; gap: 14px; }
+  .lv-cat[data-ic]:not([data-ic=""])::before { content: ""; margin: 0; flex: none; width: 34px; height: 34px; background: currentColor; -webkit-mask-position: center; mask-position: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; opacity: .92; }
+  .lv-cat[data-ic="📺"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='7' width='20' height='14' rx='2'/%3E%3Cpath d='M17 2l-5 5-5-5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='7' width='20' height='14' rx='2'/%3E%3Cpath d='M17 2l-5 5-5-5'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="📰"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h13v16H6a2 2 0 0 1-2-2z'/%3E%3Cpath d='M17 8h3v10a2 2 0 0 1-2 2'/%3E%3Cpath d='M8 8h5M8 12h5M8 16h5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h13v16H6a2 2 0 0 1-2-2z'/%3E%3Cpath d='M17 8h3v10a2 2 0 0 1-2 2'/%3E%3Cpath d='M8 8h5M8 12h5M8 16h5'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="⚽"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7l4 3-1.5 5h-5L8 10z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7l4 3-1.5 5h-5L8 10z'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="🎬"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Cpath d='M7 3v18M17 3v18M3 8h4M3 12h4M3 16h4M17 8h4M17 12h4M17 16h4'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Cpath d='M7 3v18M17 3v18M3 8h4M3 12h4M3 16h4M17 8h4M17 12h4M17 16h4'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="🌍"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="🌐"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="🎭"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="✨"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="🕌"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 21h18M5 21V10M19 21V10M9 21v-6h6v6M12 3c3 2 6 3 7 7H5c1-4 4-5 7-7z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 21h18M5 21V10M19 21V10M9 21v-6h6v6M12 3c3 2 6 3 7 7H5c1-4 4-5 7-7z'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="🧸"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8 14a4 4 0 0 0 8 0M9 9h.01M15 9h.01'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8 14a4 4 0 0 0 8 0M9 9h.01M15 9h.01'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="📖"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 5h7a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H3zM21 5h-7a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h7z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 5h7a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H3zM21 5h-7a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h7z'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="🎞"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M10 8l6 4-6 4z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M10 8l6 4-6 4z'/%3E%3C/svg%3E"); }
+  .lv-cat[data-ic="📡"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3Cpath d='M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19a10 10 0 0 1 0-14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3Cpath d='M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19a10 10 0 0 1 0-14'/%3E%3C/svg%3E"); }
+  .lv-cat.on, .vd-sec.on { background: var(--rz-s3); box-shadow: none; color: #fff; }
+  .lv-cat.focus, .vd-sec.focus { background: var(--rz-s4); border: 0; box-shadow: 0 0 0 2px #fff; color: #fff; }
+  .lv-cat.moving { background: var(--rz); color: #fff; }
+  /* channel + film cards */
+  .lv-ch { background: var(--rz-s1); border: 0; border-radius: 24px; }
+  .lv-ch.focus { background: var(--rz-s4); box-shadow: 0 0 0 2px #fff, 0 20px 44px rgba(0,0,0,.65); }
+  .lv-ch.moving { box-shadow: 0 0 0 4px #000, 0 0 0 7px #fff; }
+  .lv-art, .vd-art { border-radius: 20px; }
+  .lv-ch.focus .lv-art, .vd-card.focus .vd-art { border-radius: 20px; }
+  .lv-art .lv-img { background: #F4F4F4; }
+  .lv-art b { font-family: var(--font); font-weight: 800; color: #fff; }
+  .lv-n, .vd-n { color: #fff; font-weight: 700; } .lv-s { color: var(--rz-t2); }
+  .lv-star, .vd-star { color: var(--rz); }
+  .vd-card { background: transparent; border: 0; border-radius: 24px; padding: 6px; }
+  .vd-card.focus { background: transparent; box-shadow: none; }
+  .vd-card.focus .vd-art { box-shadow: 0 0 0 3px #000, 0 0 0 6px #fff, 0 22px 44px rgba(0,0,0,.7); }
+  .vd-art { background: linear-gradient(160deg, #1F1F1F, #141414); }
+  .vd-art b { font-family: var(--font); color: #3A3A3A; }
+  .vd-tag { background: var(--rz); color: #fff; font-weight: 700; }
+  /* pills: filters, tools, view switch */
+  #lvViews { background: var(--rz-s2); border-radius: 999px; padding: 6px; }
+  .lv-vw, .lv-tl, .vd-tab { border: 0; border-radius: 999px; color: #fff; background: var(--rz-s2); font-weight: 700; }
+  .lv-vw { background: transparent; color: var(--rz-t2); }
+  .lv-vw.on, .lv-tl.on, .vd-tab.on, .vd-tab.tool.on, .lv-tl.on.focus, .vd-tab.on.focus { background: #fff; color: #000; }
+  .vd-tab.tool { background: var(--rz-s2); border: 0; }
+  .lv-vw.focus, .lv-tl.focus, .vd-tab.focus { border: 0; box-shadow: var(--rz-ring); background: var(--rz-s4); color: #fff; }
+  .lv-vw.on.focus, .lv-tl.on.focus, .vd-tab.on.focus { background: #fff; color: #000; }
+  #lvSearch, #vdSearch { background: var(--rz-s2); border: 2px solid var(--rz); border-radius: 999px; color: #fff; padding: 12px 26px; }
+  /* the hint line becomes a floating pill like the app's bottom bar */
+  #lvHint, #vdHint { left: 14px; right: 14px; bottom: 20px; text-align: center; padding: 14px 30px; border-radius: 32px; background: rgba(24,24,24,.96); color: var(--rz-t2); font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+  /* motion: a little spring on focus, a soft rise when a screen opens */
+  .lv-ch, .vd-card, .lv-cat, .vd-sec, .vd-tab, .lv-tl, .lv-vw { transition: transform .22s var(--spring), background-color .18s, color .18s, box-shadow .18s; }
+  .lv-ch.focus { transform: scale(1.035); } .vd-card.focus { transform: scale(1.06); }
+  .lv-cat.focus, .vd-sec.focus { transform: translateX(-6px) scale(1.02); }
+  .lv-tl.focus, .vd-tab.focus, .lv-vw.focus { transform: scale(1.06); }
+  @keyframes rzUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+  #liveModal.on #lvHint, #vodModal.on #vdHint { animation: rzUp .45s cubic-bezier(.2,.9,.3,1) .12s both; }
+  #lvGrid.fresh > .lv-ch, #vdGrid.fresh > .vd-card { animation-duration: .42s; animation-timing-function: var(--spring); }
+  /* the news / scores bar */
+  #liveTicker { background: #0B0B0B; border-top: 1px solid #222; height: 64px; }
+  #liveTicker .lt-badge { background: var(--rz); border-radius: 0 32px 32px 0; font-family: var(--font); font-weight: 800; }
+  #liveTicker .lt-lg { color: var(--rz-t2); }
 </style>
 <style id="userCss"></style>
 </head>

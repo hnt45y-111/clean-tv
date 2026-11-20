@@ -9,7 +9,7 @@ android {
         minSdk 24
         targetSdk 34
         versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 4)
-        versionName '5.0'
+        versionName '6.0'
     }
     signingConfigs {
         fixed {

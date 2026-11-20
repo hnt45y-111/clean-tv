@@ -78,20 +78,27 @@
     if (D.err) return 'تعذّر جلب المحتوى من الحساب (' + D.err + ')\nتأكد من بيانات الحساب ثم اضغط «🔄 تحديث»';
     return 'الحساب ما بيه محتوى بهذا القسم';
   }
+  /* menu rows are built once, afterwards only their classes change (same trick as قنواتي) */
+  function row(el, items) {
+    var sig = '', i, k = el.children;
+    for (i = 0; i < items.length; i++) sig += items[i].s + '\u0001';
+    if (el._sig !== sig || !k || k.length !== items.length) { el._sig = sig; var h = ''; for (i = 0; i < items.length; i++) h += items[i].h; el.innerHTML = h; return; }
+    for (i = 0; i < items.length; i++) if (k[i].className !== items[i].c) k[i].className = items[i].c;
+  }
   function draw() {
     if (!$('vodModal')) return;
     compute();
     $('vdTitle').textContent = appName();
-    var th = ''; TABS.forEach(function (t, i) { th += '<div class="vd-tab' + (t.tool ? ' tool' : '') + ((!t.tool && i === st.tab) || (t.id === 'favm' && st.favm) || (t.id === 'search' && st.q) || (t.id === 'cinema' && cinemaOn()) ? ' on' : '') + (st.f === 'tab' && i === st.ti ? ' focus' : '') + '">' + t.n + '</div>'; });
-    $('vdTabs').innerHTML = th;
-    var ch = '', from = Math.max(0, Math.min(st.ci - 4, st.cats.length - 10));
-    for (var i = from; i < Math.min(st.cats.length, from + 10); i++) ch += '<div class="vd-sec' + (i === st.ci ? ' on' : '') + (st.f === 'cat' && i === st.ci ? ' focus' : '') + '">' + esc(st.cats[i].n) + '</div>';
-    $('vdSecs').innerHTML = ch; $('vodModal').setAttribute('data-nocat', st.cats.length ? '0' : '1');
+    var ti = TABS.map(function (t, i) { var cc = 'vd-tab' + (t.tool ? ' tool' : '') + ((!t.tool && i === st.tab) || (t.id === 'favm' && st.favm) || (t.id === 'search' && st.q) || (t.id === 'cinema' && cinemaOn()) ? ' on' : '') + (st.f === 'tab' && i === st.ti ? ' focus' : ''); return { s: t.n, c: cc, h: '<div class="' + cc + '">' + t.n + '</div>' }; });
+    row($('vdTabs'), ti);
+    var from = Math.max(0, Math.min(st.ci - 4, st.cats.length - 10)), ci = [];
+    for (var i = from; i < Math.min(st.cats.length, from + 10); i++) { var cc = 'vd-sec' + (i === st.ci ? ' on' : '') + (st.f === 'cat' && i === st.ci ? ' focus' : ''); ci.push({ s: st.cats[i].n, c: cc, h: '<div class="' + cc + '">' + esc(st.cats[i].n) + '</div>' }); }
+    row($('vdSecs'), ci); $('vodModal').setAttribute('data-nocat', st.cats.length ? '0' : '1');
     var n = st.list.length; if (st.gi >= n) st.gi = Math.max(0, n - 1);
     var pg = Math.floor(st.gi / PAGE), a = pg * PAGE, slice = st.list.slice(a, a + PAGE), g = $('vdGrid');
     var key = st.tab + '|' + st.ci + '|' + st.q + '|' + (st.sub ? st.sub.title : '') + '|' + pg + '|' + n + '|' + (st.favm ? 1 : 0) + '|' + (slice[0] ? slice[0].n : '');
     if (key !== st.key) {
-      st.key = key; var FK = {}; favs().forEach(function (f) { FK[fk(f)] = 1; });
+      st.key = key; try { g.classList.remove('fresh'); void g.offsetWidth; g.classList.add('fresh'); } catch (e) {} var FK = {}; favs().forEach(function (f) { FK[fk(f)] = 1; });
       g.innerHTML = n ? slice.map(function (it) {
         var img = it.img ? '<img class="vd-img" loading="lazy" decoding="async" src="' + esc(it.img) + '" alt="" onerror="this.parentNode.removeChild(this)">' : '';
         return '<div class="vd-card' + (it.t === 'xe' ? ' ep' : '') + '"><div class="vd-art"><b>' + esc(String(it.n).replace(/^ال/, '').slice(0, 2)) + '</b>' + img + (FK[fk(it)] ? '<i class="vd-star">★</i>' : '') + (it.t === 'xs' ? '<i class="vd-tag">مسلسل</i>' : '') + '</div><div class="vd-n">' + esc(it.n) + '</div></div>';
