@@ -511,6 +511,31 @@ public class LiveActivity extends Activity {
             listTitle.setText("المجلدات"); listHint.setText(foChOpen ? "▲ ▼ تنقل · OK تشغيل · ► القنوات ◄ المجلدات · رجوع" : "▲ ▼ تنقل · OK اختيار المجلد · رجوع للإغلاق");
         }
         listPanel.setLayoutParams(lp); fList.setLayoutParams(fl); cList.setLayoutParams(cl);
+        pip(true);
+    }
+
+    /** while a list is open the picture keeps playing in the free corner instead of hiding behind the list */
+    private View pipFrame;
+    private void pip(boolean on) {
+        if (sv == null) return;
+        if (pipFrame == null) {
+            pipFrame = new View(this);
+            GradientDrawable g = new GradientDrawable(); g.setColor(Color.BLACK); g.setStroke(dp(3), COPPER); g.setCornerRadius(dp(14));
+            pipFrame.setBackground(g); pipFrame.setVisibility(View.GONE);
+            root.addView(pipFrame, 0, new FrameLayout.LayoutParams(1, 1));
+        }
+        View[] vs = yt != null && yt.getVisibility() == View.VISIBLE ? new View[]{ sv, ccView, yt } : new View[]{ sv, ccView };
+        if (!on || !panelOpen) {
+            for (View v : vs) v.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+            pipFrame.setVisibility(View.GONE); return;
+        }
+        int w = getResources().getDisplayMetrics().widthPixels;
+        float used = mode == 1 ? 0.34f : (foChOpen ? 0.62f : 0.27f);
+        int bw = Math.round(w * (1f - used) * 0.86f), bh = bw * 9 / 16, m = dp(28);
+        int grav = (mode == 1 ? Gravity.END : Gravity.START) | Gravity.CENTER_VERTICAL;
+        for (View v : vs) { FrameLayout.LayoutParams p = new FrameLayout.LayoutParams(bw, bh, grav); p.setMarginStart(m); p.setMarginEnd(m); v.setLayoutParams(p); }
+        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(bw + dp(12), bh + dp(12), grav); fp.setMarginStart(m - dp(6)); fp.setMarginEnd(m - dp(6));
+        pipFrame.setLayoutParams(fp); pipFrame.setVisibility(View.VISIBLE);
     }
 
     private void openChannels() {
@@ -529,7 +554,7 @@ public class LiveActivity extends Activity {
         refreshPanel(); scrollList(fList, selFolder);
     }
 
-    private void closePanel() { panelOpen = false; mode = 0; foChOpen = false; listPanel.setVisibility(View.GONE); }
+    private void closePanel() { panelOpen = false; mode = 0; foChOpen = false; listPanel.setVisibility(View.GONE); pip(false); }
 
     private boolean panelKey(int code) {
         int[] cur = fIdx.get(selFolder);
