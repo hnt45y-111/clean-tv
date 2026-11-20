@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3500; const LAN = process.env.LAN_IP;
 const HOST = `http://127.0.0.1:${PORT}`; const REMOTE = `http://${LAN}:${PORT}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const errs = [];
 (async () => {
-  const b = await chromium.launch({ args: ['--no-proxy-server'] }); // اتصال مباشر بالشبكة المحلية
+  const b = await chromium.launch({ args: ['--proxy-server=direct://'] }); // اتصال مباشر بالشبكة المحلية
   const page = async (name, url) => {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: 'ar' });
     await ctx.addInitScript(() => { try { localStorage.setItem('mafia.prefs', JSON.stringify({ lite: true })); } catch {} });

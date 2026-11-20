@@ -134,7 +134,7 @@ function dayView(R, m, members) {
     myInvestigations(m, members),
     h('h3', {}, t('players')), m.players.map((p) => playerRow(p, members, { me: m.me.id, speaker: m.speaker, showRole: true })), reportRow(m, members));
 }
-const reportRow = (m, members) => h('button', { class: 'btn ghost sm', onclick: () => sheet((a) => [h('h2', {}, t('report')), m.players.filter((p) => p.id !== m.me?.id).map((p) => h('button', { class: 'prow', onclick: () => { a.close(); reportSheet({ id: +p.id, name: p.name }); } }, pAvatar(members, p, 'sm'), h('b', {}, p.name)))]) }, ic('flag', 'sm'), t('report'));
+const reportRow = (m, members) => S.cfg.local ? null : h('button', { class: 'btn ghost sm', onclick: () => sheet((a) => [h('h2', {}, t('report')), m.players.filter((p) => p.id !== m.me?.id).map((p) => h('button', { class: 'prow', onclick: () => { a.close(); reportSheet({ id: +p.id, name: p.name }); } }, pAvatar(members, p, 'sm'), h('b', {}, p.name)))]) }, ic('flag', 'sm'), t('report'));
 
 // التصويت (19)
 function voteView(R, m, members) {

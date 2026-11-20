@@ -123,7 +123,7 @@ export const lobby = () => {
     return h('div', { class: 'prow' + (fresh ? ' deal' : '') + (m.id === S.user.id ? ' me' : '') }, avatar({ ...m, online: m.connected }), h('div', { class: 'grow' }, h('div', { class: 'nm' }, m.name, m.guest ? h('span', { class: 'tiny dim' }, ' · ' + t('guest_tag')) : null), h('div', { class: 'tiny dim' }, h('span', { class: 'num' }, 'ID ' + m.uid), ' · ', m.connected ? t('connected') : t('disconnected'))),
       !offline && !R.auto ? h('span', { class: 'chip', style: m.ready ? { color: 'var(--green)', borderColor: 'var(--green)' } : {} }, m.ready ? t('ready') : t('not_ready')) : null,
       isHost ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('kick'), onclick: async () => { if (await confirmBox(t('kick'), m.name, t('kick'))) act(null, { t: 'room:kick', userId: m.id }); } }, ic('x', 'sm'))
-        : m.id !== S.user.id ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('report'), onclick: () => reportSheet(m) }, ic('flag', 'sm')) : null); });
+        : m.id !== S.user.id && !S.cfg.local ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('report'), onclick: () => reportSheet(m) }, ic('flag', 'sm')) : null); });
   const st = R.settings;
   return [screen(topbar(offline ? t('offline_room') : t('lobby'), { back: leave, right: h('span', { class: 'chip' }, ic('users', 'sm'), h('span', { class: 'num' }, `${R.members.length}/${st.players}`)) }),
     isHost && offline && S.cfg.local ? wifiStep() : null,
