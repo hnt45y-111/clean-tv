@@ -355,6 +355,23 @@ function osPanelWire(box, S) {
       $('#ownerSave').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); if (nm) S.ownerName = nm.slice(0, 20); else delete S.ownerName; changed(); live({ settings: S }); toast('انحفظ الاسم'); };
       $('#greetTog').onclick = () => { tap(); S.greetOn = S.greetOn === false; $('#greetTog .toggle').classList.toggle('on', S.greetOn !== false); changed(); live({ settings: S }); };
       $('#greetPreview').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); live({ settings: Object.assign({}, S, { ownerName: nm, greetOn: true }), action: 'greet' }); };
+      /* «الربط الذكي»: paste what the provider gave you; this phone reads it and hands the result to the TV */
+      const sm = document.createElement('div');
+      sm.innerHTML = `<div class="panel"><h2>${ic('live')} الربط الذكي</h2><p class="sub" style="margin-top:-4px">الصق رابط من مزوّدك (قائمة M3U، رابط حساب IPTV، أو فيديو). الموبايل (على شبكة المزوّد) يفحصه ويعرف نوعه، وتضيفه للتلفزيون بضغطة.</p>
+        <input id="smUrl" dir="ltr" placeholder="https://…" style="width:100%">
+        <button class="btn sec full" id="smGo" style="margin-top:8px">${ic('refresh')} تعرّف على الرابط</button>
+        <div id="smOut" style="margin-top:10px"></div></div>`;
+      p.insertBefore(sm, p.firstChild);
+      $('#smGo').onclick = async () => {
+        tap(); const out = $('#smOut'); out.innerHTML = '<p class="sub">جاري الفحص…</p>';
+        const r = await window.SmartLink.identify($('#smUrl').value);
+        const ok = !!r.apply, T = { live: 'للقنوات', vod: 'للأفلام والمسلسلات', both: 'للاثنين' };
+        out.innerHTML = `<div class="item" style="padding:10px 0"><div class="t"><b>${ok ? '✅' : 'ℹ️'} ${esc(r.label)}</b><small>${esc(r.detail)}</small></div></div>` +
+          (ok ? `<div class="chips">${(r.targets || ['both']).map(t => `<button class="chip on" data-smt="${t}">أضفه ${T[t]}</button>`).join('')}</div>` : '') +
+          `<button class="btn ghost full" id="smLog" style="margin-top:8px">${ic('copy')} نسخ التشخيص</button>`;
+        out.querySelectorAll('[data-smt]').forEach(b => b.onclick = () => { tap(); r.apply(S, b.dataset.smt); changed(); live({ settings: S }); toast('انضاف للتلفزيون ' + T[b.dataset.smt]); });
+        $('#smLog').onclick = () => { tap(); try { B.copy(window.SmartLink.logText(r)); toast('انسخ التشخيص'); } catch (e) { toast('ما قدرت أنسخ'); } };
+      };
       /* family profiles: a face and a name for everyone at home */
       const PCOL = ['#D9822B', '#3DBE6C', '#4A8FE7', '#C9508B', '#8E6BE0', '#E0B03D'];
       const pfs = () => (S.profiles = (S.profiles || []).slice(0, 6));

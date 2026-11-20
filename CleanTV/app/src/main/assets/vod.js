@@ -43,14 +43,16 @@
     return out;
   }
   function pullLinks() {
-    var L = links(); if (!L.length) return Promise.resolve(null);
-    var key = L.join('|');
+    var L = links(), VI = (S().vodItems || []).filter(function (o) { return o && /^https?:/i.test(o.u || ''); });
+    if (!L.length && !VI.length) return Promise.resolve(null);
+    var key = L.join('|') + '#' + VI.length;
     try { var c = JSON.parse(localStorage.getItem('vodLk') || 'null'); if (c && c.k === key && Date.now() - c.t < TTL) return Promise.resolve(c); } catch (e) {}
     return Promise.all(L.map(function (u) { return window.__fetchText ? window.__fetchText(u) : Promise.resolve('ERR:no'); })).then(function (rs) {
       var items = [], bad = '';
       rs.forEach(function (t) { if (String(t).indexOf('#EXT') >= 0) items = items.concat(parseM3(t)); else bad = String(t).indexOf('ERR:') === 0 ? String(t).slice(4) : 'الرابط ما يرجّع قائمة M3U'; });
+      VI.forEach(function (o) { items.push({ n: o.n || 'فيديو', g: 'روابط مباشرة', l: '', u: o.u, vi: 1 }); });
       if (!items.length) { D.err = bad || 'القائمة فاضية'; return null; }
-      var M = [], Sr = [], isS = function (it) { return /مسلسل|series|episode|season|حلقة|موسم|\bS\d{1,2}\s?E\d{1,3}\b/i.test(it.g + ' ' + it.n); };
+      var M = [], Sr = [], isS = function (it) { return !it.vi && /مسلسل|series|episode|season|حلقة|موسم|\bS\d{1,2}\s?E\d{1,3}\b/i.test(it.g + ' ' + it.n); };
       items.forEach(function (it) { var o = { t: 'ml', n: it.n, id: it.u, u: it.u, img: it.l || '', c: 'L:' + (it.g || 'بدون تصنيف') }; (isS(it) ? Sr : M).push(o); });
       var mk = function (a) { var seen = {}, cats = []; a.forEach(function (o) { if (!seen[o.c]) { seen[o.c] = 1; cats.push({ id: o.c, n: o.c.slice(2) }); } }); return { cats: cats, items: a }; };
       var res = { k: key, t: Date.now(), m: mk(M), s: mk(Sr) };

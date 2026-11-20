@@ -91,13 +91,13 @@ async function sendTele(force) {
     if (id === 'clean' && !featureOn('clean')) return featureLocked();
     return _show.apply(this, arguments);
   };
-  const FREE = new Set([...D_LOCAL, 'shareStart', 'shareStop', 'status', 'selfInfo', 'selfStart', 'selfStop', 'kv', 'tele', 'httpPost', 'fetchText']);
+  const FREE = new Set([...D_LOCAL, 'shareStart', 'shareStop', 'status', 'selfInfo', 'selfStart', 'selfStop', 'kv', 'tele', 'httpPost', 'fetchText', 'probe']);
   ['connect', 'pair'].forEach(x => FREE.delete(x));
   const _d = window.__direct;
   window.__direct = function (op, a) {
     if (!isAdminS()) {
       const r = myRule();
-      if (r && r.s && !['fetchText', 'tele', 'httpPost'].includes(op)) return Promise.reject(new Error('تم إيقاف حسابك'));
+      if (r && r.s && !['fetchText', 'probe', 'tele', 'httpPost'].includes(op)) return Promise.reject(new Error('تم إيقاف حسابك'));
       if (!featureOn('adb') && !FREE.has(op)) return Promise.reject(new Error('التحكم بالشاشات موقوف لحسابك من الإدارة'));
       if (!featureOn('files') && /^(push|pushData|pick|sendFile|fmPush)$/.test(op)) return Promise.reject(new Error('إرسال الملفات موقوف لحسابك من الإدارة'));
     }
