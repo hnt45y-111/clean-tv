@@ -60,5 +60,6 @@ export const settings = () => {
       row('bolt', t('lite_mode'), sw(prefs.lite, (v) => setPref('lite', v)), t('lite_hint'))),
     Object.keys(LANGS).length > 1 ? h('div', { class: 'card col' }, h('div', { class: 'row' }, ic('globe'), h('b', {}, t('language'))), h('div', { class: 'seg' }, Object.entries(LANGS).map(([k, L]) => h('button', { class: prefs.lang === k ? 'on' : '', onclick: () => { setPref('lang', k); applyLang(); } }, L.name)))) : null,
     h('div', { class: 'card col' }, h('div', { class: 'row' }, ic('info'), h('b', {}, t('about'))), h('p', { class: 'small dim' }, t('about_text')), h('div', { class: 'tiny dim' }, t('server'), ': ', h('span', { class: 'num' }, location.host))),
+    window.Android?.changeServer ? h('button', { class: 'btn block', onclick: () => window.Android.changeServer() }, ic('globe'), t('change_server')) : null,
     S.user ? h('button', { class: 'btn danger block', onclick: async () => { if (await confirmBox(t('logout'), t('logout_confirm'), t('logout'))) { try { await api('/api/auth/logout', { method: 'POST' }); } catch { /* غير متصل */ } dropSession(); go('login'); } } }, ic('out'), t('logout')) : null), S.user ? navbar('profile') : null].filter(Boolean);
 };

@@ -175,3 +175,4 @@ body.is-day #bg { background: radial-gradient(110% 60% at 50% -10%, rgba(232,174
 .ach { text-align: center; padding: 14px 8px; } .ach .ico { width: 54px; height: 54px; margin: 0 auto 6px; border-radius: 18px; display: grid; place-items: center; background: color-mix(in srgb, var(--role) 18%, transparent); color: var(--role); border: 1px solid color-mix(in srgb, var(--role) 45%, transparent); } .ach.locked { opacity: .4; filter: grayscale(1); }
 .lite *, .lite *::before, .lite *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+.card > .art, .card .col > .art { width: 140px; height: auto; }

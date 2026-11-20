@@ -1,0 +1,25 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.mafia.game'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.mafia.game'
+        minSdk 26
+        targetSdk 34
+        versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
+        versionName '2.0'
+    }
+    // واجهة اللعبة تُنسخ من Mafia/client عند البناء (مصدر واحد للويب والتطبيق)
+    sourceSets { main { assets.srcDirs += ["$buildDir/generated/webassets"] } }
+    signingConfigs {
+        fixed { storeFile file('mafia.keystore'); storePassword 'mafiagame1'; keyAlias 'mafia'; keyPassword 'mafiagame1' }
+    }
+    buildTypes { debug { signingConfig signingConfigs.fixed } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+
+tasks.register('copyWeb', Copy) {
+    from('../../client') { exclude 'sw.js' }
+    into("$buildDir/generated/webassets/web")
+}
+preBuild.dependsOn('copyWeb')

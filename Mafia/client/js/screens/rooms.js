@@ -2,7 +2,7 @@ import { h, ic, avatar, toast, sheet, copyText, confirmBox, fmtTime } from '../d
 import { t } from '../i18n.js';
 import { S, notify, serverNow } from '../store.js';
 import { api, send } from '../net.js';
-import { go, screen, topbar, act, fail, cached } from './common.js';
+import { go, screen, topbar, act, fail, cached, liveCfg } from './common.js';
 import qrcode from '../../vendor/qrcode.mjs';
 import { roleArt, ROLE_COLOR } from '../art.js';
 import { sfx } from '../fx.js';
@@ -62,7 +62,7 @@ export function settingsForm(d, { mode, rerender }) {
 export const create = () => {
   const mode = S.params.mode || 'online'; if (!draft || draft._m !== mode) { draft = defaultDraft(mode); draft._m = mode; }
   const btn = h('button', { class: 'btn primary lg block', disabled: !!validateDraft(draft), onclick: async (e) => { const { _m, ...settings } = draft; if (await act(e.currentTarget, { t: 'room:create', mode, settings })) draft = null; } }, ic('plus'), t('create_room_btn'));
-  return [screen(topbar(mode === 'offline' ? t('create_offline') : t('create_room'), { back: () => go('mode', { m: mode }) }),
+  return [screen(topbar(mode === 'offline' ? t('create_offline') : t('create_room'), { back: () => go(S.cfg.local ? 'home' : 'mode', { m: mode }) }),
     h('div', { class: 'banner', style: { background: 'rgba(36,120,232,.14)', borderColor: 'rgba(36,120,232,.5)', color: '#8ab8ff' } }, ic('mic', 'sm'), t('narrator_you')),
     settingsForm(draft, { mode, rerender: notify }), btn)];
 };
@@ -100,7 +100,8 @@ export const join = () => {
     } catch { toast(t('camera_denied'), 'err'); }
   };
   function stopScan() { scanning?.stream.getTracks().forEach((x) => x.stop()); scanning = null; camBox.classList.add('hide'); }
-  return [screen(topbar(offline ? t('join_qr') : t('join_room'), { back: () => { stopScan(); go('mode', { m: mode }); } }),
+  return [screen(topbar(offline ? t('join_qr') : t('join_room'), { back: S.cfg.local ? (S.cfg.isHost ? 'home' : null) : () => { stopScan(); go('mode', { m: mode }); } }),
+    S.cfg.local && !S.cfg.isHost ? h('div', { class: 'card col' }, h('h3', {}, t('local_join_title')), h('p', { class: 'small dim' }, t('local_join_how'))) : null,
     offline ? h('div', { class: 'col' },
       h('div', { class: 'card accent', style: { '--role': 'var(--green)' } }, h('div', { class: 'center' }, h('div', { style: { color: 'var(--green)' } }, ic('qr', 'lg')), h('h3', {}, t('scan_title')), h('p', { class: 'small dim' }, t('scan_how')))),
       h('button', { class: 'btn green lg block', onclick: startScan }, ic('camera'), t('scan_now')), camBox, h('div', { class: 'center dim small' }, t('or_enter_key'))) : h('div', { class: 'card center dim small' }, t('join_online_desc')),
@@ -115,17 +116,21 @@ export const lobby = () => {
   if (knownRoom !== R.code) { known.clear(); knownRoom = R.code; R.members.forEach((m) => known.add(m.id)); }
   const ready = R.members.filter((m) => m.ready).length; const me = R.members.find((m) => m.id === S.user.id);
   const base = cached('lan', loadBase, 60000);
-  const canStart = isHost && R.members.length >= MIN && (offline || R.members.every((m) => m.ready));
+  const guests = R.guests || []; const total = R.members.length + guests.length;
+  const canStart = isHost && total >= MIN && (offline || R.members.every((m) => m.ready));
   const leave = async () => { if (await confirmBox(isHost ? t('close_room') : t('leave_room'), isHost ? t('close_room_confirm') : t('leave_confirm'), isHost ? t('close_room') : t('leave_room'))) send({ t: isHost ? 'room:close' : 'room:leave' }); };
   const cd = R.auto && R.startsAt ? h('div', { class: 'card center' }, h('div', { class: 'small dim' }, t('auto_starts_in')), h('div', { class: 'code-big', 'data-cd': R.startsAt }, '…')) : null;
   const rows = R.members.map((m) => { const fresh = !known.has(m.id); known.add(m.id);
     return h('div', { class: 'prow' + (fresh ? ' deal' : '') + (m.id === S.user.id ? ' me' : '') }, avatar({ ...m, online: m.connected }), h('div', { class: 'grow' }, h('div', { class: 'nm' }, m.name, m.guest ? h('span', { class: 'tiny dim' }, ' · ' + t('guest_tag')) : null), h('div', { class: 'tiny dim' }, h('span', { class: 'num' }, 'ID ' + m.uid), ' · ', m.connected ? t('connected') : t('disconnected'))),
       !offline && !R.auto ? h('span', { class: 'chip', style: m.ready ? { color: 'var(--green)', borderColor: 'var(--green)' } : {} }, m.ready ? t('ready') : t('not_ready')) : null,
       isHost ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('kick'), onclick: async () => { if (await confirmBox(t('kick'), m.name, t('kick'))) act(null, { t: 'room:kick', userId: m.id }); } }, ic('x', 'sm'))
-        : m.id !== S.user.id ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('report'), onclick: () => reportSheet(m) }, ic('flag', 'sm')) : null); });
+        : m.id !== S.user.id && !S.cfg.local ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('report'), onclick: () => reportSheet(m) }, ic('flag', 'sm')) : null); });
   const st = R.settings;
-  return [screen(topbar(offline ? t('offline_room') : t('lobby'), { back: leave, right: h('span', { class: 'chip' }, ic('users', 'sm'), h('span', { class: 'num' }, `${R.members.length}/${st.players}`)) }),
-    isHost && offline ? h('div', { class: 'col' }, h('div', { class: 'qrbox' }, base ? raw(qrSvg(joinUrl(base, R.joinKey))) : h('div', { class: 'spinner', style: { margin: '80px auto' } })),
+  return [screen(topbar(offline ? t('offline_room') : t('lobby'), { back: leave, right: h('span', { class: 'chip' }, ic('users', 'sm'), h('span', { class: 'num' }, `${total}/${st.players}`)) }),
+    isHost && offline && S.cfg.local ? wifiStep() : null,
+    isHost && offline && (!S.cfg.local || qrStep === 2 || !S.cfg.wifi) ? h('div', { class: 'col' }, S.cfg.local && !S.cfg.wifi ? h('div', { class: 'banner red' }, ic('wifioff', 'sm'), t('hotspot_manual')) : null,
+      S.cfg.local ? h('div', { class: 'small dim center' }, t('step2_hint')) : null,
+      h('div', { class: 'qrbox' }, base ? raw(qrSvg(joinUrl(base, R.joinKey))) : h('div', { class: 'spinner', style: { margin: '80px auto' } })),
       h('div', { class: 'center' }, h('div', { class: 'small dim' }, t('room_number')), h('div', { class: 'code-big' }, R.code)),
       h('div', { class: 'row' }, h('button', { class: 'btn grow sm', onclick: () => base && copyText(joinUrl(base, R.joinKey)) }, ic('copy', 'sm'), t('copy_link')), h('button', { class: 'btn grow sm', onclick: () => copyText(R.joinKey) }, ic('lock', 'sm'), t('copy_key'))),
       h('div', { class: 'tiny dim center' }, base ? base.replace(/^https?:\/\//, '') : '')) : null,
@@ -137,9 +142,13 @@ export const lobby = () => {
       st.doctor && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.doctor } }, t('role_doctor')), st.detective && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.detective } }, t('role_detective')), st.sniper && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.sniper } }, t('role_sniper'))),
       h('div', { class: 'tiny dim' }, `${t('talk_time')} ${secLabel(st.talkSeconds)} · ${t('vote_time')} ${secLabel(st.voteSeconds)} · ${t('rounds')} ${st.rounds}`)),
       isHost ? h('button', { class: 'iconbtn', onclick: () => settingsSheet(), 'aria-label': t('edit') }, ic('edit')) : null),
+    isHost && S.cfg.local ? h('div', { class: 'col' }, h('div', { class: 'row between' }, h('h3', {}, t('nd_guests')), h('button', { class: 'btn sm', onclick: () => guestSheet() }, ic('plus', 'sm'), t('nd_add_guest'))),
+      h('div', { class: 'tiny dim' }, t('nd_guests_hint')),
+      guests.map((g) => h('div', { class: 'prow' }, avatar({ name: g.name }), h('div', { class: 'grow' }, h('div', { class: 'nm' }, g.name), h('div', { class: 'tiny dim' }, t('nd_no_phone'))),
+        h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, onclick: () => act(null, { t: 'room:removeGuest', id: g.id }) }, ic('x', 'sm'))))) : null,
     h('div', { class: 'col' }, h('div', { class: 'row between' }, h('h3', {}, t('players')), !offline && !R.auto ? h('span', { class: 'small dim num' }, `${ready}/${R.members.length} ${t('ready')}`) : null), rows.length ? rows : h('div', { class: 'card center dim small' }, t('waiting_players'))),
     h('div', { class: 'sp' }),
-    isHost ? h('div', { class: 'col' }, !canStart && h('div', { class: 'small dim center' }, R.members.length < MIN ? t('need_min', { n: MIN }) : t('wait_ready')),
+    isHost ? h('div', { class: 'col' }, !canStart && h('div', { class: 'small dim center' }, total < MIN ? t('need_min', { n: MIN }) : t('wait_ready')),
       h('button', { class: 'btn primary lg block', disabled: !canStart, onclick: (e) => act(e.currentTarget, { t: 'room:start' }) }, ic('play'), t('start_game')),
       h('button', { class: 'btn danger block', onclick: leave }, t('close_room')))
       : !offline && !R.auto && me ? h('button', { class: 'btn lg block ' + (me.ready ? '' : 'green'), onclick: (e) => act(e.currentTarget, { t: 'room:ready', ready: !me.ready }) }, ic('check'), me.ready ? t('cancel_ready') : t('im_ready'))
@@ -148,6 +157,21 @@ export const lobby = () => {
   )];
 };
 const raw = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; };
+
+// ---- الوضع المحلي: باركود الشبكة (الخطوة 1) ثم باركود الغرفة (الخطوة 2) ----
+let qrStep = 1;
+const wifiEsc = (s) => String(s).replace(/([\\;,:"])/g, '\\$1');
+export const wifiQrText = (w) => `WIFI:T:${w.security === 'SAE' ? 'SAE' : w.security === 'nopass' ? 'nopass' : 'WPA'};S:${wifiEsc(w.ssid)};${w.pass ? 'P:' + wifiEsc(w.pass) + ';' : ''};`;
+function wifiStep() {
+  const cfg = liveCfg(); const w = cfg.wifi; if (!w) return null;
+  const seg = h('div', { class: 'seg' }, [[1, t('step1')], [2, t('step2')]].map(([n, l]) => h('button', { class: qrStep === n ? 'on' : '', onclick: () => { qrStep = n; notify(); } }, l)));
+  if (qrStep !== 1) return seg;
+  return h('div', { class: 'col' }, seg, h('div', { class: 'small dim center' }, t('step1_hint')),
+    h('div', { class: 'qrbox' }, raw(qrSvg(wifiQrText(w)))),
+    h('div', { class: 'card col', style: { gap: '6px' } }, h('div', { class: 'row between' }, h('span', { class: 'small dim' }, t('wifi_name')), h('b', { class: 'num' }, w.ssid)),
+      w.pass ? h('div', { class: 'row between' }, h('span', { class: 'small dim' }, t('wifi_pass')), h('b', { class: 'num' }, w.pass)) : null),
+    h('button', { class: 'btn blue block', onclick: () => { qrStep = 2; notify(); } }, t('next_step')));
+}
 const secLabel = secFmt;
 
 export function reportSheet(m) {
@@ -164,3 +188,10 @@ function settingsSheet() {
   sheet((a) => { const body = h('div', { class: 'col' }); const draw = () => { body.replaceChildren(settingsForm(d, { mode: R.mode, rerender: draw }), h('button', { class: 'btn primary lg block', disabled: !!validateDraft(d), onclick: async () => { if (await act(null, { t: 'room:settings', settings: d })) a.close(); } }, t('save'))); }; draw(); return [h('h2', {}, t('match_settings')), body]; });
 }
 export { settingsSheet };
+
+function guestSheet() {
+  sheet((a) => { const inp = h('input', { class: 'input', id: 'guestname', maxlength: 24, placeholder: t('player_name') });
+    const add = async () => { if (!inp.value.trim()) return; if (await act(null, { t: 'room:addGuest', name: inp.value })) { inp.value = ''; toast(t('nd_guest_added'), 'ok'); } };
+    setTimeout(() => inp.focus(), 50);
+    return [h('h2', {}, t('nd_add_guest')), h('p', { class: 'small dim' }, t('nd_guests_hint')), inp, h('div', { class: 'row' }, h('button', { class: 'btn blue grow', onclick: add }, ic('plus'), t('add')), h('button', { class: 'btn grow', onclick: a.close }, t('close')))]; });
+}

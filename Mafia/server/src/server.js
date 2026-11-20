@@ -29,7 +29,9 @@ export function createApp({ db = openDb(), clientDir = join(here, '../../client'
   const authed = (req) => A.userFromToken(db, bearer(req)) || (() => { throw new A.AuthError('unauthorized', 401); })();
 
   async function api(req, res, url) {
-    const p = url.pathname; const m = req.method; const ip = req.socket.remoteAddress;
+    const p = url.pathname; const m = req.method;
+    // خلف بروكسي الاستضافة (Render…) عنوان العميل الحقيقي في X-Forwarded-For
+    const ip = process.env.TRUST_PROXY ? String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress : req.socket.remoteAddress;
     if (m === 'GET' && p === '/api/config') return json(res, 200, { googleClientId, version: 1 });
     if (m === 'GET' && p === '/api/lan') return json(res, 200, { addresses: lanAddresses() });
     if (m === 'GET' && p === '/api/health') return json(res, 200, { ok: true, rooms: hub.rooms.size });

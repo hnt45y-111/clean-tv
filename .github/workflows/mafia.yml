@@ -1,0 +1,42 @@
+name: Build Mafia APK
+on:
+  push:
+    paths:
+      - 'Mafia/android/**'
+      - 'Mafia/client/**'
+      - '.github/workflows/mafia.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Mafia/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test host server core (Java)
+        run: bash devserver/run-tests.sh
+      - name: Build
+        run: gradle assembleDebug --no-daemon -PbuildNum=${{ github.run_number }}
+      - name: Rename
+        run: cp app/build/outputs/apk/debug/app-debug.apk mafia.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mafia-apk
+          path: Mafia/android/mafia.apk
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "mafia-${{ github.run_number }}" mafia.apk --repo "${{ github.repository }}" --target "${{ github.sha }}" --title "لعبة مافيا ${{ github.run_number }}" --notes "نزّل mafia.apk وثبّته على هاتف الراوي (أندرويد 8 فأحدث). اللاعبون يكفيهم الباركود والمتصفح." --latest=false

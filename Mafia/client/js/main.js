@@ -28,6 +28,7 @@ function currentKey() {
     if (S.route === 'stats' && R.match.phase === 'ended') return 'stats';
     return R.isHost && !R.auto ? 'narrator' : 'play';
   }
+  if (S.cfg.local) return ['create', 'settings'].includes(S.route) && (S.cfg.isHost || S.route === 'settings') ? S.route : 'home';
   return SCREENS[S.route] && !PUBLIC.slice(0, 4).includes(S.route) ? S.route : 'home';
 }
 
