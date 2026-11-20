@@ -689,6 +689,7 @@
     if (pkg === VOD_PKG) { if (window.Vod) window.Vod.open(); return; }
     if (!kidsBeforeLaunch()) return;
     pushRecent(pkg);
+    var la = apps.filter(function (a) { return a.pkg === pkg; })[0]; logWatch('app', la ? appName(la) : pkg);
     if (HAS_ANDROID) { if (!A.launch(pkg)) toast('ما گدرت أفتح هذا التطبيق'); } else toast('فتح: ' + pkg);
   }
   function shade(hex, f) {
@@ -1169,6 +1170,8 @@
       { id: 'hide', label: 'إخفاء وإظهار', icon: 'eye', active: mode === 'hide' },
       { id: 'kids', label: 'وضع الأطفال', icon: 'child' },
       { id: 'bedtime', label: 'قصة قبل النوم', icon: 'moon' },
+      { id: 'wiz', label: 'شنو أشوف الليلة؟', icon: 'search' },
+      { id: 'recap', label: 'قصة شهري', icon: 'picture' },
       { id: 'prefs', label: 'إعدادات الواجهة', icon: 'sliders' },
       { id: 'refresh', label: 'تحديث', icon: 'refresh' }
     ];
@@ -1986,6 +1989,73 @@
     layer = 'main'; renderNowPlaying();
   }
 
+  // ---------- «شنو أشوف الليلة؟»: two quick questions, then straight to the right shelf ----------
+  var WIZ = [
+    { q: 'شلون مزاجك الليلة؟', a: [['fun', '😄 ضحك وخفة'], ['action', '🔥 أكشن وإثارة'], ['calm', '🌿 هدوء وعائلة'], ['know', '📰 أخبار ومعرفة'], ['sport', '⚽ رياضة']] },
+    { q: 'شنو تفضّل؟', a: [['live', '📡 بث مباشر'], ['movie', '🎬 فيلم'], ['series', '📺 مسلسل']] }
+  ];
+  var WIZ_LIVE = { fun: 'ent', action: 'movies', calm: 'kids', know: 'news', sport: 'sport' };
+  var WIZ_VOD = { fun: /كوميد|ضحك|ترفيه|كرتون|انمي|أنمي/i, action: /أكشن|اكشن|إثارة|اثارة|رعب|حرب|جريمة|action|thriller|horror/i, calm: /عائل|دراما|أطفال|اطفال|كرتون|family|drama|kids/i, know: /وثائق|طبيعة|تاريخ|document/i, sport: /رياض|sport/i };
+  var wz = { step: 0, i: 0, mood: '' };
+  function openWiz() { wz = { step: 0, i: 0, mood: '' }; layer = 'wiz'; $('wizModal').classList.add('on'); drawWiz(); }
+  function closeWiz() { $('wizModal').classList.remove('on'); layer = 'main'; nav.refresh(); }
+  function drawWiz() {
+    var S = WIZ[wz.step];
+    $('wizModal').innerHTML = '<div class="wz-box"><div class="wz-step">' + nf.format(wz.step + 1) + ' / ' + nf.format(WIZ.length) + '</div><div class="wz-q">' + S.q + '</div><div class="wz-a">' +
+      S.a.map(function (x, i) { return '<div class="wz-c' + (i === wz.i ? ' focus' : '') + '">' + x[1] + '</div>'; }).join('') + '</div><div class="wz-h">الأسهم للاختيار · OK للتأكيد · رجوع للإلغاء</div></div>';
+  }
+  function wizKey(k) {
+    var n = WIZ[wz.step].a.length;
+    if (k === 'back') { if (wz.step) { wz.step = 0; wz.i = 0; drawWiz(); } else closeWiz(); return; }
+    if (k === 'ArrowLeft' || k === 'ArrowDown') wz.i = (wz.i + 1) % n;
+    else if (k === 'ArrowRight' || k === 'ArrowUp') wz.i = (wz.i - 1 + n) % n;
+    else if (k === 'ok') {
+      var v = WIZ[wz.step].a[wz.i][0];
+      if (wz.step === 0) { wz.mood = v; wz.step = 1; wz.i = 0; }
+      else {
+        var hasVod = !!(settings.xtream && settings.xtream.user && settings.xtream.vod !== false);
+        $('wizModal').classList.remove('on');
+        if (v === 'live' || !hasVod || !window.Vod) { if (v !== 'live') toast('الأفلام والمسلسلات تحتاج حساب IPTV · فتحتلك قنوات مناسبة'); if (window.Live) window.Live.openCategory(WIZ_LIVE[wz.mood]); }
+        else window.Vod.openCategory(v === 'movie' ? 0 : 1, WIZ_VOD[wz.mood]);
+        return;
+      }
+    }
+    drawWiz();
+  }
+
+  // ---------- «قصة شهري»: what was watched this month, built from the TV's own history ----------
+  function logWatch(kind, name) {
+    try {
+      var k = 'watchLog', L = JSON.parse(localStorage.getItem(k) || '[]');
+      L.push([Date.now(), kind, String(name || '').slice(0, 60)]); if (L.length > 1500) L = L.slice(-1500);
+      localStorage.setItem(k, JSON.stringify(L));
+    } catch (e) {}
+  }
+  window.__logWatch = logWatch;
+  function openRecap() {
+    var L = []; try { L = JSON.parse(localStorage.getItem('watchLog') || '[]'); } catch (e) {}
+    var since = Date.now() - 30 * DAY, M = L.filter(function (r) { return r[0] >= since; });
+    var cnt = {}, kinds = { live: 0, vod: 0, app: 0 }, days = {}, hours = {};
+    M.forEach(function (r) { cnt[r[2]] = (cnt[r[2]] || 0) + 1; kinds[r[1]] = (kinds[r[1]] || 0) + 1; days[dayKey(new Date(r[0]))] = 1; var h = new Date(r[0] + 3 * 3600000).getUTCHours(); hours[h] = (hours[h] || 0) + 1; });
+    var top = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; }).slice(0, 3);
+    var ph = Object.keys(hours).sort(function (a, b) { return hours[b] - hours[a]; })[0];
+    var nm = String(settings.ownerName || '').trim();
+    var tiles = M.length ? [
+      ['🗓', nf.format(Object.keys(days).length), 'يوم شغّلت بيه الشاشة'],
+      ['▶️', nf.format(M.length), 'مرة فتحت قناة أو فيلم أو تطبيق'],
+      ['📡', nf.format(kinds.live || 0), 'قناة مباشرة'],
+      ['🎬', nf.format(kinds.vod || 0), 'فيلم وحلقة'],
+      ['⏰', ph != null ? nf.format(+ph % 12 || 12) + (+ph < 12 ? ' ص' : ' م') : '—', 'ساعتك المفضلة']
+    ] : [];
+    $('recapModal').innerHTML = '<div class="rc-box"><div class="rc-t">قصة شهرك' + (nm ? '، ' + esc(nm) : '') + '</div><div class="rc-s">آخر ٣٠ يوم على هذي الشاشة</div>' +
+      (M.length ? '<div class="rc-grid">' + tiles.map(function (t, i) { return '<div class="rc-tile" style="animation-delay:' + (i * 0.12) + 's"><i>' + t[0] + '</i><b>' + t[1] + '</b><span>' + t[2] + '</span></div>'; }).join('') + '</div>' +
+        '<div class="rc-top"><div class="rc-tt">الأكثر عندك</div>' + top.map(function (n, i) { return '<div class="rc-row" style="animation-delay:' + (0.7 + i * 0.15) + 's"><em>' + nf.format(i + 1) + '</em>' + esc(n) + '<small>' + nf.format(cnt[n]) + ' مرة</small></div>'; }).join('') + '</div>'
+        : '<div class="rc-empty">بعدك ما شغّلت شي هذا الشهر. شغّل قنواتك وأفلامك وارجع هنا تشوف قصتك.</div>') +
+      '<div class="rc-h">صوّر الشاشة وشاركها · أي زر للرجوع</div></div>';
+    $('recapModal').classList.add('on'); layer = 'recap';
+  }
+  function closeRecap() { $('recapModal').classList.remove('on'); layer = 'main'; nav.refresh(); }
+
   // ---------- Kids mode ----------
   var kids = load('kids', { on: false, pin: '', apps: [], limit: 120, used: {}, launchAt: 0 });
   function saveKids() { save('kids', kids); }
@@ -2199,6 +2269,8 @@
         else if (id === 'themes') openThemes();
         else if (id === 'kids') toggleKids();
         else if (id === 'bedtime') startBedtime();
+        else if (id === 'wiz') openWiz();
+        else if (id === 'recap') openRecap();
         else if (id === 'prefs') openSettings();
         else if (id === 'bgnext') { if (bgPinned) { bgPinned = null; save('bgPinned', null); } bgManual++; showBg(); }
         else if (id === 'move') { moving = null; setMode(mode === 'move' ? 'normal' : 'move'); if (mode === 'normal') goRow(rowEls.length - 1); }
@@ -2239,6 +2311,8 @@
     lastInput = Date.now();
     if (layer === 'greet') return window.__greetKey();
     if (layer === 'bedtime') { endBedtime(); return; }
+    if (layer === 'wiz') return wizKey(k);
+    if (layer === 'recap') { closeRecap(); return; }
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
     clickSound(); if (k === 'ok') pressFx();
@@ -2281,7 +2355,7 @@
 
   window.__refreshBadges = function () { renderApps(); };
   window.__noteNet = noteNet;
-  window.__startBedtime = startBedtime;
+  window.__startBedtime = startBedtime; window.__openWiz = openWiz; window.__openRecap = openRecap;
   window.remoteKey = function (k) { handleKey(k); };
   window.onBackKey = function () { handleKey('back'); };
   window.onHomePressed = function () {

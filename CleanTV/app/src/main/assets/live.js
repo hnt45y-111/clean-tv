@@ -368,6 +368,7 @@
     }
     if (st.favm) { var on = toggleFav(cur); st.key = null; if (window.toastMsg) window.toastMsg(on ? '⭐ انضافت للمفضلة: ' + cur.n : 'انشالت من المفضلة: ' + cur.n); draw(); return; }
     pushRecent(cur);
+    if (window.__logWatch) window.__logWatch('live', cur.n);
     var pk = packFor(cur);
     if (window.Android && window.Android.playLive) window.Android.playLive(JSON.stringify(pk), pk.idx);
     else if (window.toastMsg) window.toastMsg('التشغيل يحتاج الشاشة نفسها');
@@ -438,6 +439,13 @@
       draw();
     },
     refresh: function () { siteCache = null; st.key = null; if (document.getElementById('liveModal').classList.contains('on')) draw(); },
+    /* jumps straight to one category of قنواتي (used by «شنو أشوف الليلة؟») */
+    openCategory: function (id) {
+      Live.open();
+      var cs = cats(), i = cs.map(function (c) { return c.id; }).indexOf(id);
+      if (i >= 0) { st.ci = i; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.sub = null; endSearch(true); st.f = filter(id).length ? 'grid' : 'cat'; }
+      draw();
+    },
     /* text typed from the phone (or the TV keyboard) */
     search: function (v) { startSearch(); var b = searchBox(); if (b) { b.value = v || ''; onSearchInput(); } },
     key: function (k) {

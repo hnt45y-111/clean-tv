@@ -32,19 +32,19 @@
     return { cats: order, items: items };
   }
   function pull(force) {
-    var x = xt(); if (!x) { D.m = D.s = null; D.k = ''; return draw(); }
+    var x = xt(); if (!x) { D.m = D.s = null; D.k = ''; draw(); return Promise.resolve(); }
     var key = x.host0 + '|' + x.user;
-    if (!force && D.k === key && D.m) return draw();
-    if (!force) { try { var c = JSON.parse(localStorage.getItem('vodXt2') || 'null'); if (c && c.k === key && Date.now() - c.t < TTL) { D.k = key; D.m = c.m; D.s = c.s; return draw(); } } catch (e) {} }
-    if (D.busy) return; D.busy = true; D.err = ''; st.msg = 'جاري تحميل الأفلام والمسلسلات من حسابك…'; draw();
-    Promise.all([xtJson(x, 'get_vod_categories'), xtJson(x, 'get_vod_streams'), xtJson(x, 'get_series_categories'), xtJson(x, 'get_series')]).then(function (r) {
+    if (!force && D.k === key && D.m) { draw(); return Promise.resolve(); }
+    if (!force) { try { var c = JSON.parse(localStorage.getItem('vodXt2') || 'null'); if (c && c.k === key && Date.now() - c.t < TTL) { D.k = key; D.m = c.m; D.s = c.s; draw(); return Promise.resolve(); } } catch (e) {} }
+    if (D.busy) return D.busyP || Promise.resolve(); D.busy = true; D.err = ''; st.msg = 'جاري تحميل الأفلام والمسلسلات من حسابك…'; draw();
+    return D.busyP = Promise.all([xtJson(x, 'get_vod_categories'), xtJson(x, 'get_vod_streams'), xtJson(x, 'get_series_categories'), xtJson(x, 'get_series')]).then(function (r) {
       D.busy = false; D.k = key;
       D.m = pack(r[0], r[1], function (o) { return { t: 'xm', n: String(o.name || '').trim(), id: o.stream_id, ext: o.container_extension || 'mp4', img: o.stream_icon || '' }; });
       D.s = pack(r[2], r[3], function (o) { return { t: 'xs', n: String(o.name || '').trim(), id: o.series_id, img: o.cover || '' }; });
       var n = D.m.items.length + D.s.items.length;
       if (n) { try { localStorage.setItem('vodXt2', JSON.stringify({ k: key, t: Date.now(), m: D.m, s: D.s })); } catch (e) { try { localStorage.removeItem('vodXt2'); } catch (e2) {} } }
       if (force) toast(n ? 'تم التحديث: ' + D.m.items.length + ' فيلم · ' + D.s.items.length + ' مسلسل' : 'تعذّر التحديث' + (D.err ? ': ' + D.err : ''));
-      st.msg = ''; st.key = ''; draw();
+      st.msg = ''; st.key = ''; draw(); D.busyP = null;
     });
   }
 
@@ -124,6 +124,7 @@
   }
   function toPlayer(item) {
     if (!window.Android || !window.Android.playLive) return toast('التشغيل يحتاج الشاشة نفسها');
+    if (window.__logWatch) window.__logWatch('vod', item.n);
     var go = function () { window.Android.playLive(JSON.stringify({ vod: 1, list: [item], folders: [], fold: 0 }), 0); };
     if (cinemaOn()) playCinema(go); else go();
   }
@@ -193,6 +194,16 @@
     prefetch: function () { try { pull(false); } catch (e) {} },
     hasNew: function () { try { return vodSig() > (+localStorage.getItem('vodSeenSig') || 0); } catch (e) { return false; } },
     open: function () { st.f = 'tab'; st.ti = st.tab; st.sub = null; st.key = ''; $('vodModal').classList.add('on'); if (window.__setLayer) window.__setLayer('vod'); try { localStorage.setItem('vodSeenSig', String(vodSig())); if (window.__refreshBadges) window.__refreshBadges(); } catch (e) {} pull(false); },
+    /* jumps straight to one category of the account's films or series (used by «شنو أشوف الليلة؟») */
+    openCategory: function (tabId, re) {
+      Vod.open();
+      var pick = function () {
+        st.tab = tabId; st.ti = tabId; st.sub = null; st.q = ''; st.key = ''; compute();
+        var i = 0; for (var k = 0; k < st.cats.length; k++) if (re.test(st.cats[k].n)) { i = k; break; }
+        st.ci = i; compute(); st.f = st.list.length ? 'grid' : (st.cats.length ? 'cat' : 'tab'); draw();
+      };
+      if (D.m) pick(); else pull(false).then(pick);
+    },
     key: key,
     _t: { state: st, data: D }
   };

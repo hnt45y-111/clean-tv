@@ -205,6 +205,30 @@
   @keyframes grLetter { 0% { opacity: 0; transform: translateY(46px) scale(.7) rotate(6deg); filter: brightness(2.2); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: brightness(1); } }
   .gr-rule { margin: 26px auto 0; width: 0; height: 4px; border-radius: 4px; background: linear-gradient(90deg, transparent, #D9822B, transparent); animation: grRule .9s ease forwards; }
   @keyframes grRule { from { width: 0; opacity: 0; } 40% { opacity: 1; } to { width: 420px; opacity: 1; } }
+  /* «شنو أشوف الليلة؟» */
+  #wizModal, #recapModal { position: absolute; inset: 0; z-index: 360; display: none; align-items: center; justify-content: center; background: radial-gradient(1000px 700px at 50% 45%, rgba(40,32,22,.97), rgba(10,11,13,.98)); direction: rtl; }
+  #wizModal.on, #recapModal.on { display: flex; animation: grIn .35s ease both; }
+  .wz-box { width: 1300px; text-align: center; }
+  .wz-step { font-size: 24px; color: #D9822B; letter-spacing: 2px; }
+  .wz-q { font-family: var(--kufi); font-size: 72px; font-weight: 700; color: #EFE7D4; margin: 14px 0 50px; }
+  .wz-a { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; }
+  .wz-c { font-size: 36px; font-weight: 700; padding: 26px 40px; border-radius: 22px; background: #23282D; color: #EFE7D4; border: 3px solid transparent; transition: transform .18s ease; }
+  .wz-c.focus { border-color: #D9822B; background: #3a2d1f; transform: scale(1.07); box-shadow: 0 18px 44px rgba(217,130,43,.3); }
+  .wz-h { margin-top: 50px; font-size: 22px; color: #8B939A; }
+  /* «قصة شهري» */
+  .rc-box { width: 1500px; text-align: center; }
+  .rc-t { font-family: var(--kufi); font-size: 76px; font-weight: 700; color: #EFE7D4; text-shadow: 0 0 40px rgba(217,130,43,.5); }
+  .rc-s { font-size: 26px; color: #B8BDC2; margin: 6px 0 40px; }
+  .rc-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; }
+  .rc-tile { background: linear-gradient(160deg, #2b2620, #1d1f22); border: 1px solid rgba(217,130,43,.3); border-radius: 24px; padding: 28px 16px; opacity: 0; animation: rcIn .55s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  .rc-tile i { font-style: normal; font-size: 44px; display: block; } .rc-tile b { display: block; font-family: var(--kufi); font-size: 66px; color: #D9822B; margin: 6px 0; } .rc-tile span { font-size: 22px; color: #B8BDC2; }
+  @keyframes rcIn { from { opacity: 0; transform: translateY(30px) scale(.9); } to { opacity: 1; transform: none; } }
+  .rc-top { margin: 40px auto 0; width: 900px; text-align: right; }
+  .rc-tt { font-size: 26px; color: #D9822B; margin-bottom: 10px; }
+  .rc-row { display: flex; align-items: center; gap: 18px; font-size: 32px; color: #EFE7D4; padding: 14px 22px; border-radius: 16px; background: rgba(255,255,255,.04); margin-bottom: 10px; opacity: 0; animation: rcIn .5s ease forwards; }
+  .rc-row em { font-style: normal; font-family: var(--kufi); color: #D9822B; font-size: 36px; } .rc-row small { margin-right: auto; font-size: 22px; color: #8B939A; }
+  .rc-empty { font-size: 34px; color: #B8BDC2; padding: 80px; }
+  .rc-h { margin-top: 34px; font-size: 22px; color: #8B939A; }
   /* one button: the room dims, a calm recitation starts, and it all fades out on its own before bed */
   #bedtimeModal { position: absolute; inset: 0; z-index: 380; display: none; background: radial-gradient(900px 600px at 50% 40%, #1a2240 0%, #0a0d1c 65%, #050611 100%); animation: grIn 1.4s ease both; }
   #bedtimeModal.on { display: block; }
@@ -1059,6 +1083,8 @@
 <body>
 <div id="stage">
   <div id="greetModal"></div>
+  <div id="wizModal"></div>
+  <div id="recapModal"></div>
   <div id="bedtimeModal"><div class="bt-stars"></div><div class="bt-moon">🌙</div><div class="bt-txt">قصة قبل النوم<br><small>تخفت الإضاءة والصوت تدريجياً… نوم هنيء</small></div></div>
   <div class="bgfallback"></div>
   <div class="bgimg" id="bgA"></div>
