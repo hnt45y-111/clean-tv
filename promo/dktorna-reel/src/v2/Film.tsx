@@ -477,7 +477,9 @@ const Outro: React.FC<{ from: number }> = ({ from }) => {
   const shine = interpolate(t, [hk + 1.25, hk + 1.95], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const keys = FEATS.map((f) => f.key);
   const rot = t * 14;
-  const radius = interpolate(t, [from, Math.max(from + 0.02, FIN - 0.28), FIN], [380, 380, 60], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
+  // the outro can start only a few ms before «دكتورنا» when the speaker doesn't pause; keep the range valid
+  const finV = Math.max(FIN, from + 0.35);
+  const radius = interpolate(t, [from, Math.max(from + 0.02, finV - 0.28), finV], [380, 380, 60], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
   return (
     <AbsoluteFill style={{ background: C.lazurd, overflow: "hidden" }}>
       <BrickPattern id="ob" color={C.teen} opacity={0.07} offset={-t * 14} />
