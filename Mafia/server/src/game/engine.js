@@ -260,7 +260,7 @@ export class Match {
       phase: s.phase, day: s.day, nights: s.nights, speaker: s.speaker,
       timer: s.timer ? { total: s.timer.total, left: this.timerLeft(now), paused: s.timer.paused, endsAt: s.timer.paused ? null : s.timer.endsAt } : null,
       players: s.players.map((x) => ({
-        id: x.id, name: x.name, alive: x.alive, muted: this.isMuted(x.id),
+        id: x.id, name: x.name, alive: x.alive, muted: this.isMuted(x.id), manual: !!(x.manualMute && x.alive),
         role: showRole(x) ? x.role : null, seen: isN ? x.seen : undefined,
       })),
       lastNight: s.phase === 'dawn' || s.phase === 'day' ? { deaths: s.lastNight?.deaths.map((d) => ({ id: d.id })) || [] } : null,

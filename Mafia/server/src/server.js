@@ -11,7 +11,7 @@ import { Hub, RoomError } from './rooms.js';
 import { GameError } from './game/engine.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml',
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml',
   '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
 
 export function createApp({ db = openDb(), clientDir = join(here, '../../client'), googleClientId = process.env.GOOGLE_CLIENT_ID || '', mailer, hubOptions } = {}) {
