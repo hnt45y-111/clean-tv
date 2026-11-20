@@ -87,6 +87,8 @@ export function seedDemo() {
   mk('secretary', '07704440001', 'سكرتيرة د. سلام', { doctor_id: sec });
   const pat = mk('patient', '07705550001', 'علي حسين كاظم', { area: 'الكرادة' });
   addPoints(pat, 120, 'هدية تجريبية');
+  mk('patient', '07705550002', 'فاطمة أحمد جاسم', { area: 'المنصور' });
+  mk('admin', '07700000002', 'أدمن تجريبي');
   // مدونة ونصائح مزمنة للتجربة
   const d1 = one(`SELECT id FROM users WHERE phone='07701110001'`).id;
   run(`INSERT INTO posts(user_id,kind,topic,title,body,status,created) VALUES(?,'chronic','السكري','السكّري مرض مزمن يمكن التعايش معه',?,'published',?)`, d1, 'الالتزام بالعلاج وقياس السكر بانتظام وتقليل السكريات والنشويات والمشي نص ساعة باليوم يخلّي حياتك طبيعية. راجع طبيبك كل ثلاثة أشهر.', now());
