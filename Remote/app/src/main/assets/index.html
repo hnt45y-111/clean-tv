@@ -100,6 +100,7 @@
   .touch { height: 272px; margin-bottom: 20px; }
   .duo { display: flex; gap: 10px; margin-bottom: 14px; }
   .duo .pill { flex: 1; }
+  .wand { width: 100%; margin: 10px 0 0; } .wand.on { background: linear-gradient(90deg, #D9822B, #E8A25E); color: #15181B; box-shadow: 0 0 22px rgba(217,130,43,.55); }
   .rock { display: flex; gap: 12px; align-items: stretch; }
   .rk { width: 76px; display: flex; flex-direction: column; align-items: center; background: var(--panel2); border: 1px solid var(--line); border-radius: 38px; padding: 6px 0; }
   .rk button { background: none; border: 0; width: 64px; height: 64px; padding: 0; display: grid; place-items: center; border-radius: 50%; }
@@ -165,6 +166,7 @@
         <button class="d" data-k="down" aria-label="تحت"><svg class="ni" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
         <button class="c" data-k="ok">OK</button>
       </div>
+      <button class="pill wand" id="wandBtn"><svg class="ni" viewBox="0 0 24 24"><path d="M4 20L15 9"/><path d="M15 3v3M18 6h3M19 2l-2 2M12.5 4.5l1 1"/></svg> <span>العصا السحرية</span></button>
       <div class="touch hidden" id="touch">اسحب بإصبعك للتنقل · اضغط مرة لـ OK</div>
       <div class="duo">
         <button class="pill" data-k="back"><svg class="ni" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg> رجوع</button>
@@ -287,6 +289,33 @@
 
   // ---------- remote ----------
   function key(k) { buzz(k === 'ok' ? 25 : 10); api('key', { k: k }).catch(function () {}); }
+  /* the magic wand: hold the phone like a wand — tilt to move, flick it to confirm, shake for a random channel */
+  var wand = { on: false, last: 0, shakeAt: 0, base: null };
+  function wandOrient(e) {
+    if (!wand.on || e.beta == null) return;
+    if (!wand.base) { wand.base = { b: e.beta, g: e.gamma }; return; }
+    var now = Date.now(); if (now - wand.last < 420) return;
+    var db = e.beta - wand.base.b, dg = e.gamma - wand.base.g;
+    if (Math.abs(db) > 18 && Math.abs(db) > Math.abs(dg)) { wand.last = now; key(db > 0 ? 'down' : 'up'); }
+    else if (Math.abs(dg) > 20) { wand.last = now; key(dg > 0 ? 'left' : 'right'); }
+  }
+  function wandMotion(e) {
+    if (!wand.on) return; var a = e.accelerationIncludingGravity || e.acceleration; if (!a) return;
+    var f = Math.sqrt((a.x || 0) * (a.x || 0) + (a.y || 0) * (a.y || 0) + (a.z || 0) * (a.z || 0)), now = Date.now();
+    if (f > 28 && now - wand.shakeAt > 2000) { wand.shakeAt = now; wand.last = now + 800; buzz(60); api('key', { k: 'shuffle' }).catch(function () {}); }
+  }
+  function setWand(on) {
+    wand.on = on; wand.base = null; var b = document.getElementById('wandBtn'); b.classList.toggle('on', on);
+    b.querySelector('span').textContent = on ? 'العصا شغّالة · ميّل للتنقل · هزّ لقناة عشوائية' : 'العصا السحرية';
+    if (on) { window.addEventListener('deviceorientation', wandOrient); window.addEventListener('devicemotion', wandMotion); }
+    else { window.removeEventListener('deviceorientation', wandOrient); window.removeEventListener('devicemotion', wandMotion); }
+  }
+  document.getElementById('wandBtn').addEventListener('click', function () {
+    buzz(20);
+    var ask = window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission;
+    if (!wand.on && ask) DeviceOrientationEvent.requestPermission().then(function (r) { setWand(r === 'granted'); }).catch(function () { setWand(true); });
+    else setWand(!wand.on);
+  });
   $('openLive').onclick = function () { buzz(); api('cmd', { type: 'live' }).then(function () { toast('اشتغلت قنواتي على التلفاز'); }); };
   $('tickOn').onclick = function () { buzz(); api('cmd', { type: 'ticker', value: true }).then(function () { toast('شريط النتائج شغّال'); }); };
   $('tickOff').onclick = function () { buzz(); api('cmd', { type: 'ticker', value: false }).then(function () { toast('وقف شريط النتائج'); }); };

@@ -1172,6 +1172,7 @@
       { id: 'bedtime', label: 'قصة قبل النوم', icon: 'moon' },
       { id: 'wiz', label: 'شنو أشوف الليلة؟', icon: 'search' },
       { id: 'recap', label: 'قصة شهري', icon: 'picture' },
+      { id: 'party', label: 'مشاهدة جماعية', icon: 'channels' },
       { id: 'prefs', label: 'إعدادات الواجهة', icon: 'sliders' },
       { id: 'refresh', label: 'تحديث', icon: 'refresh' }
     ];
@@ -2099,6 +2100,38 @@
   function bootGreet() { if (settings.greetOn !== false) showGreet(); }
   window.__openProfiles = openProfiles;
 
+  // ---------- «مشاهدة جماعية»: two TVs in the same home play the same thing together ----------
+  var pt = { i: 0 };
+  function partyInfo() { try { return JSON.parse(A.partyInfo()); } catch (e) { return { ip: '', room: '', peer: '' }; } }
+  function openParty() {
+    if (!HAS_ANDROID || !A.partyInfo) { toast('المشاهدة الجماعية تحتاج الشاشة نفسها'); return; }
+    var I = partyInfo(); pt.i = 0; layer = 'party';
+    $('partyModal').innerHTML = '<div class="pt-box"><div class="pt-t">🎉 مشاهدة جماعية</div><div class="pt-s">شاشتين بنفس البيت (نفس الواي فاي): اللي يشغّله واحد، يشتغل بالثانية، وكذلك تبديل القناة والإيقاف</div>' +
+      '<div class="pt-me"><span>رمز هذه الشاشة</span><b dir="ltr">' + esc(I.ip || '—') + '</b><b dir="ltr">' + esc(I.room) + '</b></div>' +
+      (I.peer ? '<div class="pt-on">مربوطة الآن بالشاشة <b dir="ltr">' + esc(I.peer) + '</b></div>' : '') +
+      '<div class="pt-f"><input id="ptIp" dir="ltr" placeholder="عنوان الشاشة الثانية مثل 192.168.1.20"><input id="ptRoom" dir="ltr" placeholder="رمزها (٦ أرقام)" maxlength="6"></div>' +
+      '<div class="pt-b"><div class="pt-btn" data-p="link">🔗 ربط</div>' + (I.peer ? '<div class="pt-btn" data-p="off">✖ إلغاء الربط</div>' : '') + '</div><div class="pt-h">اكتب رمز الشاشة الثانية هنا، أو اكتب رمز هذه الشاشة بالثانية · رجوع للخروج</div></div>';
+    $('partyModal').classList.add('on'); drawParty();
+  }
+  function partyEls() { return [$('ptIp'), $('ptRoom')].concat(qa('#partyModal .pt-btn')); }
+  function drawParty() { partyEls().forEach(function (e, i) { e.classList.toggle('focus', i === pt.i); }); }
+  function closeParty() { var ae = document.activeElement; if (ae && ae.blur) ae.blur(); $('partyModal').classList.remove('on'); layer = 'main'; nav.refresh(); }
+  function partyKey(k) {
+    var els = partyEls(), el = els[pt.i];
+    if (k === 'back') { if (document.activeElement === el && el.tagName === 'INPUT') { el.blur(); return; } closeParty(); return; }
+    if (k === 'ArrowDown' || k === 'ArrowLeft') { if (el && el.blur) el.blur(); pt.i = Math.min(els.length - 1, pt.i + 1); }
+    else if (k === 'ArrowUp' || k === 'ArrowRight') { if (el && el.blur) el.blur(); pt.i = Math.max(0, pt.i - 1); }
+    else if (k === 'ok') {
+      if (el.tagName === 'INPUT') { el.focus(); return; }
+      if (el.dataset.p === 'off') { A.partyOff(); toast('انلغى ربط المشاهدة الجماعية'); return openParty(); }
+      var ip = $('ptIp').value.trim(), rm = $('ptRoom').value.trim();
+      if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip) || !/^\d{6}$/.test(rm)) { toast('اكتب عنوان الشاشة الثانية ورمزها (٦ أرقام)'); return; }
+      A.partyLink(ip, rm, String((activeProfile() || {}).n || settings.ownerName || 'الشاشة الثانية'));
+      toast('🎉 انربطت الشاشتين · شغّل أي قناة أو فيلم'); return openParty();
+    }
+    drawParty();
+  }
+
   // ---------- Kids mode ----------
   var kids = load('kids', { on: false, pin: '', apps: [], limit: 120, used: {}, launchAt: 0 });
   function saveKids() { save('kids', kids); }
@@ -2314,6 +2347,7 @@
         else if (id === 'bedtime') startBedtime();
         else if (id === 'wiz') openWiz();
         else if (id === 'recap') openRecap();
+        else if (id === 'party') openParty();
         else if (id === 'prefs') openSettings();
         else if (id === 'bgnext') { if (bgPinned) { bgPinned = null; save('bgPinned', null); } bgManual++; showBg(); }
         else if (id === 'move') { moving = null; setMode(mode === 'move' ? 'normal' : 'move'); if (mode === 'normal') goRow(rowEls.length - 1); }
@@ -2356,6 +2390,7 @@
     if (layer === 'bedtime') { endBedtime(); return; }
     if (layer === 'wiz') return wizKey(k);
     if (layer === 'prof') return profKey(k);
+    if (layer === 'party') return partyKey(k);
     if (layer === 'recap') { closeRecap(); return; }
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
@@ -2399,7 +2434,7 @@
 
   window.__refreshBadges = function () { renderApps(); };
   window.__noteNet = noteNet;
-  window.__startBedtime = startBedtime; window.__openWiz = openWiz; window.__openRecap = openRecap;
+  window.__startBedtime = startBedtime; window.__openWiz = openWiz; window.__openRecap = openRecap; window.__openParty = openParty;
   window.remoteKey = function (k) { handleKey(k); };
   window.onBackKey = function () { handleKey('back'); };
   window.onHomePressed = function () {

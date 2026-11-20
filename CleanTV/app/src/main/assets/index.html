@@ -220,6 +220,21 @@
   .prof-chip { display: inline-flex; align-items: center; gap: 10px; margin-right: 14px; font-family: var(--font); font-size: 22px; font-weight: 700; color: #EFE7D4; }
   .prof-chip .pf-av { width: 44px; height: 44px; border-width: 2px; box-shadow: none; } .prof-chip .pf-av b { font-size: 22px; }
   body.has-profile .item.focus { --pfx: var(--pcol); }
+  /* «مشاهدة جماعية» */
+  #partyModal { position: absolute; inset: 0; z-index: 360; display: none; align-items: center; justify-content: center; background: radial-gradient(1000px 700px at 50% 45%, rgba(30,26,40,.97), rgba(10,11,13,.98)); direction: rtl; }
+  #partyModal.on { display: flex; animation: grIn .35s ease both; }
+  .pt-box { width: 1200px; text-align: center; }
+  .pt-t { font-family: var(--kufi); font-size: 70px; font-weight: 700; color: #EFE7D4; }
+  .pt-s { font-size: 26px; color: #B8BDC2; margin: 10px 0 36px; }
+  .pt-me { display: inline-flex; gap: 26px; align-items: center; padding: 22px 40px; border-radius: 24px; background: #2a2433; border: 2px solid rgba(217,130,43,.5); }
+  .pt-me span { font-size: 24px; color: #B8BDC2; } .pt-me b { font-family: var(--kufi); font-size: 52px; color: #D9822B; letter-spacing: 2px; }
+  .pt-on { margin-top: 16px; font-size: 24px; color: #3DBE6C; }
+  .pt-f { display: flex; gap: 18px; justify-content: center; margin-top: 36px; }
+  .pt-f input { width: 460px; font: 600 30px/1.2 var(--font); color: #EFE7D4; background: #23282D; border: 3px solid transparent; border-radius: 16px; padding: 18px 22px; outline: none; text-align: center; }
+  .pt-f input.focus, .pt-btn.focus { border-color: #D9822B; box-shadow: 0 0 0 4px rgba(217,130,43,.3); }
+  .pt-b { display: flex; gap: 18px; justify-content: center; margin-top: 26px; }
+  .pt-btn { font-size: 32px; font-weight: 700; padding: 18px 44px; border-radius: 18px; background: #23282D; color: #EFE7D4; border: 3px solid transparent; }
+  .pt-h { margin-top: 34px; font-size: 21px; color: #8B939A; }
   /* «شنو أشوف الليلة؟» */
   #wizModal, #recapModal { position: absolute; inset: 0; z-index: 360; display: none; align-items: center; justify-content: center; background: radial-gradient(1000px 700px at 50% 45%, rgba(40,32,22,.97), rgba(10,11,13,.98)); direction: rtl; }
   #wizModal.on, #recapModal.on { display: flex; animation: grIn .35s ease both; }
@@ -1100,6 +1115,7 @@
   <div id="greetModal"></div>
   <div id="profModal"></div>
   <div id="wizModal"></div>
+  <div id="partyModal"></div>
   <div id="recapModal"></div>
   <div id="bedtimeModal"><div class="bt-stars"></div><div class="bt-moon">🌙</div><div class="bt-txt">قصة قبل النوم<br><small>تخفت الإضاءة والصوت تدريجياً… نوم هنيء</small></div></div>
   <div class="bgfallback"></div>

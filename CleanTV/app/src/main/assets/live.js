@@ -509,5 +509,12 @@
       draw();
     }
   };
+  /* a random channel (the remote's magic wand: shake the phone) */
+  window.__shuffle = function () {
+    var all = filter('all'); if (!all.length) return;
+    st.ci = 0; st.fold = null; st.sub = null; st.q = ''; st.favm = false; st.del = false; st.edit = false; st.list = all; st.gi = Math.floor(Math.random() * all.length);
+    if (window.toastMsg) window.toastMsg('🎲 ' + all[st.gi].n);
+    play();
+  };
   window.Live = Live;
 })();
