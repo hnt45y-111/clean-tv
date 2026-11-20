@@ -31,16 +31,51 @@
     (list || []).forEach(function (o) { var c = String(o.category_id == null ? '' : o.category_id); if (!seen[c]) { seen[c] = 1; order.push({ id: c, n: names[c] || 'بدون تصنيف' }); } var it = mk(o); it.c = c; items.push(it); });
     return { cats: order, items: items };
   }
+  /* playlist links the user gets from his own provider (an M3U link): films and series listed in it, played directly */
+  function links() { var t = String(S().vodLinks || ''); return t.split(/\s+/).filter(function (l) { return /^https?:\/\//i.test(l); }).slice(0, 6); }
+  function parseM3(text) {
+    var out = [], cur = null, lines = String(text || '').replace(/^\uFEFF/, '').split(/\r\n|\n|\r/);
+    lines.forEach(function (ln) {
+      ln = ln.trim(); if (!ln) return;
+      if (ln.indexOf('#EXTINF') === 0) cur = { n: (ln.match(/,(.*)$/) || [0, ''])[1].trim(), g: (ln.match(/group-title="([^"]*)"/) || [0, ''])[1].trim(), l: (ln.match(/tvg-logo="([^"]*)"/) || [0, ''])[1] };
+      else if (ln.charAt(0) !== '#' && /^https?:/i.test(ln) && cur) { cur.u = ln; out.push(cur); cur = null; }
+    });
+    return out;
+  }
+  function pullLinks() {
+    var L = links(), VI = (S().vodItems || []).filter(function (o) { return o && /^https?:/i.test(o.u || ''); });
+    if (!L.length && !VI.length) return Promise.resolve(null);
+    var key = L.join('|') + '#' + VI.length;
+    try { var c = JSON.parse(localStorage.getItem('vodLk') || 'null'); if (c && c.k === key && Date.now() - c.t < TTL) return Promise.resolve(c); } catch (e) {}
+    return Promise.all(L.map(function (u) { return window.__fetchText ? window.__fetchText(u) : Promise.resolve('ERR:no'); })).then(function (rs) {
+      var items = [], bad = '';
+      rs.forEach(function (t) { if (String(t).indexOf('#EXT') >= 0) items = items.concat(parseM3(t)); else bad = String(t).indexOf('ERR:') === 0 ? String(t).slice(4) : 'الرابط ما يرجّع قائمة M3U'; });
+      VI.forEach(function (o) { items.push({ n: o.n || 'فيديو', g: 'روابط مباشرة', l: '', u: o.u, vi: 1 }); });
+      if (!items.length) { D.err = bad || 'القائمة فاضية'; return null; }
+      var M = [], Sr = [], isS = function (it) { return !it.vi && /مسلسل|series|episode|season|حلقة|موسم|\bS\d{1,2}\s?E\d{1,3}\b/i.test(it.g + ' ' + it.n); };
+      items.forEach(function (it) { var o = { t: 'ml', n: it.n, id: it.u, u: it.u, img: it.l || '', c: 'L:' + (it.g || 'بدون تصنيف') }; (isS(it) ? Sr : M).push(o); });
+      var mk = function (a) { var seen = {}, cats = []; a.forEach(function (o) { if (!seen[o.c]) { seen[o.c] = 1; cats.push({ id: o.c, n: o.c.slice(2) }); } }); return { cats: cats, items: a }; };
+      var res = { k: key, t: Date.now(), m: mk(M), s: mk(Sr) };
+      try { localStorage.setItem('vodLk', JSON.stringify(res)); } catch (e) {}
+      return res;
+    }, function () { return null; });
+  }
+  function mergeP(a, b) { return !b ? a : !a ? b : { cats: a.cats.concat(b.cats), items: a.items.concat(b.items) }; }
   function pull(force) {
-    var x = xt(); if (!x) { D.m = D.s = null; D.k = ''; draw(); return Promise.resolve(); }
+    var x = xt();
+    if (!x) {
+      if (!links().length) { D.m = D.s = null; D.k = ''; draw(); return Promise.resolve(); }
+      D.err = ''; return pullLinks().then(function (r) { D.k = 'links'; D.m = r ? r.m : { cats: [], items: [] }; D.s = r ? r.s : { cats: [], items: [] }; st.msg = ''; st.key = ''; draw(); });
+    }
     var key = x.host0 + '|' + x.user;
     if (!force && D.k === key && D.m) { draw(); return Promise.resolve(); }
     if (!force) { try { var c = JSON.parse(localStorage.getItem('vodXt2') || 'null'); if (c && c.k === key && Date.now() - c.t < TTL) { D.k = key; D.m = c.m; D.s = c.s; draw(); return Promise.resolve(); } } catch (e) {} }
     if (D.busy) return D.busyP || Promise.resolve(); D.busy = true; D.err = ''; st.msg = 'جاري تحميل الأفلام والمسلسلات من حسابك…'; draw();
-    return D.busyP = Promise.all([xtJson(x, 'get_vod_categories'), xtJson(x, 'get_vod_streams'), xtJson(x, 'get_series_categories'), xtJson(x, 'get_series')]).then(function (r) {
+    return D.busyP = Promise.all([xtJson(x, 'get_vod_categories'), xtJson(x, 'get_vod_streams'), xtJson(x, 'get_series_categories'), xtJson(x, 'get_series'), pullLinks()]).then(function (r) {
       D.busy = false; D.k = key;
       D.m = pack(r[0], r[1], function (o) { return { t: 'xm', n: String(o.name || '').trim(), id: o.stream_id, ext: o.container_extension || 'mp4', img: o.stream_icon || '' }; });
       D.s = pack(r[2], r[3], function (o) { return { t: 'xs', n: String(o.name || '').trim(), id: o.series_id, img: o.cover || '' }; });
+      if (r[4]) { D.m = mergeP(D.m, r[4].m); D.s = mergeP(D.s, r[4].s); }
       var n = D.m.items.length + D.s.items.length;
       if (n) { try { localStorage.setItem('vodXt2', JSON.stringify({ k: key, t: Date.now(), m: D.m, s: D.s })); } catch (e) { try { localStorage.removeItem('vodXt2'); } catch (e2) {} } }
       if (force) toast(n ? 'تم التحديث: ' + D.m.items.length + ' فيلم · ' + D.s.items.length + ' مسلسل' : 'تعذّر التحديث' + (D.err ? ': ' + D.err : ''));
@@ -53,7 +88,7 @@
   function fk(it) { return it.t + ':' + it.id; }
   function toggleFav(it) {
     var l = favs(), k = fk(it), had = l.some(function (f) { return fk(f) === k; });
-    l = had ? l.filter(function (f) { return fk(f) !== k; }) : [{ t: it.t, n: it.n, id: it.id, ext: it.ext, img: it.img, c: it.c }].concat(l).slice(0, 300);
+    l = had ? l.filter(function (f) { return fk(f) !== k; }) : [{ t: it.t, n: it.n, id: it.id, u: it.u, ext: it.ext, img: it.img, c: it.c }].concat(l).slice(0, 300);
     try { localStorage.setItem((window.__pk ? window.__pk('vodFav') : 'vodFav'), JSON.stringify(l)); } catch (e) {}
     return !had;
   }
@@ -72,7 +107,7 @@
   }
   function emptyMsg() {
     if (st.msg) return st.msg;
-    if (!xt()) return 'هذا التطبيق يعرض أفلام ومسلسلات حساب IPTV مالتك فقط.\nأضف الحساب من تطبيق مدير الشاشة ← قنواتي الخاصة ← حساب IPTV';
+    if (!xt() && !links().length) return 'هذا التطبيق يعرض أفلام ومسلسلات حساب IPTV أو رابط قائمة من مزوّدك فقط.\nأضف الحساب من تطبيق مدير الشاشة ← قنواتي الخاصة ← حساب IPTV';
     if (TABS[st.tab].id === 'fav') return 'ماكو شي بالمفضلة. فعّل «➕ إضافة للمفضلة» واضغط OK على أي فيلم أو مسلسل';
     if (st.q) return 'ماكو نتيجة لـ «' + st.q + '»';
     if (D.err) return 'تعذّر جلب المحتوى من الحساب (' + D.err + ')\nتأكد من بيانات الحساب ثم اضغط «🔄 تحديث»';
@@ -137,6 +172,7 @@
   }
   function play(it) {
     if (st.favm && it.t !== 'xe') { var on = toggleFav(it); st.key = ''; toast(on ? '⭐ انضاف للمفضلة: ' + it.n : 'انشال من المفضلة: ' + it.n); return draw(); }
+    if (it.t === 'ml') return toPlayer({ n: it.n, u: it.u });
     var x = xt(); if (!x) return toast('أضف حساب IPTV من مدير الشاشة');
     var base = x.host + '/', cred = encodeURIComponent(x.user) + '/' + encodeURIComponent(x.pass) + '/', ua = xtUa(x);
     if (it.t === 'xm') return toPlayer({ n: it.n, ua: ua, u: base + 'movie/' + cred + it.id + '.' + (it.ext || 'mp4') });

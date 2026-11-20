@@ -107,6 +107,18 @@ final class Accounts {
         } catch (Exception e) { return ""; }
     }
 
+    /** Admin only: lifetime activation code for «قنواتي موبايل» on a given phone (must match Acct.mobileCode there). */
+    static String mobileCode(String dev) {
+        try {
+            Mac m = Mac.getInstance("HmacSHA256");
+            m.init(new SecretKeySpec(hex(K[0] + K[1] + K[2] + K[3]), "HmacSHA256"));
+            byte[] h = m.doFinal(("mobile|" + norm(dev) + "|life").getBytes(StandardCharsets.UTF_8));
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < 10; i++) { if (i == 5) b.append('-'); b.append(AL.charAt((h[i] & 0xff) % 32)); }
+            return b.toString();
+        } catch (Exception e) { return ""; }
+    }
+
     static boolean isAdmin(String user, String pass) {
         try {
             if (!"mhmd21".equals(user.trim())) return false;

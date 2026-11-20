@@ -188,6 +188,10 @@ public class MainActivity extends Activity {
             try { if (!Accounts.session(MainActivity.this).optBoolean("admin")) return ""; } catch (Exception e) { return ""; }
             return Accounts.autoCode(code);
         }
+        @JavascriptInterface public String genMobile(String code) {
+            try { if (!Accounts.session(MainActivity.this).optBoolean("admin")) return ""; } catch (Exception e) { return ""; }
+            return Accounts.mobileCode(code);
+        }
         @JavascriptInterface public String kvGet(String k) { return kv(MainActivity.this).getString(k, null); }
         @JavascriptInterface public void kvSet(String k, String v) {
             if (v == null) kv(MainActivity.this).edit().remove(k).apply();
@@ -382,6 +386,7 @@ public class MainActivity extends Activity {
                 return true;
             }
             case "fetchText": return httpText(a.getString("url"));
+            case "probe": return probe(a.getString("url"), a.optString("ua", "VLC/3.0.20 LibVLC/3.0.20"));
             case "zipTheme": prog("أجهّز صور الواجهة…"); return ZipThemes.images(a.optString("path"), a.optInt("max", 20));
             case "zipIcons": prog("أجهّز أيقونات الواجهة…"); return ZipThemes.icons(a.optString("path"), a.optInt("max", 120));
             case "ai": return GeminiService.generate(this, a.getString("system"), a.getString("prompt"));
@@ -491,6 +496,30 @@ public class MainActivity extends Activity {
     }
 
     // ---------------------------------------------------------------- launcher install
+    /** a gentle look at a link for «الربط الذكي»: status, type, the first bytes and the time taken; never throws, so the page can say what it saw */
+    private String probe(String url, String ua) {
+        JSONObject o = new JSONObject();
+        long t0 = System.currentTimeMillis();
+        try {
+            HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+            c.setRequestProperty("User-Agent", ua); c.setRequestProperty("Accept", "*/*");
+            c.setConnectTimeout(8000); c.setReadTimeout(10000); c.setInstanceFollowRedirects(true);
+            int code = c.getResponseCode();
+            o.put("code", code).put("type", String.valueOf(c.getContentType())).put("url", c.getURL().toString());
+            InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
+            if (in != null) {
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream(); byte[] buf = new byte[4096]; int n, tot = 0;
+                while (tot < 12000 && (n = in.read(buf)) > 0) { bo.write(buf, 0, n); tot += n; }
+                in.close(); o.put("head", bo.toString("UTF-8"));
+            }
+            c.disconnect();
+        } catch (java.net.UnknownHostException e) { try { o.put("err", "ما لگيت عنوان الخادم"); } catch (Throwable ignored) { } }
+        catch (java.net.SocketTimeoutException e) { try { o.put("err", "الخادم تأخر بالرد"); } catch (Throwable ignored) { } }
+        catch (Throwable t) { try { o.put("err", t.getClass().getSimpleName()); } catch (Throwable ignored) { } }
+        try { o.put("ms", System.currentTimeMillis() - t0); } catch (Throwable ignored) { }
+        return o.toString();
+    }
+
     private String httpText(String url) throws Exception {
         HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setRequestProperty("Accept", "application/vnd.github+json");

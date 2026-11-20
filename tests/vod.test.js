@@ -78,3 +78,12 @@ test('وضع السينما: زر واحد يشغّله، وستارة وعدّ 
   await new Promise((r) => setTimeout(r, 3100));
   assert.strictEqual(played.length, 1, 'الفيلم يبدأ بعد ما تفتح الستارة');
 });
+
+test('رابط قائمة M3U من المزوّد: أفلام ومسلسلات تشتغل مباشرة بدون حساب Xtream', async () => {
+  const m3u = '#EXTM3U\n#EXTINF:-1 group-title="أفلام عربية" tvg-logo="http://i/1.jpg",فيلم أ\nhttp://cdn.test/a.mp4\n#EXTINF:-1 group-title="مسلسلات تركية",مسلسل ب الحلقة 1\nhttp://cdn.test/b1.m3u8\n';
+  const { sb, played } = page({ vodLinks: 'http://list.test/my.m3u' }, { 'list.test/my.m3u': m3u });
+  sb.Vod.open(); await tick();
+  const D = sb.Vod._t.data; assert.strictEqual(D.m.items.length, 1); assert.strictEqual(D.s.items.length, 1);
+  sb.Vod.key('ArrowDown'); sb.Vod.key('ok'); sb.Vod.key('ok');
+  assert.strictEqual(played[0].list[0].u, 'http://cdn.test/a.mp4');
+});
