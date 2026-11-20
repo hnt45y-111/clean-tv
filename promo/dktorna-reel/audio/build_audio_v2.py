@@ -30,6 +30,7 @@ mono = vo.mean(1)
 
 
 def clean(s):
+    s = s.replace("گ", "ق")  # Iraqi گ is matched against the same word written with ق in features.json
     return "".join(ch for ch in s if ch not in "…،.:؟?!,")
 
 
