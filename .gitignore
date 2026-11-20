@@ -17,3 +17,4 @@ Mafia/server/data/
 # Dktorna reel
 promo/dktorna-reel/node_modules/
 promo/dktorna-reel/out/
+promo/dktorna-reel/audio/__pycache__/
