@@ -23,15 +23,20 @@ APPS = [
  dict(id='auto', tag='لأندرويد أوتو', name='مدير الشاشات أوتو', img='auto-phone.jpg', alt='مدير الشاشات أوتو', phone=True, link=L['auto'], tagv=a, btn='تحميل أوتو',
       text='لسيارتك إذا شاشتها تدعم أندرويد أوتو: واجهة خاصة بيك تطلع على الشاشة وتصممها من موبايلك.',
       feats=['قوالب جاهزة بالهوية الجديدة وغيرها', 'تترتب حسب شكل شاشة السيارة: عريضة أو عادية أو طولية', 'موسيقى وسرعة وطقس واختصارات للتطبيقات', 'اشتراك مرة وحدة مدى الحياة']),
- dict(id='mobile', tag='للموبايل · جديد', name='قنواتي موبايل', img='mobile-main.jpg', alt='قنواتي موبايل', phone=True, link=L['mobile'], tagv=mo, btn='تحميل قنواتي موبايل',
-      text='قنواتي والأفلام والمسلسلات بموبايلك: واجهة عربية باللمس، تشغّل بنافذة صغيرة، وتضيف مزوّدك برابط واحد.',
-      feats=['قنوات مجانية رسمية بأقسامها وشعاراتها، وتضيف قنواتك من حساب IPTV أو قائمة M3U', 'أفلام ومسلسلات من حسابك أو قائمتك بغلافات وتصنيفات وبحث', 'الربط الذكي: تلصق رابط المزوّد والتطبيق يتعرف على نوعه ويضيفه', 'مفضلة وآخر مشاهدة، وإكمال الفيلم من حيث وقفت', 'وضع الهدوء الليلي: الصوت ينزل والترجمة تكبر بعد ساعتك', 'ترحيب باسمك بحركة عند كل فتح']),
+ dict(id='mobile', tag='للموبايل · جديد', name='قنواتي موبايل', img='mobile-main.jpg', more=['mobile-vod.jpg', 'mobile-lock.jpg'], alt='قنواتي موبايل', phone=True, link=L['mobile'], tagv=mo, btn='تحميل قنواتي موبايل',
+      text='قنواتي والأفلام والمسلسلات بموبايلك، بنفس هوية قنواتي على التلفزيون: أسود وأحمر وكبسولات. تفعّله مرة وحدة بكود من مدير الشاشة.',
+      feats=['يفتح بكود تفعيل مرة وحدة (مدى الحياة ومربوط بموبايلك): تدز رمز جهازك لمدير الشاشة ويرجّعلك الكود', 'قنوات مجانية رسمية بأقسامها وشعاراتها، وتضيف قنواتك من حساب IPTV أو قائمة M3U', 'أفلام ومسلسلات من حسابك أو قائمتك بغلافات وتصنيفات وبحث', 'الربط الذكي: تلصق رابط المزوّد والتطبيق يتعرف على نوعه ويضيفه', 'مفضلة وآخر مشاهدة، وإكمال الفيلم من حيث وقفت', 'وضع الهدوء الليلي: الصوت ينزل والترجمة تكبر بعد ساعتك', 'ترحيب باسمك بحركة عند كل فتح']),
  dict(id='remote', tag='ريموت التحكم · جديد', name='هوائي', img='remote-main.jpg', alt='تطبيق هوائي', phone=True, link=L['remote'], tagv=r, btn='تحميل هوائي',
       text='ريموت كامل بموبايلك: يلگى التلفزيون وحده، ويتحكم بكل شي بدون ما تدور الريموت.',
       feats=['لوحة لمس وأسهم وOK ورجوع والرئيسية', 'الصوت والكتم والتشغيل والإعدادات والتالي والسابق', 'فتح أي تطبيق وكتابة النص والبحث', 'تشغيل قنواتي وشريط النتائج من الموبايل', 'تغيير الثيم والخلفيات وإرسال صورك', 'القرآن والأذان والتنبيهات ووضع الأطفال']),
 ]
 def card(x):
     cls = 'shot phone' if x.get('phone') else 'shot'
+    if x.get('more'):
+        figs = ''.join('<figure class="shot phone"><img src="img/%s" alt="%s" loading="lazy"></figure>' % (i, x['alt']) for i in [x['img']] + x['more'])
+        return ('<article class="app" id="%s"><div class="gal">%s</div><div class="body"><span class="tag">%s</span><h3>%s</h3><p>%s</p>%s'
+                '<div class="act"><a class="btn pri" href="%s" target="_blank" rel="noopener">%s%s</a><span class="ver" dir="ltr">%s · %s</span></div></div></article>') % (
+            x['id'], figs, x['tag'], x['name'], x['text'], li(x['feats']), x['link'], DL, x['btn'], VER, x['tagv'])
     return ('<article class="app" id="%s"><figure class="%s"><img src="img/%s" alt="%s" loading="lazy"></figure><div class="body"><span class="tag">%s</span><h3>%s</h3><p>%s</p>%s'
             '<div class="act"><a class="btn pri" href="%s" target="_blank" rel="noopener">%s%s</a><span class="ver" dir="ltr">%s · %s</span></div></div></article>') % (
         x['id'], cls, x['img'], x['alt'], x['tag'], x['name'], x['text'], li(x['feats']), x['link'], DL, x['btn'], VER, x['tagv'])
@@ -74,6 +79,8 @@ section{padding:72px 0}
 .app:nth-child(even){direction:ltr}.app:nth-child(even)>*{direction:rtl}
 .shot{border-radius:var(--r2);overflow:hidden;border:1px solid var(--line);background:var(--ink)}.shot img{display:block;width:100%;height:auto}
 .shot.phone{max-width:300px;margin:0 auto}
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-self:start}.gal .shot.phone{max-width:none;margin:0}
+@media(max-width:640px){.gal{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .tag{display:inline-block;font:600 13px 'IBM Plex Sans Arabic';color:var(--ink);background:var(--cu2);border-radius:var(--r3);padding:2px 10px}
 .app h3{font-size:34px;margin:10px 0 6px}.app p{color:var(--ivory2);margin-bottom:12px;opacity:.9}
 .app ul{list-style:none;display:grid;gap:7px;margin-bottom:20px}.app li{display:flex;gap:10px;font-size:16px;color:var(--ivory2);line-height:1.6}.app li .ic{color:var(--cu);margin-top:4px}
