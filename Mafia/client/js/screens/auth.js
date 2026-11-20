@@ -27,8 +27,13 @@ function googleBtn() {
 }
 const divider = () => h('div', { class: 'row dim small' }, h('div', { class: 'grow', style: { height: '1px', background: 'var(--faint)' } }), t('or'), h('div', { class: 'grow', style: { height: '1px', background: 'var(--faint)' } }));
 
+// الوضع المحلي (هاتف الراوي خادم): الاسم فقط
+const localLogin = () => [screen(hero(S.cfg.isHost ? t('local_host_tagline') : t('local_tagline')),
+  h('div', { class: 'card small dim center' }, S.cfg.isHost ? t('local_host_note') : t('local_player_note')),
+  form([{ name: 'name', label: t('your_name'), max: 24, ac: 'nickname' }], t('continue'), async (v) => done(await api('/api/auth/guest', { method: 'POST', body: v }))))];
+
 // تسجيل الدخول (2)
-export const login = () => [screen(hero(t('tagline')),
+export const login = () => S.cfg.local ? localLogin() : [screen(hero(t('tagline')),
   form([{ name: 'email', label: t('email'), type: 'email', ac: 'email', cls: 'ltr' }, { name: 'password', label: t('password'), type: 'password', ac: 'current-password', cls: 'ltr' }], t('login'),
     async (v) => done(await api('/api/auth/login', { method: 'POST', body: v })),
     h('button', { type: 'button', class: 'btn ghost sm', onclick: () => go('forgot') }, t('forgot_password'))),

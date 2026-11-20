@@ -2,7 +2,7 @@ import { h, ic, avatar, toast, sheet, copyText, confirmBox, fmtTime } from '../d
 import { t } from '../i18n.js';
 import { S, notify, serverNow } from '../store.js';
 import { api, send } from '../net.js';
-import { go, screen, topbar, act, fail, cached } from './common.js';
+import { go, screen, topbar, act, fail, cached, liveCfg } from './common.js';
 import qrcode from '../../vendor/qrcode.mjs';
 import { roleArt, ROLE_COLOR } from '../art.js';
 import { sfx } from '../fx.js';
@@ -62,7 +62,7 @@ export function settingsForm(d, { mode, rerender }) {
 export const create = () => {
   const mode = S.params.mode || 'online'; if (!draft || draft._m !== mode) { draft = defaultDraft(mode); draft._m = mode; }
   const btn = h('button', { class: 'btn primary lg block', disabled: !!validateDraft(draft), onclick: async (e) => { const { _m, ...settings } = draft; if (await act(e.currentTarget, { t: 'room:create', mode, settings })) draft = null; } }, ic('plus'), t('create_room_btn'));
-  return [screen(topbar(mode === 'offline' ? t('create_offline') : t('create_room'), { back: () => go('mode', { m: mode }) }),
+  return [screen(topbar(mode === 'offline' ? t('create_offline') : t('create_room'), { back: () => go(S.cfg.local ? 'home' : 'mode', { m: mode }) }),
     h('div', { class: 'banner', style: { background: 'rgba(36,120,232,.14)', borderColor: 'rgba(36,120,232,.5)', color: '#8ab8ff' } }, ic('mic', 'sm'), t('narrator_you')),
     settingsForm(draft, { mode, rerender: notify }), btn)];
 };
@@ -100,7 +100,8 @@ export const join = () => {
     } catch { toast(t('camera_denied'), 'err'); }
   };
   function stopScan() { scanning?.stream.getTracks().forEach((x) => x.stop()); scanning = null; camBox.classList.add('hide'); }
-  return [screen(topbar(offline ? t('join_qr') : t('join_room'), { back: () => { stopScan(); go('mode', { m: mode }); } }),
+  return [screen(topbar(offline ? t('join_qr') : t('join_room'), { back: S.cfg.local ? (S.cfg.isHost ? 'home' : null) : () => { stopScan(); go('mode', { m: mode }); } }),
+    S.cfg.local && !S.cfg.isHost ? h('div', { class: 'card col' }, h('h3', {}, t('local_join_title')), h('p', { class: 'small dim' }, t('local_join_how'))) : null,
     offline ? h('div', { class: 'col' },
       h('div', { class: 'card accent', style: { '--role': 'var(--green)' } }, h('div', { class: 'center' }, h('div', { style: { color: 'var(--green)' } }, ic('qr', 'lg')), h('h3', {}, t('scan_title')), h('p', { class: 'small dim' }, t('scan_how')))),
       h('button', { class: 'btn green lg block', onclick: startScan }, ic('camera'), t('scan_now')), camBox, h('div', { class: 'center dim small' }, t('or_enter_key'))) : h('div', { class: 'card center dim small' }, t('join_online_desc')),
@@ -125,7 +126,10 @@ export const lobby = () => {
         : m.id !== S.user.id ? h('button', { class: 'iconbtn', style: { width: '36px', height: '36px' }, 'aria-label': t('report'), onclick: () => reportSheet(m) }, ic('flag', 'sm')) : null); });
   const st = R.settings;
   return [screen(topbar(offline ? t('offline_room') : t('lobby'), { back: leave, right: h('span', { class: 'chip' }, ic('users', 'sm'), h('span', { class: 'num' }, `${R.members.length}/${st.players}`)) }),
-    isHost && offline ? h('div', { class: 'col' }, h('div', { class: 'qrbox' }, base ? raw(qrSvg(joinUrl(base, R.joinKey))) : h('div', { class: 'spinner', style: { margin: '80px auto' } })),
+    isHost && offline && S.cfg.local ? wifiStep() : null,
+    isHost && offline && (!S.cfg.local || qrStep === 2 || !S.cfg.wifi) ? h('div', { class: 'col' }, S.cfg.local && !S.cfg.wifi ? h('div', { class: 'banner red' }, ic('wifioff', 'sm'), t('hotspot_manual')) : null,
+      S.cfg.local ? h('div', { class: 'small dim center' }, t('step2_hint')) : null,
+      h('div', { class: 'qrbox' }, base ? raw(qrSvg(joinUrl(base, R.joinKey))) : h('div', { class: 'spinner', style: { margin: '80px auto' } })),
       h('div', { class: 'center' }, h('div', { class: 'small dim' }, t('room_number')), h('div', { class: 'code-big' }, R.code)),
       h('div', { class: 'row' }, h('button', { class: 'btn grow sm', onclick: () => base && copyText(joinUrl(base, R.joinKey)) }, ic('copy', 'sm'), t('copy_link')), h('button', { class: 'btn grow sm', onclick: () => copyText(R.joinKey) }, ic('lock', 'sm'), t('copy_key'))),
       h('div', { class: 'tiny dim center' }, base ? base.replace(/^https?:\/\//, '') : '')) : null,
@@ -148,6 +152,21 @@ export const lobby = () => {
   )];
 };
 const raw = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; };
+
+// ---- الوضع المحلي: باركود الشبكة (الخطوة 1) ثم باركود الغرفة (الخطوة 2) ----
+let qrStep = 1;
+const wifiEsc = (s) => String(s).replace(/([\\;,:"])/g, '\\$1');
+export const wifiQrText = (w) => `WIFI:T:${w.security === 'SAE' ? 'SAE' : w.security === 'nopass' ? 'nopass' : 'WPA'};S:${wifiEsc(w.ssid)};${w.pass ? 'P:' + wifiEsc(w.pass) + ';' : ''};`;
+function wifiStep() {
+  const cfg = liveCfg(); const w = cfg.wifi; if (!w) return null;
+  const seg = h('div', { class: 'seg' }, [[1, t('step1')], [2, t('step2')]].map(([n, l]) => h('button', { class: qrStep === n ? 'on' : '', onclick: () => { qrStep = n; notify(); } }, l)));
+  if (qrStep !== 1) return seg;
+  return h('div', { class: 'col' }, seg, h('div', { class: 'small dim center' }, t('step1_hint')),
+    h('div', { class: 'qrbox' }, raw(qrSvg(wifiQrText(w)))),
+    h('div', { class: 'card col', style: { gap: '6px' } }, h('div', { class: 'row between' }, h('span', { class: 'small dim' }, t('wifi_name')), h('b', { class: 'num' }, w.ssid)),
+      w.pass ? h('div', { class: 'row between' }, h('span', { class: 'small dim' }, t('wifi_pass')), h('b', { class: 'num' }, w.pass)) : null),
+    h('button', { class: 'btn blue block', onclick: () => { qrStep = 2; notify(); } }, t('next_step')));
+}
 const secLabel = secFmt;
 
 export function reportSheet(m) {

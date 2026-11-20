@@ -1,7 +1,7 @@
 import { h, ic, avatar, toast } from '../dom.js';
 import { t, err } from '../i18n.js';
 import { S, notify } from '../store.js';
-import { send } from '../net.js';
+import { send, api } from '../net.js';
 
 export const go = (route, params = {}) => { S.route = route; S.params = params; history.replaceState(null, '', '#/' + route); notify(); };
 export const screen = (...kids) => h('div', { class: 'screen' }, ...kids);
@@ -9,7 +9,7 @@ export const topbar = (title, { back = 'home', right } = {}) => h('div', { class
   back && h('button', { class: 'iconbtn', 'aria-label': t('back'), onclick: () => (typeof back === 'function' ? back() : go(back)) }, ic('chev')),
   h('h2', {}, title), right);
 export const NAV = [['home', 'home', 'nav_home'], ['friends', 'users', 'nav_friends'], ['tasks', 'task', 'nav_tasks'], ['profile', 'user', 'nav_profile']];
-export const navbar = (cur) => h('nav', { class: 'nav' }, NAV.map(([r, i, l]) => h('button', { class: r === cur ? 'on' : '', onclick: () => go(r) }, ic(i), t(l))));
+export const navbar = (cur) => S.cfg.local ? null : h('nav', { class: 'nav' }, NAV.map(([r, i, l]) => h('button', { class: r === cur ? 'on' : '', onclick: () => go(r) }, ic(i), t(l))));
 export const fail = (code) => toast(err(code), 'err');
 /** ينفّذ أمراً عبر الشبكة ويعرض الخطأ إن وُجد. يمنع النقر المزدوج بتعطيل الزر أثناء التنفيذ */
 export async function act(btn, msg) {
@@ -31,3 +31,5 @@ export function cached(key, loader, ttl = 5000) {
   return cache.get(key).v;
 }
 export const bust = (key) => (key ? cache.delete(key) : cache.clear());
+/** في الوضع المحلي تتغير حالة نقطة الاتصال بعد الإقلاع؛ نعيد قراءة الإعدادات دورياً على هاتف الراوي */
+export const liveCfg = () => { if (S.cfg.local && S.cfg.isHost) { const c = cached('cfg', () => api('/api/config'), 3000); if (c) S.cfg = c; } return S.cfg; };

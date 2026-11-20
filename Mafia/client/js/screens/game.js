@@ -175,7 +175,7 @@ export function endView(R, m, members, isNarrator) {
     h('h3', {}, t('roles_revealed')), m.players.map((p) => playerRow({ ...p, alive: true }, members, { me: m.me?.id, showRole: true, role: p.role, extra: p.alive ? null : h('span', { class: 'tiny dim' }, ic('skull', 'sm')) })),
     Object.keys(R.scores || {}).length && R.settings.rounds > 1 ? h('div', { class: 'card col' }, h('h3', {}, t('room_scores')), m.players.filter((p) => R.scores[p.id]).sort((a, b) => R.scores[b.id] - R.scores[a.id]).map((p) => h('div', { class: 'row between' }, h('span', {}, p.name), h('b', { class: 'num' }, R.scores[p.id], ' ', t('wins'))))) : null,
     isNarrator ? null : h('div', { class: 'center dim small' }, finished ? t('match_over_room') : t('wait_next_round')),
-    !isNarrator ? h('div', { class: 'row' }, h('button', { class: 'btn grow', onclick: () => go('stats') }, ic('list'), t('stats')), h('button', { class: 'btn grow danger', onclick: () => send({ t: 'room:leave' }) }, ic('out'), t('leave_room'))) : null);
+    !isNarrator ? h('div', { class: 'row' }, S.cfg.local ? null : h('button', { class: 'btn grow', onclick: () => go('stats') }, ic('list'), t('stats')), h('button', { class: 'btn grow danger', onclick: () => send({ t: 'room:leave' }) }, ic('out'), t('leave_room'))) : null);
 }
 
 // ========== لوحة الراوي (11) + اختيار المتحدث (16) + المؤقت (17) ==========

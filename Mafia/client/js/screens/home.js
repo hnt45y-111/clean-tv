@@ -2,10 +2,12 @@ import { h, ic, avatar, toast, sheet, copyText, confirmBox } from '../dom.js';
 import { t, err } from '../i18n.js';
 import { S, saveToken, notify } from '../store.js';
 import { api, send, dropSession, connect } from '../net.js';
-import { go, screen, topbar, navbar, act, fail, xpBar, cached } from './common.js';
+import { go, screen, topbar, navbar, act, fail, xpBar, cached, liveCfg } from './common.js';
+import { join as joinScreen } from './rooms.js';
 import { logoArt } from '../art.js';
 
 export const home = () => {
+  if (S.cfg.local) return localHome();
   const u = S.user; const pend = S.friends.incoming.length;
   return [screen(
     h('div', { class: 'row' }, h('button', { class: 'row grow', style: { textAlign: 'start' }, onclick: () => go('profile') }, avatar(u, '', ''), h('div', { class: 'grow' }, h('div', { class: 'bold' }, u.name), h('div', { class: 'small dim' }, `${t('points')}: `, h('b', { class: 'num' }, u.points)))),
@@ -20,6 +22,21 @@ export const home = () => {
       tile('star', t('achievements'), 'achievements', 'var(--purple)'), tile('users', t('nav_friends'), 'friends', 'var(--green)', pend || null)),
   ), navbar('home')];
 };
+function localHome() {
+  const cfg = liveCfg();
+  if (!cfg.isHost) { S.params = { mode: 'offline' }; return joinScreen(); }
+  const w = cfg.wifi;
+  return [screen(
+    h('div', { class: 'row' }, avatar(S.user), h('div', { class: 'grow' }, h('div', { class: 'small dim' }, t('narrator')), h('div', { class: 'bold' }, S.user.name)),
+      h('button', { class: 'iconbtn', onclick: () => go('settings'), 'aria-label': t('settings') }, ic('gear'))),
+    h('div', { class: 'hero' }, logoArt(), h('div', { class: 'logo' }, 'مافيا')),
+    w ? h('div', { class: 'banner', style: { background: 'rgba(33,168,117,.14)', borderColor: 'rgba(33,168,117,.5)', color: '#5fe0ad' } }, ic('wifi', 'sm'), t('hotspot_on', { ssid: w.ssid }))
+      : h('div', { class: 'banner red' }, ic('wifioff', 'sm'), cfg.hotspotError ? t('hotspot_err_' + cfg.hotspotError) : t('hotspot_starting')),
+    h('button', { class: 'card accent modecard', style: { '--role': 'var(--red)', textAlign: 'start' }, onclick: () => go('create', { mode: 'offline' }) },
+      h('div', { class: 'big' }, ic('plus', 'lg')), h('div', { class: 'grow' }, h('h2', {}, t('create_room')), h('div', { class: 'small dim' }, t('local_create_desc')))),
+    h('div', { class: 'card col' }, h('h3', {}, t('local_how_title')), h('p', { class: 'small dim' }, t('local_how')))
+  )];
+}
 const tile = (icon, label, route, color, badge) => h('button', { class: 'card row', style: { '--role': color, textAlign: 'start' }, onclick: () => go(route) },
   h('span', { style: { color } }, ic(icon, 'lg')), h('b', { class: 'grow' }, label), badge ? h('span', { class: 'chip role' }, badge) : null);
 
