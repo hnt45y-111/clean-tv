@@ -355,6 +355,22 @@ function osPanelWire(box, S) {
       $('#ownerSave').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); if (nm) S.ownerName = nm.slice(0, 20); else delete S.ownerName; changed(); live({ settings: S }); toast('انحفظ الاسم'); };
       $('#greetTog').onclick = () => { tap(); S.greetOn = S.greetOn === false; $('#greetTog .toggle').classList.toggle('on', S.greetOn !== false); changed(); live({ settings: S }); };
       $('#greetPreview').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); live({ settings: Object.assign({}, S, { ownerName: nm, greetOn: true }), action: 'greet' }); };
+      /* family profiles: a face and a name for everyone at home */
+      const PCOL = ['#D9822B', '#3DBE6C', '#4A8FE7', '#C9508B', '#8E6BE0', '#E0B03D'];
+      const pfs = () => (S.profiles = (S.profiles || []).slice(0, 6));
+      const pfPanel = document.createElement('div');
+      const pfDraw = () => {
+        pfPanel.innerHTML = `<div class="panel"><h2>${ic('user')} أفراد البيت</h2><p class="sub" style="margin-top:-4px">لكل شخص صورة واسم ومفضلة وآخر مشاهدة خاصة بيه. لما يكون اكو شخصين أو أكثر، التلفاز يسأل «منو يتفرج؟» عند الفتح ويرحّب باسمه.</p>
+          ${pfs().map((p, i) => `<div class="row" style="align-items:center;gap:10px;margin-top:10px"><div style="width:52px;height:52px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:${p.c || PCOL[i % 6]};font-weight:800;font-size:22px;color:#15181B">${p.img ? `<img src="${esc(p.img)}" style="width:100%;height:100%;object-fit:cover">` : esc(String(p.n || '؟').charAt(0))}</div>
+            <input class="pfn" data-i="${i}" value="${esc(p.n || '')}" placeholder="الاسم" maxlength="16" style="flex:1"><button class="btn ghost" data-pfimg="${i}">${ic('cam')}</button><button class="btn ghost" data-pfdel="${i}">${ic('trash')}</button></div>`).join('')}
+          <div class="row" style="margin-top:12px;gap:8px">${pfs().length < 6 ? `<button class="btn sec full" id="pfAdd">${ic('plus')} شخص جديد</button>` : ''}<button class="btn sec full" id="pfSave">${ic('save')} حفظ</button></div></div>`;
+        pfPanel.querySelectorAll('.pfn').forEach(e => e.oninput = () => { pfs()[+e.dataset.i].n = e.value.trim(); });
+        pfPanel.querySelectorAll('[data-pfdel]').forEach(e => e.onclick = () => { tap(); pfs().splice(+e.dataset.pfdel, 1); pfDraw(); });
+        pfPanel.querySelectorAll('[data-pfimg]').forEach(e => e.onclick = () => { tap(); busy('اختار صورة…'); run('pick', { mode: 'logo' }).then(u => { unbusy(); pfs()[+e.dataset.pfimg].img = u; pfDraw(); }).catch(er => { unbusy(); if (er.message !== 'CANCEL') toast(errText(er)); }); });
+        const add = pfPanel.querySelector('#pfAdd'); if (add) add.onclick = () => { tap(); const l = pfs(); l.push({ id: 'p' + Date.now().toString(36), n: '', c: PCOL[l.length % 6] }); pfDraw(); };
+        pfPanel.querySelector('#pfSave').onclick = () => { tap(); S.profiles = pfs().filter(p => p.n); if (!S.profiles.length) delete S.profiles; changed(); live({ settings: S }); toast('انحفظ أفراد البيت'); pfDraw(); };
+      };
+      pfDraw(); p.insertBefore(pfPanel, p.firstChild);
       const HRS = Array.from({ length: 24 }, (_, i) => i);
       const hrChips = (key, cur) => `<div class="chips" id="${key}Chips">${HRS.map(h => `<button class="chip ${((S[key] != null ? S[key] : cur) === h) ? 'on' : ''}" data-hr="${key}:${h}">${h}</button>`).join('')}</div>`;
       const qt = document.createElement('div');

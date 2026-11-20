@@ -974,7 +974,7 @@
     if (id === 'home') { nav.home(); return; }
     if (id === 'search' || id === 'ai') return openSearch();
     if (id === 'settings') { if (HAS_ANDROID) A.openSettings(); else toast('إعدادات الجهاز'); return; }
-    if (id === 'profile') return openSettings();
+    if (id === 'profile') return profiles().length > 1 ? openProfiles(false) : openSettings();
     if (id === 'menu') return openOsMenu();
     if (id === 'apps' || id === 'library') return openAppsList('كل التطبيقات', null);
     if (id === 'games') return openAppsList('الألعاب', /game|xbox|geforce|boosteroid|steam|moonlight|luna|play\.games|pubg|fifa|emulat/i);
@@ -2026,20 +2026,20 @@
   // ---------- «قصة شهري»: what was watched this month, built from the TV's own history ----------
   function logWatch(kind, name) {
     try {
-      var k = 'watchLog', L = JSON.parse(localStorage.getItem(k) || '[]');
+      var k = pkey('watchLog'), L = JSON.parse(localStorage.getItem(k) || '[]');
       L.push([Date.now(), kind, String(name || '').slice(0, 60)]); if (L.length > 1500) L = L.slice(-1500);
       localStorage.setItem(k, JSON.stringify(L));
     } catch (e) {}
   }
   window.__logWatch = logWatch;
   function openRecap() {
-    var L = []; try { L = JSON.parse(localStorage.getItem('watchLog') || '[]'); } catch (e) {}
+    var L = []; try { L = JSON.parse(localStorage.getItem(pkey('watchLog')) || '[]'); } catch (e) {}
     var since = Date.now() - 30 * DAY, M = L.filter(function (r) { return r[0] >= since; });
     var cnt = {}, kinds = { live: 0, vod: 0, app: 0 }, days = {}, hours = {};
     M.forEach(function (r) { cnt[r[2]] = (cnt[r[2]] || 0) + 1; kinds[r[1]] = (kinds[r[1]] || 0) + 1; days[dayKey(new Date(r[0]))] = 1; var h = new Date(r[0] + 3 * 3600000).getUTCHours(); hours[h] = (hours[h] || 0) + 1; });
     var top = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; }).slice(0, 3);
     var ph = Object.keys(hours).sort(function (a, b) { return hours[b] - hours[a]; })[0];
-    var nm = String(settings.ownerName || '').trim();
+    var nm = String((activeProfile() || {}).n || settings.ownerName || '').trim();
     var tiles = M.length ? [
       ['🗓', nf.format(Object.keys(days).length), 'يوم شغّلت بيه الشاشة'],
       ['▶️', nf.format(M.length), 'مرة فتحت قناة أو فيلم أو تطبيق'],
@@ -2055,6 +2055,49 @@
     $('recapModal').classList.add('on'); layer = 'recap';
   }
   function closeRecap() { $('recapModal').classList.remove('on'); layer = 'main'; nav.refresh(); }
+
+  // ---------- Family profiles: a face for everyone at home; each one keeps their own favourites, last watched and story ----------
+  function profiles() { return (settings.profiles || []).filter(function (p) { return p && p.n; }).slice(0, 6); }
+  function activeProfile() { var id = ''; try { id = localStorage.getItem('activeProfile') || ''; } catch (e) {} var l = profiles(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return null; }
+  function pkey(k) { var p = activeProfile(); return p ? k + '@' + p.id : k; }
+  window.__pk = pkey;
+  var PCOL = ['#D9822B', '#3DBE6C', '#4A8FE7', '#C9508B', '#8E6BE0', '#E0B03D'];
+  var pf = { i: 0, boot: false };
+  function avatar(p, i) {
+    var col = p.c || PCOL[i % PCOL.length], ini = String(p.n).trim().charAt(0);
+    return '<div class="pf-av" style="--pc:' + col + '">' + (p.img ? '<img src="' + esc(p.img) + '" alt="">' : '<b>' + esc(ini) + '</b>') + '</div>';
+  }
+  function openProfiles(boot) {
+    var l = profiles(); if (l.length < 2) { if (boot) bootGreet(); return; }
+    var cur = activeProfile(); pf.i = 0; pf.boot = boot;
+    l.forEach(function (p, i) { if (cur && p.id === cur.id) pf.i = i; });
+    layer = 'prof'; $('profModal').classList.add('on'); drawProfiles();
+  }
+  function drawProfiles() {
+    var l = profiles();
+    $('profModal').innerHTML = '<div class="pf-box"><div class="pf-q">منو يتفرج؟</div><div class="pf-row">' + l.map(function (p, i) {
+      return '<div class="pf-it' + (i === pf.i ? ' focus' : '') + '" style="animation-delay:' + (i * 0.08) + 's">' + avatar(p, i) + '<div class="pf-n">' + esc(p.n) + '</div></div>';
+    }).join('') + '</div><div class="pf-h">الأسهم للاختيار · OK للدخول</div></div>';
+  }
+  function profKey(k) {
+    var n = profiles().length;
+    if (k === 'ArrowLeft') pf.i = Math.min(n - 1, pf.i + 1);
+    else if (k === 'ArrowRight') pf.i = Math.max(0, pf.i - 1);
+    else if (k === 'ok') {
+      var p = profiles()[pf.i]; try { localStorage.setItem('activeProfile', p.id); } catch (e) {}
+      $('profModal').classList.remove('on'); layer = 'main'; applyProfile(); renderApps();
+      if (pf.boot) bootGreet(); else toast('أهلاً ' + p.n); return;
+    } else if (k === 'back' && !pf.boot) { $('profModal').classList.remove('on'); layer = 'main'; return; }
+    drawProfiles();
+  }
+  function applyProfile() {
+    var p = activeProfile(), i = p ? profiles().indexOf(p) : -1;
+    document.documentElement.style.setProperty('--pcol', p ? (p.c || PCOL[i % PCOL.length]) : '');
+    document.body.classList.toggle('has-profile', !!p);
+    var tb = $('profChip'); if (tb) tb.innerHTML = p ? avatar(p, i) + '<span>' + esc(p.n) + '</span>' : '';
+  }
+  function bootGreet() { if (settings.greetOn !== false) showGreet(); }
+  window.__openProfiles = openProfiles;
 
   // ---------- Kids mode ----------
   var kids = load('kids', { on: false, pin: '', apps: [], limit: 120, used: {}, launchAt: 0 });
@@ -2312,6 +2355,7 @@
     if (layer === 'greet') return window.__greetKey();
     if (layer === 'bedtime') { endBedtime(); return; }
     if (layer === 'wiz') return wizKey(k);
+    if (layer === 'prof') return profKey(k);
     if (layer === 'recap') { closeRecap(); return; }
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
@@ -2378,7 +2422,7 @@
   }
   function greetWords() {
     var h = new Date(Date.now() + 3 * 3600000).getUTCHours(); // Baghdad time, no Intl needed for a plain hour
-    var g = greetPeriod(h), nm = String(settings.ownerName || '').trim();
+    var ap = activeProfile(), g = greetPeriod(h), nm = String((ap && ap.n) || settings.ownerName || '').trim();
     return nm ? [g + '،', nm] : [g];
   }
   var greetT = null, greetActive = false;
@@ -2414,7 +2458,8 @@
   if (!PREVIEW) setTimeout(function () { checkUpdate(false); }, 20000);
   if (!PREVIEW && typeof window.addEventListener === 'function') { window.addEventListener('online', renderNetQuality); window.addEventListener('offline', renderNetQuality); renderNetQuality(); }
   if (!PREVIEW) setTimeout(function () { if (window.Live && window.Live.prefetch) window.Live.prefetch(); if (window.Vod && window.Vod.prefetch) window.Vod.prefetch(); }, 6000);
-  if (!PREVIEW && settings.greetOn !== false) setTimeout(showGreet, 160);
+  applyProfile();
+  if (!PREVIEW) setTimeout(function () { if (profiles().length > 1) openProfiles(true); else bootGreet(); }, 160);
   var gm = $('greetModal'); if (gm) gm.addEventListener('click', function () { closeGreet(true); });
   /* if the interface had to restart, say why (so the cause can be read off the screen) */
   if (HAS_ANDROID && A.lastCrash) setTimeout(function () { try { var c = A.lastCrash(); if (c) { var k = c.indexOf('|'); toast('الواجهة أعادت التشغيل بسبب: ' + c.slice(k + 1, k + 220), 20000); } } catch (e) {} }, 6000);

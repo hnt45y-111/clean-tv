@@ -49,12 +49,12 @@
   }
 
   /* ---------------------------------------------------------------- favourites */
-  function favs() { try { return JSON.parse(localStorage.getItem('vodFav') || '[]') || []; } catch (e) { return []; } }
+  function favs() { try { return JSON.parse(localStorage.getItem((window.__pk ? window.__pk('vodFav') : 'vodFav')) || '[]') || []; } catch (e) { return []; } }
   function fk(it) { return it.t + ':' + it.id; }
   function toggleFav(it) {
     var l = favs(), k = fk(it), had = l.some(function (f) { return fk(f) === k; });
     l = had ? l.filter(function (f) { return fk(f) !== k; }) : [{ t: it.t, n: it.n, id: it.id, ext: it.ext, img: it.img, c: it.c }].concat(l).slice(0, 300);
-    try { localStorage.setItem('vodFav', JSON.stringify(l)); } catch (e) {}
+    try { localStorage.setItem((window.__pk ? window.__pk('vodFav') : 'vodFav'), JSON.stringify(l)); } catch (e) {}
     return !had;
   }
 

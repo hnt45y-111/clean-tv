@@ -25,14 +25,14 @@
   function jget(k) { try { return JSON.parse(localStorage.getItem(k) || '[]') || []; } catch (e) { return []; } }
   function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function slim(c) { return { n: c.n, u: c.u, i: c.i || '', l: c.l || '', g: c.g || '', c: c.c || '', p: c.p || '', r: c.r || '', ua: c.ua || '', grp: c.grp || '' }; }
-  function favs() { return jget('lvFav'); }
+  function favs() { return jget((window.__pk ? window.__pk('lvFav') : 'lvFav')); }
   function isFav(c) { var k = c.u + '|' + c.n; return favs().some(function (f) { return f.u + '|' + f.n === k; }); }
   function toggleFav(c) {
     var l = favs(), k = c.u + '|' + c.n, had = l.some(function (f) { return f.u + '|' + f.n === k; });
     l = had ? l.filter(function (f) { return f.u + '|' + f.n !== k; }) : [slim(c)].concat(l).slice(0, 200);
-    jset('lvFav', l); return !had;
+    jset((window.__pk ? window.__pk('lvFav') : 'lvFav'), l); return !had;
   }
-  function pushRecent(c) { var k = c.u + '|' + c.n; jset('lvRecent', [slim(c)].concat(jget('lvRecent').filter(function (f) { return f.u + '|' + f.n !== k; })).slice(0, 24)); }
+  function pushRecent(c) { var k = c.u + '|' + c.n; jset((window.__pk ? window.__pk('lvRecent') : 'lvRecent'), [slim(c)].concat(jget((window.__pk ? window.__pk('lvRecent') : 'lvRecent')).filter(function (f) { return f.u + '|' + f.n !== k; })).slice(0, 24)); }
   var ICON = { all: '📺', news: '📰', sport: '⚽', movies: '🎬', docs: '🌍', ent: '🎭', mbc: '✨', karbala: '🕌', kids: '🧸', quran: '📖', sites: '🌐' };
   function cats() {
     var l = CATS.map(function (c) { return { id: c[0], n: c[1], kind: 'cat' }; });
@@ -43,7 +43,7 @@
     /* the user's own channels live in one folder, always the last one */
     if (custom().lists.length) l.push({ id: 'my', n: '📁 قنواتي الخاصة', kind: 'my' });
     l = sortBy(l, ORD.cats, function (c) { return c.id; });
-    if (jget('lvRecent').length) l.push({ id: 'recent', n: '🕘 آخر ما شاهدت', kind: 'recent' });
+    if (jget((window.__pk ? window.__pk('lvRecent') : 'lvRecent')).length) l.push({ id: 'recent', n: '🕘 آخر ما شاهدت', kind: 'recent' });
     if (favs().length) l.push({ id: 'fav', n: '⭐ المفضلة', kind: 'fav' });
     return l;
   }
@@ -263,7 +263,7 @@
   function rawFilter(cid) {
     var all = (window.CHANNELS || []).concat(siteCh());
     if (cid === 'fav') return favs();
-    if (cid === 'recent') return jget('lvRecent');
+    if (cid === 'recent') return jget((window.__pk ? window.__pk('lvRecent') : 'lvRecent'));
     if (cid === 'sites') return sitesList().map(function (u) { return { n: siteHost(u), sub: 'يفتح الموقع وتختار القناة منه', u: u, site: 1, c: 'my' }; });
     if (cid === 'my') {
       var Ls = custom().lists;

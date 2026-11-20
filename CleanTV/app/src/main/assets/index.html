@@ -205,6 +205,21 @@
   @keyframes grLetter { 0% { opacity: 0; transform: translateY(46px) scale(.7) rotate(6deg); filter: brightness(2.2); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: brightness(1); } }
   .gr-rule { margin: 26px auto 0; width: 0; height: 4px; border-radius: 4px; background: linear-gradient(90deg, transparent, #D9822B, transparent); animation: grRule .9s ease forwards; }
   @keyframes grRule { from { width: 0; opacity: 0; } 40% { opacity: 1; } to { width: 420px; opacity: 1; } }
+  /* family profiles */
+  #profModal { position: absolute; inset: 0; z-index: 390; display: none; align-items: center; justify-content: center; background: radial-gradient(1100px 760px at 50% 45%, #22262b, #0c0d0f 75%); direction: rtl; }
+  #profModal.on { display: flex; animation: grIn .4s ease both; }
+  .pf-box { text-align: center; }
+  .pf-q { font-family: var(--kufi); font-size: 76px; font-weight: 700; color: #EFE7D4; margin-bottom: 60px; }
+  .pf-row { display: flex; gap: 50px; justify-content: center; }
+  .pf-it { opacity: 0; animation: rcIn .5s cubic-bezier(.2,.9,.3,1.2) forwards; transition: transform .2s ease; }
+  .pf-av { width: 210px; height: 210px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--pc); border: 6px solid transparent; box-shadow: 0 16px 40px rgba(0,0,0,.45); }
+  .pf-av img { width: 100%; height: 100%; object-fit: cover; } .pf-av b { font-family: var(--kufi); font-size: 100px; color: #15181B; }
+  .pf-it.focus { transform: scale(1.12); } .pf-it.focus .pf-av { border-color: #EFE7D4; box-shadow: 0 0 0 6px var(--pc), 0 24px 60px rgba(0,0,0,.6); }
+  .pf-n { margin-top: 22px; font-size: 38px; font-weight: 700; color: #B8BDC2; } .pf-it.focus .pf-n { color: #EFE7D4; }
+  .pf-h { margin-top: 60px; font-size: 22px; color: #8B939A; }
+  .prof-chip { display: inline-flex; align-items: center; gap: 10px; margin-right: 14px; font-family: var(--font); font-size: 22px; font-weight: 700; color: #EFE7D4; }
+  .prof-chip .pf-av { width: 44px; height: 44px; border-width: 2px; box-shadow: none; } .prof-chip .pf-av b { font-size: 22px; }
+  body.has-profile .item.focus { --pfx: var(--pcol); }
   /* «شنو أشوف الليلة؟» */
   #wizModal, #recapModal { position: absolute; inset: 0; z-index: 360; display: none; align-items: center; justify-content: center; background: radial-gradient(1000px 700px at 50% 45%, rgba(40,32,22,.97), rgba(10,11,13,.98)); direction: rtl; }
   #wizModal.on, #recapModal.on { display: flex; animation: grIn .35s ease both; }
@@ -1083,6 +1098,7 @@
 <body>
 <div id="stage">
   <div id="greetModal"></div>
+  <div id="profModal"></div>
   <div id="wizModal"></div>
   <div id="recapModal"></div>
   <div id="bedtimeModal"><div class="bt-stars"></div><div class="bt-moon">🌙</div><div class="bt-txt">قصة قبل النوم<br><small>تخفت الإضاءة والصوت تدريجياً… نوم هنيء</small></div></div>
@@ -1102,7 +1118,7 @@
 
     <section class="hero">
       <div class="time-block" id="timeblock" data-edit="timeblock">
-        <div class="owner-row"><div class="owner">مدير الشاشات</div><i class="net-dot" id="netDot" title=""></i><span class="net-lbl" id="netLbl"></span></div>
+        <div class="owner-row"><div class="owner">مدير الشاشات</div><i class="net-dot" id="netDot" title=""></i><span class="net-lbl" id="netLbl"></span><span class="prof-chip" id="profChip"></span></div>
         <div class="clock"><span class="hm" id="hm">--:--</span><span class="ampm" id="ampm"></span></div>
         <div class="dates">
           <div class="date-line"><span class="tag">م</span><span id="greg"></span></div>
