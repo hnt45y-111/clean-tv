@@ -1,0 +1,24 @@
+name: Doctorna
+on:
+  push:
+    paths: ['Doctorna/**', '.github/workflows/doctorna.yml']
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    name: Doctorna (server + browser)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax of the client scripts
+        run: for f in Doctorna/client/js/*.js Doctorna/client/js/screens/*.js; do node --input-type=module --check < "$f" || exit 1; done
+      - name: Server tests
+        run: cd Doctorna/server && npm test
+      - name: Browser end-to-end
+        run: |
+          npm i --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+          cd Doctorna && NODE_PATH=$PWD/../node_modules node tests/e2e.cjs
