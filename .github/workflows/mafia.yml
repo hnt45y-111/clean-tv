@@ -1,0 +1,42 @@
+name: Build Mafia APK
+on:
+  push:
+    paths:
+      - 'Mafia/android/**'
+      - '.github/workflows/mafia.yml'
+  workflow_dispatch:
+    inputs:
+      server_url:
+        description: 'عنوان خادم اللعبة (مثال https://mafia-game.onrender.com) — فارغ يعني يسأل التطبيق عنه'
+        required: false
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Mafia/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Build
+        env:
+          SERVER_URL: ${{ github.event.inputs.server_url || vars.MAFIA_SERVER_URL }}
+        run: gradle assembleDebug --no-daemon -PbuildNum=${{ github.run_number }} -PserverUrl="$SERVER_URL"
+      - name: Rename
+        run: cp app/build/outputs/apk/debug/app-debug.apk mafia.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mafia-apk
+          path: Mafia/android/mafia.apk
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "mafia-${{ github.run_number }}" mafia.apk --repo "${{ github.repository }}" --target "${{ github.sha }}" --title "لعبة مافيا ${{ github.run_number }}" --notes "نزّل mafia.apk وثبّته على هاتف أندرويد." --latest=false
