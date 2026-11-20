@@ -104,8 +104,32 @@
     });
   }
   function getJSON(url) {
-    if (HAS_ANDROID) return bridgeAsync('fetchAsync', url).then(function (t) { try { return t ? JSON.parse(t) : null; } catch (e) { return null; } });
-    return fetch(url).then(function (r) { return r.json(); }).catch(function () { return null; });
+    var t0 = Date.now();
+    var p = HAS_ANDROID ? bridgeAsync('fetchAsync', url).then(function (t) { try { return t ? JSON.parse(t) : null; } catch (e) { return null; } })
+      : fetch(url).then(function (r) { return r.json(); }).catch(function () { return null; });
+    return p.then(function (r) { noteNet(Date.now() - t0, r != null); return r; });
+  }
+  // ---------- Connection quality: read off real round-trips the app was already making, not a cosmetic icon ----------
+  var netSamples = [];
+  function noteNet(ms, ok) {
+    netSamples.push(ok ? ms : -1); if (netSamples.length > 6) netSamples.shift();
+    renderNetQuality();
+  }
+  function renderNetQuality() {
+    var dot = $('netDot'), lbl = $('netLbl'); if (!dot) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) { dot.className = 'net-dot show bad'; dot.title = 'غير متصل بالإنترنت'; lbl.textContent = 'غير متصل بالإنترنت'; lbl.className = 'net-lbl' + (settings.netLabel === false ? '' : ' show'); return; }
+    if (!netSamples.length) { dot.classList.remove('show'); lbl.classList.remove('show'); return; }
+    var recent = netSamples.slice(-3), fails = recent.filter(function (v) { return v < 0; }).length;
+    var oks = recent.filter(function (v) { return v >= 0; });
+    var cls, txt;
+    if (fails === recent.length) { cls = 'bad'; txt = 'تعذّر الاتصال'; }
+    else {
+      var avg = oks.reduce(function (a, b) { return a + b; }, 0) / oks.length;
+      if (avg < 700 && fails === 0) { cls = 'good'; txt = 'الاتصال ممتاز'; }
+      else if (avg < 2200 && fails < 2) { cls = 'ok'; txt = 'الاتصال مقبول'; }
+      else { cls = 'bad'; txt = 'الاتصال ضعيف'; }
+    }
+    dot.className = 'net-dot show ' + cls; dot.title = txt; lbl.textContent = txt; lbl.className = 'net-lbl' + (settings.netLabel === false ? '' : ' show');
   }
 
   // ---------- Formats ----------
@@ -149,6 +173,22 @@
     $('hm').textContent = c.hm; $('ampm').textContent = c.p;
     $('greg').textContent = fmtGreg.format(now);
     $('hijri').textContent = hijriText(now);
+    applyTimeTint();
+  }
+  /* a living backdrop: the colour of the sky right now, over the user's own picture or skin — dawn, noon glare, sunset, night */
+  var TINT_ANCHORS = [
+    [0, 'rgba(10,12,35,.55)', 'rgba(4,5,12,.65)'], [4, 'rgba(28,22,48,.5)', 'rgba(62,30,40,.5)'], [6, 'rgba(255,172,92,.35)', 'rgba(255,110,70,.4)'],
+    [9, 'rgba(255,221,150,.16)', 'rgba(200,212,255,.1)'], [13, 'rgba(255,255,255,.05)', 'rgba(200,220,255,.07)'], [17, 'rgba(255,200,120,.2)', 'rgba(255,140,90,.22)'],
+    [19, 'rgba(255,120,80,.4)', 'rgba(120,40,90,.45)'], [21, 'rgba(60,40,90,.45)', 'rgba(15,15,40,.55)'], [24, 'rgba(10,12,35,.55)', 'rgba(4,5,12,.65)']
+  ];
+  function parseRgba(s) { var m = s.match(/[\d.]+/g); return [+m[0], +m[1], +m[2], +m[3]]; }
+  function lerpRgba(a, b, t) { var pa = parseRgba(a), pb = parseRgba(b), o = []; for (var i = 0; i < 4; i++) o.push(pa[i] + (pb[i] - pa[i]) * t); return 'rgba(' + Math.round(o[0]) + ',' + Math.round(o[1]) + ',' + Math.round(o[2]) + ',' + o[3].toFixed(2) + ')'; }
+  function applyTimeTint() {
+    var el = $('timeTint'); if (!el || settings.liveTint === false) { if (el) el.style.background = ''; return; }
+    var h = nowHoursBaghdad(), i = 0;
+    while (i < TINT_ANCHORS.length - 1 && TINT_ANCHORS[i + 1][0] <= h) i++;
+    var a = TINT_ANCHORS[i], b = TINT_ANCHORS[Math.min(i + 1, TINT_ANCHORS.length - 1)], span = b[0] - a[0], t = span > 0 ? (h - a[0]) / span : 0;
+    el.style.background = 'linear-gradient(180deg, ' + lerpRgba(a[1], b[1], t) + ', ' + lerpRgba(a[2], b[2], t) + ')';
   }
 
   // ---------- Prayer times ----------
@@ -595,7 +635,7 @@
   function loadApps(force) {
     if (HAS_ANDROID) {
       if (!force && apps.length && !A.appsChanged()) return;
-      bridgeAsync('getAppsAsync').then(function (t) { var l = []; try { l = JSON.parse(t) || []; } catch (e) {} l.forEach(arLabel); apps = sortApps(l); renderApps(); });
+      bridgeAsync('getAppsAsync').then(function (t) { var l = []; try { l = JSON.parse(t) || []; } catch (e) {} l.forEach(arLabel); apps = sortApps(l); renderApps(); if (typeof nav !== 'undefined') nav.restoreFocus(); });
     } else if (window.__DEMO_APPS) { apps = sortApps(window.__DEMO_APPS.slice().map(arLabel)); renderApps(); }
     else if (PREVIEW) { apps = sortApps(DEMO_FALLBACK.map(function (n, i) { return arLabel({ pkg: 'demo.' + i, label: n[0], color: n[1] }); })); renderApps(); }
   }
@@ -649,6 +689,7 @@
     if (pkg === VOD_PKG) { if (window.Vod) window.Vod.open(); return; }
     if (!kidsBeforeLaunch()) return;
     pushRecent(pkg);
+    var la = apps.filter(function (a) { return a.pkg === pkg; })[0]; logWatch('app', la ? appName(la) : pkg);
     if (HAS_ANDROID) { if (!A.launch(pkg)) toast('ما گدرت أفتح هذا التطبيق'); } else toast('فتح: ' + pkg);
   }
   function shade(hex, f) {
@@ -666,7 +707,8 @@
       if (customIcons[a.pkg]) inner = '<div class="tile"><img class="custom" src="' + esc(customIcons[a.pkg]) + '" alt=""></div>';
       else if (a.banner && !(iconShape && a.icon)) inner = '<div class="tile"><img class="banner" src="' + a.banner + '" alt=""></div>';
       else inner = '<div class="tile ic" style="background:' + shade(a.color, .62) + '">' + (a.icon ? '<img src="' + a.icon + '" alt="">' : '') + '</div>';
-      return '<div class="item app' + (isHidden ? ' hidden-app' : '') + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + inner + '<span class="badge">' + (mode === 'kidsel' ? 'غير مسموح' : 'مخفي') + '</span><div class="name">' + esc(appName(a)) + '</div></div>';
+      var isNew = !isHidden && mode === 'normal' && ((a.pkg === LIVE_PKG && window.Live && window.Live.hasNew && window.Live.hasNew()) || (a.pkg === VOD_PKG && window.Vod && window.Vod.hasNew && window.Vod.hasNew()));
+      return '<div class="item app' + (isHidden ? ' hidden-app' : '') + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + inner + (isNew ? '<i class="new-pulse" title="محتوى جديد"></i>' : '') + '<span class="badge">' + (mode === 'kidsel' ? 'غير مسموح' : 'مخفي') + '</span><div class="name">' + esc(appName(a)) + '</div></div>';
     }).join('') || '<div class="item empty-card" data-kind="none">جاري تحميل التطبيقات…</div>';
     $('apps-hint').textContent = mode === 'move' ? 'وضع الترتيب: OK على التطبيق، حرّكه بالأسهم، وOK للتثبيت' : mode === 'hide' ? 'وضع الإخفاء: OK على التطبيق حتى تخفيه أو ترجعه'
       : mode === 'kidsel' ? 'تطبيقات الأطفال: OK حتى تسمح أو تمنع · رجوع للحفظ' : mode === 'icon' ? 'تغيير الأيقونة: اختار التطبيق واضغط OK · رجوع للخروج'
@@ -932,7 +974,7 @@
     if (id === 'home') { nav.home(); return; }
     if (id === 'search' || id === 'ai') return openSearch();
     if (id === 'settings') { if (HAS_ANDROID) A.openSettings(); else toast('إعدادات الجهاز'); return; }
-    if (id === 'profile') return openSettings();
+    if (id === 'profile') return profiles().length > 1 ? openProfiles(false) : openSettings();
     if (id === 'menu') return openOsMenu();
     if (id === 'apps' || id === 'library') return openAppsList('كل التطبيقات', null);
     if (id === 'games') return openAppsList('الألعاب', /game|xbox|geforce|boosteroid|steam|moonlight|luna|play\.games|pubg|fifa|emulat/i);
@@ -1127,6 +1169,10 @@
       { id: 'move', label: 'ترتيب التطبيقات', icon: 'move', active: mode === 'move' },
       { id: 'hide', label: 'إخفاء وإظهار', icon: 'eye', active: mode === 'hide' },
       { id: 'kids', label: 'وضع الأطفال', icon: 'child' },
+      { id: 'bedtime', label: 'قصة قبل النوم', icon: 'moon' },
+      { id: 'wiz', label: 'شنو أشوف الليلة؟', icon: 'search' },
+      { id: 'recap', label: 'قصة شهري', icon: 'picture' },
+      { id: 'party', label: 'مشاهدة جماعية', icon: 'channels' },
       { id: 'prefs', label: 'إعدادات الواجهة', icon: 'sliders' },
       { id: 'refresh', label: 'تحديث', icon: 'refresh' }
     ];
@@ -1335,8 +1381,10 @@
     getJSON('https://api.open-meteo.com/v1/forecast?latitude=' + c[1] + '&longitude=' + c[2] + '&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FBaghdad&forecast_days=4')
       .then(function (j) { if (j && j.current) { save('wxCache', { t: Date.now(), city: cityIdx, d: j }); renderWeather(j); } else if (cache) renderWeather(cache.d); });
   }
+  var RAIN_CODES = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99];
   function renderWeather(j) {
     if (!j || !j.current) return;
+    document.body.classList.toggle('wx-rain', settings.liveTint !== false && RAIN_CODES.indexOf(j.current.weather_code) >= 0);
     var c = window.CITIES[cityIdx] || window.CITIES[0], w = wx(j.current.weather_code), days = '';
     if (j.daily && j.daily.time) {
       for (var i = 1; i < Math.min(4, j.daily.time.length); i++) {
@@ -1350,7 +1398,8 @@
 
   // ---------- Alarms (adhan + match alerts) ----------
   var SETTINGS_DEFAULT = { adhanMode: 'sound', adhanFocus: 'pause', adhanFile: '', matchAlerts: true, reciter: 0, autoNext: true,
-    theme: 'default', clickSound: false, saverApps: true, saverMin: 10, bgSources: null, bgInterval: 300 };
+    theme: 'default', clickSound: false, saverApps: true, saverMin: 10, bgSources: null, bgInterval: 300,
+    ownerName: '', greetOn: true, quietHour: 23, quietEndHour: 7, quietOn: false, kidsBedtime: false, liveTint: true, netLabel: true };
   var settings = load('settings', {});
   Object.keys(SETTINGS_DEFAULT).forEach(function (k) { if (settings[k] === undefined) settings[k] = SETTINGS_DEFAULT[k]; });
   function saveSettings() {
@@ -1358,6 +1407,7 @@
     if (HAS_ANDROID) {
       A.setPref('adhanMode', settings.adhanMode); A.setPref('adhanFocus', settings.adhanFocus); A.setPref('adhanFile', settings.adhanFile || '');
       A.setPref('saverApps', settings.saverApps && settings.saverOn !== false ? '1' : '0'); A.setPref('saverMin', String(settings.saverMin || 10));
+      A.setPref('quietOn', settings.quietOn ? '1' : '0'); A.setPref('quietHour', String(settings.quietHour != null ? settings.quietHour : 23)); A.setPref('quietEndHour', String(settings.quietEndHour != null ? settings.quietEndHour : 7));
     }
     applyTheme(); publishState();
   }
@@ -1915,6 +1965,173 @@
     if (on) el.textContent = (st.state === 'paused' ? '⏸ ' : st.state === 'loading' ? '⏳ ' : '▶ ') + st.title;
   }
 
+  // ---------- Bedtime story (for the kids, one button): dims the room, a calm recitation, fades out and returns home on its own ----------
+  var BEDTIME_MIN = 15, bedtimeT = null, bedtimeFade = null;
+  function startBedtime() {
+    var m = $('bedtimeModal'); if (!m) return;
+    m.classList.add('on'); layer = 'bedtime';
+    if (HAS_ANDROID && A.quranPlay) { try { A.quranVolume(1); } catch (e) {} playSurah(66); }   // سورة الملك: تُقرأ عادة قبل النوم
+    clearTimeout(bedtimeT); clearInterval(bedtimeFade);
+    bedtimeT = setTimeout(fadeBedtime, Math.max(1, BEDTIME_MIN - 0.5) * 60000);
+    toast('🌙 قصة قبل النوم: تخفت تدريجياً خلال ' + nf.format(BEDTIME_MIN) + ' دقيقة · أي زر يوقفها أول');
+  }
+  function fadeBedtime() {
+    if (!HAS_ANDROID || !A.quranVolume) return endBedtime();
+    var v = 1;
+    bedtimeFade = setInterval(function () {
+      v -= 0.08; try { A.quranVolume(Math.max(0, v)); } catch (e) {}
+      if (v <= 0) { clearInterval(bedtimeFade); endBedtime(); }
+    }, 2200);
+  }
+  function endBedtime() {
+    clearTimeout(bedtimeT); clearInterval(bedtimeFade); bedtimeT = bedtimeFade = null;
+    if (HAS_ANDROID && A.quranStop) { try { A.quranVolume(1); } catch (e) {} A.quranStop(); }
+    var m = $('bedtimeModal'); if (m) m.classList.remove('on');
+    layer = 'main'; renderNowPlaying();
+  }
+
+  // ---------- «شنو أشوف الليلة؟»: two quick questions, then straight to the right shelf ----------
+  var WIZ = [
+    { q: 'شلون مزاجك الليلة؟', a: [['fun', '😄 ضحك وخفة'], ['action', '🔥 أكشن وإثارة'], ['calm', '🌿 هدوء وعائلة'], ['know', '📰 أخبار ومعرفة'], ['sport', '⚽ رياضة']] },
+    { q: 'شنو تفضّل؟', a: [['live', '📡 بث مباشر'], ['movie', '🎬 فيلم'], ['series', '📺 مسلسل']] }
+  ];
+  var WIZ_LIVE = { fun: 'ent', action: 'movies', calm: 'kids', know: 'news', sport: 'sport' };
+  var WIZ_VOD = { fun: /كوميد|ضحك|ترفيه|كرتون|انمي|أنمي/i, action: /أكشن|اكشن|إثارة|اثارة|رعب|حرب|جريمة|action|thriller|horror/i, calm: /عائل|دراما|أطفال|اطفال|كرتون|family|drama|kids/i, know: /وثائق|طبيعة|تاريخ|document/i, sport: /رياض|sport/i };
+  var wz = { step: 0, i: 0, mood: '' };
+  function openWiz() { wz = { step: 0, i: 0, mood: '' }; layer = 'wiz'; $('wizModal').classList.add('on'); drawWiz(); }
+  function closeWiz() { $('wizModal').classList.remove('on'); layer = 'main'; nav.refresh(); }
+  function drawWiz() {
+    var S = WIZ[wz.step];
+    $('wizModal').innerHTML = '<div class="wz-box"><div class="wz-step">' + nf.format(wz.step + 1) + ' / ' + nf.format(WIZ.length) + '</div><div class="wz-q">' + S.q + '</div><div class="wz-a">' +
+      S.a.map(function (x, i) { return '<div class="wz-c' + (i === wz.i ? ' focus' : '') + '">' + x[1] + '</div>'; }).join('') + '</div><div class="wz-h">الأسهم للاختيار · OK للتأكيد · رجوع للإلغاء</div></div>';
+  }
+  function wizKey(k) {
+    var n = WIZ[wz.step].a.length;
+    if (k === 'back') { if (wz.step) { wz.step = 0; wz.i = 0; drawWiz(); } else closeWiz(); return; }
+    if (k === 'ArrowLeft' || k === 'ArrowDown') wz.i = (wz.i + 1) % n;
+    else if (k === 'ArrowRight' || k === 'ArrowUp') wz.i = (wz.i - 1 + n) % n;
+    else if (k === 'ok') {
+      var v = WIZ[wz.step].a[wz.i][0];
+      if (wz.step === 0) { wz.mood = v; wz.step = 1; wz.i = 0; }
+      else {
+        var hasVod = !!(settings.xtream && settings.xtream.user && settings.xtream.vod !== false);
+        $('wizModal').classList.remove('on');
+        if (v === 'live' || !hasVod || !window.Vod) { if (v !== 'live') toast('الأفلام والمسلسلات تحتاج حساب IPTV · فتحتلك قنوات مناسبة'); if (window.Live) window.Live.openCategory(WIZ_LIVE[wz.mood]); }
+        else window.Vod.openCategory(v === 'movie' ? 0 : 1, WIZ_VOD[wz.mood]);
+        return;
+      }
+    }
+    drawWiz();
+  }
+
+  // ---------- «قصة شهري»: what was watched this month, built from the TV's own history ----------
+  function logWatch(kind, name) {
+    try {
+      var k = pkey('watchLog'), L = JSON.parse(localStorage.getItem(k) || '[]');
+      L.push([Date.now(), kind, String(name || '').slice(0, 60)]); if (L.length > 1500) L = L.slice(-1500);
+      localStorage.setItem(k, JSON.stringify(L));
+    } catch (e) {}
+  }
+  window.__logWatch = logWatch;
+  function openRecap() {
+    var L = []; try { L = JSON.parse(localStorage.getItem(pkey('watchLog')) || '[]'); } catch (e) {}
+    var since = Date.now() - 30 * DAY, M = L.filter(function (r) { return r[0] >= since; });
+    var cnt = {}, kinds = { live: 0, vod: 0, app: 0 }, days = {}, hours = {};
+    M.forEach(function (r) { cnt[r[2]] = (cnt[r[2]] || 0) + 1; kinds[r[1]] = (kinds[r[1]] || 0) + 1; days[dayKey(new Date(r[0]))] = 1; var h = new Date(r[0] + 3 * 3600000).getUTCHours(); hours[h] = (hours[h] || 0) + 1; });
+    var top = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; }).slice(0, 3);
+    var ph = Object.keys(hours).sort(function (a, b) { return hours[b] - hours[a]; })[0];
+    var nm = String((activeProfile() || {}).n || settings.ownerName || '').trim();
+    var tiles = M.length ? [
+      ['🗓', nf.format(Object.keys(days).length), 'يوم شغّلت بيه الشاشة'],
+      ['▶️', nf.format(M.length), 'مرة فتحت قناة أو فيلم أو تطبيق'],
+      ['📡', nf.format(kinds.live || 0), 'قناة مباشرة'],
+      ['🎬', nf.format(kinds.vod || 0), 'فيلم وحلقة'],
+      ['⏰', ph != null ? nf.format(+ph % 12 || 12) + (+ph < 12 ? ' ص' : ' م') : '—', 'ساعتك المفضلة']
+    ] : [];
+    $('recapModal').innerHTML = '<div class="rc-box"><div class="rc-t">قصة شهرك' + (nm ? '، ' + esc(nm) : '') + '</div><div class="rc-s">آخر ٣٠ يوم على هذي الشاشة</div>' +
+      (M.length ? '<div class="rc-grid">' + tiles.map(function (t, i) { return '<div class="rc-tile" style="animation-delay:' + (i * 0.12) + 's"><i>' + t[0] + '</i><b>' + t[1] + '</b><span>' + t[2] + '</span></div>'; }).join('') + '</div>' +
+        '<div class="rc-top"><div class="rc-tt">الأكثر عندك</div>' + top.map(function (n, i) { return '<div class="rc-row" style="animation-delay:' + (0.7 + i * 0.15) + 's"><em>' + nf.format(i + 1) + '</em>' + esc(n) + '<small>' + nf.format(cnt[n]) + ' مرة</small></div>'; }).join('') + '</div>'
+        : '<div class="rc-empty">بعدك ما شغّلت شي هذا الشهر. شغّل قنواتك وأفلامك وارجع هنا تشوف قصتك.</div>') +
+      '<div class="rc-h">صوّر الشاشة وشاركها · أي زر للرجوع</div></div>';
+    $('recapModal').classList.add('on'); layer = 'recap';
+  }
+  function closeRecap() { $('recapModal').classList.remove('on'); layer = 'main'; nav.refresh(); }
+
+  // ---------- Family profiles: a face for everyone at home; each one keeps their own favourites, last watched and story ----------
+  function profiles() { return (settings.profiles || []).filter(function (p) { return p && p.n; }).slice(0, 6); }
+  function activeProfile() { var id = ''; try { id = localStorage.getItem('activeProfile') || ''; } catch (e) {} var l = profiles(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return null; }
+  function pkey(k) { var p = activeProfile(); return p ? k + '@' + p.id : k; }
+  window.__pk = pkey;
+  var PCOL = ['#D9822B', '#3DBE6C', '#4A8FE7', '#C9508B', '#8E6BE0', '#E0B03D'];
+  var pf = { i: 0, boot: false };
+  function avatar(p, i) {
+    var col = p.c || PCOL[i % PCOL.length], ini = String(p.n).trim().charAt(0);
+    return '<div class="pf-av" style="--pc:' + col + '">' + (p.img ? '<img src="' + esc(p.img) + '" alt="">' : '<b>' + esc(ini) + '</b>') + '</div>';
+  }
+  function openProfiles(boot) {
+    var l = profiles(); if (l.length < 2) { if (boot) bootGreet(); return; }
+    var cur = activeProfile(); pf.i = 0; pf.boot = boot;
+    l.forEach(function (p, i) { if (cur && p.id === cur.id) pf.i = i; });
+    layer = 'prof'; $('profModal').classList.add('on'); drawProfiles();
+  }
+  function drawProfiles() {
+    var l = profiles();
+    $('profModal').innerHTML = '<div class="pf-box"><div class="pf-q">منو يتفرج؟</div><div class="pf-row">' + l.map(function (p, i) {
+      return '<div class="pf-it' + (i === pf.i ? ' focus' : '') + '" style="animation-delay:' + (i * 0.08) + 's">' + avatar(p, i) + '<div class="pf-n">' + esc(p.n) + '</div></div>';
+    }).join('') + '</div><div class="pf-h">الأسهم للاختيار · OK للدخول</div></div>';
+  }
+  function profKey(k) {
+    var n = profiles().length;
+    if (k === 'ArrowLeft') pf.i = Math.min(n - 1, pf.i + 1);
+    else if (k === 'ArrowRight') pf.i = Math.max(0, pf.i - 1);
+    else if (k === 'ok') {
+      var p = profiles()[pf.i]; try { localStorage.setItem('activeProfile', p.id); } catch (e) {}
+      $('profModal').classList.remove('on'); layer = 'main'; applyProfile(); renderApps();
+      if (pf.boot) bootGreet(); else toast('أهلاً ' + p.n); return;
+    } else if (k === 'back' && !pf.boot) { $('profModal').classList.remove('on'); layer = 'main'; return; }
+    drawProfiles();
+  }
+  function applyProfile() {
+    var p = activeProfile(), i = p ? profiles().indexOf(p) : -1;
+    document.documentElement.style.setProperty('--pcol', p ? (p.c || PCOL[i % PCOL.length]) : '');
+    document.body.classList.toggle('has-profile', !!p);
+    var tb = $('profChip'); if (tb) tb.innerHTML = p ? avatar(p, i) + '<span>' + esc(p.n) + '</span>' : '';
+  }
+  function bootGreet() { if (settings.greetOn !== false) showGreet(); }
+  window.__openProfiles = openProfiles;
+
+  // ---------- «مشاهدة جماعية»: two TVs in the same home play the same thing together ----------
+  var pt = { i: 0 };
+  function partyInfo() { try { return JSON.parse(A.partyInfo()); } catch (e) { return { ip: '', room: '', peer: '' }; } }
+  function openParty() {
+    if (!HAS_ANDROID || !A.partyInfo) { toast('المشاهدة الجماعية تحتاج الشاشة نفسها'); return; }
+    var I = partyInfo(); pt.i = 0; layer = 'party';
+    $('partyModal').innerHTML = '<div class="pt-box"><div class="pt-t">🎉 مشاهدة جماعية</div><div class="pt-s">شاشتين بنفس البيت (نفس الواي فاي): اللي يشغّله واحد، يشتغل بالثانية، وكذلك تبديل القناة والإيقاف</div>' +
+      '<div class="pt-me"><span>رمز هذه الشاشة</span><b dir="ltr">' + esc(I.ip || '—') + '</b><b dir="ltr">' + esc(I.room) + '</b></div>' +
+      (I.peer ? '<div class="pt-on">مربوطة الآن بالشاشة <b dir="ltr">' + esc(I.peer) + '</b></div>' : '') +
+      '<div class="pt-f"><input id="ptIp" dir="ltr" placeholder="عنوان الشاشة الثانية مثل 192.168.1.20"><input id="ptRoom" dir="ltr" placeholder="رمزها (٦ أرقام)" maxlength="6"></div>' +
+      '<div class="pt-b"><div class="pt-btn" data-p="link">🔗 ربط</div>' + (I.peer ? '<div class="pt-btn" data-p="off">✖ إلغاء الربط</div>' : '') + '</div><div class="pt-h">اكتب رمز الشاشة الثانية هنا، أو اكتب رمز هذه الشاشة بالثانية · رجوع للخروج</div></div>';
+    $('partyModal').classList.add('on'); drawParty();
+  }
+  function partyEls() { return [$('ptIp'), $('ptRoom')].concat(qa('#partyModal .pt-btn')); }
+  function drawParty() { partyEls().forEach(function (e, i) { e.classList.toggle('focus', i === pt.i); }); }
+  function closeParty() { var ae = document.activeElement; if (ae && ae.blur) ae.blur(); $('partyModal').classList.remove('on'); layer = 'main'; nav.refresh(); }
+  function partyKey(k) {
+    var els = partyEls(), el = els[pt.i];
+    if (k === 'back') { if (document.activeElement === el && el.tagName === 'INPUT') { el.blur(); return; } closeParty(); return; }
+    if (k === 'ArrowDown' || k === 'ArrowLeft') { if (el && el.blur) el.blur(); pt.i = Math.min(els.length - 1, pt.i + 1); }
+    else if (k === 'ArrowUp' || k === 'ArrowRight') { if (el && el.blur) el.blur(); pt.i = Math.max(0, pt.i - 1); }
+    else if (k === 'ok') {
+      if (el.tagName === 'INPUT') { el.focus(); return; }
+      if (el.dataset.p === 'off') { A.partyOff(); toast('انلغى ربط المشاهدة الجماعية'); return openParty(); }
+      var ip = $('ptIp').value.trim(), rm = $('ptRoom').value.trim();
+      if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip) || !/^\d{6}$/.test(rm)) { toast('اكتب عنوان الشاشة الثانية ورمزها (٦ أرقام)'); return; }
+      A.partyLink(ip, rm, String((activeProfile() || {}).n || settings.ownerName || 'الشاشة الثانية'));
+      toast('🎉 انربطت الشاشتين · شغّل أي قناة أو فيلم'); return openParty();
+    }
+    drawParty();
+  }
+
   // ---------- Kids mode ----------
   var kids = load('kids', { on: false, pin: '', apps: [], limit: 120, used: {}, launchAt: 0 });
   function saveKids() { save('kids', kids); }
@@ -2000,13 +2217,16 @@
   var layer = 'main';
   window.__setLayer = function (l) { layer = l; };
   window.__getSettings = function () { return settings; };
-  window.__fetchText = function (u) { return (HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u); };
+  window.__fetchText = function (u) {
+    var t0 = Date.now();
+    return ((HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u)).then(function (t) { noteNet(Date.now() - t0, String(t || '').indexOf('ERR:') !== 0); return t; });
+  };
   window.__closeVod = function () { var m = document.getElementById('vodModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   var nav = (function () {
     var rowEls = qa('#content .row');
     var AR = rowEls.indexOf(document.getElementById('row-apps'));
-    var r = AR, idx = rowEls.map(function () { return 0; }), moving = null;
+    var r = AR, idx = rowEls.map(function () { return 0; }), moving = null, hfT = null;
     function homeRow() { return AR; }
     function goId(id) { var i = rowEls.indexOf(document.getElementById(id)); if (i >= 0) goRow(i); }
     function items(row) { return qa('.item', rowEls[row]); }
@@ -2022,6 +2242,7 @@
       if (r > 0) scrollTrack(r);
       osFocus(el);
       scrollPage();
+      if (!PREVIEW) { clearTimeout(hfT); hfT = setTimeout(function () { try { localStorage.setItem('homeFocus', JSON.stringify({ r: r, i: idx[r] })); } catch (e) {} }, 350); }
     }
     function scrollTrack(row) {
       var track = rowEls[row].querySelector('.track'); if (!track) return;
@@ -2123,6 +2344,10 @@
         else if (id === 'quran') openQuran();
         else if (id === 'themes') openThemes();
         else if (id === 'kids') toggleKids();
+        else if (id === 'bedtime') startBedtime();
+        else if (id === 'wiz') openWiz();
+        else if (id === 'recap') openRecap();
+        else if (id === 'party') openParty();
         else if (id === 'prefs') openSettings();
         else if (id === 'bgnext') { if (bgPinned) { bgPinned = null; save('bgPinned', null); } bgManual++; showBg(); }
         else if (id === 'move') { moving = null; setMode(mode === 'move' ? 'normal' : 'move'); if (mode === 'normal') goRow(rowEls.length - 1); }
@@ -2142,7 +2367,13 @@
       if (mode !== 'normal') { var wasKidsel = mode === 'kidsel'; setMode('normal'); if (wasKidsel) toast('تم حفظ تطبيقات الأطفال (' + nf.format(kids.apps.length) + ')'); return; }
       r = homeRow(); idx[r] = 0; apply();
     }
-    return { refresh: apply, goRow: goRow, back: back, moveH: moveH, ok: ok, row: function () { return r; }, moving: function () { return moving; },
+    function restoreFocus() {
+      try {
+        var hf = JSON.parse(localStorage.getItem('homeFocus') || 'null');
+        if (hf && typeof hf.r === 'number' && hf.r >= 0 && hf.r < rowEls.length && rowVisible(hf.r) && !isRail(hf.r)) goRow(hf.r, hf.i || 0);
+      } catch (e) {}
+    }
+    return { refresh: apply, goRow: goRow, back: back, moveH: moveH, ok: ok, row: function () { return r; }, moving: function () { return moving; }, restoreFocus: restoreFocus,
       appsRow: function () { return AR; }, goId: goId, gridMove: gridMove, arrow: arrow, railHome: railHome, home: function () { moving = null; if (mode !== 'normal') setMode('normal'); r = homeRow(); idx[r] = 0; apply(); } };
   })();
 
@@ -2155,6 +2386,12 @@
   }
   function handleKey(k) {
     lastInput = Date.now();
+    if (layer === 'greet') return window.__greetKey();
+    if (layer === 'bedtime') { endBedtime(); return; }
+    if (layer === 'wiz') return wizKey(k);
+    if (layer === 'prof') return profKey(k);
+    if (layer === 'party') return partyKey(k);
+    if (layer === 'recap') { closeRecap(); return; }
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
     clickSound(); if (k === 'ok') pressFx();
@@ -2195,6 +2432,9 @@
     e.preventDefault(); handleKey(k);
   });
 
+  window.__refreshBadges = function () { renderApps(); };
+  window.__noteNet = noteNet;
+  window.__startBedtime = startBedtime; window.__openWiz = openWiz; window.__openRecap = openRecap; window.__openParty = openParty;
   window.remoteKey = function (k) { handleKey(k); };
   window.onBackKey = function () { handleKey('back'); };
   window.onHomePressed = function () {
@@ -2208,13 +2448,53 @@
     tick(); renderAdhan(); renderWisdom(); loadApps(false); refreshMatches(false); refreshDaily(); refreshWeather(false); renderNowPlaying();
   };
 
+  // ---------- Greeting (a strong, repeatable welcome: the owner's name, written in with motion, every single time the app opens) ----------
+  function greetPeriod(h) {
+    if (h >= 4 && h < 11) return 'صباح الخير';
+    if (h >= 11 && h < 17) return 'طاب يومك';
+    if (h >= 17 && h < 20) return 'مساء الخير';
+    return 'ليلة طيبة';
+  }
+  function greetWords() {
+    var h = new Date(Date.now() + 3 * 3600000).getUTCHours(); // Baghdad time, no Intl needed for a plain hour
+    var ap = activeProfile(), g = greetPeriod(h), nm = String((ap && ap.n) || settings.ownerName || '').trim();
+    return nm ? [g + '،', nm] : [g];
+  }
+  var greetT = null, greetActive = false;
+  function closeGreet(skip) {
+    var m = $('greetModal'); if (!m || !greetActive) return;
+    greetActive = false; clearTimeout(greetT);
+    m.classList.add('out'); m.classList.remove('on');
+    setTimeout(function () { m.classList.remove('out'); m.innerHTML = ''; }, skip ? 0 : 500);
+    if (layer === 'greet') layer = 'main';
+  }
+  window.__greetKey = function () { closeGreet(true); return true; };
+  function showGreet() {
+    var m = $('greetModal'); if (!m) return;
+    var w = greetWords(), g = String(w[0]).replace(/،$/, ''), nm = w[1] || '';
+    /* Arabic stays joined: each line is revealed whole (a wipe from the right), never cut into letters */
+    var dots = ''; for (var i = 0; i < 14; i++) dots += '<i style="left:' + (8 + Math.random() * 84).toFixed(1) + '%;top:' + (20 + Math.random() * 60).toFixed(1) + '%;animation-delay:' + (0.4 + Math.random() * 1.6).toFixed(2) + 's"></i>';
+    m.innerHTML = '<div class="gr-dots">' + dots + '</div><div class="gr-wrap">' +
+      '<div class="gr-line"><span>' + esc(g) + '</span></div>' +
+      (nm ? '<div class="gr-line gr-name"><span>' + esc(nm) + '</span></div>' : '') +
+      '<div class="gr-rule"><b></b></div></div>';
+    m.classList.add('on'); greetActive = true; layer = 'greet';
+    clearTimeout(greetT); greetT = setTimeout(function () { closeGreet(false); }, nm ? 4200 : 3400);
+  }
+
   // ---------- Start ----------
   try { if (!PREVIEW) save('teamAr', NAMES); } catch (e) {}
   renderTopbar(); applyLayout(); applyTheme(); saveSettings();
   tick(); renderAdhan(); renderWisdom(); renderTools(); renderApps(); renderOccasions(); renderMatches();
   renderBigCount(); renderActs(); applyKids(); refreshNews(false); applyLayout();
   loadBackgrounds(); loadApps(true); refreshMatches(false); refreshWeather(false); scheduleAll();
+  nav.restoreFocus();
   if (!PREVIEW) setTimeout(function () { checkUpdate(false); }, 20000);
+  if (!PREVIEW && typeof window.addEventListener === 'function') { window.addEventListener('online', renderNetQuality); window.addEventListener('offline', renderNetQuality); renderNetQuality(); }
+  if (!PREVIEW) setTimeout(function () { if (window.Live && window.Live.prefetch) window.Live.prefetch(); if (window.Vod && window.Vod.prefetch) window.Vod.prefetch(); }, 6000);
+  applyProfile();
+  if (!PREVIEW) setTimeout(function () { if (profiles().length > 1) openProfiles(true); else bootGreet(); }, 160);
+  var gm = $('greetModal'); if (gm) gm.addEventListener('click', function () { closeGreet(true); });
   /* if the interface had to restart, say why (so the cause can be read off the screen) */
   if (HAS_ANDROID && A.lastCrash) setTimeout(function () { try { var c = A.lastCrash(); if (c) { var k = c.indexOf('|'); toast('الواجهة أعادت التشغيل بسبب: ' + c.slice(k + 1, k + 220), 20000); } } catch (e) {} }, 6000);
   setTimeout(pushConfig, 3000);
@@ -2253,6 +2533,7 @@
       applyTheme(); refreshNews(true); renderClub(); renderTopbar(); applyLayout(); renderApps(); refreshLive();
     }
     if (o.bg || o.settings) { buildBgList(); bgCur = ''; showBg(); }
+    if (o.action === 'greet') showGreet();
     if (o.select !== undefined) {
       qa('.editing').forEach(function (e) { e.classList.remove('editing'); });
       var el = o.select && editEl(o.select); if (el) el.classList.add('editing');

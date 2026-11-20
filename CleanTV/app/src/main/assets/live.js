@@ -25,14 +25,14 @@
   function jget(k) { try { return JSON.parse(localStorage.getItem(k) || '[]') || []; } catch (e) { return []; } }
   function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function slim(c) { return { n: c.n, u: c.u, i: c.i || '', l: c.l || '', g: c.g || '', c: c.c || '', p: c.p || '', r: c.r || '', ua: c.ua || '', grp: c.grp || '' }; }
-  function favs() { return jget('lvFav'); }
+  function favs() { return jget((window.__pk ? window.__pk('lvFav') : 'lvFav')); }
   function isFav(c) { var k = c.u + '|' + c.n; return favs().some(function (f) { return f.u + '|' + f.n === k; }); }
   function toggleFav(c) {
     var l = favs(), k = c.u + '|' + c.n, had = l.some(function (f) { return f.u + '|' + f.n === k; });
     l = had ? l.filter(function (f) { return f.u + '|' + f.n !== k; }) : [slim(c)].concat(l).slice(0, 200);
-    jset('lvFav', l); return !had;
+    jset((window.__pk ? window.__pk('lvFav') : 'lvFav'), l); return !had;
   }
-  function pushRecent(c) { var k = c.u + '|' + c.n; jset('lvRecent', [slim(c)].concat(jget('lvRecent').filter(function (f) { return f.u + '|' + f.n !== k; })).slice(0, 24)); }
+  function pushRecent(c) { var k = c.u + '|' + c.n; jset((window.__pk ? window.__pk('lvRecent') : 'lvRecent'), [slim(c)].concat(jget((window.__pk ? window.__pk('lvRecent') : 'lvRecent')).filter(function (f) { return f.u + '|' + f.n !== k; })).slice(0, 24)); }
   var ICON = { all: '📺', news: '📰', sport: '⚽', movies: '🎬', docs: '🌍', ent: '🎭', mbc: '✨', karbala: '🕌', kids: '🧸', quran: '📖', sites: '🌐', xshahid: '🎞', xosn: '📡' };
   function cats() {
     var l = CATS.map(function (c) { return { id: c[0], n: c[1], kind: 'cat' }; });
@@ -45,7 +45,7 @@
     /* the user's own channels live in one folder, always the last one */
     if (custom().lists.length) l.push({ id: 'my', n: '📁 قنواتي الخاصة', kind: 'my' });
     l = sortBy(l, ORD.cats, function (c) { return c.id; });
-    if (jget('lvRecent').length) l.push({ id: 'recent', n: '🕘 آخر ما شاهدت', kind: 'recent' });
+    if (jget((window.__pk ? window.__pk('lvRecent') : 'lvRecent')).length) l.push({ id: 'recent', n: '🕘 آخر ما شاهدت', kind: 'recent' });
     if (favs().length) l.push({ id: 'fav', n: '⭐ المفضلة', kind: 'fav' });
     return l;
   }
@@ -166,7 +166,7 @@
         if (!arr || !arr.length) { var er = String(st).indexOf('ERR:') === 0 ? String(st).slice(4) : 'الحساب ما رجّع قنوات (تأكد من الرابط والمستخدم)'; if (/403|401/.test(er) && !/Cloudflare/.test(er)) er += ' · السيرفر رفض الطلب: تأكد من الرابط والمنفذ واسم المستخدم وكلمة المرور، وأن الاشتراك فعّال وما متجاوز عدد الأجهزة'; return xtProbe(x).then(function (k) { if (KIND_MSG[k] && k !== 'xtream') er += ' · ' + KIND_MSG[k]; xtState = 'fail:' + er; if (force && window.toastMsg) window.toastMsg('تعذّر التحديث: ' + er); }); }
         var names = [], idx = {}, items = [];
         arr.forEach(function (o) { var cn = cats[o.category_id] || 'بدون مجموعة'; if (idx[cn] == null) { idx[cn] = names.length; names.push(cn); } items.push([String(o.name || '').trim(), o.stream_id, idx[cn], o.stream_icon || '']); });
-        try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; if (force && window.toastMsg) window.toastMsg('تم تحديث IPTV: ' + items.length + ' قناة'); } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
+        try { localStorage.setItem('myXt', JSON.stringify({ k: xtKey(x), t: Date.now(), cats: names, items: items })); xtState = ''; if (window.__refreshBadges) window.__refreshBadges(); if (force && window.toastMsg) window.toastMsg('تم تحديث IPTV: ' + items.length + ' قناة'); } catch (e) { xtState = 'fail:القائمة كبيرة على ذاكرة التلفزيون'; }
         }
       });
     }).then(function () { cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); }, function () { xtState = 'fail:تعذّر الاتصال بالسيرفر'; cust.key = ''; if (document.getElementById('liveModal').classList.contains('on')) draw(); });
@@ -268,7 +268,7 @@
   function rawFilter(cid) {
     var all = (window.CHANNELS || []).concat(siteCh());
     if (cid === 'fav') return favs();
-    if (cid === 'recent') return jget('lvRecent');
+    if (cid === 'recent') return jget((window.__pk ? window.__pk('lvRecent') : 'lvRecent'));
     if (cid === 'sites') return sitesList().map(function (u) { return { n: siteHost(u), sub: 'يفتح الموقع وتختار القناة منه', u: u, site: 1, c: 'my' }; });
     if (cid === 'my') {
       var Ls = custom().lists;
@@ -400,6 +400,7 @@
     if (st.favm) { var on = toggleFav(cur); st.key = null; if (window.toastMsg) window.toastMsg(on ? '⭐ انضافت للمفضلة: ' + cur.n : 'انشالت من المفضلة: ' + cur.n); draw(); return; }
     tapAnim($('lvGrid'));
     pushRecent(cur);
+    if (window.__logWatch) window.__logWatch('live', cur.n);
     var pk = packFor(cur);
     if (window.Android && window.Android.playLive) window.Android.playLive(JSON.stringify(pk), pk.idx);
     else if (window.toastMsg) window.toastMsg('التشغيل يحتاج الشاشة نفسها');
@@ -453,8 +454,12 @@
     for (i = 0; i < l.length; i++) if (l[i].u + '|' + l[i].n === last.k) { gi = i; break; }
     st.gi = gi; st.f = 'grid';
   }
+  /* a quiet signal on the app icon: did more channels (the list, or the account) arrive since the last time قنواتي was opened? */
+  function liveSig() { var c = (window.CHANNELS || []).length, xc = 0; try { var m = JSON.parse(localStorage.getItem('myXt') || 'null'); if (m && m.items) xc = m.items.length; } catch (e) {} return c + xc; }
   var Live = {
     restore: restoreLast,
+    prefetch: function () { try { xtPull((window.__getSettings && window.__getSettings()) || {}); } catch (e) {} },
+    hasNew: function () { try { return liveSig() > (+localStorage.getItem('lvSeenSig') || 0); } catch (e) { return false; } },
     open: function () {
       st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.pick = null; st.del = false; siteCache = null; st.hi = st.vi; st.ti = 0; COLS = VIEWS[st.vi][2];
       ORD = loadOrd(); endSearch(true);
@@ -462,9 +467,17 @@
       pullUrl();
       document.getElementById('liveModal').classList.add('on');
       if (window.__setLayer) window.__setLayer('live');
+      try { localStorage.setItem('lvSeenSig', String(liveSig())); if (window.__refreshBadges) window.__refreshBadges(); } catch (e) {}
       draw();
     },
     refresh: function () { siteCache = null; st.key = null; if (document.getElementById('liveModal').classList.contains('on')) draw(); },
+    /* jumps straight to one category of قنواتي (used by «شنو أشوف الليلة؟») */
+    openCategory: function (id) {
+      Live.open();
+      var cs = cats(), i = cs.map(function (c) { return c.id; }).indexOf(id);
+      if (i >= 0) { st.ci = i; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.sub = null; endSearch(true); st.f = filter(id).length ? 'grid' : 'cat'; }
+      draw();
+    },
     /* text typed from the phone (or the TV keyboard) */
     search: function (v) { startSearch(); var b = searchBox(); if (b) { b.value = v || ''; onSearchInput(); } },
     key: function (k) {
@@ -527,6 +540,13 @@
       }
       draw();
     }
+  };
+  /* a random channel (the remote's magic wand: shake the phone) */
+  window.__shuffle = function () {
+    var all = filter('all'); if (!all.length) return;
+    st.ci = 0; st.fold = null; st.sub = null; st.q = ''; st.favm = false; st.del = false; st.edit = false; st.list = all; st.gi = Math.floor(Math.random() * all.length);
+    if (window.toastMsg) window.toastMsg('🎲 ' + all[st.gi].n);
+    play();
   };
   window.Live = Live;
 })();

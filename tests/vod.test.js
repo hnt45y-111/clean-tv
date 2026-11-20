@@ -10,7 +10,7 @@ function page(settings, fetchMap) {
     Android: { playLive: (j) => played.push(JSON.parse(j)), getPref: () => '' },
     __getSettings: () => settings, __setLayer() {}, __closeVod() { sb.closed = true; }, toastMsg() {},
     __fetchText: (u) => { asked.push(u); for (const k in fetchMap) if (u.indexOf(k) >= 0) return Promise.resolve(fetchMap[k]); return Promise.resolve('ERR:رد الخادم 403'); },
-    setTimeout, Promise, Date, JSON, Math, Object, String
+    setTimeout, setInterval, clearInterval, clearTimeout, Promise, Date, JSON, Math, Object, String
   };
   sb.window = sb; vm.createContext(sb); vm.runInContext(SRC, sb);
   return { sb, els, played, asked, store };
@@ -58,7 +58,7 @@ test('المفضلة والتحديث والخروج', async () => {
   sb.Vod.key('ArrowDown'); sb.Vod.key('ok'); sb.Vod.key('ok');
   assert.strictEqual(played.length, 0); assert.strictEqual(JSON.parse(store.vodFav).length, 1);
   sb.Vod.key('back'); sb.Vod.key('back');
-  const before = asked.length; sb.Vod.key('ArrowLeft'); sb.Vod.key('ok'); await tick();     // «تحديث»
+  const before = asked.length; sb.Vod.key('ArrowLeft'); sb.Vod.key('ArrowLeft'); sb.Vod.key('ok'); await tick();     // «تحديث» (بعد «وضع السينما»)
   assert.ok(asked.length > before);
   sb.Vod.key('back'); assert.ok(sb.closed);
 });
@@ -66,4 +66,15 @@ test('حساب مرفوض: تظهر رسالة الخطأ', async () => {
   const { sb, els } = page({ xtream: X }, {});
   sb.Vod.open(); await tick();
   assert.match(els.vdGrid.innerHTML, /403/);
+});
+test('وضع السينما: زر واحد يشغّله، وستارة وعدّ تنازلي قبل كل فيلم', async () => {
+  const { sb, els, played, store } = page({ xtream: X }, MAP);
+  sb.Vod.open(); await tick();
+  for (let i = 0; i < 5; i++) sb.Vod.key('ArrowLeft'); sb.Vod.key('ok');      // «وضع السينما»
+  assert.strictEqual(store.vodCinema, '1');
+  assert.match(els.vdTabs.innerHTML, /وضع السينما/);
+  sb.Vod.key('ArrowDown'); sb.Vod.key('ok'); sb.Vod.key('ok');      // tab -> cat -> grid -> play
+  assert.strictEqual(played.length, 0, 'الفيلم ما يبدأ قبل ما تخلص الستارة');
+  await new Promise((r) => setTimeout(r, 3100));
+  assert.strictEqual(played.length, 1, 'الفيلم يبدأ بعد ما تفتح الستارة');
 });

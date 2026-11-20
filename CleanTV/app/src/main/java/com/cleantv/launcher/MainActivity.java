@@ -489,6 +489,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void playLive(String json, int index) {
             LiveActivity.PACK = json;
+            if (Party.on(MainActivity.this)) { try { Party.send(MainActivity.this, new JSONObject().put("t", "start").put("pack", json).put("idx", index)); } catch (Throwable ignored) { } }
             Intent i = new Intent(MainActivity.this, LiveActivity.class).putExtra("idx", index);
             startActivity(i);
         }
@@ -696,6 +697,13 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void quranStop() { Media.quranStop(); }
+        @JavascriptInterface public void quranVolume(float v) { Media.quranVolume(v); }
+        /** «مشاهدة جماعية»: this TV's address and room code, and the linked TV */
+        @JavascriptInterface public String partyInfo() {
+            try { return new JSONObject().put("ip", RemoteServer.ip()).put("room", Party.room(MainActivity.this)).put("peer", Party.peerIp(MainActivity.this)).toString(); } catch (Throwable t) { return "{}"; }
+        }
+        @JavascriptInterface public void partyLink(String ip, String room, String name) { Party.link(MainActivity.this, ip, room); Media.prefs(MainActivity.this).edit().putString("partyName", name).apply(); try { Party.send(MainActivity.this, new JSONObject().put("t", "hello")); } catch (Throwable ignored) { } }
+        @JavascriptInterface public void partyOff() { Party.off(MainActivity.this); }
 
         @JavascriptInterface
         public String quranStatus() {

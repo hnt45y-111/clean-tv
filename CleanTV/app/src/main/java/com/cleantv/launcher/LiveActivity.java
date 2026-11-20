@@ -34,6 +34,9 @@ import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.HttpDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.common.text.CueGroup;
+import androidx.media3.ui.SubtitleView;
+import androidx.media3.ui.CaptionStyleCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -52,6 +55,30 @@ import java.util.List;
 public class LiveActivity extends Activity {
     /** the channel pack handed over by the page (a static field: big lists do not fit an Intent) */
     static volatile String PACK = null;
+    /** the screen that is playing now, so the linked TV of «مشاهدة جماعية» can change its channel or pause it */
+    static volatile LiveActivity NOW = null;
+    private boolean quietSend = false;
+    static void fromParty(final android.content.Context c, final JSONObject m) {
+        final String t = m.optString("t");
+        final String who = m.optString("from", "الشاشة الثانية");
+        if ("hello".equals(t)) { MainActivity.js("window.toastMsg && toastMsg(" + JSONObject.quote("🎉 " + who + " انضم للمشاهدة الجماعية") + ")"); return; }
+        new Handler(Looper.getMainLooper()).post(new Runnable() { public void run() {
+            LiveActivity a = NOW;
+            if ("start".equals(t)) {
+                PACK = m.optString("pack");
+                android.content.Intent i = new android.content.Intent(c, LiveActivity.class).putExtra("idx", m.optInt("idx")).putExtra("party", who)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                c.startActivity(i);
+            } else if (a != null && "zap".equals(t)) { a.quietSend = true; a.play(m.optInt("idx")); a.toastParty(who + " بدّل القناة"); }
+            else if (a != null && a.player != null && "pause".equals(t)) { a.player.setPlayWhenReady(!m.optBoolean("on")); a.toastParty(who + (m.optBoolean("on") ? " وقّف مؤقتاً" : " كمّل التشغيل")); }
+            else if (a != null && a.player != null && "seek".equals(t)) a.player.seekTo(m.optLong("pos"));
+        } });
+    }
+    private void toastParty(String s) { if (state != null) { state.setText("🎉 " + s); h.postDelayed(new Runnable() { public void run() { if (state.getText().toString().startsWith("🎉")) state.setText(""); } }, 3000); } }
+    private void partySend(String t, Object k, Object v) {
+        if (!Party.on(this)) return;
+        try { JSONObject o = new JSONObject().put("t", t); if (k != null) o.put((String) k, v); Party.send(this, o); } catch (Throwable ignored) { }
+    }
     private static final int INK = Color.parseColor("#000000"), IVORY = Color.parseColor("#FFFFFF"), COPPER = Color.parseColor("#FA0023"), CHROME = Color.parseColor("#A3A3A3");
     private final List<String> names = new ArrayList<>(), urls = new ArrayList<>(), ids = new ArrayList<>(), subs = new ArrayList<>(), refs = new ArrayList<>(), uas = new ArrayList<>(), logos = new ArrayList<>();
     private DefaultHttpDataSource.Factory httpFactory;
@@ -72,6 +99,7 @@ public class LiveActivity extends Activity {
     private boolean panelOpen;
     private FrameLayout root;
     private SurfaceView sv;
+    private SubtitleView ccView;
     private WebView yt;
     private String ytWatch;
     private boolean ytFell;
@@ -126,6 +154,11 @@ public class LiveActivity extends Activity {
         root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         sv = new SurfaceView(this);
         root.addView(sv, new FrameLayout.LayoutParams(-1, -1));
+        ccView = new SubtitleView(this);
+        ccView.setApplyEmbeddedStyles(false);
+        ccView.setStyle(new CaptionStyleCompat(IVORY, Color.parseColor("#AA000000"), Color.TRANSPARENT, CaptionStyleCompat.EDGE_TYPE_OUTLINE, Color.BLACK, null));
+        root.addView(ccView, new FrameLayout.LayoutParams(-1, -1));
+        applyQuietMode();
 
         state = tv(24, IVORY, false);
         state.setGravity(Gravity.CENTER);
@@ -192,6 +225,7 @@ public class LiveActivity extends Activity {
                     h.removeCallbacks(hide); h.postDelayed(hide, 4000);
                 }
             }
+            @Override public void onCues(CueGroup cueGroup) { ccView.setCues(cueGroup.cues); }
             @Override public void onVideoSizeChanged(VideoSize v) {
                 int hgt = v.height;
                 if (hgt <= 0) return;
@@ -201,10 +235,31 @@ public class LiveActivity extends Activity {
                 failed++;
                 state.setText("هذي القناة ما اشتغلت الآن (" + why(e) + "). جرّب قناة ثانية بالأسهم");
                 showPanel(8000);
-                if (failed < 2) h.postDelayed(new Runnable() { public void run() { play(idx); } }, 2500);
+                if (failed < 2) h.postDelayed(new Runnable() { public void run() { quietSend = true; play(idx); } }, 2500);
             }
         });
+        applyQuietMode();
+        h.postDelayed(quietTick, 5 * 60000);
+        NOW = this;
+        String partyFrom = getIntent().getStringExtra("party");
+        quietSend = true;      // the first channel was already announced by the page (or came from the other TV)
+        if (partyFrom != null) toastParty(partyFrom + " شغّل هذا الآن");
         play(idx);
+    }
+
+    private final Runnable quietTick = new Runnable() { public void run() { applyQuietMode(); h.postDelayed(this, 5 * 60000); } };
+    /** after the user's chosen hour at night, the sound drops on its own and subtitles grow — quiet, on by default off unless the phone app turned it on */
+    private void applyQuietMode() {
+        try {
+            android.content.SharedPreferences p = Media.prefs(this);
+            boolean on = p.getString("quietOn", "0").equals("1");
+            int from = Integer.parseInt(p.getString("quietHour", "23")), to = Integer.parseInt(p.getString("quietEndHour", "7"));
+            int hr = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+            boolean quiet = on && (from <= to ? (hr >= from && hr < to) : (hr >= from || hr < to));
+            ccView.setFractionalTextSize(quiet ? SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * 1.6f : SubtitleView.DEFAULT_TEXT_SIZE_FRACTION);
+            if (quiet && player != null) player.setVolume(0.45f);
+            else if (player != null) player.setVolume(1f);
+        } catch (Throwable ignored) { }
     }
 
     /** the reason in a few words, so that a channel that does not play can be told apart: blocked, gone, no internet... */
@@ -243,7 +298,9 @@ public class LiveActivity extends Activity {
 
     private void play(int i) {
         if (urls.isEmpty()) return;
+        if (vod) saveVodPos();    // a film or episode: keep exactly where this one stopped before switching away
         idx = (i + urls.size()) % urls.size();
+        if (quietSend) quietSend = false; else if (player != null) partySend("zap", "idx", idx);
         // the last folder and channel are kept, so the next start opens on them
         try { Media.prefs(this).edit().putString("liveLast", new JSONObject().put("f", fNames.get(curFolder)).put("k", urls.get(idx) + "|" + names.get(idx)).toString()).apply(); } catch (Throwable ignored) { }
         String n = names.get(idx);
@@ -271,8 +328,26 @@ public class LiveActivity extends Activity {
         hideYT();
         player.setMediaItem(MediaItem.fromUri(urls.get(idx)));
         player.prepare();
+        if (vod) {
+            long saved = Media.prefs(this).getLong(vodKey(urls.get(idx)), 0);
+            if (saved > 4000) { player.seekTo(saved); state.setText("إكمال من حيث وقفت…"); }
+        }
         player.setPlayWhenReady(true);
+        if (vod) { h.removeCallbacks(vodPosTick); h.postDelayed(vodPosTick, 5000); }
     }
+
+    private String vodKey(String url) { return "vodPos|" + url.hashCode(); }
+    /** every film/episode remembers exactly where it stopped, so the next open picks up there — even after the TV was off for hours */
+    private void saveVodPos() {
+        try {
+            if (player == null || idx < 0 || idx >= urls.size()) return;
+            long pos = player.getCurrentPosition(), dur = player.getDuration();
+            String k = vodKey(urls.get(idx));
+            if (pos > 4000 && (dur <= 0 || pos < dur - 15000)) Media.prefs(this).edit().putLong(k, pos).apply();
+            else Media.prefs(this).edit().remove(k).apply();   // finished (or barely started): nothing to resume
+        } catch (Throwable ignored) { }
+    }
+    private final Runnable vodPosTick = new Runnable() { public void run() { if (vod) { saveVodPos(); h.postDelayed(this, 5000); } } };
 
     private static int posIn(int[] a, int ch) { for (int i = 0; i < a.length; i++) if (a[i] == ch) return i; return -1; }
 
@@ -462,6 +537,31 @@ public class LiveActivity extends Activity {
             listTitle.setText("المجلدات"); listHint.setText(foChOpen ? "▲ ▼ تنقل · OK تشغيل · ► القنوات ◄ المجلدات · رجوع" : "▲ ▼ تنقل · OK اختيار المجلد · رجوع للإغلاق");
         }
         listPanel.setLayoutParams(lp); fList.setLayoutParams(fl); cList.setLayoutParams(cl);
+        pip(true);
+    }
+
+    /** while a list is open the picture keeps playing in the free corner instead of hiding behind the list */
+    private View pipFrame;
+    private void pip(boolean on) {
+        if (sv == null) return;
+        if (pipFrame == null) {
+            pipFrame = new View(this);
+            GradientDrawable g = new GradientDrawable(); g.setColor(Color.BLACK); g.setStroke(dp(3), COPPER); g.setCornerRadius(dp(14));
+            pipFrame.setBackground(g); pipFrame.setVisibility(View.GONE);
+            root.addView(pipFrame, 0, new FrameLayout.LayoutParams(1, 1));
+        }
+        View[] vs = yt != null && yt.getVisibility() == View.VISIBLE ? new View[]{ sv, ccView, yt } : new View[]{ sv, ccView };
+        if (!on || !panelOpen) {
+            for (View v : vs) v.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+            pipFrame.setVisibility(View.GONE); return;
+        }
+        int w = getResources().getDisplayMetrics().widthPixels;
+        float used = mode == 1 ? 0.34f : (foChOpen ? 0.62f : 0.27f);
+        int bw = Math.round(w * (1f - used) * 0.86f), bh = bw * 9 / 16, m = dp(28);
+        int grav = (mode == 1 ? Gravity.END : Gravity.START) | Gravity.CENTER_VERTICAL;
+        for (View v : vs) { FrameLayout.LayoutParams p = new FrameLayout.LayoutParams(bw, bh, grav); p.setMarginStart(m); p.setMarginEnd(m); v.setLayoutParams(p); }
+        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(bw + dp(12), bh + dp(12), grav); fp.setMarginStart(m - dp(6)); fp.setMarginEnd(m - dp(6));
+        pipFrame.setLayoutParams(fp); pipFrame.setVisibility(View.VISIBLE);
     }
 
     private void openChannels() {
@@ -491,7 +591,7 @@ public class LiveActivity extends Activity {
 
     private void closePanel() {
         panelOpen = false; int was = mode; mode = 0; foChOpen = false;
-        listPanel.animate().cancel();
+        listPanel.animate().cancel(); pip(false);
         listPanel.animate().alpha(0f).translationX((was == 1 ? 1 : -1) * dp(60)).setDuration(180).withEndAction(new Runnable() { public void run() { if (!panelOpen) listPanel.setVisibility(View.GONE); } }).start();
     }
 
@@ -536,7 +636,7 @@ public class LiveActivity extends Activity {
                 case KeyEvent.KEYCODE_DPAD_RIGHT: player.seekTo(Math.max(0, player.getCurrentPosition() - 15000)); return true;
                 case KeyEvent.KEYCODE_DPAD_LEFT: player.seekTo(player.getCurrentPosition() + 15000); return true;
                 case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_DPAD_DOWN: return true;
-                case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: player.setPlayWhenReady(!player.getPlayWhenReady()); return true;
+                case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: player.setPlayWhenReady(!player.getPlayWhenReady()); partySend("pause", "on", !player.getPlayWhenReady()); return true;
                 case KeyEvent.KEYCODE_BACK: finish(); return true;
                 default: break;
             }
@@ -650,6 +750,8 @@ public class LiveActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
+        if (vod) saveVodPos();
+        if (NOW == this) NOW = null;
         if (player != null) { player.release(); player = null; }
         if (yt != null) { try { yt.destroy(); } catch (Throwable ignored) { } yt = null; }
         h.removeCallbacksAndMessages(null);

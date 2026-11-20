@@ -346,6 +346,43 @@ function osPanelWire(box, S) {
         <div class="chips" style="margin-top:6px">${[['left', 'يسار'], ['center', 'وسط'], ['right', 'يمين']].map(([v, n]) => `<button class="chip ${(S.tickerAlign || 'center') === v ? 'on' : ''}" data-tka="${v}">${n}</button>`).join('')}</div>
         <div class="list" style="margin:14px 0 0"><div class="item tap" data-tk="news" style="padding:6px 0;min-height:0"><div class="t"><b>أخبار رياضية بالشريط</b><small>عناوين عربية عن فرقك ودورياتك تمر بنفس الشريط</small></div><div class="toggle ${S.tickerNews !== false ? 'on' : ''}"></div></div></div></div>`;
       p.insertBefore(box, p.firstChild); osPanelWire(box, S);
+      const gr = document.createElement('div');
+      gr.innerHTML = `<div class="panel"><h2>${ic('user')} الترحيب بالاسم</h2><p class="sub" style="margin-top:-4px">كل ما تفتح الشاشة، تكتب اسمك بحركة على الشاشة مع تحية حسب الوقت (صباح الخير، مساء الخير…). جرّبها بالمعاينة فوق.</p>
+        <label class="f">اسمك (يطلع بالتحية؛ اتركه فاضي إذا ما تريد اسم)</label><input id="ownerName" placeholder="مثلاً: أحمد" value="${esc(S.ownerName || '')}" maxlength="20">
+        <div class="list" style="margin-top:10px"><div class="item tap" id="greetTog" style="padding:6px 0;min-height:0"><div class="t"><b>تشغيل التحية عند كل فتح</b></div><div class="toggle ${S.greetOn !== false ? 'on' : ''}"></div></div></div>
+        <div class="row" style="margin-top:10px;gap:8px"><button class="btn sec full" id="ownerSave">${ic('save')} حفظ</button><button class="btn ghost full" id="greetPreview">${ic('play')} جرّب التحية الآن</button></div></div>`;
+      p.insertBefore(gr, p.firstChild);
+      $('#ownerSave').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); if (nm) S.ownerName = nm.slice(0, 20); else delete S.ownerName; changed(); live({ settings: S }); toast('انحفظ الاسم'); };
+      $('#greetTog').onclick = () => { tap(); S.greetOn = S.greetOn === false; $('#greetTog .toggle').classList.toggle('on', S.greetOn !== false); changed(); live({ settings: S }); };
+      $('#greetPreview').onclick = () => { tap(); const nm = $('#ownerName').value.trim(); live({ settings: Object.assign({}, S, { ownerName: nm, greetOn: true }), action: 'greet' }); };
+      /* family profiles: a face and a name for everyone at home */
+      const PCOL = ['#D9822B', '#3DBE6C', '#4A8FE7', '#C9508B', '#8E6BE0', '#E0B03D'];
+      const pfs = () => (S.profiles = (S.profiles || []).slice(0, 6));
+      const pfPanel = document.createElement('div');
+      const pfDraw = () => {
+        pfPanel.innerHTML = `<div class="panel"><h2>${ic('user')} أفراد البيت</h2><p class="sub" style="margin-top:-4px">لكل شخص صورة واسم ومفضلة وآخر مشاهدة خاصة بيه. لما يكون اكو شخصين أو أكثر، التلفاز يسأل «منو يتفرج؟» عند الفتح ويرحّب باسمه.</p>
+          ${pfs().map((p, i) => `<div class="row" style="align-items:center;gap:10px;margin-top:10px"><div style="width:52px;height:52px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:${p.c || PCOL[i % 6]};font-weight:800;font-size:22px;color:#15181B">${p.img ? `<img src="${esc(p.img)}" style="width:100%;height:100%;object-fit:cover">` : esc(String(p.n || '؟').charAt(0))}</div>
+            <input class="pfn" data-i="${i}" value="${esc(p.n || '')}" placeholder="الاسم" maxlength="16" style="flex:1"><button class="btn ghost" data-pfimg="${i}">${ic('cam')}</button><button class="btn ghost" data-pfdel="${i}">${ic('trash')}</button></div>`).join('')}
+          <div class="row" style="margin-top:12px;gap:8px">${pfs().length < 6 ? `<button class="btn sec full" id="pfAdd">${ic('plus')} شخص جديد</button>` : ''}<button class="btn sec full" id="pfSave">${ic('save')} حفظ</button></div></div>`;
+        pfPanel.querySelectorAll('.pfn').forEach(e => e.oninput = () => { pfs()[+e.dataset.i].n = e.value.trim(); });
+        pfPanel.querySelectorAll('[data-pfdel]').forEach(e => e.onclick = () => { tap(); pfs().splice(+e.dataset.pfdel, 1); pfDraw(); });
+        pfPanel.querySelectorAll('[data-pfimg]').forEach(e => e.onclick = () => { tap(); busy('اختار صورة…'); run('pick', { mode: 'logo' }).then(u => { unbusy(); pfs()[+e.dataset.pfimg].img = u; pfDraw(); }).catch(er => { unbusy(); if (er.message !== 'CANCEL') toast(errText(er)); }); });
+        const add = pfPanel.querySelector('#pfAdd'); if (add) add.onclick = () => { tap(); const l = pfs(); l.push({ id: 'p' + Date.now().toString(36), n: '', c: PCOL[l.length % 6] }); pfDraw(); };
+        pfPanel.querySelector('#pfSave').onclick = () => { tap(); S.profiles = pfs().filter(p => p.n); if (!S.profiles.length) delete S.profiles; changed(); live({ settings: S }); toast('انحفظ أفراد البيت'); pfDraw(); };
+      };
+      pfDraw(); p.insertBefore(pfPanel, p.firstChild);
+      const HRS = Array.from({ length: 24 }, (_, i) => i);
+      const hrChips = (key, cur) => `<div class="chips" id="${key}Chips">${HRS.map(h => `<button class="chip ${((S[key] != null ? S[key] : cur) === h) ? 'on' : ''}" data-hr="${key}:${h}">${h}</button>`).join('')}</div>`;
+      const qt = document.createElement('div');
+      qt.innerHTML = `<div class="panel"><h2>${ic('sun')} وضع الهدوء الليلي</h2><p class="sub" style="margin-top:-4px">بعد الساعة المحددة، صوت القنوات والأفلام ينخفض تلقائياً حتى ما يزعج النايمين بالبيت.</p>
+        <div class="list"><div class="item tap" id="quietTog" style="padding:6px 0;min-height:0"><div class="t"><b>تشغيل وضع الهدوء</b></div><div class="toggle ${S.quietOn ? 'on' : ''}"></div></div></div>
+        <div class="lb" style="margin:12px 0 4px"><span class="sub">يبدأ الساعة</span></div>${hrChips('quietHour', 23)}
+        <div class="lb" style="margin:12px 0 4px"><span class="sub">ينتهي الساعة</span></div>${hrChips('quietEndHour', 7)}
+        <button class="btn sec full" id="quietSave" style="margin-top:12px">${ic('save')} حفظ</button></div>`;
+      p.insertBefore(qt, p.firstChild);
+      qt.addEventListener('click', e => { const c = e.target.closest('[data-hr]'); if (!c) return; tap(); const [key, h] = c.dataset.hr.split(':'); S[key] = +h; qt.querySelectorAll('#' + key + 'Chips .chip').forEach(b => b.classList.toggle('on', b === c)); });
+      $('#quietTog').onclick = () => { tap(); S.quietOn = !S.quietOn; $('#quietTog .toggle').classList.toggle('on', S.quietOn); };
+      $('#quietSave').onclick = () => { tap(); changed(); live({ settings: S }); toast('انحفظ وضع الهدوء الليلي'); };
       const my = document.createElement('div');
       const cnt = (S.myM3u || '').split(/\r?\n/).filter(l => /^https?:/i.test(l.trim())).length;
       my.innerHTML = `<div class="panel"><h2>قنواتي الخاصة</h2><p class="sub" style="margin-top:-4px">أضف قنواتك اللي عندك حق بثها (مثل اتفاقيتك مع beIN، أو قنوات ثانية). تطلع آخر شي بقنواتي داخل فولدر «قنواتي الخاصة»، وكل قائمة IPTV تصير فولدر لحاله وبيه قنواتها. الروابط تنحفظ بتصميمك وبشاشتك بس، وما تنرفع لأي مكان عام.</p>

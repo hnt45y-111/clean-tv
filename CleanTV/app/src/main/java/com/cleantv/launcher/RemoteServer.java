@@ -207,6 +207,14 @@ public class RemoteServer extends Thread {
                         MainActivity.js("window.hidePair && window.hidePair(); window.remoteCmd && window.remoteCmd({type:'paired'})");
                         res = new JSONObject().put("token", t).toString().getBytes(StandardCharsets.UTF_8);
                     } else { code = 403; res = "{\"error\":\"wrong code\"}".getBytes(StandardCharsets.UTF_8); }
+                } else if (api.equals("party")) {
+                    /* the linked TV of «مشاهدة جماعية»: accepted only with this TV's own room code */
+                    JSONObject b = json(body);
+                    if (b.optString("room").equals(Party.room(ctx))) {
+                        if (b.optString("backIp").length() > 0 && !Party.on(ctx)) Party.link(ctx, b.optString("backIp"), b.optString("backRoom"));
+                        LiveActivity.fromParty(ctx, b);
+                        res = "{\"ok\":true}".getBytes(StandardCharsets.UTF_8);
+                    } else { code = 403; res = "{\"error\":\"room\"}".getBytes(StandardCharsets.UTF_8); }
                 } else if (!authed) {
                     code = 401; res = "{\"error\":\"pair first\"}".getBytes(StandardCharsets.UTF_8);
                 } else {
@@ -349,6 +357,11 @@ public class RemoteServer extends Thread {
                     return ("{\"ok\":" + ok + "}").getBytes(StandardCharsets.UTF_8);
                 }
                 if ("settings".equals(k)) { try { ctx.startActivity(new android.content.Intent(android.provider.Settings.ACTION_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Throwable ignored) { } return "{\"ok\":true}".getBytes(StandardCharsets.UTF_8); }
+                if ("shuffle".equals(k)) {     // the phone was shaken: a random channel, from wherever the TV is
+                    if (!MainActivity.foreground) { try { ctx.startActivity(new android.content.Intent(ctx, MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)); } catch (Throwable ignored) { } }
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() { public void run() { MainActivity.js("window.__shuffle && window.__shuffle()"); } }, MainActivity.foreground ? 0 : 900);
+                    return "{\"ok\":true}".getBytes(StandardCharsets.UTF_8);
+                }
                 if ("power".equals(k)) return ("{\"ok\":" + PowerService.powerDialog() + "}").getBytes(StandardCharsets.UTF_8);
                 if ("home".equals(k) && PowerService.instance == null) {
                     try { ctx.startActivity(new android.content.Intent(ctx, MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); } catch (Throwable ignored) { }
