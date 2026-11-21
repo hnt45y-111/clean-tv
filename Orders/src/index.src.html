@@ -18,7 +18,7 @@ body{font:400 16px/1.7 'IBM Plex Sans Arabic','Segoe UI',Tahoma,'Noto Naskh Arab
 button,input,select,textarea{font:inherit;color:inherit}
 header.top{position:sticky;top:0;z-index:10;background:var(--ink);border-bottom:1px solid var(--line);padding:10px 16px}
 .bar{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-h1{font-size:21px;font-weight:700;margin-inline-end:auto}
+h1{font-size:21px;font-weight:700;margin-inline-end:auto;margin-inline-start:6px}
 .btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:var(--r2);border:2px solid var(--line);background:transparent;cursor:pointer;font-weight:600;white-space:nowrap}
 .btn:hover{border-color:var(--cu2)}
 .btn.pri{background:var(--cu);border-color:var(--cu);color:var(--ink)}
@@ -37,12 +37,6 @@ input:focus,select:focus,textarea:focus,.btn:focus-visible{outline:none;border-c
 .stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;color:var(--chrome);font-size:14px}
 .stats span{background:var(--surf);border-radius:99px;padding:2px 14px}
 .stats b{color:var(--ivory)}
-details.menu{position:relative}
-details.menu summary{list-style:none}
-details.menu summary::-webkit-details-marker{display:none}
-details.menu .pop{position:absolute;inset-inline-start:0;top:50px;background:var(--surf2);border:1px solid var(--line);border-radius:var(--r2);padding:6px;min-width:230px;z-index:20;display:flex;flex-direction:column}
-details.menu .pop button{background:none;border:0;text-align:start;padding:10px 12px;border-radius:6px;cursor:pointer}
-details.menu .pop button:hover{background:var(--surf)}
 .tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r1)}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{background:var(--surf);text-align:start;padding:10px 10px;white-space:nowrap;position:sticky;top:0}
@@ -65,7 +59,15 @@ dialog.wide{width:min(1000px,96vw)}
 .dh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surf);z-index:2}
 .dh h2{font-size:18px;margin-inline-end:auto}
 .db{padding:16px 18px;overflow:auto;max-height:calc(92vh - 140px)}
-.df{display:flex;gap:10px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.df{display:flex;gap:10px;justify-content:flex-start;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap;position:sticky;bottom:0;background:var(--surf)}
+.setlist{display:flex;flex-direction:column;gap:10px}
+.setlist .btn{justify-content:flex-start;min-height:52px}
+.dcell{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ic{min-width:38px;min-height:38px;border:2px solid var(--line);background:none;border-radius:8px;cursor:pointer;font-size:16px}
+.ic:hover{border-color:var(--cu2)}
+.dsec{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surf2);border-radius:var(--r2);padding:8px 12px}
+.dsec .note{margin-inline-end:auto}
+.dsec b{color:var(--ivory)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid .full{grid-column:1/-1}
 label.f{display:block;font-size:14px;color:var(--chrome)}
@@ -102,23 +104,30 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
   tr:hover td{background:none}
   .acts{margin-top:8px}
 }
-@media (max-width:560px){.grid{grid-template-columns:1fr}h1{font-size:18px;width:100%}.bar .btn{flex:1 1 auto;justify-content:center}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}h1{font-size:17px;flex:1 1 auto;margin:0}.bar{gap:8px}.bar .btn{padding:0 12px;justify-content:center}.bar .sec2{flex:1 1 40%}}
+@media print{body>*:not(#dView){display:none!important}#dView{position:static!important;display:block!important;width:100%!important;max-height:none!important;border:0;background:#fff;overflow:visible}#dView .dh,#dView .vtabs{display:none!important}#vbody{max-height:none!important;overflow:visible!important;background:#fff;padding:0}#vbody canvas{width:100%!important;height:auto!important;margin:0!important;break-after:page}#vbody img{max-width:100%!important;width:auto!important}}
 </style>
 </head>
 <body>
 <header class="top"><div class="bar">
+  <button class="btn" id="bSet">⚙ الإعدادات</button>
   <h1>الأوامر الإدارية</h1>
-  <button class="btn pri" id="bAdd">＋ إضافة أمر</button>
-  <button class="btn" id="bImp">استيراد Excel</button>
-  <button class="btn" id="bFiles">📁 المجلد والاضبارات</button>
-  <details class="menu"><summary class="btn">المزيد ▾</summary><div class="pop">
-    <button id="mExp">تصدير إلى Excel</button>
-    <button id="mTpl">تحميل نموذج Excel فارغ</button>
-    <button id="mBak">نسخة احتياطية (JSON)</button>
-    <button id="mRes">استرجاع نسخة احتياطية</button>
-    <button id="mClr" style="color:var(--bad)">حذف كل الأوامر</button>
-  </div></details>
+  <button class="btn pri" id="bAdd">＋ إضافة</button>
+  <button class="btn sec2" id="bImp">استيراد Excel</button>
+  <button class="btn sec2" id="bFiles">📁 المجلد</button>
 </div></header>
+
+<dialog id="dSet">
+  <div class="dh"><h2>الإعدادات</h2><button class="btn sm" data-close>إغلاق</button></div>
+  <div class="db setlist">
+    <button class="btn" id="mFolder">📁 المجلد والاضبارات</button>
+    <button class="btn" id="mExp">تصدير إلى Excel</button>
+    <button class="btn" id="mTpl">تحميل نموذج Excel فارغ</button>
+    <button class="btn" id="mBak">نسخة احتياطية (JSON)</button>
+    <button class="btn" id="mRes">استرجاع نسخة احتياطية</button>
+    <button class="btn bad" id="mClr">حذف كل الأوامر</button>
+  </div>
+</dialog>
 
 <main>
   <div id="banner" class="banner" hidden><span id="bText"></span><button class="btn sm" id="bAct"></button><button class="btn sm" id="bAct2" hidden></button></div>
@@ -135,7 +144,7 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
 </main>
 
 <dialog id="dForm"><form method="dialog" id="fForm">
-  <div class="dh"><h2 id="fTitle">إضافة أمر</h2><button class="btn sm" type="button" data-close>إغلاق</button></div>
+  <div class="dh"><h2 id="fTitle">إضافة</h2><button class="btn sm" type="button" data-close>إغلاق</button></div>
   <div class="db"><div class="grid">
     <div class="full seg" role="radiogroup" aria-label="نوع الأمر">
       <label><input type="radio" name="kind" value="assign" checked><span>تكليف</span></label>
@@ -150,22 +159,23 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
     <label class="f">رقم الكتاب<input name="bookNo" autocomplete="off"></label>
     <label class="f">نوع الكتاب<input name="bookType" list="l-bookType"></label>
     <label class="f">رقم الاضبارة<input name="fileNo" inputmode="numeric" autocomplete="off"></label>
+    <div class="full dsec"><span class="note">ملف الاضبارة: <b id="fDoss">لم يُختَر</b></span><button class="btn sm" type="button" id="fPick">اختيار ملف</button><button class="btn sm bad" type="button" id="fUnpin">إزالة</button></div>
     <label class="f full">الملاحظات<textarea name="notes" rows="3"></textarea></label>
   </div></div>
-  <div class="df"><button class="btn" type="button" data-close>إلغاء</button><button class="btn pri" id="fSave" value="ok">حفظ</button></div>
+  <div class="df"><button class="btn pri" id="fSave" value="ok">حفظ</button><button class="btn" type="button" data-close>إلغاء</button></div>
 </form></dialog>
 <datalist id="l-position"></datalist><datalist id="l-command"></datalist><datalist id="l-brigade"></datalist><datalist id="l-battalion"></datalist><datalist id="l-bookType"></datalist>
 
 <dialog id="dImp">
   <div class="dh"><h2>استيراد من Excel</h2><button class="btn sm" data-close>إغلاق</button></div>
   <div class="db" id="impBody"></div>
-  <div class="df"><button class="btn" data-close>إلغاء</button><button class="btn pri" id="impGo" disabled>استيراد</button></div>
+  <div class="df"><button class="btn pri" id="impGo" disabled>استيراد</button><button class="btn" data-close>إلغاء</button></div>
 </dialog>
 
 <dialog id="dFiles">
   <div class="dh"><h2>المجلد والاضبارات</h2><button class="btn sm" data-close>إغلاق</button></div>
   <div class="db">
-    <p class="note">ضع ملفات الاضبارات (PDF أو صور) باسم الرقم فقط: <b>1.pdf</b> ، <b>2.jpg</b> … عند الضغط على رقم الاضبارة يفتح الملف الذي يحمل نفس الرقم مباشرة.</p>
+    <p class="note">ملفات الاضبارات (PDF أو صور). لكل أمر زر «اختيار ملف» يثبّت له ملف الاضبارة (ينتقل إلى المجلد)، وإذا ما اخترت ملفاً يبحث التطبيق عن ملف باسم رقم الاضبارة.</p>
     <p style="margin:12px 0" id="fInfo"></p>
     <div class="df" style="justify-content:flex-start;padding:0">
       <button class="btn pri" id="bLink">📁 ربط مجلد</button>
@@ -175,7 +185,7 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
       <button class="btn bad" id="bDelFiles">حذف كل الملفات</button>
       <button class="btn bad" id="bUnlink">فك الربط</button>
     </div>
-    <h3 style="margin:16px 0 4px;font-size:16px">أرقام اضبارات بدون ملف</h3>
+    <h3 style="margin:16px 0 4px;font-size:16px">أوامر بدون ملف اضبارة</h3>
     <div class="chips" id="missing"></div>
   </div>
 </dialog>
@@ -183,12 +193,13 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
 <dialog id="dView" class="wide">
   <div class="dh"><h2 id="vTitle"></h2>
     <button class="btn sm" id="zOut" aria-label="تصغير">－</button><button class="btn sm" id="zIn" aria-label="تكبير">＋</button>
-    <a class="btn sm" id="vDl" download>تنزيل</a><button class="btn sm" data-close>إغلاق</button></div>
+    <button class="btn sm" id="vPrint">🖨 طباعة</button><a class="btn sm" id="vDl" download>تنزيل</a><button class="btn sm" data-close>إغلاق</button></div>
   <div class="vtabs" id="vTabs" hidden></div>
   <div id="vbody"></div>
 </dialog>
 
 <input type="file" id="inXlsx" accept=".xlsx,.xls,.csv" hidden>
+<input type="file" id="inOne" accept=".pdf,image/*" hidden>
 <input type="file" id="inJson" accept=".json,application/json" hidden>
 <input type="file" id="inDir" webkitdirectory multiple hidden>
 <input type="file" id="inFiles" accept=".pdf,image/*" multiple hidden>

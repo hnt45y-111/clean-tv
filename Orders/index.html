@@ -18,7 +18,7 @@ body{font:400 16px/1.7 'IBM Plex Sans Arabic','Segoe UI',Tahoma,'Noto Naskh Arab
 button,input,select,textarea{font:inherit;color:inherit}
 header.top{position:sticky;top:0;z-index:10;background:var(--ink);border-bottom:1px solid var(--line);padding:10px 16px}
 .bar{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-h1{font-size:21px;font-weight:700;margin-inline-end:auto}
+h1{font-size:21px;font-weight:700;margin-inline-end:auto;margin-inline-start:6px}
 .btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:var(--r2);border:2px solid var(--line);background:transparent;cursor:pointer;font-weight:600;white-space:nowrap}
 .btn:hover{border-color:var(--cu2)}
 .btn.pri{background:var(--cu);border-color:var(--cu);color:var(--ink)}
@@ -37,12 +37,6 @@ input:focus,select:focus,textarea:focus,.btn:focus-visible{outline:none;border-c
 .stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;color:var(--chrome);font-size:14px}
 .stats span{background:var(--surf);border-radius:99px;padding:2px 14px}
 .stats b{color:var(--ivory)}
-details.menu{position:relative}
-details.menu summary{list-style:none}
-details.menu summary::-webkit-details-marker{display:none}
-details.menu .pop{position:absolute;inset-inline-start:0;top:50px;background:var(--surf2);border:1px solid var(--line);border-radius:var(--r2);padding:6px;min-width:230px;z-index:20;display:flex;flex-direction:column}
-details.menu .pop button{background:none;border:0;text-align:start;padding:10px 12px;border-radius:6px;cursor:pointer}
-details.menu .pop button:hover{background:var(--surf)}
 .tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r1)}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{background:var(--surf);text-align:start;padding:10px 10px;white-space:nowrap;position:sticky;top:0}
@@ -65,7 +59,15 @@ dialog.wide{width:min(1000px,96vw)}
 .dh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surf);z-index:2}
 .dh h2{font-size:18px;margin-inline-end:auto}
 .db{padding:16px 18px;overflow:auto;max-height:calc(92vh - 140px)}
-.df{display:flex;gap:10px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.df{display:flex;gap:10px;justify-content:flex-start;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap;position:sticky;bottom:0;background:var(--surf)}
+.setlist{display:flex;flex-direction:column;gap:10px}
+.setlist .btn{justify-content:flex-start;min-height:52px}
+.dcell{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ic{min-width:38px;min-height:38px;border:2px solid var(--line);background:none;border-radius:8px;cursor:pointer;font-size:16px}
+.ic:hover{border-color:var(--cu2)}
+.dsec{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surf2);border-radius:var(--r2);padding:8px 12px}
+.dsec .note{margin-inline-end:auto}
+.dsec b{color:var(--ivory)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid .full{grid-column:1/-1}
 label.f{display:block;font-size:14px;color:var(--chrome)}
@@ -102,23 +104,30 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
   tr:hover td{background:none}
   .acts{margin-top:8px}
 }
-@media (max-width:560px){.grid{grid-template-columns:1fr}h1{font-size:18px;width:100%}.bar .btn{flex:1 1 auto;justify-content:center}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}h1{font-size:17px;flex:1 1 auto;margin:0}.bar{gap:8px}.bar .btn{padding:0 12px;justify-content:center}.bar .sec2{flex:1 1 40%}}
+@media print{body>*:not(#dView){display:none!important}#dView{position:static!important;display:block!important;width:100%!important;max-height:none!important;border:0;background:#fff;overflow:visible}#dView .dh,#dView .vtabs{display:none!important}#vbody{max-height:none!important;overflow:visible!important;background:#fff;padding:0}#vbody canvas{width:100%!important;height:auto!important;margin:0!important;break-after:page}#vbody img{max-width:100%!important;width:auto!important}}
 </style>
 </head>
 <body>
 <header class="top"><div class="bar">
+  <button class="btn" id="bSet">⚙ الإعدادات</button>
   <h1>الأوامر الإدارية</h1>
-  <button class="btn pri" id="bAdd">＋ إضافة أمر</button>
-  <button class="btn" id="bImp">استيراد Excel</button>
-  <button class="btn" id="bFiles">📁 المجلد والاضبارات</button>
-  <details class="menu"><summary class="btn">المزيد ▾</summary><div class="pop">
-    <button id="mExp">تصدير إلى Excel</button>
-    <button id="mTpl">تحميل نموذج Excel فارغ</button>
-    <button id="mBak">نسخة احتياطية (JSON)</button>
-    <button id="mRes">استرجاع نسخة احتياطية</button>
-    <button id="mClr" style="color:var(--bad)">حذف كل الأوامر</button>
-  </div></details>
+  <button class="btn pri" id="bAdd">＋ إضافة</button>
+  <button class="btn sec2" id="bImp">استيراد Excel</button>
+  <button class="btn sec2" id="bFiles">📁 المجلد</button>
 </div></header>
+
+<dialog id="dSet">
+  <div class="dh"><h2>الإعدادات</h2><button class="btn sm" data-close>إغلاق</button></div>
+  <div class="db setlist">
+    <button class="btn" id="mFolder">📁 المجلد والاضبارات</button>
+    <button class="btn" id="mExp">تصدير إلى Excel</button>
+    <button class="btn" id="mTpl">تحميل نموذج Excel فارغ</button>
+    <button class="btn" id="mBak">نسخة احتياطية (JSON)</button>
+    <button class="btn" id="mRes">استرجاع نسخة احتياطية</button>
+    <button class="btn bad" id="mClr">حذف كل الأوامر</button>
+  </div>
+</dialog>
 
 <main>
   <div id="banner" class="banner" hidden><span id="bText"></span><button class="btn sm" id="bAct"></button><button class="btn sm" id="bAct2" hidden></button></div>
@@ -135,7 +144,7 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
 </main>
 
 <dialog id="dForm"><form method="dialog" id="fForm">
-  <div class="dh"><h2 id="fTitle">إضافة أمر</h2><button class="btn sm" type="button" data-close>إغلاق</button></div>
+  <div class="dh"><h2 id="fTitle">إضافة</h2><button class="btn sm" type="button" data-close>إغلاق</button></div>
   <div class="db"><div class="grid">
     <div class="full seg" role="radiogroup" aria-label="نوع الأمر">
       <label><input type="radio" name="kind" value="assign" checked><span>تكليف</span></label>
@@ -150,22 +159,23 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
     <label class="f">رقم الكتاب<input name="bookNo" autocomplete="off"></label>
     <label class="f">نوع الكتاب<input name="bookType" list="l-bookType"></label>
     <label class="f">رقم الاضبارة<input name="fileNo" inputmode="numeric" autocomplete="off"></label>
+    <div class="full dsec"><span class="note">ملف الاضبارة: <b id="fDoss">لم يُختَر</b></span><button class="btn sm" type="button" id="fPick">اختيار ملف</button><button class="btn sm bad" type="button" id="fUnpin">إزالة</button></div>
     <label class="f full">الملاحظات<textarea name="notes" rows="3"></textarea></label>
   </div></div>
-  <div class="df"><button class="btn" type="button" data-close>إلغاء</button><button class="btn pri" id="fSave" value="ok">حفظ</button></div>
+  <div class="df"><button class="btn pri" id="fSave" value="ok">حفظ</button><button class="btn" type="button" data-close>إلغاء</button></div>
 </form></dialog>
 <datalist id="l-position"></datalist><datalist id="l-command"></datalist><datalist id="l-brigade"></datalist><datalist id="l-battalion"></datalist><datalist id="l-bookType"></datalist>
 
 <dialog id="dImp">
   <div class="dh"><h2>استيراد من Excel</h2><button class="btn sm" data-close>إغلاق</button></div>
   <div class="db" id="impBody"></div>
-  <div class="df"><button class="btn" data-close>إلغاء</button><button class="btn pri" id="impGo" disabled>استيراد</button></div>
+  <div class="df"><button class="btn pri" id="impGo" disabled>استيراد</button><button class="btn" data-close>إلغاء</button></div>
 </dialog>
 
 <dialog id="dFiles">
   <div class="dh"><h2>المجلد والاضبارات</h2><button class="btn sm" data-close>إغلاق</button></div>
   <div class="db">
-    <p class="note">ضع ملفات الاضبارات (PDF أو صور) باسم الرقم فقط: <b>1.pdf</b> ، <b>2.jpg</b> … عند الضغط على رقم الاضبارة يفتح الملف الذي يحمل نفس الرقم مباشرة.</p>
+    <p class="note">ملفات الاضبارات (PDF أو صور). لكل أمر زر «اختيار ملف» يثبّت له ملف الاضبارة (ينتقل إلى المجلد)، وإذا ما اخترت ملفاً يبحث التطبيق عن ملف باسم رقم الاضبارة.</p>
     <p style="margin:12px 0" id="fInfo"></p>
     <div class="df" style="justify-content:flex-start;padding:0">
       <button class="btn pri" id="bLink">📁 ربط مجلد</button>
@@ -175,7 +185,7 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
       <button class="btn bad" id="bDelFiles">حذف كل الملفات</button>
       <button class="btn bad" id="bUnlink">فك الربط</button>
     </div>
-    <h3 style="margin:16px 0 4px;font-size:16px">أرقام اضبارات بدون ملف</h3>
+    <h3 style="margin:16px 0 4px;font-size:16px">أوامر بدون ملف اضبارة</h3>
     <div class="chips" id="missing"></div>
   </div>
 </dialog>
@@ -183,12 +193,13 @@ label.f input,label.f select,label.f textarea{margin-top:4px;color:var(--ivory)}
 <dialog id="dView" class="wide">
   <div class="dh"><h2 id="vTitle"></h2>
     <button class="btn sm" id="zOut" aria-label="تصغير">－</button><button class="btn sm" id="zIn" aria-label="تكبير">＋</button>
-    <a class="btn sm" id="vDl" download>تنزيل</a><button class="btn sm" data-close>إغلاق</button></div>
+    <button class="btn sm" id="vPrint">🖨 طباعة</button><a class="btn sm" id="vDl" download>تنزيل</a><button class="btn sm" data-close>إغلاق</button></div>
   <div class="vtabs" id="vTabs" hidden></div>
   <div id="vbody"></div>
 </dialog>
 
 <input type="file" id="inXlsx" accept=".xlsx,.xls,.csv" hidden>
+<input type="file" id="inOne" accept=".pdf,image/*" hidden>
 <input type="file" id="inJson" accept=".json,application/json" hidden>
 <input type="file" id="inDir" webkitdirectory multiple hidden>
 <input type="file" id="inFiles" accept=".pdf,image/*" multiple hidden>
@@ -290,7 +301,7 @@ async function dbDel(st, id) { const t = db.transaction(st, 'readwrite'); t.obje
 async function dbClear(st) { const t = db.transaction(st, 'readwrite'); t.objectStore(st).clear(); await done(t); }
 
 /* ---------- الحالة ---------- */
-let orders = [], filesIdx = new Map(), shown = PAGE;
+let orders = [], filesIdx = new Map(), allFiles = new Map(), shown = PAGE;
 const DATA = 'الأوامر.json', FS = 'showDirectoryPicker' in window;
 let dir = null, folderMode = false, needPerm = false, scanned = false, nextId = 1;
 const addIdx = (num, m) => { if (!filesIdx.has(num)) filesIdx.set(num, []); filesIdx.get(num).push(m); };
@@ -305,19 +316,19 @@ async function writeData() {
 async function scan(d, depth = 0) {
   for await (const [n, h] of d.entries()) {
     if (h.kind === 'directory') { if (depth < 2) await scan(h, depth + 1); }
-    else if (FEXT.test(n)) { const num = fileKey(n.replace(/\.[^.]+$/, '')); if (/^\d+$/.test(num)) addIdx(num, { name: n, handle: h }); }
+    else if (FEXT.test(n)) { const m = { name: n, handle: h }; allFiles.set(n, m); const num = fileKey(n.replace(/\.[^.]+$/, '')); if (/^\d+$/.test(num)) addIdx(num, m); }
   }
 }
 async function load(rescan = false) {
   if (folderMode) {
-    orders = []; if (needPerm) filesIdx = new Map();
+    orders = []; if (needPerm) { filesIdx = new Map(); allFiles = new Map(); }
     else {
       await readData();
-      if (rescan || !scanned) { filesIdx = new Map(); await scan(dir); scanned = true; }
+      if (rescan || !scanned) { filesIdx = new Map(); allFiles = new Map(); await scan(dir); scanned = true; }
     }
   } else {
-    orders = await dbAll('orders'); filesIdx = new Map();
-    for (const f of await dbAll('files')) addIdx(f.num, { id: f.id, name: f.name });
+    orders = await dbAll('orders'); filesIdx = new Map(); allFiles = new Map();
+    for (const f of await dbAll('files')) { const m = { id: f.id, name: f.name }; allFiles.set(f.id, m); if (f.num) addIdx(f.num, m); }
   }
   render(); banner();
 }
@@ -356,7 +367,15 @@ async function unlinkFolder() {
   const t = db.transaction('meta', 'readwrite'); t.objectStore('meta').delete('dir'); await done(t);
   dir = null; folderMode = false; needPerm = false; scanned = false; await load(); filesDialog();
 }
-const hasFile = o => !!o.fileNo && filesIdx.has(fileKey(o.fileNo));
+function dossierList(o) {
+  const d = o.dossier, m = d && (folderMode ? allFiles.get(d.name) : allFiles.get(d.id));
+  if (m) return [m];
+  return (o.fileNo && filesIdx.get(fileKey(o.fileNo))) || [];
+}
+const hasFile = o => dossierList(o).length > 0;
+const dossCell = o => hasFile(o)
+  ? `<div class="dcell"><button class="doss has" data-open title="فتح الاضبارة">${esc(o.fileNo || 'فتح')}</button><button class="ic" data-pick title="تغيير ملف الاضبارة" aria-label="تغيير ملف الاضبارة">✎</button></div>`
+  : `<div class="dcell">${o.fileNo ? `<button class="doss no" data-open title="لا يوجد ملف">${esc(o.fileNo)}</button>` : ''}<button class="btn sm" data-pick>اختيار ملف</button></div>`;
 
 /* ---------- العرض ---------- */
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 3500); }
@@ -373,7 +392,7 @@ function render() {
     <td class="v${o.bookDate ? '' : ' e'}" data-l="تاريخ الكتاب">${esc(fmtDate(o.bookDate))}</td>
     <td class="v${o.bookNo ? '' : ' e'}" data-l="رقم الكتاب">${esc(o.bookNo)}</td>
     <td class="v${o.bookType ? '' : ' e'}" data-l="نوع الكتاب">${esc(o.bookType)}</td>
-    <td class="v${o.fileNo ? '' : ' e'}" data-l="الاضبارة">${o.fileNo ? `<button class="doss ${hasFile(o) ? 'has' : 'no'}" data-doss="${esc(o.fileNo)}" title="${hasFile(o) ? 'فتح الاضبارة' : 'لا يوجد ملف لهذه الاضبارة'}">${esc(o.fileNo)}</button>` : ''}</td>
+    <td class="v" data-l="الاضبارة">${dossCell(o)}</td>
     <td class="v${o.notes ? '' : ' e'}" data-l="الملاحظات">${esc(o.notes)}</td>
     <td data-l=""><div class="acts"><button class="btn sm" data-edit>تعديل</button><button class="btn sm bad" data-del>حذف</button></div></td></tr>`).join('');
   const n = orders.length, ne = orders.filter(o => o.kind === 'end').length;
@@ -387,24 +406,51 @@ function render() {
 $('#q').oninput = $('#fk').onchange = () => { shown = PAGE; render(); };
 $('#bMore').onclick = () => { shown += PAGE; render(); };
 document.addEventListener('click', e => { if (e.target.closest('[data-close]')) e.target.closest('dialog').close(); });
-document.addEventListener('click', e => { const m = $('details.menu'); if (m.open && !m.contains(e.target)) m.open = false; });
+const closeSet = () => $('#dSet').close();
+$('#bSet').onclick = () => $('#dSet').showModal();
+$('#mFolder').onclick = () => { closeSet(); filesDialog(); };
 
 /* ---------- إضافة / تعديل ---------- */
-let editing = null;
+let editing = null, formPin = null;
+const showPin = () => { $('#fDoss').textContent = formPin ? formPin.name : (editing && hasFile(editing) ? 'حسب رقم الاضبارة' : 'لم يُختَر'); $('#fUnpin').hidden = !formPin; };
+function pickFor(cb) {
+  const i = $('#inOne');
+  i.onchange = async () => { const f = i.files[0]; i.value = ''; if (f) { try { await cb(f); } catch (e) { toast('تعذّر: ' + e.message); } } };
+  i.click();
+}
+async function storeFile(f) {
+  if (!FEXT.test(f.name)) throw new Error('الملف لازم يكون PDF أو صورة');
+  if (folderMode) {
+    let name = f.name;
+    for (let n = 2; ; n++) {
+      let ex = null; try { ex = await (await dir.getFileHandle(name)).getFile(); } catch (e) { if (e.name !== 'NotFoundError') throw e; }
+      if (!ex) break; if (ex.size === f.size) { allFiles.set(name, { name, handle: await dir.getFileHandle(name) }); return { name }; }
+      name = f.name.replace(/(\.[^.]+)$/, ` (${n})$1`);
+    }
+    const h = await dir.getFileHandle(name, { create: true }), w = await h.createWritable(); await w.write(f); await w.close();
+    allFiles.set(name, { name, handle: h }); return { name };
+  }
+  const old = (await dbAll('files')).find(x => x.name === f.name && x.blob.size === f.size);
+  if (old) return { id: old.id, name: old.name };
+  const [id] = await dbPutMany('files', [{ num: '', name: f.name, type: f.type, blob: f }]); return { id, name: f.name };
+}
 function openForm(o) {
   editing = o || null; const f = $('#fForm');
-  $('#fTitle').textContent = o ? 'تعديل أمر' : 'إضافة أمر';
+  $('#fTitle').textContent = o ? 'تعديل' : 'إضافة'; formPin = o && o.dossier || null; showPin();
   f.reset();
   for (const k of FIELDS) { if (k === 'kind') f.kind.value = o ? o.kind : 'assign'; else f[k].value = o ? (o[k] || '') : ''; }
   $('#dForm').showModal();
 }
 $('#bAdd').onclick = () => openForm();
+$('#fPick').onclick = () => pickFor(async f => { formPin = await storeFile(f); showPin(); toast('تم اختيار الملف — اضغط حفظ'); });
+$('#fUnpin').onclick = () => { formPin = null; showPin(); };
 $('#fForm').onsubmit = async e => {
   e.preventDefault(); const f = e.target;
   const o = editing ? { ...editing } : {};
   for (const k of FIELDS) o[k] = (k === 'kind' ? f.kind.value : f[k].value).trim();
   if (!o.name) return toast('اكتب اسم المكلف');
   o.fileNo = latin(o.fileNo);
+  if (formPin) o.dossier = formPin; else delete o.dossier;
   await putOrders([o]); $('#dForm').close(); await load(); toast('تم الحفظ');
 };
 $('#rows').onclick = async e => {
@@ -412,7 +458,8 @@ $('#rows').onclick = async e => {
   const o = orders.find(x => x.id === +tr.dataset.id);
   if (e.target.closest('[data-edit]')) openForm(o);
   else if (e.target.closest('[data-del]')) { if (confirm(`حذف أمر «${o.name}»؟`)) { await delOrder(o.id); await load(); toast('تم الحذف'); } }
-  else if (e.target.closest('[data-doss]')) openDossier(o.fileNo);
+  else if (e.target.closest('[data-pick]')) pickFor(async f => { const ref = await storeFile(f); await putOrders([{ ...o, dossier: ref }]); await load(); toast(`تم تثبيت الاضبارة لـ «${o.name}»`); });
+  else if (e.target.closest('[data-open]')) openDossier(o);
 };
 
 /* ---------- استيراد Excel ---------- */
@@ -490,20 +537,20 @@ function xlsxOut(rows, name) {
   const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] }; XLSX.utils.book_append_sheet(wb, ws, 'الأوامر');
   save(new Blob([XLSX.write(wb, { type: 'array', bookType: 'xlsx' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), name);
 }
-$('#mExp').onclick = () => { $('details.menu').open = false; xlsxOut(filtered().map(o => [o.name, o.kind === 'end' ? 'نعم' : '', o.position, o.command, o.brigade, o.battalion, fmtDate(o.bookDate), o.bookNo, o.bookType, o.fileNo, o.notes]), `الأوامر-${stamp()}.xlsx`); };
-$('#mTpl').onclick = () => { $('details.menu').open = false; xlsxOut([['مثال: أحمد علي', '', 'آمر', 'قيادة العمليات', 'اللواء 1', 'الفوج 2', '05/03/2025', '123', 'أمر إداري', '1', '']], 'نموذج-الأوامر.xlsx'); };
-$('#mBak').onclick = () => { $('details.menu').open = false; save(new Blob([JSON.stringify({ v: 1, orders: orders.map(({ id, ...r }) => r) })], { type: 'application/json' }), `نسخة-الأوامر-${stamp()}.json`); };
-$('#mRes').onclick = () => { $('details.menu').open = false; $('#inJson').click(); };
+$('#mExp').onclick = () => { closeSet(); xlsxOut(filtered().map(o => [o.name, o.kind === 'end' ? 'نعم' : '', o.position, o.command, o.brigade, o.battalion, fmtDate(o.bookDate), o.bookNo, o.bookType, o.fileNo, o.notes]), `الأوامر-${stamp()}.xlsx`); };
+$('#mTpl').onclick = () => { closeSet(); xlsxOut([['مثال: أحمد علي', '', 'آمر', 'قيادة العمليات', 'اللواء 1', 'الفوج 2', '05/03/2025', '123', 'أمر إداري', '1', '']], 'نموذج-الأوامر.xlsx'); };
+$('#mBak').onclick = () => { closeSet(); save(new Blob([JSON.stringify({ v: 1, orders: orders.map(({ id, ...r }) => r) })], { type: 'application/json' }), `نسخة-الأوامر-${stamp()}.json`); };
+$('#mRes').onclick = () => { closeSet(); $('#inJson').click(); };
 $('#inJson').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try {
     const j = JSON.parse(await f.text()); if (!Array.isArray(j.orders)) throw new Error('ملف غير صالح');
     const seen = new Set(orders.map(dupKey)), add = [];
-    for (const r of j.orders) { const o = {}; FIELDS.forEach(k => o[k] = String(r[k] ?? '')); if (!o.name) continue; if (o.kind !== 'end') o.kind = 'assign'; const k = dupKey(o); if (!seen.has(k)) { seen.add(k); add.push(o); } }
+    for (const r of j.orders) { const o = {}; FIELDS.forEach(k => o[k] = String(r[k] ?? '')); if (!o.name) continue; if (o.kind !== 'end') o.kind = 'assign'; if (folderMode && r.dossier && r.dossier.name) o.dossier = { name: String(r.dossier.name) }; const k = dupKey(o); if (!seen.has(k)) { seen.add(k); add.push(o); } }
     await putOrders(add); await load(); toast(`تم استرجاع ${add.length} أمر`);
   } catch (err) { toast('تعذّر الاسترجاع: ' + err.message); }
 };
-$('#mClr').onclick = async () => { $('details.menu').open = false; if (orders.length && confirm(`حذف كل الأوامر (${orders.length})؟ لا يمكن التراجع. (ملفات الاضبارات لا تُحذف)`)) { await clearOrders(); await load(); toast('تم الحذف'); } };
+$('#mClr').onclick = async () => { closeSet(); if (orders.length && confirm(`حذف كل الأوامر (${orders.length})؟ لا يمكن التراجع. (ملفات الاضبارات لا تُحذف)`)) { await clearOrders(); await load(); toast('تم الحذف'); } };
 
 /* ---------- مجلد الاضبارات ---------- */
 const FEXT = /\.(pdf|jpe?g|png|webp|gif|bmp)$/i;
@@ -515,7 +562,7 @@ function filesDialog() {
   $('#bRescan').hidden = !folderMode || needPerm; $('#bUnlink').hidden = !folderMode;
   $('#bPickDir').hidden = FS || folderMode; $('#bPickFiles').hidden = folderMode && needPerm; $('#bPickFiles').textContent = folderMode ? 'نسخ ملفات إلى المجلد' : 'اختيار ملفات';
   $('#bDelFiles').hidden = folderMode;
-  const miss = [...new Set(orders.filter(o => o.fileNo && !hasFile(o)).map(o => o.fileNo))];
+  const miss = orders.filter(o => !hasFile(o)).map(o => o.name + (o.fileNo ? ` (${o.fileNo})` : ''));
   $('#missing').innerHTML = miss.length ? miss.slice(0, 300).map(n => `<span>${esc(n)}</span>`).join('') : '<span class="note">لا يوجد</span>';
   $('#dFiles').showModal();
 }
@@ -549,10 +596,10 @@ $('#bDelFiles').onclick = async () => { if (filesIdx.size && confirm('حذف ك�
 
 /* ---------- عارض الاضبارة ---------- */
 let vToken = 0, vUrl = null, vPdf = null, vZoom = 1, vBlob = null;
-async function openDossier(no) {
-  const list = filesIdx.get(fileKey(no));
-  if (!list) { toast(`ما لقيت ملف للاضبارة ${no} — اختر مجلد الاضبارات`); return filesDialog(); }
-  $('#vTitle').textContent = `اضبارة ${no}`;
+async function openDossier(o) {
+  const list = dossierList(o);
+  if (!list.length) return toast(`ما كو ملف لاضبارة «${o.name}» — اضغط «اختيار ملف»`);
+  $('#vTitle').textContent = `اضبارة ${o.fileNo || o.name}`;
   const tabs = $('#vTabs'); tabs.hidden = list.length < 2;
   tabs.innerHTML = list.map((f, i) => `<button class="btn sm" data-i="${i}">${esc(f.name)}</button>`).join('');
   tabs.onclick = e => { const b = e.target.closest('[data-i]'); if (b) showFile(list[+b.dataset.i]); };
@@ -570,8 +617,8 @@ async function showFile(meta) {
     } catch (err) { box.innerHTML = `<p style="padding:20px">تعذّر عرض الملف داخل التطبيق. استخدم زر «تنزيل».</p>`; }
   } else { box.innerHTML = `<img alt="${esc(meta.name)}" src="${vUrl}">`; }
 }
-async function renderPdf(my) {
-  const box = $('#vbody'); box.textContent = ''; const w = Math.max(280, box.clientWidth - 16) * vZoom, dpr = Math.min(devicePixelRatio || 1, 2);
+async function renderPdf(my, fw, fd) {
+  const box = $('#vbody'); box.textContent = ''; const w = fw || Math.max(280, box.clientWidth - 16) * vZoom, dpr = fd || Math.min(devicePixelRatio || 1, 2);
   for (let i = 1; i <= vPdf.numPages; i++) {
     const p = await vPdf.getPage(i); if (my !== vToken) return;
     const base = p.getViewport({ scale: 1 }), vp = p.getViewport({ scale: (w / base.width) * dpr });
@@ -580,6 +627,7 @@ async function renderPdf(my) {
   }
 }
 const zoom = d => { vZoom = Math.min(4, Math.max(.5, vZoom + d)); if (vPdf) renderPdf(++vToken); else { const i = $('#vbody img'); if (i) { i.style.maxWidth = 'none'; i.style.width = (vZoom * 100) + '%'; } } };
+$('#vPrint').onclick = async () => { if (vPdf) { await renderPdf(++vToken, 1600, 1); window.print(); renderPdf(++vToken); } else window.print(); };
 $('#zIn').onclick = () => zoom(.25); $('#zOut').onclick = () => zoom(-.25);
 $('#dView').addEventListener('close', () => { vToken++; vPdf = null; $('#vbody').textContent = ''; if (vUrl) { URL.revokeObjectURL(vUrl); vUrl = null; } });
 

@@ -48,7 +48,7 @@ async function dbDel(st, id) { const t = db.transaction(st, 'readwrite'); t.obje
 async function dbClear(st) { const t = db.transaction(st, 'readwrite'); t.objectStore(st).clear(); await done(t); }
 
 /* ---------- الحالة ---------- */
-let orders = [], filesIdx = new Map(), shown = PAGE;
+let orders = [], filesIdx = new Map(), allFiles = new Map(), shown = PAGE;
 const DATA = 'الأوامر.json', FS = 'showDirectoryPicker' in window;
 let dir = null, folderMode = false, needPerm = false, scanned = false, nextId = 1;
 const addIdx = (num, m) => { if (!filesIdx.has(num)) filesIdx.set(num, []); filesIdx.get(num).push(m); };
@@ -63,19 +63,19 @@ async function writeData() {
 async function scan(d, depth = 0) {
   for await (const [n, h] of d.entries()) {
     if (h.kind === 'directory') { if (depth < 2) await scan(h, depth + 1); }
-    else if (FEXT.test(n)) { const num = fileKey(n.replace(/\.[^.]+$/, '')); if (/^\d+$/.test(num)) addIdx(num, { name: n, handle: h }); }
+    else if (FEXT.test(n)) { const m = { name: n, handle: h }; allFiles.set(n, m); const num = fileKey(n.replace(/\.[^.]+$/, '')); if (/^\d+$/.test(num)) addIdx(num, m); }
   }
 }
 async function load(rescan = false) {
   if (folderMode) {
-    orders = []; if (needPerm) filesIdx = new Map();
+    orders = []; if (needPerm) { filesIdx = new Map(); allFiles = new Map(); }
     else {
       await readData();
-      if (rescan || !scanned) { filesIdx = new Map(); await scan(dir); scanned = true; }
+      if (rescan || !scanned) { filesIdx = new Map(); allFiles = new Map(); await scan(dir); scanned = true; }
     }
   } else {
-    orders = await dbAll('orders'); filesIdx = new Map();
-    for (const f of await dbAll('files')) addIdx(f.num, { id: f.id, name: f.name });
+    orders = await dbAll('orders'); filesIdx = new Map(); allFiles = new Map();
+    for (const f of await dbAll('files')) { const m = { id: f.id, name: f.name }; allFiles.set(f.id, m); if (f.num) addIdx(f.num, m); }
   }
   render(); banner();
 }
@@ -114,7 +114,15 @@ async function unlinkFolder() {
   const t = db.transaction('meta', 'readwrite'); t.objectStore('meta').delete('dir'); await done(t);
   dir = null; folderMode = false; needPerm = false; scanned = false; await load(); filesDialog();
 }
-const hasFile = o => !!o.fileNo && filesIdx.has(fileKey(o.fileNo));
+function dossierList(o) {
+  const d = o.dossier, m = d && (folderMode ? allFiles.get(d.name) : allFiles.get(d.id));
+  if (m) return [m];
+  return (o.fileNo && filesIdx.get(fileKey(o.fileNo))) || [];
+}
+const hasFile = o => dossierList(o).length > 0;
+const dossCell = o => hasFile(o)
+  ? `<div class="dcell"><button class="doss has" data-open title="فتح الاضبارة">${esc(o.fileNo || 'فتح')}</button><button class="ic" data-pick title="تغيير ملف الاضبارة" aria-label="تغيير ملف الاضبارة">✎</button></div>`
+  : `<div class="dcell">${o.fileNo ? `<button class="doss no" data-open title="لا يوجد ملف">${esc(o.fileNo)}</button>` : ''}<button class="btn sm" data-pick>اختيار ملف</button></div>`;
 
 /* ---------- العرض ---------- */
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 3500); }
@@ -131,7 +139,7 @@ function render() {
     <td class="v${o.bookDate ? '' : ' e'}" data-l="تاريخ الكتاب">${esc(fmtDate(o.bookDate))}</td>
     <td class="v${o.bookNo ? '' : ' e'}" data-l="رقم الكتاب">${esc(o.bookNo)}</td>
     <td class="v${o.bookType ? '' : ' e'}" data-l="نوع الكتاب">${esc(o.bookType)}</td>
-    <td class="v${o.fileNo ? '' : ' e'}" data-l="الاضبارة">${o.fileNo ? `<button class="doss ${hasFile(o) ? 'has' : 'no'}" data-doss="${esc(o.fileNo)}" title="${hasFile(o) ? 'فتح الاضبارة' : 'لا يوجد ملف لهذه الاضبارة'}">${esc(o.fileNo)}</button>` : ''}</td>
+    <td class="v" data-l="الاضبارة">${dossCell(o)}</td>
     <td class="v${o.notes ? '' : ' e'}" data-l="الملاحظات">${esc(o.notes)}</td>
     <td data-l=""><div class="acts"><button class="btn sm" data-edit>تعديل</button><button class="btn sm bad" data-del>حذف</button></div></td></tr>`).join('');
   const n = orders.length, ne = orders.filter(o => o.kind === 'end').length;
@@ -145,24 +153,51 @@ function render() {
 $('#q').oninput = $('#fk').onchange = () => { shown = PAGE; render(); };
 $('#bMore').onclick = () => { shown += PAGE; render(); };
 document.addEventListener('click', e => { if (e.target.closest('[data-close]')) e.target.closest('dialog').close(); });
-document.addEventListener('click', e => { const m = $('details.menu'); if (m.open && !m.contains(e.target)) m.open = false; });
+const closeSet = () => $('#dSet').close();
+$('#bSet').onclick = () => $('#dSet').showModal();
+$('#mFolder').onclick = () => { closeSet(); filesDialog(); };
 
 /* ---------- إضافة / تعديل ---------- */
-let editing = null;
+let editing = null, formPin = null;
+const showPin = () => { $('#fDoss').textContent = formPin ? formPin.name : (editing && hasFile(editing) ? 'حسب رقم الاضبارة' : 'لم يُختَر'); $('#fUnpin').hidden = !formPin; };
+function pickFor(cb) {
+  const i = $('#inOne');
+  i.onchange = async () => { const f = i.files[0]; i.value = ''; if (f) { try { await cb(f); } catch (e) { toast('تعذّر: ' + e.message); } } };
+  i.click();
+}
+async function storeFile(f) {
+  if (!FEXT.test(f.name)) throw new Error('الملف لازم يكون PDF أو صورة');
+  if (folderMode) {
+    let name = f.name;
+    for (let n = 2; ; n++) {
+      let ex = null; try { ex = await (await dir.getFileHandle(name)).getFile(); } catch (e) { if (e.name !== 'NotFoundError') throw e; }
+      if (!ex) break; if (ex.size === f.size) { allFiles.set(name, { name, handle: await dir.getFileHandle(name) }); return { name }; }
+      name = f.name.replace(/(\.[^.]+)$/, ` (${n})$1`);
+    }
+    const h = await dir.getFileHandle(name, { create: true }), w = await h.createWritable(); await w.write(f); await w.close();
+    allFiles.set(name, { name, handle: h }); return { name };
+  }
+  const old = (await dbAll('files')).find(x => x.name === f.name && x.blob.size === f.size);
+  if (old) return { id: old.id, name: old.name };
+  const [id] = await dbPutMany('files', [{ num: '', name: f.name, type: f.type, blob: f }]); return { id, name: f.name };
+}
 function openForm(o) {
   editing = o || null; const f = $('#fForm');
-  $('#fTitle').textContent = o ? 'تعديل أمر' : 'إضافة أمر';
+  $('#fTitle').textContent = o ? 'تعديل' : 'إضافة'; formPin = o && o.dossier || null; showPin();
   f.reset();
   for (const k of FIELDS) { if (k === 'kind') f.kind.value = o ? o.kind : 'assign'; else f[k].value = o ? (o[k] || '') : ''; }
   $('#dForm').showModal();
 }
 $('#bAdd').onclick = () => openForm();
+$('#fPick').onclick = () => pickFor(async f => { formPin = await storeFile(f); showPin(); toast('تم اختيار الملف — اضغط حفظ'); });
+$('#fUnpin').onclick = () => { formPin = null; showPin(); };
 $('#fForm').onsubmit = async e => {
   e.preventDefault(); const f = e.target;
   const o = editing ? { ...editing } : {};
   for (const k of FIELDS) o[k] = (k === 'kind' ? f.kind.value : f[k].value).trim();
   if (!o.name) return toast('اكتب اسم المكلف');
   o.fileNo = latin(o.fileNo);
+  if (formPin) o.dossier = formPin; else delete o.dossier;
   await putOrders([o]); $('#dForm').close(); await load(); toast('تم الحفظ');
 };
 $('#rows').onclick = async e => {
@@ -170,7 +205,8 @@ $('#rows').onclick = async e => {
   const o = orders.find(x => x.id === +tr.dataset.id);
   if (e.target.closest('[data-edit]')) openForm(o);
   else if (e.target.closest('[data-del]')) { if (confirm(`حذف أمر «${o.name}»؟`)) { await delOrder(o.id); await load(); toast('تم الحذف'); } }
-  else if (e.target.closest('[data-doss]')) openDossier(o.fileNo);
+  else if (e.target.closest('[data-pick]')) pickFor(async f => { const ref = await storeFile(f); await putOrders([{ ...o, dossier: ref }]); await load(); toast(`تم تثبيت الاضبارة لـ «${o.name}»`); });
+  else if (e.target.closest('[data-open]')) openDossier(o);
 };
 
 /* ---------- استيراد Excel ---------- */
@@ -248,20 +284,20 @@ function xlsxOut(rows, name) {
   const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] }; XLSX.utils.book_append_sheet(wb, ws, 'الأوامر');
   save(new Blob([XLSX.write(wb, { type: 'array', bookType: 'xlsx' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), name);
 }
-$('#mExp').onclick = () => { $('details.menu').open = false; xlsxOut(filtered().map(o => [o.name, o.kind === 'end' ? 'نعم' : '', o.position, o.command, o.brigade, o.battalion, fmtDate(o.bookDate), o.bookNo, o.bookType, o.fileNo, o.notes]), `الأوامر-${stamp()}.xlsx`); };
-$('#mTpl').onclick = () => { $('details.menu').open = false; xlsxOut([['مثال: أحمد علي', '', 'آمر', 'قيادة العمليات', 'اللواء 1', 'الفوج 2', '05/03/2025', '123', 'أمر إداري', '1', '']], 'نموذج-الأوامر.xlsx'); };
-$('#mBak').onclick = () => { $('details.menu').open = false; save(new Blob([JSON.stringify({ v: 1, orders: orders.map(({ id, ...r }) => r) })], { type: 'application/json' }), `نسخة-الأوامر-${stamp()}.json`); };
-$('#mRes').onclick = () => { $('details.menu').open = false; $('#inJson').click(); };
+$('#mExp').onclick = () => { closeSet(); xlsxOut(filtered().map(o => [o.name, o.kind === 'end' ? 'نعم' : '', o.position, o.command, o.brigade, o.battalion, fmtDate(o.bookDate), o.bookNo, o.bookType, o.fileNo, o.notes]), `الأوامر-${stamp()}.xlsx`); };
+$('#mTpl').onclick = () => { closeSet(); xlsxOut([['مثال: أحمد علي', '', 'آمر', 'قيادة العمليات', 'اللواء 1', 'الفوج 2', '05/03/2025', '123', 'أمر إداري', '1', '']], 'نموذج-الأوامر.xlsx'); };
+$('#mBak').onclick = () => { closeSet(); save(new Blob([JSON.stringify({ v: 1, orders: orders.map(({ id, ...r }) => r) })], { type: 'application/json' }), `نسخة-الأوامر-${stamp()}.json`); };
+$('#mRes').onclick = () => { closeSet(); $('#inJson').click(); };
 $('#inJson').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try {
     const j = JSON.parse(await f.text()); if (!Array.isArray(j.orders)) throw new Error('ملف غير صالح');
     const seen = new Set(orders.map(dupKey)), add = [];
-    for (const r of j.orders) { const o = {}; FIELDS.forEach(k => o[k] = String(r[k] ?? '')); if (!o.name) continue; if (o.kind !== 'end') o.kind = 'assign'; const k = dupKey(o); if (!seen.has(k)) { seen.add(k); add.push(o); } }
+    for (const r of j.orders) { const o = {}; FIELDS.forEach(k => o[k] = String(r[k] ?? '')); if (!o.name) continue; if (o.kind !== 'end') o.kind = 'assign'; if (folderMode && r.dossier && r.dossier.name) o.dossier = { name: String(r.dossier.name) }; const k = dupKey(o); if (!seen.has(k)) { seen.add(k); add.push(o); } }
     await putOrders(add); await load(); toast(`تم استرجاع ${add.length} أمر`);
   } catch (err) { toast('تعذّر الاسترجاع: ' + err.message); }
 };
-$('#mClr').onclick = async () => { $('details.menu').open = false; if (orders.length && confirm(`حذف كل الأوامر (${orders.length})؟ لا يمكن التراجع. (ملفات الاضبارات لا تُحذف)`)) { await clearOrders(); await load(); toast('تم الحذف'); } };
+$('#mClr').onclick = async () => { closeSet(); if (orders.length && confirm(`حذف كل الأوامر (${orders.length})؟ لا يمكن التراجع. (ملفات الاضبارات لا تُحذف)`)) { await clearOrders(); await load(); toast('تم الحذف'); } };
 
 /* ---------- مجلد الاضبارات ---------- */
 const FEXT = /\.(pdf|jpe?g|png|webp|gif|bmp)$/i;
@@ -273,7 +309,7 @@ function filesDialog() {
   $('#bRescan').hidden = !folderMode || needPerm; $('#bUnlink').hidden = !folderMode;
   $('#bPickDir').hidden = FS || folderMode; $('#bPickFiles').hidden = folderMode && needPerm; $('#bPickFiles').textContent = folderMode ? 'نسخ ملفات إلى المجلد' : 'اختيار ملفات';
   $('#bDelFiles').hidden = folderMode;
-  const miss = [...new Set(orders.filter(o => o.fileNo && !hasFile(o)).map(o => o.fileNo))];
+  const miss = orders.filter(o => !hasFile(o)).map(o => o.name + (o.fileNo ? ` (${o.fileNo})` : ''));
   $('#missing').innerHTML = miss.length ? miss.slice(0, 300).map(n => `<span>${esc(n)}</span>`).join('') : '<span class="note">لا يوجد</span>';
   $('#dFiles').showModal();
 }
@@ -307,10 +343,10 @@ $('#bDelFiles').onclick = async () => { if (filesIdx.size && confirm('حذف ك�
 
 /* ---------- عارض الاضبارة ---------- */
 let vToken = 0, vUrl = null, vPdf = null, vZoom = 1, vBlob = null;
-async function openDossier(no) {
-  const list = filesIdx.get(fileKey(no));
-  if (!list) { toast(`ما لقيت ملف للاضبارة ${no} — اختر مجلد الاضبارات`); return filesDialog(); }
-  $('#vTitle').textContent = `اضبارة ${no}`;
+async function openDossier(o) {
+  const list = dossierList(o);
+  if (!list.length) return toast(`ما كو ملف لاضبارة «${o.name}» — اضغط «اختيار ملف»`);
+  $('#vTitle').textContent = `اضبارة ${o.fileNo || o.name}`;
   const tabs = $('#vTabs'); tabs.hidden = list.length < 2;
   tabs.innerHTML = list.map((f, i) => `<button class="btn sm" data-i="${i}">${esc(f.name)}</button>`).join('');
   tabs.onclick = e => { const b = e.target.closest('[data-i]'); if (b) showFile(list[+b.dataset.i]); };
@@ -328,8 +364,8 @@ async function showFile(meta) {
     } catch (err) { box.innerHTML = `<p style="padding:20px">تعذّر عرض الملف داخل التطبيق. استخدم زر «تنزيل».</p>`; }
   } else { box.innerHTML = `<img alt="${esc(meta.name)}" src="${vUrl}">`; }
 }
-async function renderPdf(my) {
-  const box = $('#vbody'); box.textContent = ''; const w = Math.max(280, box.clientWidth - 16) * vZoom, dpr = Math.min(devicePixelRatio || 1, 2);
+async function renderPdf(my, fw, fd) {
+  const box = $('#vbody'); box.textContent = ''; const w = fw || Math.max(280, box.clientWidth - 16) * vZoom, dpr = fd || Math.min(devicePixelRatio || 1, 2);
   for (let i = 1; i <= vPdf.numPages; i++) {
     const p = await vPdf.getPage(i); if (my !== vToken) return;
     const base = p.getViewport({ scale: 1 }), vp = p.getViewport({ scale: (w / base.width) * dpr });
@@ -338,6 +374,7 @@ async function renderPdf(my) {
   }
 }
 const zoom = d => { vZoom = Math.min(4, Math.max(.5, vZoom + d)); if (vPdf) renderPdf(++vToken); else { const i = $('#vbody img'); if (i) { i.style.maxWidth = 'none'; i.style.width = (vZoom * 100) + '%'; } } };
+$('#vPrint').onclick = async () => { if (vPdf) { await renderPdf(++vToken, 1600, 1); window.print(); renderPdf(++vToken); } else window.print(); };
 $('#zIn').onclick = () => zoom(.25); $('#zOut').onclick = () => zoom(-.25);
 $('#dView').addEventListener('close', () => { vToken++; vPdf = null; $('#vbody').textContent = ''; if (vUrl) { URL.revokeObjectURL(vUrl); vUrl = null; } });
 
