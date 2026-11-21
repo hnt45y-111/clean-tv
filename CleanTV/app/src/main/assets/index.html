@@ -1232,6 +1232,14 @@
   #liveTicker { background: #0B0B0B; border-top: 1px solid #222; height: 64px; }
   #liveTicker .lt-badge { background: var(--rz); border-radius: 0 32px 32px 0; font-family: var(--font); font-weight: 800; }
   #liveTicker .lt-lg { color: var(--rz-t2); }
+
+  /* light mode (weak TVs): same layout and colours, but no blur, no long animations, flat panels */
+  body.lite *, body.lite *::before, body.lite *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; filter: none !important;
+    animation-duration: .001s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; transition-delay: 0s !important; }
+  body.lite #timeTint, body.lite #rainFx, body.lite #cinemaFx, body.lite .hero::before { display: none !important; }
+  body.lite #topbar .glass, body.lite .glass { background: rgba(58,60,64,.92); box-shadow: none; }
+  body.lite #topbar .glass.focus, body.lite .glass.focus { background: #EFE7D4; box-shadow: 0 0 0 5px #15181B, 0 0 0 10px #D9822B; }
+  body.lite * { text-shadow: none !important; }
 </style>
 <style id="userCss"></style>
 </head>

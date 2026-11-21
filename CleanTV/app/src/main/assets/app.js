@@ -183,8 +183,13 @@
   ];
   function parseRgba(s) { var m = s.match(/[\d.]+/g); return [+m[0], +m[1], +m[2], +m[3]]; }
   function lerpRgba(a, b, t) { var pa = parseRgba(a), pb = parseRgba(b), o = []; for (var i = 0; i < 4; i++) o.push(pa[i] + (pb[i] - pa[i]) * t); return 'rgba(' + Math.round(o[0]) + ',' + Math.round(o[1]) + ',' + Math.round(o[2]) + ',' + o[3].toFixed(2) + ')'; }
+  /* light mode: same classic look, minus glass blur, long animations, the live tint and rain. 'auto' turns on for TVs with about 1 GB of memory */
+  function liteOn() {
+    var m = settings.lite || 'auto'; if (m === 'on') return true; if (m === 'off') return false;
+    try { var r = HAS_ANDROID && A.totalRamMb ? A.totalRamMb() : 0; return r > 0 && r <= 1536; } catch (e) { return false; }
+  }
   function applyTimeTint() {
-    var el = $('timeTint'); if (!el || settings.liveTint === false) { if (el) el.style.background = ''; return; }
+    var el = $('timeTint'); if (!el || settings.liveTint === false || liteOn()) { if (el) el.style.background = ''; return; }
     var h = nowHoursBaghdad(), i = 0;
     while (i < TINT_ANCHORS.length - 1 && TINT_ANCHORS[i + 1][0] <= h) i++;
     var a = TINT_ANCHORS[i], b = TINT_ANCHORS[Math.min(i + 1, TINT_ANCHORS.length - 1)], span = b[0] - a[0], t = span > 0 ? (h - a[0]) / span : 0;
@@ -1457,6 +1462,7 @@
   function darken(c, f) { return 'rgb(' + Math.round(c[0] * f) + ',' + Math.round(c[1] * f) + ',' + Math.round(c[2] * f) + ')'; }
   var lastTeamKey = null;
   function applySkin() {
+    document.body.classList.toggle('lite', liteOn());
     var b = document.body, sk = settings.skin || 'classic', st = b.style;
     if (!/^(classic|ribbon|shelf|club|tizen|oneui|webos|vidaa|googletv|androidtv|firetv|roku|patchwall|cyt)$/.test(sk)) sk = 'classic';   /* a design that names a look this version no longer has opens as the classic one */
     if (sk === 'classic') b.removeAttribute('data-skin'); else b.setAttribute('data-skin', sk);
@@ -1824,6 +1830,7 @@
         { label: 'شكل أيقونات الأعلى', value: (TOP_SHAPES.filter(function (x) { return x[0] === (settings.topShape || 'circle'); })[0] || TOP_SHAPES[0])[1], act: function (k) { settings.topShape = cycle(TOP_SHAPES.map(function (x) { return x[0]; }), settings.topShape || 'circle', k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'المسافة بين أيقونات الأعلى', value: nf.format(settings.topGap || 30), act: function (k) { settings.topGap = cycle([10, 20, 30, 40, 54, 70], settings.topGap || 30, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'مكان زر المداخل', value: { center: 'وسط الشريط', right: 'فوق يمين لحاله', left: 'فوق يسار لحاله', list: 'ضمن الأيقونات' }[settings.inputsPos || 'center'], act: function (k) { settings.inputsPos = cycle(['center', 'right', 'left', 'list'], settings.inputsPos || 'center', k === 'ArrowRight' ? -1 : 1); if (settings.topTools) settings.topTools = settings.topTools.filter(function (x) { return x !== 'tvinput'; }); saveSettings(); } },
+        { label: 'الوضع الخفيف (للشاشات الضعيفة)', value: { auto: 'تلقائي حسب الرام', on: 'شغّال', off: 'متوقف' }[settings.lite || 'auto'], act: function (k) { settings.lite = cycle(['auto', 'on', 'off'], settings.lite || 'auto', k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'شريط النتائج المباشرة', value: settings.ticker === false ? 'متوقف' : 'شغّال', act: function () { settings.ticker = settings.ticker === false; saveSettings(); refreshLive(); } },
         { label: 'شريط النتائج فوق التطبيقات (يوتيوب وغيره)', value: settings.tickerApps === true ? 'شغّال' : 'متوقف', act: function () {
           if (settings.tickerApps !== true && HAS_ANDROID && A.hasOverlay && !A.hasOverlay()) { toast('لازم تسمح للواجهة بالعرض فوق التطبيقات، وارجع شغّل الخيار', 5000); if (A.openOverlaySettings) A.openOverlaySettings(); return; }
@@ -2495,6 +2502,7 @@
   }
   window.__greetKey = function () { closeGreet(true); return true; };
   function showGreet() {
+    if (liteOn()) return;
     var m = $('greetModal'); if (!m) return;
     var w = greetWords(), g = String(w[0]).replace(/،$/, ''), nm = w[1] || '';
     /* Arabic stays joined: each line is revealed whole (a wipe from the right), never cut into letters */

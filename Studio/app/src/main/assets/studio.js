@@ -396,6 +396,8 @@ function designPanel() {
         <div class="lb" style="margin:12px 0 6px"><span class="sub">ترتيب الأيقونات (من اليمين)</span></div>
         <div id="ttOrder">${topTools().map((id, i, a) => `<div class="item" style="padding:6px 0;min-height:0"><div class="t"><b>${i + 1} · ${esc(TT_LABEL[id] || id)}</b></div>
           <button class="chip" data-tmove="${id}:-1" ${i ? '' : 'disabled'}>▲</button><button class="chip" data-tmove="${id}:1" ${i < a.length - 1 ? '' : 'disabled'}>▼</button></div>`).join('')}</div></div>
+      <div class="panel"><h2>الوضع الخفيف</h2><p class="sub" style="margin-top:-4px">للشاشات الضعيفة (رام 1 جيجا): نفس الواجهة والألوان، بس بدون زجاج وتمويه وحركات طويلة حتى تصير أسرع. تلقائي يشغّله للشاشات الضعيفة لحاله.</p>
+        ${chips([['تلقائي حسب الرام', 'auto'], ['شغّال', 'on'], ['متوقف', 'off']], S.lite || 'auto', 'lite')}</div>
       <div class="panel"><h2>شكل أيقونات الأعلى</h2><p class="sub" style="margin-top:-4px">الشكل والمسافة بين الأيقونات. التلفزيون يتغيّر مباشرة.</p>
         ${chips([['دائري زجاجي', 'circle'], ['مربع مدوّر', 'round'], ['مربع حاد', 'square'], ['حبّة بنص', 'pill']], S.topShape || 'circle', 'tshape')}
         <div class="lb" style="margin:12px 0 6px"><span class="sub">المسافة بين الأيقونات</span></div>
@@ -493,6 +495,7 @@ function panelClick(e) {
   else if (ds.tvctl) S.tvCtl = ds.tvctl;
   else if (ds.inbtn) S.inputsBtn = ds.inbtn;
   else if (ds.tshape) S.topShape = ds.tshape;
+  else if (ds.lite) S.lite = ds.lite;
   else if (ds.tgap) S.topGap = +ds.tgap;
   else if (ds.inpos) {
     S.inputsPos = ds.inpos;

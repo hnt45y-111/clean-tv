@@ -914,6 +914,15 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public boolean isTv() { return TvControls.isTv(MainActivity.this); }
+        /** total memory in MB — the launcher switches to its light look on small TVs */
+        @JavascriptInterface
+        public int totalRamMb() {
+            try {
+                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                android.app.ActivityManager.MemoryInfo m = new android.app.ActivityManager.MemoryInfo(); am.getMemoryInfo(m);
+                return (int) (m.totalMem / 1048576L);
+            } catch (Throwable t) { return 0; }
+        }
 
         @JavascriptInterface
         public String tvInputs() { return TvControls.list(MainActivity.this); }
