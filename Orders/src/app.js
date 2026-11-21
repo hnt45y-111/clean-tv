@@ -30,10 +30,13 @@ const rq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r
 const done = t => new Promise((res, rej) => { t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error); });
 function openDB() {
   return new Promise((res, rej) => {
-    const r = indexedDB.open('orders-db', 1);
-    r.onupgradeneeded = () => {
-      r.result.createObjectStore('orders', { keyPath: 'id', autoIncrement: true });
-      r.result.createObjectStore('files', { keyPath: 'id', autoIncrement: true }).createIndex('num', 'num');
+    const r = indexedDB.open('orders-db', 2);
+    r.onupgradeneeded = e => {
+      if (e.oldVersion < 1) {
+        r.result.createObjectStore('orders', { keyPath: 'id', autoIncrement: true });
+        r.result.createObjectStore('files', { keyPath: 'id', autoIncrement: true }).createIndex('num', 'num');
+      }
+      if (e.oldVersion < 2) r.result.createObjectStore('meta', { keyPath: 'key' });
     };
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   });
@@ -46,11 +49,70 @@ async function dbClear(st) { const t = db.transaction(st, 'readwrite'); t.object
 
 /* ---------- الحالة ---------- */
 let orders = [], filesIdx = new Map(), shown = PAGE;
-async function load() {
-  orders = await dbAll('orders');
-  filesIdx = new Map();
-  for (const f of await dbAll('files')) { if (!filesIdx.has(f.num)) filesIdx.set(f.num, []); filesIdx.get(f.num).push({ id: f.id, name: f.name }); }
-  render();
+const DATA = 'الأوامر.json', FS = 'showDirectoryPicker' in window;
+let dir = null, folderMode = false, needPerm = false, scanned = false, nextId = 1;
+const addIdx = (num, m) => { if (!filesIdx.has(num)) filesIdx.set(num, []); filesIdx.get(num).push(m); };
+async function readData() {
+  try { const j = JSON.parse(await (await (await dir.getFileHandle(DATA)).getFile()).text()); orders = j.orders || []; nextId = Math.max(j.nextId || 1, ...orders.map(o => o.id + 1), 1); }
+  catch (e) { if (e.name !== 'NotFoundError') throw e; orders = []; nextId = 1; }
+}
+async function writeData() {
+  const w = await (await dir.getFileHandle(DATA, { create: true })).createWritable();
+  await w.write(JSON.stringify({ v: 1, nextId, orders })); await w.close();
+}
+async function scan(d, depth = 0) {
+  for await (const [n, h] of d.entries()) {
+    if (h.kind === 'directory') { if (depth < 2) await scan(h, depth + 1); }
+    else if (FEXT.test(n)) { const num = fileKey(n.replace(/\.[^.]+$/, '')); if (/^\d+$/.test(num)) addIdx(num, { name: n, handle: h }); }
+  }
+}
+async function load(rescan = false) {
+  if (folderMode) {
+    orders = []; if (needPerm) filesIdx = new Map();
+    else {
+      await readData();
+      if (rescan || !scanned) { filesIdx = new Map(); await scan(dir); scanned = true; }
+    }
+  } else {
+    orders = await dbAll('orders'); filesIdx = new Map();
+    for (const f of await dbAll('files')) addIdx(f.num, { id: f.id, name: f.name });
+  }
+  render(); banner();
+}
+async function putOrders(arr) {
+  if (!folderMode) return dbPutMany('orders', arr);
+  for (const o of arr) { if (o.id == null) o.id = nextId++; const i = orders.findIndex(x => x.id === o.id); if (i < 0) orders.push(o); else orders[i] = o; }
+  await writeData();
+}
+async function delOrder(id) { if (!folderMode) return dbDel('orders', id); orders = orders.filter(o => o.id !== id); await writeData(); }
+async function clearOrders() { if (!folderMode) return dbClear('orders'); orders = []; await writeData(); }
+const permOK = async () => (await dir.queryPermission({ mode: 'readwrite' })) === 'granted' || (await dir.requestPermission({ mode: 'readwrite' })) === 'granted';
+function banner() {
+  const b = $('#banner'), t = $('#bText'), a = $('#bAct'), a2 = $('#bAct2'); a2.hidden = true; b.hidden = false; b.className = 'banner';
+  if (folderMode && needPerm) { b.classList.add('warn'); t.textContent = `⚠ المجلد «${dir.name}» يحتاج إذنك من جديد حتى تظهر بياناتك.`; a.textContent = 'إعادة ربط المجلد'; a.onclick = relink; }
+  else if (folderMode) { t.innerHTML = `📁 البيانات والاضبارات محفوظة في المجلد: <b>${esc(dir.name)}</b>`; a.textContent = 'تحديث الاضبارات'; a.onclick = async () => { await load(true); toast('تم تحديث الاضبارات'); }; }
+  else if (FS) { t.textContent = 'البيانات محفوظة على هذا الجهاز فقط. اربط مجلداً ليحفظ فيه الأوامر ويقرأ منه الاضبارات.'; a.textContent = '📁 ربط مجلد'; a.onclick = linkFolder; }
+  else { t.textContent = 'هذا المتصفح لا يدعم ربط المجلد (يدعمه Chrome/Edge على اللابتوب). البيانات محفوظة على هذا الجهاز.'; a.hidden = true; return; }
+  a.hidden = false;
+}
+async function relink() { try { if (await permOK()) { needPerm = false; await load(true); } } catch (e) { toast('تعذّر الإذن: ' + e.message); } }
+async function linkFolder() {
+  let h; try { h = await showDirectoryPicker({ mode: 'readwrite', id: 'orders' }); } catch (e) { return; }
+  const local = await dbAll('orders');
+  dir = h; folderMode = true; needPerm = false; scanned = false;
+  await dbPutMany('meta', [{ key: 'dir', handle: h }]);
+  await load(true);
+  if (local.length && confirm(`دمج ${local.length} أمر محفوظ على هذا الجهاز مع المجلد؟`)) {
+    const seen = new Set(orders.map(dupKey)); const add = [];
+    for (const { id, ...o } of local) { const k = dupKey(o); if (!seen.has(k)) { seen.add(k); add.push(o); } }
+    await putOrders(add); await load();
+  }
+  toast(`تم ربط المجلد «${h.name}»`);
+}
+async function unlinkFolder() {
+  if (!confirm('فك الربط؟ ملفات المجلد تبقى كما هي، والتطبيق يرجع لبيانات هذا الجهاز.')) return;
+  const t = db.transaction('meta', 'readwrite'); t.objectStore('meta').delete('dir'); await done(t);
+  dir = null; folderMode = false; needPerm = false; scanned = false; await load(); filesDialog();
 }
 const hasFile = o => !!o.fileNo && filesIdx.has(fileKey(o.fileNo));
 
@@ -101,13 +163,13 @@ $('#fForm').onsubmit = async e => {
   for (const k of FIELDS) o[k] = (k === 'kind' ? f.kind.value : f[k].value).trim();
   if (!o.name) return toast('اكتب اسم المكلف');
   o.fileNo = latin(o.fileNo);
-  await dbPutMany('orders', [o]); $('#dForm').close(); await load(); toast('تم الحفظ');
+  await putOrders([o]); $('#dForm').close(); await load(); toast('تم الحفظ');
 };
 $('#rows').onclick = async e => {
   const tr = e.target.closest('tr'); if (!tr) return;
   const o = orders.find(x => x.id === +tr.dataset.id);
   if (e.target.closest('[data-edit]')) openForm(o);
-  else if (e.target.closest('[data-del]')) { if (confirm(`حذف أمر «${o.name}»؟`)) { await dbDel('orders', o.id); await load(); toast('تم الحذف'); } }
+  else if (e.target.closest('[data-del]')) { if (confirm(`حذف أمر «${o.name}»؟`)) { await delOrder(o.id); await load(); toast('تم الحذف'); } }
   else if (e.target.closest('[data-doss]')) openDossier(o.fileNo);
 };
 
@@ -175,7 +237,7 @@ $('#inXlsx').onchange = async e => {
   } catch (err) { body.innerHTML = `<p class="err">تعذّر قراءة الملف: ${esc(err.message)}</p>`; }
   $('#dImp').showModal();
 };
-$('#impGo').onclick = async () => { const n = pending.length; await dbPutMany('orders', pending); pending = []; $('#dImp').close(); await load(); toast(`تم استيراد ${n} أمر`); };
+$('#impGo').onclick = async () => { const n = pending.length; await putOrders(pending); pending = []; $('#dImp').close(); await load(); toast(`تم استيراد ${n} أمر`); };
 
 /* ---------- تصدير / نسخ احتياطي ---------- */
 const stamp = () => new Date().toISOString().slice(0, 10);
@@ -196,25 +258,38 @@ $('#inJson').onchange = async e => {
     const j = JSON.parse(await f.text()); if (!Array.isArray(j.orders)) throw new Error('ملف غير صالح');
     const seen = new Set(orders.map(dupKey)), add = [];
     for (const r of j.orders) { const o = {}; FIELDS.forEach(k => o[k] = String(r[k] ?? '')); if (!o.name) continue; if (o.kind !== 'end') o.kind = 'assign'; const k = dupKey(o); if (!seen.has(k)) { seen.add(k); add.push(o); } }
-    await dbPutMany('orders', add); await load(); toast(`تم استرجاع ${add.length} أمر`);
+    await putOrders(add); await load(); toast(`تم استرجاع ${add.length} أمر`);
   } catch (err) { toast('تعذّر الاسترجاع: ' + err.message); }
 };
-$('#mClr').onclick = async () => { $('details.menu').open = false; if (orders.length && confirm(`حذف كل الأوامر (${orders.length})؟ لا يمكن التراجع. (ملفات الاضبارات لا تُحذف)`)) { await dbClear('orders'); await load(); toast('تم الحذف'); } };
+$('#mClr').onclick = async () => { $('details.menu').open = false; if (orders.length && confirm(`حذف كل الأوامر (${orders.length})؟ لا يمكن التراجع. (ملفات الاضبارات لا تُحذف)`)) { await clearOrders(); await load(); toast('تم الحذف'); } };
 
 /* ---------- مجلد الاضبارات ---------- */
 const FEXT = /\.(pdf|jpe?g|png|webp|gif|bmp)$/i;
 function filesDialog() {
   const total = [...filesIdx.values()].reduce((a, v) => a + v.length, 0);
-  $('#fInfo').innerHTML = total ? `الملفات المحفوظة: <b>${total}</b> (اضبارات: ${filesIdx.size})` : 'ما كو ملفات محفوظة بعد.';
+  const inf = total ? `ملفات الاضبارات: <b>${total}</b> (اضبارات: ${filesIdx.size})` : 'ما كو ملفات اضبارات بعد.';
+  $('#fInfo').innerHTML = folderMode ? `المجلد المربوط: <b>${esc(dir.name)}</b><br>الأوامر محفوظة فيه بملف <b>${DATA}</b> (لا تحذفه)، وضع ملفات الاضبارات داخل المجلد نفسه باسم الرقم ثم اضغط «تحديث».<br>${inf}` : inf;
+  $('#bLink').hidden = !FS; $('#bLink').textContent = folderMode ? 'تغيير المجلد' : '📁 ربط مجلد';
+  $('#bRescan').hidden = !folderMode || needPerm; $('#bUnlink').hidden = !folderMode;
+  $('#bPickDir').hidden = FS || folderMode; $('#bPickFiles').hidden = folderMode && needPerm; $('#bPickFiles').textContent = folderMode ? 'نسخ ملفات إلى المجلد' : 'اختيار ملفات';
+  $('#bDelFiles').hidden = folderMode;
   const miss = [...new Set(orders.filter(o => o.fileNo && !hasFile(o)).map(o => o.fileNo))];
   $('#missing').innerHTML = miss.length ? miss.slice(0, 300).map(n => `<span>${esc(n)}</span>`).join('') : '<span class="note">لا يوجد</span>';
   $('#dFiles').showModal();
 }
 $('#bFiles').onclick = filesDialog;
 $('#bPickDir').onclick = () => $('#inDir').click();
+$('#bLink').onclick = async () => { await linkFolder(); filesDialog(); };
+$('#bRescan').onclick = async () => { await load(true); filesDialog(); toast('تم التحديث'); };
+$('#bUnlink').onclick = unlinkFolder;
 $('#bPickFiles').onclick = () => $('#inFiles').click();
 async function addFiles(list) {
   const arr = [...list].filter(f => FEXT.test(f.name)); if (!arr.length) return toast('ما لقيت PDF أو صور');
+  if (folderMode) {
+    let n = 0, sk = 0;
+    for (const f of arr) { if (!/^\d+$/.test(fileKey(f.name.replace(/\.[^.]+$/, '')))) { sk++; continue; } const w = await (await dir.getFileHandle(f.name, { create: true })).createWritable(); await w.write(f); await w.close(); n++; }
+    await load(true); filesDialog(); return toast(`تم نسخ ${n} ملف إلى المجلد${sk ? ` — تجاوزت ${sk} (الاسم لازم يكون رقم فقط)` : ''}`);
+  }
   const existing = await dbAll('files'), recs = []; let skipped = 0;
   for (const f of arr) {
     const stem = f.name.replace(/\.[^.]+$/, ''), num = fileKey(stem);
@@ -232,7 +307,6 @@ $('#bDelFiles').onclick = async () => { if (filesIdx.size && confirm('حذف ك�
 
 /* ---------- عارض الاضبارة ---------- */
 let vToken = 0, vUrl = null, vPdf = null, vZoom = 1, vBlob = null;
-const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
 async function openDossier(no) {
   const list = filesIdx.get(fileKey(no));
   if (!list) { toast(`ما لقيت ملف للاضبارة ${no} — اختر مجلد الاضبارات`); return filesDialog(); }
@@ -244,12 +318,11 @@ async function openDossier(no) {
 }
 async function showFile(meta) {
   const my = ++vToken, box = $('#vbody'); box.textContent = 'جارٍ الفتح…'; vZoom = 1; vPdf = null;
-  const rec = await dbGet('files', meta.id); if (my !== vToken) return;
-  vBlob = rec.blob; if (vUrl) URL.revokeObjectURL(vUrl); vUrl = URL.createObjectURL(vBlob);
+  vBlob = meta.handle ? await meta.handle.getFile() : (await dbGet('files', meta.id)).blob; if (my !== vToken) return; if (vUrl) URL.revokeObjectURL(vUrl); vUrl = URL.createObjectURL(vBlob);
   const dl = $('#vDl'); dl.href = vUrl; dl.download = meta.name;
   if (/\.pdf$/i.test(meta.name)) {
     try {
-      if (!window.pdfjsLib) { await loadScript('pdf.min.js'); pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js'; }
+      if (!pdfjsLib.GlobalWorkerOptions.workerSrc) { const b64 = $('#pdfWorker').textContent.trim(); const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([u], { type: 'text/javascript' })); }
       vPdf = await pdfjsLib.getDocument({ data: await vBlob.arrayBuffer() }).promise; if (my !== vToken) return;
       await renderPdf(my);
     } catch (err) { box.innerHTML = `<p style="padding:20px">تعذّر عرض الملف داخل التطبيق. استخدم زر «تنزيل».</p>`; }
@@ -270,7 +343,12 @@ $('#dView').addEventListener('close', () => { vToken++; vPdf = null; $('#vbody')
 
 /* ---------- تشغيل ---------- */
 (async () => {
-  try { db = await openDB(); await load(); }
+  try {
+    db = await openDB();
+    const m = FS ? await rq(db.transaction('meta').objectStore('meta').get('dir')) : null;
+    if (m) { dir = m.handle; folderMode = true; try { needPerm = (await dir.queryPermission({ mode: 'readwrite' })) !== 'granted'; } catch (e) { needPerm = true; } }
+    await load();
+  }
   catch (e) { $('#empty').hidden = false; $('#empty').textContent = 'تعذّر فتح قاعدة البيانات المحلية: ' + e.message; }
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
