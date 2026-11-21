@@ -248,6 +248,7 @@ let pvReloadT = null;
    rebuilt from the full design so nothing is left behind (club, theme, widgets, backgrounds…). */
 const TOP_TOOLS_ST = [['channels', 'قنواتي'], ['saver', 'شاشة التوقف'], ['search', 'البحث'], ['settings', 'إعدادات الجهاز'], ['wifi', 'الواي فاي'], ['net', 'الشبكة'], ['bt', 'البلوتوث'],
   ['mem', 'تنظيف الذاكرة'], ['mute', 'كتم الصوت'], ['sleep', 'مؤقت النوم'], ['edit', 'تعديل الشاشة'], ['power', 'الطاقة'], ['tvpic', 'الصورة'], ['tvsound', 'الصوت'], ['tvdim', 'تعتيم']];
+const TT_LABEL = Object.fromEntries(TOP_TOOLS_ST.concat([['tvinput', 'المداخل']]));
 function topTools() {
   const S = D.cfg.settings;
   if (S.topTools && S.topTools.length) return S.topTools;
@@ -389,7 +390,16 @@ function designPanel() {
         <div class="chips">${TOP_TOOLS_ST.map(([id, l]) => `<button class="chip${topTools().includes(id) ? ' on' : ''}" data-ttool="${id}">${topTools().includes(id) ? (topTools().indexOf(id) + 1) + ' · ' : ''}${esc(l)}</button>`).join('')}</div>
         <button class="btn ghost full" id="ttReset" style="margin-top:8px">${ic('refresh')} رجّع الافتراضي</button>
         <div class="lb" style="margin:12px 0 6px"><span class="sub">زر «المداخل» (HDMI والمصادر) بنص الشريط</span></div>
-        ${chips([['تلقائي للتلفزيونات', 'auto'], ['يطلع دايماً', 'on'], ['مخفي', 'off']], S.inputsBtn || 'auto', 'inbtn')}</div>
+        ${chips([['تلقائي للتلفزيونات', 'auto'], ['يطلع دايماً', 'on'], ['مخفي', 'off']], S.inputsBtn || 'auto', 'inbtn')}
+        <div class="lb" style="margin:12px 0 6px"><span class="sub">مكان زر «المداخل»</span></div>
+        ${chips([['وسط الشريط', 'center'], ['فوق يمين لحاله', 'right'], ['فوق يسار لحاله', 'left'], ['ضمن الأيقونات', 'list']], (S.topTools || []).includes('tvinput') ? 'list' : (S.inputsPos || 'center'), 'inpos')}
+        <div class="lb" style="margin:12px 0 6px"><span class="sub">ترتيب الأيقونات (من اليمين)</span></div>
+        <div id="ttOrder">${topTools().map((id, i, a) => `<div class="item" style="padding:6px 0;min-height:0"><div class="t"><b>${i + 1} · ${esc(TT_LABEL[id] || id)}</b></div>
+          <button class="chip" data-tmove="${id}:-1" ${i ? '' : 'disabled'}>▲</button><button class="chip" data-tmove="${id}:1" ${i < a.length - 1 ? '' : 'disabled'}>▼</button></div>`).join('')}</div></div>
+      <div class="panel"><h2>شكل أيقونات الأعلى</h2><p class="sub" style="margin-top:-4px">الشكل والمسافة بين الأيقونات. التلفزيون يتغيّر مباشرة.</p>
+        ${chips([['دائري زجاجي', 'circle'], ['مربع مدوّر', 'round'], ['مربع حاد', 'square'], ['حبّة بنص', 'pill']], S.topShape || 'circle', 'tshape')}
+        <div class="lb" style="margin:12px 0 6px"><span class="sub">المسافة بين الأيقونات</span></div>
+        ${chips([['قريبة', '12'], ['متوسطة', '22'], ['عادية', '30'], ['واسعة', '44'], ['واسعة جداً', '60']], String(S.topGap || 30), 'tgap')}</div>
       <div class="panel"><h2>اسم الشاشة</h2><input id="ownerI" value="${esc(S.owner || 'مدير الشاشات')}" maxlength="24"></div>
       <div class="panel"><h2>مباريات أي فريق؟</h2><button class="btn sec full" id="teamBtn">${ic('layers')} ${S.team ? esc(S.team.name) : 'الفرق المشهورة (الافتراضي)'}</button></div>
       <div class="panel"><h2>شاشة التوقف</h2>
@@ -482,6 +492,14 @@ function panelClick(e) {
   else if (ds.pal !== undefined) { S.palette = deepCopy(PALETTES[+ds.pal][0]); if (!S.palette) delete S.bgMode; }
   else if (ds.tvctl) S.tvCtl = ds.tvctl;
   else if (ds.inbtn) S.inputsBtn = ds.inbtn;
+  else if (ds.tshape) S.topShape = ds.tshape;
+  else if (ds.tgap) S.topGap = +ds.tgap;
+  else if (ds.inpos) {
+    S.inputsPos = ds.inpos;
+    if (ds.inpos === 'list') { const l = topTools().filter(x => x !== 'tvinput'); l.unshift('tvinput'); S.topTools = l; if (S.inputsBtn === 'off') S.inputsBtn = 'on'; }
+    else if (S.topTools) S.topTools = S.topTools.filter(x => x !== 'tvinput');
+  }
+  else if (ds.tmove) { const [id, d] = ds.tmove.split(':'), l = topTools().slice(), i = l.indexOf(id), j = i + (+d); if (i >= 0 && j >= 0 && j < l.length) { l.splice(i, 1); l.splice(j, 0, id); S.topTools = l; } else return; tap(); changed(); live({ settings: S }); designPanel(); return; }
   else if (ds.ttool) { const l = topTools().slice(), i = l.indexOf(ds.ttool); if (i >= 0) l.splice(i, 1); else l.push(ds.ttool); S.topTools = l; tap(); changed(); live({ settings: S }); designPanel(); return; }
   else if (e.target.closest('#ttReset')) { delete S.topTools; tap(); changed(); live({ settings: S }); designPanel(); return; }
   else if (ds.clubbg) S.clubBg = ds.clubbg;

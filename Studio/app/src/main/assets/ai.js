@@ -131,7 +131,7 @@ function aiApply(mode, j, prompt) {
   } else {
     const r = aiTvCfg(j);
     if (inTv) {
-      const S = D.cfg.settings, keep = { owner: S.owner, team: S.team, topTools: S.topTools, inputsBtn: S.inputsBtn, saver: S.saver, saverMin: S.saverMin, tvCtl: S.tvCtl, cityIdx: S.cityIdx };
+      const S = D.cfg.settings, keep = { owner: S.owner, team: S.team, topTools: S.topTools, inputsBtn: S.inputsBtn, inputsPos: S.inputsPos, topShape: S.topShape, topGap: S.topGap, saver: S.saver, saverMin: S.saverMin, tvCtl: S.tvCtl, cityIdx: S.cityIdx };
       Object.keys(keep).forEach(k => keep[k] === undefined && delete keep[k]);
       D.cfg.settings = Object.assign({}, r.cfg.settings, keep);
       D.cfg.layout = r.cfg.layout; delete D.cfg.bgPinned;
