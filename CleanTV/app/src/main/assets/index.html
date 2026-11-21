@@ -502,6 +502,26 @@
   #topbar.c2 .item.glass.inb { width: auto; padding: 0 16px; }
   #topbar.c3 { gap: 6px; } #topbar.c3 .tg { gap: 6px; } #topbar.c3 .item.glass { width: 50px; height: 50px; min-width: 50px; } #topbar.c3 .item.glass svg { width: 21px; height: 21px; }
   #topbar.c3 .item.glass.inb { width: auto; padding: 0 12px; }
+
+  /* top bar: glass circles, each one apart from the next (shape and gap come from settings.topShape / topGap) */
+  #topbar { --tg: var(--tgu, 30px); gap: var(--tg); }
+  #topbar.split .tg, #topbar.corner .tg { gap: var(--tg, 30px); }
+  #topbar .glass { background: rgba(255,255,255,.14); -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5);
+    border: 1px solid rgba(255,255,255,.34); box-shadow: inset 0 1px 0 rgba(255,255,255,.38), 0 10px 26px rgba(0,0,0,.28); }
+  #topbar.sh-circle .glass, #topbar.sh-pill .glass { border-radius: 50%; }
+  #topbar.sh-pill .glass.tvb { border-radius: 999px; }
+  #topbar.sh-round .glass { border-radius: 22px; } #topbar.sh-square .glass { border-radius: 8px; }
+  #topbar:not(.sh-pill) .glass.tvb { width: 70px; min-width: 70px; padding: 0; justify-content: center; }
+  #topbar:not(.sh-pill) .glass.tvb .lbl { position: absolute; top: 82px; left: 50%; transform: translateX(-50%); opacity: 0; font-size: 19px; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+  #topbar:not(.sh-pill) .glass.tvb.focus .lbl { opacity: 1; }
+  #topbar:not(.sh-pill) .glass.tvb svg { width: 30px; height: 30px; }
+  #topbar.c1 { --tg: 22px; } #topbar.c2 { --tg: 12px; } #topbar.c3 { --tg: 7px; }
+  #topbar.c2:not(.sh-pill) .glass.tvb { width: 58px; min-width: 58px; } #topbar.c3:not(.sh-pill) .glass.tvb { width: 50px; min-width: 50px; }
+  #topbar.c2 .glass.tvb:not(.inb):not(.saverb) { width: 58px; min-width: 58px; } #topbar.c3 .glass.tvb:not(.inb):not(.saverb) { width: 50px; min-width: 50px; }
+  #topbar.corner { left: 0; right: 0; width: auto; margin-left: 0; transform: none; -webkit-transform: none; padding: 0 60px; }
+  #topbar.corner .tg { flex: 1; display: flex; justify-content: center; min-width: 0; }
+  #topbar.corner .inb { position: absolute; top: 0; }
+  #topbar.cn-right .inb { right: 60px; } #topbar.cn-left .inb { left: 60px; }
   .tvsep { width: 2px; height: 46px; align-self: center; background: rgba(255,255,255,.25); margin: 0 4px; }
   #clubcard { display: none; }
 

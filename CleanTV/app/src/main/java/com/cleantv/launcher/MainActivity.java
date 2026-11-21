@@ -330,6 +330,12 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, android.view.KeyEvent ev) {
+        if (keyCode == android.view.KeyEvent.KEYCODE_TV_INPUT) { js("window.__tvInput && window.__tvInput()"); return true; }
+        return super.onKeyDown(keyCode, ev);
+    }
+
+    @Override
     public void onBackPressed() {
         if (web != null) web.evaluateJavascript("window.onBackKey && window.onBackKey()", null);
     }

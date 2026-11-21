@@ -61,6 +61,11 @@ public class PowerService extends AccessibilityService {
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
         lastInput = System.currentTimeMillis();
+        // The remote's INPUT / SOURCE key: the launcher opens its own source picker (nobody else gets it when we are the home screen).
+        if (event.getKeyCode() == KeyEvent.KEYCODE_TV_INPUT && MainActivity.foreground) {
+            if (event.getAction() == KeyEvent.ACTION_UP) MainActivity.js("window.__tvInput && window.__tvInput()");
+            return true;
+        }
         // Some TVs send the Home button straight to their own launcher; catch it and open ours instead.
         if (event.getKeyCode() == KeyEvent.KEYCODE_HOME && !"0".equals(Media.prefs(this).getString("homeGuard", "1"))) {
             if (event.getAction() == KeyEvent.ACTION_UP) {

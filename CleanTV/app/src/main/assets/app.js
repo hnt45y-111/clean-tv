@@ -1038,31 +1038,47 @@
   var TOP_TOOLS = {
     saver: ['شاشة التوقف', 'moon', 1], search: ['البحث', 'search'], settings: ['إعدادات الجهاز', 'settings'], wifi: ['الواي فاي', 'wifi'],
     net: ['الشبكة', 'net'], bt: ['البلوتوث', 'bt'], mem: ['تنظيف الذاكرة', 'broom'], mute: ['كتم الصوت', 'mute'], sleep: ['مؤقت النوم', 'timer'],
-    channels: ['قنواتي', 'picture'], edit: ['تعديل الشاشة', 'edit'], power: ['الطاقة', 'power'], tvpic: ['الصورة', 'picture', 1], tvsound: ['الصوت', 'sound', 1], tvdim: ['تعتيم', 'dim', 1]
+    channels: ['قنواتي', 'picture'], edit: ['تعديل الشاشة', 'edit'], power: ['الطاقة', 'power'], tvpic: ['الصورة', 'picture', 1], tvsound: ['الصوت', 'sound', 1], tvdim: ['تعتيم', 'dim', 1], tvinput: ['المداخل', 'input', 1]
   };
   function topToolList() {
     var l = settings.topTools && settings.topTools.length ? settings.topTools.slice() : null;
     if (!l) { l = ['channels', 'saver', 'search', 'settings', 'wifi', 'edit', 'power']; if (tvShortcutsOn()) l = ['tvpic', 'tvsound', 'sleep', 'tvdim'].concat(l); }
-    return l.filter(function (id) { return TOP_TOOLS[id] && !(id === 'saver' && settings.saverOn === false); });
+    if (settings.inputsPos === 'list' && inputsOn() && l.indexOf('tvinput') < 0) l.unshift('tvinput');
+    return l.filter(function (id) { return TOP_TOOLS[id] && !(id === 'saver' && settings.saverOn === false) && !(id === 'tvinput' && !(IS_TV || PREVIEW)); });
   }
   function inputsOn() { var m = settings.inputsBtn || 'auto'; return m === 'on' || (m === 'auto' && tvShortcutsOn()); }
+  /* where «المداخل» sits: 'list' (inside the ordered tools), 'center', 'right' / 'left' (alone in the top corner) or 'off' */
+  function inputsPlace() {
+    if (settings.topTools && settings.topTools.indexOf('tvinput') >= 0) return 'list';
+    if (!inputsOn()) return 'off';
+    var p = settings.inputsPos || 'center'; return p === 'list' ? 'list' : p;
+  }
+  var TOP_SHAPES = [['circle', 'دائري'], ['round', 'مربع مدوّر'], ['square', 'مربع حاد'], ['pill', 'حبّة بنص']];
   function topItem(id) {
     var t = TOP_TOOLS[id], lbl = t[0], ic = t[1];
     if (id === 'sleep') lbl = tvSleepLabel();
+    if (id === 'tvinput') return '<div class="item glass tvb inb" data-kind="top" data-id="tvinput">' + ICONS.input + '<span class="lbl">المداخل</span></div>';
     if (id === 'tvdim' && tvDim) lbl = 'تعتيم ' + nf.format(tvDim) + '٪';
     if (id === 'mute') { var m = false; try { m = HAS_ANDROID && A.isMuted ? A.isMuted() : false; } catch (e) {} lbl = m ? 'شغّل الصوت' : 'كتم الصوت'; ic = m ? 'mute' : 'sound'; }
     var pill = t[2] || id === 'sleep' && tvSleepLabel() !== 'مؤقت النوم';
     return '<div class="item glass' + (pill ? ' tvb' : '') + (id === 'saver' ? ' saverb' : '') + '" data-kind="top" data-id="' + id + '">' + (ICONS[ic] || ICONS.settings) + '<span class="lbl">' + lbl + '</span></div>';
   }
   function renderTopbar() {
-    var l = topToolList(), tb = $('topbar');
-    if (inputsOn()) {
+    var l = topToolList(), tb = $('topbar'), pl = inputsPlace();
+    var shape = settings.topShape || 'circle', gap = settings.topGap || 30;
+    TOP_SHAPES.forEach(function (x) { tb.classList.remove('sh-' + x[0]); }); tb.classList.add('sh-' + shape);
+    tb.style.setProperty('--tgu', gap + 'px');
+    tb.classList.remove('split', 'corner', 'cn-left', 'cn-right');
+    var inb = '<div class="item glass tvb inb cnr" data-kind="top" data-id="tvinput">' + ICONS.input + '<span class="lbl">المداخل</span></div>';
+    if (pl === 'center') {
       var half = Math.ceil(l.length / 2);
       tb.classList.add('split');
-      tb.innerHTML = '<div class="tg tg1">' + l.slice(0, half).map(topItem).join('') + '</div>' +
-        '<div class="item glass tvb inb" data-kind="top" data-id="tvinput">' + ICONS.input + '<span class="lbl">المداخل</span></div>' +
+      tb.innerHTML = '<div class="tg tg1">' + l.slice(0, half).map(topItem).join('') + '</div>' + inb.replace(' cnr', '') +
         '<div class="tg tg2">' + l.slice(half).map(topItem).join('') + '</div>';
-    } else { tb.classList.remove('split'); tb.innerHTML = l.map(topItem).join(''); }
+    } else if (pl === 'right' || pl === 'left') {
+      tb.classList.add('corner', 'cn-' + pl);
+      tb.innerHTML = '<div class="tg">' + l.map(topItem).join('') + '</div>' + inb;
+    } else tb.innerHTML = l.map(topItem).join('');
     fitTopbar();
   }
   /* many tools: the bar shrinks step by step so it never covers the clock or the other widgets */
@@ -1071,7 +1087,7 @@
     tb.classList.remove('c1', 'c2', 'c3');
     var hit = function () {
       var r = tb.getBoundingClientRect(), ids = ['timeblock', 'adhanbox', 'weather', 'wisdom'];
-      var its = tb.querySelectorAll('.item'); if (!its.length) return false;
+      var its = tb.querySelectorAll('.item:not(.cnr)'); if (!its.length) return false;
       var a = its[0].getBoundingClientRect(), z = its[its.length - 1].getBoundingClientRect();
       var L = Math.min(a.left, z.left), R = Math.max(a.right, z.right), T = r.top, Bm = r.bottom;
       for (var i = 0; i < ids.length; i++) {
@@ -1805,6 +1821,9 @@
         { head: true, label: 'الشكل والتفاعل' },
         { label: 'الثيم', value: themeName(settings.theme), act: function (k) { if (k === 'ok') { closeModal(); openThemes(); return false; } var ids = THEMES.map(function (t) { return t[0]; }); settings.theme = cycle(ids, settings.theme, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'صوت النقر عند التنقل', value: settings.clickSound ? 'شغّال' : 'متوقف', act: function () { settings.clickSound = !settings.clickSound; saveSettings(); clickSound(); } },
+        { label: 'شكل أيقونات الأعلى', value: (TOP_SHAPES.filter(function (x) { return x[0] === (settings.topShape || 'circle'); })[0] || TOP_SHAPES[0])[1], act: function (k) { settings.topShape = cycle(TOP_SHAPES.map(function (x) { return x[0]; }), settings.topShape || 'circle', k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
+        { label: 'المسافة بين أيقونات الأعلى', value: nf.format(settings.topGap || 30), act: function (k) { settings.topGap = cycle([10, 20, 30, 40, 54, 70], settings.topGap || 30, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
+        { label: 'مكان زر المداخل', value: { center: 'وسط الشريط', right: 'فوق يمين لحاله', left: 'فوق يسار لحاله', list: 'ضمن الأيقونات' }[settings.inputsPos || 'center'], act: function (k) { settings.inputsPos = cycle(['center', 'right', 'left', 'list'], settings.inputsPos || 'center', k === 'ArrowRight' ? -1 : 1); if (settings.topTools) settings.topTools = settings.topTools.filter(function (x) { return x !== 'tvinput'; }); saveSettings(); } },
         { label: 'شريط النتائج المباشرة', value: settings.ticker === false ? 'متوقف' : 'شغّال', act: function () { settings.ticker = settings.ticker === false; saveSettings(); refreshLive(); } },
         { label: 'شريط النتائج فوق التطبيقات (يوتيوب وغيره)', value: settings.tickerApps === true ? 'شغّال' : 'متوقف', act: function () {
           if (settings.tickerApps !== true && HAS_ANDROID && A.hasOverlay && !A.hasOverlay()) { toast('لازم تسمح للواجهة بالعرض فوق التطبيقات، وارجع شغّل الخيار', 5000); if (A.openOverlaySettings) A.openOverlaySettings(); return; }
@@ -2435,6 +2454,12 @@
   window.__refreshBadges = function () { renderApps(); };
   window.__noteNet = noteNet;
   window.__startBedtime = startBedtime; window.__openWiz = openWiz; window.__openRecap = openRecap; window.__openParty = openParty;
+  /* the remote's INPUT / SOURCE button opens the source picker from the home screen (before, it only worked once «المداخل» was opened by hand) */
+  window.__tvInput = function () {
+    if (!HAS_ANDROID || !IS_TV) return;
+    if (layer !== 'main') { if (layer === 'live' || layer === 'vod') return; closeModal(); }
+    tvAction('tvinput');
+  };
   window.remoteKey = function (k) { handleKey(k); };
   window.onBackKey = function () { handleKey('back'); };
   window.onHomePressed = function () {
