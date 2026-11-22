@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wd_resume">آخر قناة شفتها بضغطة</string>
+    <string name="wd_favs">أول قنواتك المفضلة</string>
+    <string name="wd_grid">اختصارات جاهزة تختارها، وكل ما تكبّر الويدجت تطلع اقتراحات أكثر</string>
+    <string name="wd_nav">قنواتي والأفلام والمفضلة والإعدادات</string>
+    <string name="wd_clock">الوقت والتاريخ وتحية باسمك</string>
+    <string name="wd_movies">تابع فيلمك أو افتح الأفلام والمسلسلات</string>
+    <string name="wd_quiet">شغّل أو أوقف الهدوء الليلي</string>
+</resources>

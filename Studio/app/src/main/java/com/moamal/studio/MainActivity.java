@@ -90,6 +90,8 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(), "A");
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
+        route(getIntent());
+        try { com.msm.widgets.Shortcuts.publish(this, new com.moamal.studio.wd.StudioWidgets(), com.msm.widgets.ActActivity.class, com.msm.widgets.PickActivity.class); } catch (Throwable ignored) { }
         disc = new Discovery(this, o -> js("window.onFound&&onFound(" + o + ")"));
         self = this;
     }
@@ -128,6 +130,17 @@ public class MainActivity extends Activity {
     }
 
     private static MainActivity self;
+
+    /** a widget or an icon shortcut asked to open a place inside the app */
+    @Override
+    protected void onNewIntent(Intent i) { super.onNewIntent(i); setIntent(i); route(i); }
+
+    private void route(Intent i) {
+        String r = i == null ? null : i.getStringExtra("msm_route");
+        if (r == null || web == null) return;
+        i.removeExtra("msm_route");
+        web.evaluateJavascript("(function(){var r=" + JSONObject.quote(r) + ",n=0;function g(){try{if(window.__route&&window.__route(r)!==false)return;}catch(e){}if(++n<40)setTimeout(g,300)}g()})()", null);
+    }
     static void jsStatic(String code) { MainActivity m = self; if (m != null) m.js(code); }
     void js(String code) {
         ui.post(() -> { try { web.evaluateJavascript(code, null); } catch (Throwable ignored) { } });

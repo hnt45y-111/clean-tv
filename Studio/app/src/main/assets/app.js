@@ -970,3 +970,22 @@ function mockBridge() {
     }, 200),
   };
 }
+
+/* widgets and the app-icon menu open a place from outside: «devices», «clean», «design», «remote», «more», «phone», «phone2» and «phone:clean|bloat|anim|ads|bat».
+   Returns false while the app is not ready (still on the sign-in screen), so the caller tries again. */
+window.__route = function (r) {
+  try {
+    if (typeof cur === 'undefined' || cur === 'login') return false;
+    const tab = { devices: 'home', clean: 'clean', design: 'design', remote: 'remote', more: 'more' }[r];
+    if (tab) { stack = []; show(tab); return true; }
+    if (r === 'phone2') { stack = []; show('home'); setTimeout(() => { const b = document.getElementById('phOther'); b && b.click(); }, 450); return true; }
+    if (r === 'phone' || r.indexOf('phone:') === 0) {
+      stack = []; show('home');
+      const act = r.indexOf(':') > 0 ? r.split(':')[1] : '';
+      setTimeout(() => { const b = document.getElementById('phSelf'); b && b.click(); }, 450);
+      if (act) setTimeout(() => { const a = document.querySelector('[data-pa="' + act + '"]'); a && a.click(); }, 1800);
+      return true;
+    }
+  } catch (e) { return false; }
+  return false;
+};

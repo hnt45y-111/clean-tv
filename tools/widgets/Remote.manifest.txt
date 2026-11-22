@@ -1,0 +1,35 @@
+        <receiver android:name="com.cleantv.remote.wd.RemoteWidgets$Pad" android:exported="true" android:label="ريموت">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_pad" />
+        </receiver>
+        <receiver android:name="com.cleantv.remote.wd.RemoteWidgets$Volume" android:exported="true" android:label="صوت التلفاز">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_volume" />
+        </receiver>
+        <receiver android:name="com.cleantv.remote.wd.RemoteWidgets$Power" android:exported="true" android:label="طاقة التلفاز">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_power" />
+        </receiver>
+        <receiver android:name="com.cleantv.remote.wd.RemoteWidgets$Channels" android:exported="true" android:label="قنواتي على التلفاز">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_channels" />
+        </receiver>
+        <receiver android:name="com.cleantv.remote.wd.RemoteWidgets$Media" android:exported="true" android:label="وسائط">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_media" />
+        </receiver>
+        <receiver android:name="com.cleantv.remote.wd.RemoteWidgets$Grid" android:exported="true" android:label="اختصاراتي">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_grid" />
+        </receiver>
+        <receiver android:name="com.cleantv.remote.wd.RemoteWidgets$Status" android:exported="true" android:label="حالة التلفاز">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_status" />
+        </receiver>
+        <activity android:name="com.msm.widgets.PickActivity" android:exported="true" android:excludeFromRecents="true" android:theme="@android:style/Theme.Material.NoActionBar">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+            <meta-data android:name="msm.app" android:value="com.cleantv.remote.wd.RemoteWidgets" />
+        </activity>
+        <activity android:name="com.msm.widgets.ActActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@android:style/Theme.NoDisplay">
+            <meta-data android:name="msm.app" android:value="com.cleantv.remote.wd.RemoteWidgets" />
+        </activity>

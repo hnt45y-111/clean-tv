@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/msm_z" android:layout_width="match_parent" android:layout_height="match_parent" android:layoutDirection="ltr">
+    <ImageView android:id="@+id/msm_bg" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center" android:padding="12dp">
+        <TextClock android:id="@+id/msm_time" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:format12Hour="h:mm" android:format24Hour="HH:mm" android:textColor="#FFFFFF" android:textSize="46sp" android:textStyle="bold" android:includeFontPadding="false" />
+        <TextClock android:id="@+id/msm_date" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:format12Hour="EEEE d MMMM" android:format24Hour="EEEE d MMMM" android:textColor="#B8B8C6" android:textSize="14sp" android:layoutDirection="rtl" />
+        <TextView android:id="@+id/msm_greet" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#FF2A45" android:textSize="15sp" android:textStyle="bold" android:layout_marginTop="6dp" android:layoutDirection="rtl" />
+    </LinearLayout>
+</FrameLayout>
