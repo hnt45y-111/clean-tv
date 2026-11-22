@@ -416,9 +416,9 @@
   }
   function heroAct(a) {
     var it = cin.pool[cin.hero]; if (!it) return;
-    if (a === 'play') detailSheet(it);
+    if (a === 'play') detailPage(it);
     else if (a === 'list') { var on = toggleFav(it); toast(on ? 'انضاف لقائمتي' : 'انشال من قائمتي'); }
-    else { var all = VOD.m.concat(VOD.s); if (all.length) detailSheet(all[Math.floor(Math.random() * all.length)]); }
+    else { var all = VOD.m.concat(VOD.s); if (all.length) detailPage(all[Math.floor(Math.random() * all.length)]); }
   }
   function heroHtml(it) {
     var u = esc(logoOf(it));
@@ -445,23 +445,23 @@
     if (!VOD.loaded) { $('main').innerHTML = '<div class="hero sk"></div><div class="sh">جاري التحميل…</div>' + skeleton(6); return; }
     var all = VOD.m.concat(VOD.s);
     if (!all.length) { $('main').innerHTML = '<div class="empty">ماكو أفلام ومسلسلات بعد.<br>أضف حساب IPTV أو رابط قائمة من الإعدادات، أو افتح تبويب «مواقعي» وأضف موقعك.</div><div style="padding:0 16px"><button class="btn" id="goSet">فتح الإعدادات</button> <button class="btn sec" id="goSites">مواقعي</button></div>'; $('goSet').onclick = function () { show('set'); }; $('goSites').onclick = function () { st.vod.sub = 'w'; drawVod(); }; return; }
-    cin.flat = []; var top = topList(); cin.pool = top.slice(0, 5); cin.hero = 0;
+    var secs = []; cin.flat = []; var top = topList(); cin.pool = top.slice(0, 5); cin.hero = 0;
     function card(it) { var i = cin.flat.push(it) - 1; return '<div class="card" data-cm="' + i + '" style="animation-delay:' + Math.min(i % 12, 8) * 40 + 'ms">' + art(it, true) + '<b>' + esc(it.n) + '</b></div>'; }
     var html = cin.pool.length ? '<div class="hero" id="hero">' + heroHtml(cin.pool[0]) + '</div>' : '';
-    if (top.length) html += '<div class="sh rv">الأكثر رواجاً · أعلى ١٠</div><div class="hs t10 rv">' + top.map(function (it, i) { var k = cin.flat.push(it) - 1; return '<div class="tn" data-cm="' + k + '"><span class="nm">' + ar0(i + 1) + '</span>' + art(it, true) + '</div>'; }).join('') + '</div>';
+    if (top.length) secs.push({ id: 'top', n: 'أعلى ١٠', html: '<div class="sh rv">الأكثر رواجاً · أعلى ١٠</div><div class="hs t10 rv">' + top.map(function (it, i) { var k = cin.flat.push(it) - 1; return '<div class="tn" data-cm="' + k + '"><span class="nm">' + ar0(i + 1) + '</span>' + art(it, true) + '</div>'; }).join('') + '</div>'});
     var rec = J('mRec', []).filter(function (x) { return x.t; });
-    if (rec.length) html += '<div class="sh rv">تابع المشاهدة</div><div class="hs rv">' + rec.slice(0, 14).map(card).join('') + '</div>';
+    if (rec.length) secs.push({ id: 'rec', n: 'تابع المشاهدة', html: '<div class="sh rv">تابع المشاهدة</div><div class="hs rv">' + rec.slice(0, 14).map(card).join('') + '</div>'});
     var by = {}; all.forEach(function (c) { var g = c.g || 'بدون تصنيف'; (by[g] = by[g] || []).push(c); });
     var gs = Object.keys(by).sort(function (a, b) { return by[b].length - by[a].length; });
-    html += '<div class="sh rv">التصنيفات</div><div class="hs cats rv">' + gs.slice(0, 16).map(function (g) {
+    secs.push({ id: 'cats', n: 'التصنيفات', html: '<div class="sh rv">التصنيفات</div><div class="hs cats rv">' + gs.slice(0, 16).map(function (g) {
       var first = by[g].filter(function (c) { return c.img; })[0], hh = hue(g);
       return '<div class="ct" data-cc="' + esc(g) + '" style="background-image:linear-gradient(135deg,hsla(' + hh + ',75%,34%,.92),rgba(0,0,0,.85))' + (first ? ',url(\'' + esc(first.img) + '\')' : '') + '"><b>' + esc(g) + '</b><small>' + ar0(by[g].length) + '</small></div>';
-    }).join('') + '</div>';
+    }).join('') + '</div>' });
     gs.slice(0, 8).forEach(function (g) {
       var l = by[g].filter(function (c) { return c.img; }).slice(0, 24); if (l.length < 3) l = by[g].slice(0, 24);
-      html += '<div class="sh rv"><span>' + esc(g) + '</span><a data-cc="' + esc(g) + '">المزيد ‹</a></div><div class="hs rv">' + l.map(card).join('') + '</div>';
+      secs.push({ id: 'g:' + g, n: g, html: '<div class="sh rv"><span>' + esc(g) + '</span><a data-cc="' + esc(g) + '">المزيد ‹</a></div><div class="hs rv">' + l.map(card).join('') + '</div>'});
     });
-    $('main').innerHTML = html; $('main').scrollTop = 0; observe();
+    html += orderSecs('v', secs); $('main').innerHTML = html; $('main').scrollTop = 0; observe();
     if (cin.pool.length > 1) cin.timer = setInterval(function () {
       var h = $('hero'); if (!h || tab !== 'vod' || st.vod.sub !== 'h') { clearInterval(cin.timer); cin.timer = null; return; }
       cin.hero = (cin.hero + 1) % cin.pool.length; h.classList.remove('swap'); void h.offsetWidth; h.innerHTML = heroHtml(cin.pool[cin.hero]); h.classList.add('swap');
@@ -472,7 +472,7 @@
     var l = VOD.m.concat(VOD.s).filter(function (c) { return (c.g || 'بدون تصنيف') === cin.cat; }); cin.flat = [];
     $('main').innerHTML = '<div class="sh">' + esc(cin.cat) + ' · ' + ar0(l.length) + '</div><div class="grid">' + l.slice(0, 200).map(function (it, i) { var k = cin.flat.push(it) - 1; return '<div class="card" data-cm="' + k + '" style="animation-delay:' + Math.min(i, 12) * 30 + 'ms">' + art(it, true) + '<b>' + esc(it.n) + '</b></div>'; }).join('') + '</div>';
     $('main').scrollTop = 0;
-    $('catBack').onclick = function () { st.vod.sub = 'h'; drawVod(); };
+    $('catBack').onclick = function () { st.vod.sub = 'h'; markNav(); drawVod(); };
   }
   /* channels: «now playing» card, then rows of channel tiles by group */
   function drawLiveHome(keepTop) {
@@ -490,15 +490,17 @@
     if (recent.length > 1) rows.push(['آخر ما شاهدت', recent.slice(0, 20)]);
     rows.push(['قنوات عراقية', all.filter(function (c) { return c.c === 'iq'; })]);
     [['movies', 'أفلام ومسلسلات'], ['ent', 'منوعات وترفيه'], ['news', 'أخبار'], ['sport', 'رياضة'], ['kids', 'أطفال'], ['docs', 'وثائقية'], ['quran', 'قرآن ومرجعيات']].forEach(function (r) { rows.push([r[1], all.filter(function (c) { return c.g === r[0] && !c.mine; })]); });
+    var secs = [];
     rows.forEach(function (r) {
       if (r[1].length < 2) return;
-      html += '<div class="sh rv">' + esc(r[0]) + '</div><div class="hs chs rv">' + r[1].slice(0, 40).map(tile).join('') + '</div>';
+      secs.push({ id: r[0], n: r[0], html: '<div class="sh rv">' + esc(r[0]) + '</div><div class="hs chs rv">' + r[1].slice(0, 40).map(tile).join('') + '</div>' });
     });
-    $('main').innerHTML = html; $('main').scrollTop = 0; observe();
+    html += orderSecs('l', secs); $('main').innerHTML = html; $('main').scrollTop = 0; observe();
   }
 
   /* ---------------------------------------------------------------- series sheet */
-  function openSeries(it) {
+  function openSeries(it) { detailPage(it); }
+  function openSeriesOld(it) {
     var x = xt(); if (!x) return;
     $('sheetIn').innerHTML = '<h3>' + esc(it.n) + '</h3><div class="empty">جاري تحميل الحلقات…</div>'; $('sheet').classList.add('on');
     xjson(x, 'get_series_info', '&series_id=' + it.id).then(function (j) {
@@ -509,18 +511,250 @@
     });
   }
 
+  /* ================================================================ 2.0: themes, customisation, pages, detail, folders */
+  var THEMES = [
+    { id: 'cinema', n: 'سينمائي (الأساسي)', rz: '#FA0023', g: 'linear-gradient(135deg,#FA0023,#2a0006 70%,#000)', hero: 'tall', nav: 'pill', top: 'outline', fx: 'glow' },
+    { id: 'royal', n: 'ذهبي ملكي', rz: '#D6B47A', g: 'linear-gradient(135deg,#D6B47A,#3a2a0e 70%,#07060a)', hero: 'frame', nav: 'bar', top: 'badge', fx: 'gold' },
+    { id: 'karbala', n: 'كربلائي', rz: '#C4001D', g: 'linear-gradient(135deg,#7a0010,#1a0004 70%,#0c0305)', hero: 'side', nav: 'dock', top: 'fill', fx: 'embers' },
+    { id: 'alawi', n: 'علوي أخضر', rz: '#12B76A', g: 'linear-gradient(135deg,#12B76A,#04301a 70%,#020a06)', hero: 'split', nav: 'pill', top: 'badge', fx: 'aurora' },
+    { id: 'apple', n: 'زجاجي', rz: '#0A84FF', g: 'linear-gradient(135deg,#0A84FF,#102a52 70%,#0b0b10)', hero: 'glass', nav: 'glass', top: 'none', fx: 'depth' },
+    { id: 'neon', n: 'نيون', rz: '#00E5FF', g: 'linear-gradient(135deg,#00E5FF,#B14AFF 55%,#02020a)', hero: 'neon', nav: 'neonbar', top: 'neon', fx: 'scan' }
+  ];
+  var ACC = ['#FA0023', '#FF6A00', '#D6B47A', '#12B76A', '#00E5FF', '#0A84FF', '#B14AFF', '#FF3EA5'];
+  var AVS = ['🦁', '🐯', '🦊', '🐼', '🦅', '🐺', '🌙', '⭐'];
+  var NAVD = {
+    home: ['الرئيسية', '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>'],
+    search: ['بحث', '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'],
+    live: ['البث المباشر', '<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19a10 10 0 0 1 0-14"/>'],
+    lib: ['مكتبتي', '<path d="M5 3h14v18l-7-4-7 4z"/>'],
+    prof: ['ملفي', '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>'],
+    movies: ['أفلام', '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 3v18M17 3v18M3 8h4M3 12h4M3 16h4M17 8h4M17 12h4M17 16h4"/>'],
+    series: ['مسلسلات', '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>'],
+    sites: ['مواقعي', '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>']
+  };
+  function U() {
+    var u = S.ui = S.ui || {};
+    if (!u.theme) u.theme = 'cinema'; if (!u.nav || !u.nav.length) u.nav = ['home', 'search', 'live', 'lib', 'prof'];
+    if (!u.size) u.size = 'm'; if (!u.rows) u.rows = { v: [], l: [], hid: [] }; if (!u.folders) u.folders = [];
+    return u;
+  }
+  function themeOf() { var id = U().theme; for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i]; return THEMES[0]; }
+  function saveUi() { save(); }
+  function applyTheme() {
+    var t = themeOf(), u = U(), b = document.body;
+    b.setAttribute('data-th', t.id); b.setAttribute('data-hero', t.hero); b.setAttribute('data-nav', t.nav); b.setAttribute('data-top', t.top); b.setAttribute('data-fx', t.fx);
+    b.setAttribute('data-size', u.size); b.setAttribute('data-anim', u.anim === 'off' ? 'off' : 'on'); b.setAttribute('data-bg', u.bg || 'theme');
+    var rz = u.accent || t.rz, st2 = b.style; st2.setProperty('--rz', rz);
+    var rgb = rz.replace('#', ''); st2.setProperty('--rzrgb', parseInt(rgb.slice(0, 2), 16) + ',' + parseInt(rgb.slice(2, 4), 16) + ',' + parseInt(rgb.slice(4, 6), 16));
+    if (u.bg === 'img' && u.bgimg) st2.setProperty('--bgimg', 'url("' + String(u.bgimg).replace(/"/g, '') + '")'); else st2.removeProperty('--bgimg');
+  }
+  function renderHeader() {
+    var u = U(); $('ttl').firstChild.nodeValue = u.app || 'قنواتي'; $('sub').textContent = u.tag != null && u.tag !== '' ? u.tag : 'بث مباشر مجاني · أفلام ومسلسلات';
+    var av = $('hAv'); if (av) { av.textContent = AVS[u.av || 0]; av.style.background = ACC[(u.av || 0) % ACC.length]; }
+  }
+  function renderNav() {
+    var u = U(), nav = $('nav'); nav.innerHTML = u.nav.map(function (id) { var d = NAVD[id]; return d ? '<button data-n="' + id + '"><svg viewBox="0 0 24 24">' + d[1] + '</svg><span>' + d[0] + '</span></button>' : ''; }).join('');
+    nav.setAttribute('data-count', u.nav.length); markNav();
+  }
+  function activeNav() {
+    if (tab === 'vod') return { h: 'home', c: 'home', m: 'movies', s: 'series', w: 'sites' }[st.vod.sub] || 'home';
+    return { live: 'live', search: 'search', lib: 'lib', prof: 'prof' }[tab] || 'home';
+  }
+  function markNav() { var a = activeNav(); [].forEach.call($('nav').children, function (b) { b.classList.toggle('on', b.getAttribute('data-n') === a); }); }
+  function pageAnim() { var m = $('main'); m.classList.remove('pg'); void m.offsetWidth; m.classList.add('pg'); }
+  function navGo(id) {
+    if (id === 'home') { st.vod.sub = 'h'; show('vod'); } else if (id === 'movies') { st.vod.sub = 'm'; show('vod'); } else if (id === 'series') { st.vod.sub = 's'; show('vod'); } else if (id === 'sites') { st.vod.sub = 'w'; show('vod'); }
+    else show(id);
+  }
+  /* sections of a page, in the order (and with the rows hidden) the user chose */
+  var lastSecs = { v: [], l: [] };
+  function orderSecs(kind, secs) {
+    lastSecs[kind] = secs.map(function (s) { return { id: s.id, n: s.n }; });
+    var o = U().rows[kind] || [], hid = U().rows.hid || [];
+    var ix = function (id) { var i = o.indexOf(id); return i < 0 ? 1e6 + secs.map(function (s) { return s.id; }).indexOf(id) : i; };
+    return secs.filter(function (s) { return hid.indexOf(kind + ':' + s.id) < 0; }).sort(function (a, b) { return ix(a.id) - ix(b.id); }).map(function (s) { return s.html; }).join('');
+  }
+
+  /* ---------------------------------------------------------------- folders and the item menu */
+  function snap(it) { return { k: favKey(it), n: it.n, u: it.u, img: it.img || it.l || '', t: it.t, id: it.id, g: it.g || it.grp || '', l: it.l, ua: it.ua, r: it.r, rt: it.rt, pl: it.pl }; }
+  function itemMenu(it) {
+    if (!it) return;
+    showSheet('<h3>' + esc(it.n) + '</h3><button class="btn" id="imPlay">▶ تشغيل</button><button class="btn sec" id="imFav">' + (isFav(it) ? '✓ بالمفضلة · إزالة' : '☆ أضف للمفضلة') + '</button><button class="btn sec" id="imFol">📁 أضف لمجلد</button>');
+    $('imPlay').onclick = function () { $('sheet').classList.remove('on'); if (it.t) detailPage(it); else playPack([it], 0, false); };
+    $('imFav').onclick = function () { var on = toggleFav(it); toast(on ? 'انضاف للمفضلة' : 'انشال من المفضلة'); $('sheet').classList.remove('on'); };
+    $('imFol').onclick = function () { folderPick(it); };
+  }
+  function folderPick(it) {
+    var fs = U().folders;
+    showSheet('<h3>أضف لمجلد</h3>' + fs.map(function (f, i) { return '<button class="btn sec" data-fp="' + i + '">📁 ' + esc(f.name) + ' · ' + ar0(f.items.length) + '</button>'; }).join('') + '<input class="rtl" id="fpN" maxlength="30" placeholder="أو اكتب اسم مجلد جديد"><button class="btn" id="fpNew">＋ مجلد جديد وأضفه</button>');
+    var add = function (f) { var k = favKey(it); if (!f.items.some(function (x) { return x.k === k; })) f.items.unshift(snap(it)); saveUi(); $('sheet').classList.remove('on'); toast('انضاف لمجلد «' + f.name + '»'); };
+    [].forEach.call($('sheetIn').querySelectorAll('[data-fp]'), function (b) { b.onclick = function () { add(fs[+b.getAttribute('data-fp')]); }; });
+    $('fpNew').onclick = function () { var n = $('fpN').value.trim(); if (!n) { toast('اكتب اسم المجلد'); return; } var f = { id: 'f' + Date.now(), name: n.slice(0, 30), items: [] }; fs.push(f); add(f); };
+  }
+  function foldersSheet() {
+    var fs = U().folders;
+    showSheet('<h3>مجلداتي</h3>' + (fs.length ? fs.map(function (f, i) { return '<div class="row"><div class="tx"><b>📁 ' + esc(f.name) + '</b><small>' + ar0(f.items.length) + ' عنصر</small></div><span class="ed" data-fr="' + i + '">✎</span><span class="ed" data-fd="' + i + '">✕</span></div>'; }).join('') : '<div class="empty">ماكو مجلدات. أضف عنصر لمجلد بالضغط المطوّل على أي قناة أو فيلم.</div>') + '<input class="rtl" id="foN" maxlength="30" placeholder="اسم مجلد جديد"><button class="btn" id="foNew">＋ مجلد جديد</button>');
+    [].forEach.call($('sheetIn').querySelectorAll('[data-fd]'), function (b) { b.onclick = function () { fs.splice(+b.getAttribute('data-fd'), 1); saveUi(); foldersSheet(); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-fr]'), function (b) { b.onclick = function () { var f = fs[+b.getAttribute('data-fr')], n = prompt('اسم المجلد', f.name); if (n && n.trim()) { f.name = n.trim().slice(0, 30); saveUi(); foldersSheet(); } }; });
+    $('foNew').onclick = function () { var n = $('foN').value.trim(); if (!n) return; fs.push({ id: 'f' + Date.now(), name: n.slice(0, 30), items: [] }); saveUi(); foldersSheet(); };
+  }
+
+  /* ---------------------------------------------------------------- title page */
+  function detailPage(it) {
+    if (!it) return;
+    var u = esc(logoOf(it)), d = $('detail');
+    d.innerHTML = '<div class="dh"><div class="dbg" style="background-image:url(\'' + u + '\')"></div><div class="dsh"></div><button class="dback" id="dBack">→</button>' +
+      '<div class="din"><div class="art poster dpo">' + ini(it.n) + (u ? '<img src="' + u + '" alt="" onerror="this.remove()">' : '') + '</div><h2>' + esc(it.n) + '</h2><div class="hmeta">' + metaOf(it) + '</div></div></div>' +
+      '<div class="dbody"><div class="dact"><button class="pri" id="dPlay">▶ شاهد الآن</button><button id="dFav">' + (isFav(it) ? '✓ قائمتي' : '＋ قائمتي') + '</button><button id="dFol">📁 مجلد</button><button id="dShare">↗ مشاركة</button></div>' +
+      (it.pl ? '<p class="dpl2">' + esc(it.pl) + '</p>' : '') + '<div id="dEps"></div><div id="dRel"></div></div>';
+    d.classList.add('on'); d.scrollTop = 0;
+    $('dBack').onclick = closeDetail;
+    $('dFav').onclick = function () { var on = toggleFav(it); $('dFav').textContent = on ? '✓ قائمتي' : '＋ قائمتي'; };
+    $('dFol').onclick = function () { folderPick(it); };
+    $('dShare').onclick = function () { try { A.share(it.n + (it.u ? '\n' + it.u : '')); } catch (e) {} };
+    var eps = null;
+    $('dPlay').onclick = function () { if (it.t === 'xs') { if (eps && eps.length) playEps(it, eps, 0); else toast('جاري تحميل الحلقات…'); } else playPack([it], 0, true); };
+    if (it.t === 'xs') {
+      var x = xt(); if (!x) return;
+      $('dEps').innerHTML = '<div class="sh">الحلقات</div><div class="empty">جاري تحميل الحلقات…</div>';
+      xjson(x, 'get_series_info', '&series_id=' + it.id).then(function (j) {
+        eps = []; var seasons = (j && j.episodes) || {};
+        Object.keys(seasons).sort(function (a, b) { return a - b; }).forEach(function (sn) { (seasons[sn] || []).forEach(function (e) { eps.push({ t: 'xe', n: 'م' + sn + ' · ح' + (e.episode_num || '') + (e.title ? ' · ' + e.title : ''), u: x.host + '/series/' + cred(x) + e.id + '.' + (e.container_extension || 'mp4'), img: (e.info && e.info.movie_image) || it.img }); }); });
+        if (!$('dEps')) return;
+        $('dEps').innerHTML = '<div class="sh">الحلقات · ' + ar0(eps.length) + '</div>' + (eps.length ? '<div class="eps">' + eps.map(function (e, i) { return '<div class="ep" data-ep="' + i + '"><div class="eth" style="background-image:url(\'' + esc(e.img || '') + '\')"></div><div class="etx"><b>' + esc(e.n) + '</b></div><span>▶</span></div>'; }).join('') + '</div>' : '<div class="empty">ماكو حلقات</div>');
+        [].forEach.call($('dEps').querySelectorAll('[data-ep]'), function (r) { r.onclick = function () { playEps(it, eps, +r.getAttribute('data-ep')); }; });
+      });
+    } else {
+      var rel = VOD.m.concat(VOD.s).filter(function (c) { return c !== it && c.g === it.g && c.img; }).slice(0, 18);
+      if (rel.length > 2) { cin.flat = cin.flat || []; $('dRel').innerHTML = '<div class="sh">مشابه</div><div class="hs">' + rel.map(function (r) { var i = cin.flat.push(r) - 1; return '<div class="card" data-rm="' + i + '">' + art(r, true) + '<b>' + esc(r.n) + '</b></div>'; }).join('') + '</div>'; [].forEach.call($('dRel').querySelectorAll('[data-rm]'), function (c) { c.onclick = function () { detailPage(cin.flat[+c.getAttribute('data-rm')]); }; }); }
+    }
+  }
+  function playEps(it, eps, i) { A.play(JSON.stringify({ vod: 1, list: eps.map(function (e) { return { n: it.n + ' · ' + e.n, u: e.u, img: e.img || it.img || '', pl: it.pl || '', m: metaTxt(it) }; }) }), i); }
+  function closeDetail() { var d = $('detail'); d.classList.remove('on'); d.innerHTML = ''; }
+
+  /* ---------------------------------------------------------------- search */
+  var sq = '', ssel = 'all';
+  function drawSearch() {
+    pageAnim();
+    $('top').innerHTML = '<input class="search" id="gq" type="search" placeholder="ابحث عن فيلم أو مسلسل أو قناة…" value="' + esc(sq) + '">' + chips([['all', 'الكل'], ['m', 'أفلام'], ['s', 'مسلسلات'], ['c', 'قنوات']], ssel, 'gs');
+    var q = $('gq'); q.oninput = function () { sq = q.value.trim(); drawSearchBody(); };
+    drawSearchBody();
+  }
+  function drawSearchBody() {
+    var w = sq.toLowerCase(), html = '', ok = function (c) { return String(c.n).toLowerCase().indexOf(w) >= 0; };
+    cin.flat = []; chFlat = [];
+    if (!w) {
+      var by = {}; VOD.m.concat(VOD.s).forEach(function (c) { var g = c.g || 'بدون تصنيف'; by[g] = (by[g] || 0) + 1; });
+      var gs = Object.keys(by).sort(function (a, b) { return by[b] - by[a]; }).slice(0, 18);
+      html = '<div class="sh">تصفّح حسب التصنيف</div><div class="tiles">' + (gs.length ? gs.map(function (g) { var hh = hue(g); return '<div class="ct big" data-cc="' + esc(g) + '" style="background-image:linear-gradient(135deg,hsla(' + hh + ',75%,34%,.95),rgba(0,0,0,.85))"><b>' + esc(g) + '</b><small>' + ar0(by[g]) + '</small></div>'; }).join('') : '<div class="empty">اكتب اسم للبحث</div>') + '</div>';
+      $('main').innerHTML = html; return;
+    }
+    var card = function (it) { var i = cin.flat.push(it) - 1; return '<div class="card" data-cm="' + i + '">' + art(it, true) + '<b>' + esc(it.n) + '</b></div>'; };
+    var ms = ssel === 'all' || ssel === 'm' ? VOD.m.filter(ok).slice(0, 60) : [], ss = ssel === 'all' || ssel === 's' ? VOD.s.filter(ok).slice(0, 60) : [], cs = ssel === 'all' || ssel === 'c' ? liveAll().filter(ok).slice(0, 80) : [];
+    if (ms.length) html += '<div class="sh">أفلام · ' + ar0(ms.length) + '</div><div class="grid">' + ms.map(card).join('') + '</div>';
+    if (ss.length) html += '<div class="sh">مسلسلات · ' + ar0(ss.length) + '</div><div class="grid">' + ss.map(card).join('') + '</div>';
+    if (cs.length) html += '<div class="sh">قنوات · ' + ar0(cs.length) + '</div>' + cs.map(function (c) { var i = chFlat.push(c) - 1; return '<div class="row" data-ci="' + i + '">' + art(c) + '<div class="tx"><b>' + esc(c.n) + '</b><small>' + esc(c.grp || catName(c.g) || '') + '</small></div></div>'; }).join('');
+    $('main').innerHTML = html || '<div class="empty">ماكو نتيجة لـ «' + esc(sq) + '»</div>';
+  }
+
+  /* ---------------------------------------------------------------- library */
+  var lsel = 'fav', lfold = null;
+  function drawLib() {
+    pageAnim();
+    $('top').innerHTML = chips([['fav', 'المفضلة'], ['rec', 'تابع المشاهدة'], ['fol', 'مجلداتي']], lsel, 'lb');
+    var body = '', l;
+    cin.flat = []; chFlat = [];
+    var rowOf = function (it, extra) { var k = it.t ? cin.flat.push(it) - 1 : chFlat.push(it) - 1; return '<div class="row" ' + (it.t ? 'data-cm="' : 'data-ci="') + k + '">' + art(it, !!it.t) + '<div class="tx"><b>' + esc(it.n) + '</b><small>' + (it.t ? (it.t === 'xs' ? 'مسلسل' : 'فيلم') : 'قناة') + '</small></div>' + (extra || '') + '</div>'; };
+    if (lsel === 'fav') { l = favList(); body = l.length ? l.map(function (it) { return rowOf(it); }).join('') : '<div class="empty">ماكو مفضلة بعد.<br>اضغط «＋ قائمتي» بأي فيلم أو النجمة جنب أي قناة.</div>'; }
+    else if (lsel === 'rec') { l = J('mRec', []); body = l.length ? l.map(function (it) { return rowOf(it); }).join('') : '<div class="empty">ما شاهدت شي بعد.</div>'; }
+    else if (lfold) {
+      var f = U().folders.filter(function (x) { return x.id === lfold; })[0];
+      if (!f) { lfold = null; return drawLib(); }
+      body = '<div class="sh"><span>📁 ' + esc(f.name) + '</span><a data-fb="1">‹ المجلدات</a></div>' + (f.items.length ? f.items.map(function (it, i) { return rowOf(it, '<span class="ed" data-fxd="' + i + '">✕</span>'); }).join('') : '<div class="empty">المجلد فاضي. اضغط مطوّلاً على أي عنصر وأضفه هنا.</div>');
+    } else {
+      var fs = U().folders;
+      body = (fs.length ? fs.map(function (f) { return '<div class="row" data-fo="' + esc(f.id) + '"><div class="art">📁</div><div class="tx"><b>' + esc(f.name) + '</b><small>' + ar0(f.items.length) + ' عنصر</small></div></div>'; }).join('') : '<div class="empty">ماكو مجلدات. سوّ مجلد واجمع فيه قنواتك وأفلامك.</div>') + '<div style="padding:8px 2px"><button class="btn" id="foAdd">＋ مجلد جديد</button></div>';
+    }
+    $('main').innerHTML = body; $('main').scrollTop = 0;
+    if ($('foAdd')) $('foAdd').onclick = foldersSheet;
+  }
+
+  /* ---------------------------------------------------------------- profile + customisation */
+  function drawProf() {
+    drawSet(); pageAnim();
+    var u = U();
+    var head = '<div class="pcard"><div class="pav" id="pAv" style="background:' + ACC[(u.av || 0) % ACC.length] + '">' + AVS[u.av || 0] + '</div><div class="pnm"><input class="rtl" id="pName" maxlength="20" value="' + esc(u.pname != null ? u.pname : (S.ownerName || '')) + '" placeholder="اسمك"><small>اضغط الصورة لتغييرها · الاسم قابل للتعديل</small></div></div>' +
+      '<div class="pmenu">' + [['th', '🎨', 'المظهر والثيمات', themeOf().n], ['nv', '▭', 'شريط التنقل', ar0(u.nav.length) + ' أيقونات'], ['rw', '↕', 'ترتيب الرئيسية والصفوف', 'رتّب وأخفِ'], ['fo', '📁', 'مجلداتي', ar0(u.folders.length) + ' مجلد'], ['br', '✎', 'اسم التطبيق', u.app || 'قنواتي']].map(function (r) { return '<div class="row" data-pm="' + r[0] + '"><div class="art pi">' + r[1] + '</div><div class="tx"><b>' + r[2] + '</b><small>' + esc(r[3]) + '</small></div><span class="chev">‹</span></div>'; }).join('') + '</div><div class="sh">الإعدادات المتقدمة</div>';
+    $('main').insertAdjacentHTML('afterbegin', head);
+    $('pName').onchange = function () { var v = $('pName').value.trim(); U().pname = v; if (v) S.ownerName = v; else delete S.ownerName; saveUi(); toast('انحفظ الاسم'); };
+    $('pAv').onclick = function () { U().av = ((U().av || 0) + 1) % AVS.length; saveUi(); $('pAv').textContent = AVS[U().av]; $('pAv').style.background = ACC[U().av % ACC.length]; renderHeader(); };
+    [].forEach.call($('main').querySelectorAll('[data-pm]'), function (r) { r.onclick = function () { ({ th: themeSheet, nv: navSheet, rw: rowsSheet, fo: foldersSheet, br: brandSheet })[r.getAttribute('data-pm')](); }; });
+  }
+  function redrawPage() { renderNav(); renderHeader(); if (tab === 'vod') drawVod(); else if (tab === 'live') drawLive(); else if (tab === 'search') drawSearch(); else if (tab === 'lib') drawLib(); else drawProf(); }
+  function themeSheet() {
+    var u = U();
+    showSheet('<h3>المظهر والثيمات</h3><div class="thg">' + THEMES.map(function (t) { return '<div class="thc' + (u.theme === t.id ? ' on' : '') + '" data-th="' + t.id + '"><i style="background:' + t.g + '"></i><b>' + t.n + '</b></div>'; }).join('') + '</div>' +
+      '<div class="lab">اللون الرئيسي</div><div class="sws">' + ACC.map(function (c) { return '<i data-ac="' + c + '" style="background:' + c + '"' + ((u.accent || themeOf().rz) === c ? ' class="on"' : '') + '></i>'; }).join('') + '<i data-ac="" class="rs">↺</i></div>' +
+      '<div class="lab">الخلفية</div>' + chips([['theme', 'حسب الثيم'], ['black', 'أسود'], ['grad', 'تدرّج'], ['img', 'صورة']], u.bg || 'theme', 'bgm') + '<input dir="ltr" id="bgI" placeholder="رابط الصورة (للخيار صورة)" value="' + esc(u.bgimg || '') + '" style="display:' + (u.bg === 'img' ? 'block' : 'none') + '">' +
+      '<div class="lab">حجم البطاقات</div>' + chips([['s', 'صغير'], ['m', 'عادي'], ['l', 'كبير']], u.size, 'szm') +
+      '<div class="lab">الصفحة اللي يفتح عليها</div>' + chips([['live', 'القنوات'], ['home', 'الرئيسية']], u.start || 'live', 'stm') + '<div class="lab">الحركات</div>' + chips([['on', 'كاملة'], ['off', 'أقل (للأجهزة الضعيفة)']], u.anim === 'off' ? 'off' : 'on', 'anm'));
+    var rs = function () { saveUi(); applyTheme(); redrawPage(); themeSheet(); };
+    [].forEach.call($('sheetIn').querySelectorAll('[data-th]'), function (c) { c.onclick = function () { u.theme = c.getAttribute('data-th'); delete u.accent; rs(); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-ac]'), function (c) { c.onclick = function () { if (c.getAttribute('data-ac')) u.accent = c.getAttribute('data-ac'); else delete u.accent; rs(); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-bgm]'), function (c) { c.onclick = function () { u.bg = c.getAttribute('data-bgm'); rs(); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-szm]'), function (c) { c.onclick = function () { u.size = c.getAttribute('data-szm'); rs(); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-anm]'), function (c) { c.onclick = function () { u.anim = c.getAttribute('data-anm'); rs(); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-stm]'), function (c) { c.onclick = function () { u.start = c.getAttribute('data-stm'); rs(); }; });
+    if ($('bgI')) $('bgI').onchange = function () { u.bgimg = $('bgI').value.trim(); saveUi(); applyTheme(); };
+  }
+  function navSheet() {
+    var u = U(), all = Object.keys(NAVD);
+    var rest = all.filter(function (id) { return u.nav.indexOf(id) < 0; });
+    showSheet('<h3>شريط التنقل</h3><div class="res">اختر من ٣ إلى ٥ أيقونات ورتّبها.</div>' + u.nav.map(function (id, i) { return '<div class="row"><div class="art pi"><svg viewBox="0 0 24 24" class="ni">' + NAVD[id][1] + '</svg></div><div class="tx"><b>' + NAVD[id][0] + '</b></div><span class="ed" data-nu="' + i + '">▲</span><span class="ed" data-nd="' + i + '">▼</span><span class="ed" data-nx="' + i + '">✕</span></div>'; }).join('') +
+      (rest.length && u.nav.length < 5 ? '<div class="lab">أضف أيقونة</div>' + rest.map(function (id) { return '<div class="row" data-na="' + id + '"><div class="art pi"><svg viewBox="0 0 24 24" class="ni">' + NAVD[id][1] + '</svg></div><div class="tx"><b>' + NAVD[id][0] + '</b></div><span class="chev">＋</span></div>'; }).join('') : ''));
+    var rs = function () { saveUi(); renderNav(); navSheet(); };
+    [].forEach.call($('sheetIn').querySelectorAll('[data-nu]'), function (b) { b.onclick = function () { var i = +b.getAttribute('data-nu'); if (i > 0) { var t = u.nav[i]; u.nav[i] = u.nav[i - 1]; u.nav[i - 1] = t; rs(); } }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-nd]'), function (b) { b.onclick = function () { var i = +b.getAttribute('data-nd'); if (i < u.nav.length - 1) { var t = u.nav[i]; u.nav[i] = u.nav[i + 1]; u.nav[i + 1] = t; rs(); } }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-nx]'), function (b) { b.onclick = function () { if (u.nav.length <= 3) { toast('أقل شي ٣ أيقونات'); return; } var i = +b.getAttribute('data-nx'); if (u.nav[i] === 'prof') { toast('«ملفي» لازم يبقى حتى توصل للإعدادات'); return; } u.nav.splice(i, 1); rs(); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-na]'), function (b) { b.onclick = function () { if (u.nav.length < 5) { u.nav.push(b.getAttribute('data-na')); rs(); } }; });
+  }
+  function rowsSheet() {
+    var u = U(), kinds = [['v', 'الرئيسية (أفلام ومسلسلات)'], ['l', 'القنوات']];
+    var html = '<h3>ترتيب الصفوف</h3><div class="res">رتّب الصفوف أو أخفِها. افتح الصفحة أول حتى تظهر صفوفها هنا.</div>';
+    kinds.forEach(function (k) {
+      var secs = lastSecs[k[0]]; if (!secs.length) { html += '<div class="lab">' + k[1] + '</div><div class="empty">افتح هذي الصفحة أول</div>'; return; }
+      var o = u.rows[k[0]] || []; secs = secs.slice().sort(function (a, b) { var ia = o.indexOf(a.id), ib = o.indexOf(b.id); return (ia < 0 ? 1e6 : ia) - (ib < 0 ? 1e6 : ib) || 0; });
+      html += '<div class="lab">' + k[1] + '</div>' + secs.map(function (s, i) { var hid = u.rows.hid.indexOf(k[0] + ':' + s.id) >= 0; return '<div class="row' + (hid ? ' off' : '') + '"><div class="tx"><b>' + esc(s.n) + '</b></div><span class="ed" data-ru="' + k[0] + '|' + i + '">▲</span><span class="ed" data-rd="' + k[0] + '|' + i + '">▼</span><span class="ed" data-rh="' + k[0] + ':' + esc(s.id) + '">' + (hid ? '👁‍🗨' : '👁') + '</span></div>'; }).join('');
+    });
+    showSheet(html);
+    var mv = function (kind, i, d) { var secs = lastSecs[kind].map(function (s) { return s.id; }), o = (u.rows[kind] || []).filter(function (id) { return secs.indexOf(id) >= 0; }); secs.forEach(function (id) { if (o.indexOf(id) < 0) o.push(id); }); var j = i + d; if (j < 0 || j >= o.length) return; var t = o[i]; o[i] = o[j]; o[j] = t; u.rows[kind] = o; saveUi(); redrawPage(); rowsSheet(); };
+    [].forEach.call($('sheetIn').querySelectorAll('[data-ru]'), function (b) { b.onclick = function () { var p = b.getAttribute('data-ru').split('|'); mv(p[0], +p[1], -1); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-rd]'), function (b) { b.onclick = function () { var p = b.getAttribute('data-rd').split('|'); mv(p[0], +p[1], 1); }; });
+    [].forEach.call($('sheetIn').querySelectorAll('[data-rh]'), function (b) { b.onclick = function () { var k = b.getAttribute('data-rh'), i = u.rows.hid.indexOf(k); if (i >= 0) u.rows.hid.splice(i, 1); else u.rows.hid.push(k); saveUi(); redrawPage(); rowsSheet(); }; });
+  }
+  function brandSheet() {
+    var u = U();
+    showSheet('<h3>اسم التطبيق</h3><label class="f">الاسم</label><input class="rtl" id="brN" maxlength="20" value="' + esc(u.app || 'قنواتي') + '"><label class="f">السطر تحت الاسم</label><input class="rtl" id="brT" maxlength="40" value="' + esc(u.tag != null ? u.tag : 'بث مباشر مجاني · أفلام ومسلسلات') + '"><label class="f">اسم تبويب الأفلام</label><input class="rtl" id="brV" maxlength="16" value="' + esc(S.vodName || '') + '" placeholder="الأفلام"><button class="btn" id="brS">حفظ</button>');
+    $('brS').onclick = function () { u.app = $('brN').value.trim() || 'قنواتي'; u.tag = $('brT').value.trim(); var v = $('brV').value.trim(); if (v) S.vodName = v; else delete S.vodName; saveUi(); renderHeader(); $('sheet').classList.remove('on'); toast('انحفظ'); };
+  }
+
   /* ---------------------------------------------------------------- events */
   function show(t) {
-    tab = t; [].forEach.call($('nav').children, function (b) { b.classList.toggle('on', b.getAttribute('data-t') === t); });
-    if (t === 'live') drawLive(); else if (t === 'vod') drawVod(); else if (t === 'fav') drawFav(); else drawSet();
+    if (t === 'fav') t = 'lib'; if (t === 'set') t = 'prof';
+    tab = t; closeDetail(); markNav(); pageAnim();
+    if (t === 'live') drawLive(); else if (t === 'vod') drawVod(); else if (t === 'search') drawSearch(); else if (t === 'lib') drawLib(); else drawProf();
   }
-  function applyName() { $('vodTab').textContent = String(S.vodName || '').trim() || 'الأفلام'; }
-  $('nav').onclick = function (e) { var b = e.target.closest('button'); if (b) show(b.getAttribute('data-t')); };
+  function applyName() { renderHeader(); }
+  $('nav').onclick = function (e) { var b = e.target.closest('button'); if (b) navGo(b.getAttribute('data-n')); };
+  $('hAv').onclick = function () { show('prof'); };
   $('main').onclick = function (e) {
     var t = e.target;
     if (t.id === 'more') { (tab === 'live' ? st.live : st.vod).more += PAGE; tab === 'live' ? drawLive(true) : drawVod(true); return; }
-    var cmk = t.closest('[data-cm]'); if (cmk) { detailSheet(cin.flat[+cmk.getAttribute('data-cm')]); return; }
-    var cck = t.closest('[data-cc]'); if (cck) { cin.cat = cck.getAttribute('data-cc'); st.vod.sub = 'c'; drawVod(); return; }
+    var cmk = t.closest('[data-cm]'); if (cmk) { detailPage(cin.flat[+cmk.getAttribute('data-cm')]); return; }
+    var cck = t.closest('[data-cc]'); if (cck) { cin.cat = cck.getAttribute('data-cc'); st.vod.sub = 'c'; tab = 'vod'; markNav(); drawVod(); return; }
+    var fo = t.closest('[data-fo]'); if (fo) { lfold = fo.getAttribute('data-fo'); drawLib(); return; }
+    if (t.closest('[data-fb]')) { lfold = null; drawLib(); return; }
+    var fxd = t.closest('[data-fxd]'); if (fxd) { var ff = U().folders.filter(function (x) { return x.id === lfold; })[0]; if (ff) { ff.items.splice(+fxd.getAttribute('data-fxd'), 1); saveUi(); drawLib(); } e.stopPropagation(); return; }
     var hak = t.closest('[data-ha]'); if (hak) { heroAct(hak.getAttribute('data-ha')); return; }
     var cik = t.closest('[data-ci]'); if (cik) { var chn = chFlat[+cik.getAttribute('data-ci')]; if (chn) playPack([chn], 0, false); return; }
     var nwk = t.closest('[data-now]'); if (nwk) { var nc = chFlat[+nwk.getAttribute('data-now')]; if (nc) playPack([nc], 0, false); return; }
@@ -535,19 +769,21 @@
     var v = t.closest('[data-v]'); if (v) { var it2 = cur[+v.getAttribute('data-v')]; if (it2.t === 'xs') openSeries(it2); else playPack([it2], 0, true); }
   };
   var lp = null;
-  $('main').addEventListener('touchstart', function (e) { var v = e.target.closest('[data-v]'); if (!v) return; lp = setTimeout(function () { var it = cur[+v.getAttribute('data-v')]; toast(toggleFav(it) ? 'انضاف للمفضلة' : 'انشال من المفضلة'); drawVod(true); lp = 'done'; }, 600); }, { passive: true });
+  $('main').addEventListener('touchstart', function (e) { var v = e.target.closest('[data-v],[data-cm],[data-ci]'); if (!v) return; lp = setTimeout(function () { var it = v.hasAttribute('data-v') ? cur[+v.getAttribute('data-v')] : v.hasAttribute('data-cm') ? cin.flat[+v.getAttribute('data-cm')] : chFlat[+v.getAttribute('data-ci')]; lp = 'done'; if (it) itemMenu(it); }, 520); }, { passive: true });
   $('main').addEventListener('touchend', function (e) { if (lp === 'done') { e.preventDefault(); } clearTimeout(lp); lp = null; });
   $('main').addEventListener('touchmove', function () { clearTimeout(lp); lp = null; }, { passive: true });
   $('top').onclick = function (e) {
-    var t = e.target.closest('[data-lc],[data-vs],[data-vc],#rnd,#vrf,#siteBtn,#siteAdd,#siteBack,#siteRef'); if (!t) return;
+    var t = e.target.closest('[data-lc],[data-vs],[data-vc],[data-lb],[data-gs],#rnd,#vrf,#siteBtn,#siteAdd,#siteBack,#siteRef'); if (!t) return;
     if (t.id === 'siteAdd') { addSiteSheet(); return; }
     if (t.id === 'siteBack') { siteView = null; drawSites(); return; }
     if (t.id === 'siteRef') { var sx = siteById(siteView); if (sx) { toast('جاري قراءة الموقع…'); A.readSite(sx.url); } return; }
     if (t.id === 'siteBtn') { siteSheet(); return; }
     if (t.id === 'rnd') { var all = liveAll(); if (all.length) { var i = Math.floor(Math.random() * all.length); toast(all[i].n); playPack(all, i, false); } return; }
     if (t.id === 'vrf') { toast('جاري التحديث…'); lastErr = ''; loadVod(true).then(function () { drawVod(); }); return; }
+    if (t.hasAttribute('data-lb')) { lsel = t.getAttribute('data-lb'); lfold = null; drawLib(); return; }
+    if (t.hasAttribute('data-gs')) { ssel = t.getAttribute('data-gs'); drawSearch(); return; }
     if (t.hasAttribute('data-lc')) { st.live.cat = t.getAttribute('data-lc'); st.live.more = PAGE; st.live.q = ''; drawLive(); }
-    else if (t.hasAttribute('data-vs')) { st.vod.sub = t.getAttribute('data-vs'); st.vod.cat = '*'; st.vod.more = PAGE; st.vod.q = ''; drawVod(); }
+    else if (t.hasAttribute('data-vs')) { st.vod.sub = t.getAttribute('data-vs'); st.vod.cat = '*'; st.vod.more = PAGE; st.vod.q = ''; markNav(); drawVod(); }
     else { st.vod.cat = t.getAttribute('data-vc'); st.vod.more = PAGE; st.vod.q = ''; drawVod(); }
   };
   $('sheet').onclick = function (e) { if (e.target === $('sheet')) $('sheet').classList.remove('on'); };
@@ -556,7 +792,7 @@
     try {
       if (typeof isActive === 'function' && !isActive()) return true;
       if (r === 'live' || r === 'vod' || r === 'fav' || r === 'set') { show(r); return true; }
-      if (r === 'search') { show('live'); setTimeout(function () { var q = document.querySelector('.search'); q && q.focus(); }, 300); return true; }
+      if (r === 'search') { show('search'); setTimeout(function () { var q = document.querySelector('.search'); q && q.focus(); }, 300); return true; }
       if (r === 'quiet') { S.quietOn = !S.quietOn; save(); toast(S.quietOn ? 'وضع الهدوء شغّال' : 'وضع الهدوء متوقف'); return true; }
       if (r === 'random') { var all = liveAll(); if (all.length) { var i = Math.floor(Math.random() * all.length); toast(all[i].n); playPack(all, i, false); } return true; }
       if (r === 'resume' || r.indexOf('fav:') === 0) {
@@ -572,7 +808,7 @@
     return false;
   };
   mirror();
-  window.onBack = function () { if ($('sheet').classList.contains('on')) { $('sheet').classList.remove('on'); return true; } if ($('greet').classList.contains('on')) { $('greet').classList.remove('on'); return true; } if (tab !== 'live') { show('live'); return true; } return false; };
+  window.onBack = function () { if ($('detail').classList.contains('on')) { closeDetail(); return true; } if ($('sheet').classList.contains('on')) { $('sheet').classList.remove('on'); return true; } if ($('greet').classList.contains('on')) { $('greet').classList.remove('on'); return true; } if (tab !== 'live') { show('live'); return true; } return false; };
 
   /* ---------------------------------------------------------------- the welcome, then go */
   function greet() {
@@ -599,7 +835,7 @@
       else { $('lkMsg').textContent = 'الكود غير صحيح، أو مخصّص لجهاز ثاني'; var b = el.querySelector('.lk'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
     };
   }
-  function begin() { applyName(); greet(); setTimeout(checkClip, 3800); drawLive(); loadLive(false).then(function () { if (tab === 'live') drawLive(); }); loadVod(false).then(function () { if (tab === 'vod') drawVod(); }); }
+  function begin() { applyTheme(); renderNav(); renderHeader(); greet(); setTimeout(checkClip, 3800); if (U().start === 'home') { st.vod.sub = 'h'; show('vod'); } else show('live'); loadLive(false).then(function () { if (tab === 'live') drawLive(); }); loadVod(false).then(function () { if (tab === 'vod') drawVod(); }); }
   if (isActive()) begin(); else showLock();
   window.__mobile = { S: S, parseM3U: parseM3U };
 })();
