@@ -104,8 +104,15 @@
 
   /* ---------------------------------------------------------------- playing */
   function playPack(list, i, vod) {
-    var lo = Math.max(0, i - 250), sl = list.slice(lo, lo + 500);
-    A.play(JSON.stringify({ vod: vod ? 1 : 0, list: sl.map(function (c) { return { n: c.n, u: c.u, ua: c.ua || '', r: c.r || '' }; }) }), i - lo);
+    /* live: the player gets every channel (with its group) and starts at the one you chose, so you can change channel inside the player */
+    var src = list, k = i;
+    if (!vod && list[i]) {
+      var all = liveAll(), key = favKey(list[i]), f = -1;
+      for (var z = 0; z < all.length; z++) if (favKey(all[z]) === key) { f = z; break; }
+      if (f >= 0) { src = all; k = f; }
+    }
+    var lo = Math.max(0, k - 1500), sl = src.slice(lo, lo + 3000);
+    A.play(JSON.stringify({ vod: vod ? 1 : 0, list: sl.map(function (c) { return { n: c.n, u: c.u, ua: c.ua || '', r: c.r || '', g: c.grp || (c.g && catName(c.g)) || '' }; }) }), k - lo);
     pushRecent(list[i]);
   }
 
@@ -368,7 +375,7 @@
           return '<div class="sh">' + esc(sec.title) + '</div><div class="hs">' + (sec.items || []).map(function (it) {
             var i = siteFlat.push(it) - 1; return '<div class="card" data-sl="' + i + '">' + art({ n: it.n, img: it.img }, true) + '<b>' + esc(it.n) + '</b></div>';
           }).join('') + '</div>';
-        }).join('') + '<div class="empty" style="padding:14px">اضغط أي عنوان: ينفتح بالموقع، شغّله، وإذا لقط التطبيق البث يطلع «شغّل» و«حفظ القناة».</div>';
+        }).join('') + '<div class="empty" style="padding:14px">اضغط أي عنوان: يجهّزه التطبيق ويشغّله بمشغّله. وإذا الصفحة تحتاج ضغطة منك، تطلع لك وتضغط التشغيل بنفسك.</div>';
       }
     }
     if (!siteView) {
@@ -404,7 +411,7 @@
     if (t.id === 'more') { (tab === 'live' ? st.live : st.vod).more += PAGE; tab === 'live' ? drawLive(true) : drawVod(true); return; }
     var sd = t.closest('[data-sd]'); if (sd) { removeSite(sd.getAttribute('data-sd')); e.stopPropagation(); return; }
     var stc = t.closest('[data-st]'); if (stc) { openSiteView(stc.getAttribute('data-st')); return; }
-    var sl = t.closest('[data-sl]'); if (sl) { var it0 = siteFlat[+sl.getAttribute('data-sl')]; if (it0) A.openSite(it0.u); return; }
+    var sl = t.closest('[data-sl]'); if (sl) { var it0 = siteFlat[+sl.getAttribute('data-sl')]; if (it0) { toast('جاري تجهيز التشغيل…'); A.playSite(it0.u); } return; }
     var ed = t.closest('[data-ed]'); if (ed) { var c0 = (S.myCh || [])[+ed.getAttribute('data-ed')]; if (c0) chSheet({ ix: +ed.getAttribute('data-ed'), n: c0.n, u: c0.u, l: c0.l }); e.stopPropagation(); return; }
     var s = t.closest('[data-s]'); if (s) { var c = cur[+s.getAttribute('data-s')]; s.classList.toggle('on', toggleFav(c)); e.stopPropagation(); return; }
     var fs = t.closest('[data-fs]'); if (fs) { toggleFav(cur[+fs.getAttribute('data-fs')]); drawFav(); return; }
