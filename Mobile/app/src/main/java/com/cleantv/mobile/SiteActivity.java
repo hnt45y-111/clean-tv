@@ -51,34 +51,80 @@ public class SiteActivity extends Activity {
             + "if(!t)t=(n.innerText||n.textContent||'');return String(t).replace(/\\s+/g,' ').trim();}"
             + "for(var i=0;i<6&&e;i++,e=e.parentElement){var t=tx(e);if(t&&t.length>=2&&t.length<=40)return t;}return '';}catch(_){return '';}})";
 
-    /** reads the arrangement of the page: rows of poster cards (a link with a picture and a name), each row with the heading above it */
-    private static final String READ_JS = "(function(){try{"
-        + "function abs(u){try{return new URL(u,location.href).href}catch(e){return ''}}"
-        + "function dom(h){var p=String(h).split('.');return p.slice(-2).join('.')}"
-        + "var base=dom(location.hostname),cards=[],seen={};"
-        + "var as=document.querySelectorAll('a[href]');"
-        + "for(var i=0;i<as.length&&cards.length<900;i++){var a=as[i],href=abs(a.getAttribute('href'));if(!href||/^(javascript|mailto|tel)/i.test(href)||href.split('#')[0]===location.href.split('#')[0])continue;"
-        + "var hn='';try{hn=new URL(href).hostname}catch(e){continue}if(dom(hn)!==base)continue;"
-        + "var im=a.querySelector('img'),src='';"
-        + "if(im){src=im.getAttribute('data-src')||im.getAttribute('data-lazy-src')||im.getAttribute('data-original')||im.currentSrc||im.src||'';}"
-        + "if(!src){var bg=a.querySelector('[style*=\"background-image\"]')||a;var m=(bg.getAttribute('style')||'').match(/url\\(['\"]?([^'\")]+)/);if(m)src=m[1];}"
-        + "if(!src||/^data:/.test(src)&&src.length<200)continue;"
-        + "var name=(a.getAttribute('title')||(im&&im.getAttribute('alt'))||a.getAttribute('aria-label')||a.innerText||'').replace(/\\s+/g,' ').trim();"
-        + "if(name.length<2||name.length>70||seen[href])continue;seen[href]=1;cards.push({n:name,u:href,img:abs(src),a:a});}"
-        + "if(cards.length<4)return JSON.stringify({sections:[]});"
-        + "function count(el){var n=0;for(var k=0;k<cards.length;k++)if(el.contains(cards[k].a))n++;return n}"
-        + "var groups=[];"
-        + "cards.forEach(function(c){var e=c.a.parentElement,best=null;for(var d=0;d<6&&e&&e!==document.body;d++,e=e.parentElement){if(count(e)>=4){best=e;break}}"
-        + "if(!best)best=document.body;var g=null;for(var j=0;j<groups.length;j++)if(groups[j].el===best)g=groups[j];if(!g){g={el:best,items:[]};groups.push(g)}g.items.push(c)});"
-        + "function head(el){var e=el;for(var d=0;d<5&&e;d++,e=e.parentElement){var q=e.querySelector&&e.querySelector('h1,h2,h3,h4,[class*=title],[class*=heading],[class*=head]');"
-        + "if(q&&!q.querySelector('a[href] img')){var t=(q.innerText||'').replace(/\\s+/g,' ').trim();if(t.length>=2&&t.length<=40)return t}"
-        + "var p=e.previousElementSibling;for(var k=0;k<2&&p;k++,p=p.previousElementSibling){if(/^H[1-6]$/.test(p.tagName)||/title|head/i.test(p.className||'')){var t2=(p.innerText||'').replace(/\\s+/g,' ').trim();if(t2.length>=2&&t2.length<=40)return t2}}}return ''}"
-        + "var out=[];groups.forEach(function(g,i){if(g.items.length<3)return;out.push({title:head(g.el)||('قسم '+(out.length+1)),items:g.items.slice(0,60).map(function(c){return{n:c.n,u:c.u,img:c.img}})})});"
-        + "var nm=(document.querySelector('meta[property=\"og:site_name\"]')||{}).content||(document.title||location.hostname).split(/\\s[-|–—]\\s/)[0];"
-        + "var ic=document.querySelector('link[rel~=\"icon\"],link[rel=\"apple-touch-icon\"]');"
-        + "return JSON.stringify({name:String(nm).trim().slice(0,40),icon:ic?abs(ic.getAttribute('href')):'',sections:out.slice(0,30)});}catch(e){return JSON.stringify({sections:[],err:String(e)})}})()";
+    /** reads the arrangement of the page: generated from tools/mobile/read_site.js by tools/mobile/gen_readjs.py */
+    private static final String READ_JS = ""
+        + "(function () {\n"
+        + "try {\n"
+        + "function abs(u) { try { return new URL(u, location.href).href; } catch (e) { return ''; } }\n"
+        + "function dom(h) { return String(h).split('.').slice(-2).join('.'); }\n"
+        + "var base = dom(location.hostname), cards = [], seen = {};\n"
+        + "var MENU = /^(الرئيسية|الصفحة الرئيسية|بحث|search|home|menu|القائمة|تسجيل|دخول|login|register|حسابي|المزيد|more|اتصل|من نحن|about|contact|الاصدارات الجديدة|المشهورة|الإعدادات|settings)$/i;\n"
+        + "var NAV = 'nav,header,footer,aside,[role=navigation],[class*=menu],[class*=navbar],[class*=sidebar],[class*=footer],[id*=menu],[id*=nav],[id*=sidebar]';\n"
+        + "var as = document.querySelectorAll('a[href]');\n"
+        + "for (var i = 0; i < as.length && cards.length < 1200; i++) {\n"
+        + "var a = as[i], href = abs(a.getAttribute('href'));\n"
+        + "if (!href || /^(javascript|mailto|tel)/i.test(href) || href.split('#')[0] === location.href.split('#')[0]) continue;\n"
+        + "var hn = ''; try { hn = new URL(href).hostname; } catch (e) { continue; }\n"
+        + "if (dom(hn) !== base) continue;\n"
+        + "if (a.closest(NAV)) continue;\n"
+        + "var im = a.querySelector('img'), src = '';\n"
+        + "if (im) src = im.getAttribute('data-src') || im.getAttribute('data-lazy-src') || im.getAttribute('data-original') || im.currentSrc || im.src || '';\n"
+        + "if (!src) { var bg = a.querySelector('[style*=\"background-image\"]') || a; var m = (bg.getAttribute('style') || '').match(/url\\(['\"]?([^'\")]+)/); if (m) src = m[1]; }\n"
+        + "if (!src || /\\.svg(\\?|$)/i.test(src) || /^data:image\\/svg/i.test(src) || /(^|[\\/_-])(icon|logo|sprite|avatar|flag|banner-ad)[\\/_.-]/i.test(src)) continue;\n"
+        + "var box = (im || a).getBoundingClientRect(), w = box.width, h = box.height;\n"
+        + "if (w < 90 || h < 60 || w * h < 9000) continue;\n"
+        + "var name = (a.getAttribute('title') || (im && im.getAttribute('alt')) || a.getAttribute('aria-label') || a.innerText || '').replace(/\\s+/g, ' ').trim();\n"
+        + "if (name.length < 2 || name.length > 70 || MENU.test(name) || seen[href]) continue;\n"
+        + "seen[href] = 1; cards.push({ n: name, u: href, img: abs(src), a: a, area: w * h });\n"
+        + "}\n"
+        + "if (cards.length < 4) return JSON.stringify({ sections: [] });\n"
+        + "var all = cards.map(function (c) { return c.area; }).sort(function (x, y) { return x - y; }), gm = all[Math.floor(all.length / 2)];\n"
+        + "cards = cards.filter(function (c) { return c.area >= gm * 0.45; });\n"
+        + "if (cards.length < 4) return JSON.stringify({ sections: [] });\n"
+        + "function count(el) { var n = 0; for (var k = 0; k < cards.length; k++) if (el.contains(cards[k].a)) n++; return n; }\n"
+        + "var groups = [];\n"
+        + "cards.forEach(function (c) {\n"
+        + "var e = c.a.parentElement, best = null;\n"
+        + "for (var d = 0; d < 6 && e && e !== document.body; d++, e = e.parentElement) { if (count(e) >= 4) { best = e; break; } }\n"
+        + "if (!best) best = document.body;\n"
+        + "var g = null; for (var j = 0; j < groups.length; j++) if (groups[j].el === best) g = groups[j];\n"
+        + "if (!g) { g = { el: best, items: [] }; groups.push(g); }\n"
+        + "g.items.push(c);\n"
+        + "});\n"
+        + "function head(el) {\n"
+        + "var e = el;\n"
+        + "for (var d = 0; d < 5 && e; d++, e = e.parentElement) {\n"
+        + "var q = e.querySelector && e.querySelector('h1,h2,h3,h4,[class*=title],[class*=heading],[class*=head]');\n"
+        + "if (q && !q.querySelector('a[href] img')) { var t = (q.innerText || '').replace(/\\s+/g, ' ').trim(); if (t.length >= 2 && t.length <= 40 && !MENU.test(t)) return t; }\n"
+        + "var p = e.previousElementSibling;\n"
+        + "for (var k = 0; k < 2 && p; k++, p = p.previousElementSibling) {\n"
+        + "if (/^H[1-6]$/.test(p.tagName) || /title|head/i.test(p.className || '')) { var t2 = (p.innerText || '').replace(/\\s+/g, ' ').trim(); if (t2.length >= 2 && t2.length <= 40) return t2; }\n"
+        + "}\n"
+        + "}\n"
+        + "return '';\n"
+        + "}\n"
+        + "var out = [];\n"
+        + "groups.forEach(function (g) {\n"
+        + "var ar = g.items.map(function (c) { return c.area; }).sort(function (x, y) { return x - y; }), med = ar[Math.floor(ar.length / 2)];\n"
+        + "var items = g.items.filter(function (c) { return c.area >= med * 0.45; });\n"
+        + "if (items.length < 3) return;\n"
+        + "out.push({ title: head(g.el) || ('قسم ' + (out.length + 1)), items: items.slice(0, 60).map(function (c) { return { n: c.n, u: c.u, img: c.img }; }) });\n"
+        + "});\n"
+        + "var nm = (document.querySelector('meta[property=\"og:site_name\"]') || {}).content || (document.title || location.hostname).split(/\\s[-|–—]\\s/)[0];\n"
+        + "var ic = document.querySelector('link[rel~=\"icon\"],link[rel=\"apple-touch-icon\"]');\n"
+        + "return JSON.stringify({ name: String(nm).trim().slice(0, 40), icon: ic ? abs(ic.getAttribute('href')) : '', sections: out.slice(0, 30) });\n"
+        + "} catch (e) { return JSON.stringify({ sections: [], err: String(e) }); }\n"
+        + "})()\n";
 
-    private boolean auto, reading;
+    /** tries the usual «play» buttons of a page (and the video itself) */
+    private static final String CLICK_JS = "(function(){try{var v=document.querySelector('video');if(v){try{v.play()}catch(e){}}"
+        + "var s=['.vjs-big-play-button','.jw-icon-display','.plyr__control--overlaid','[class*=big-play]','[class*=play-button]','[class*=playbtn]','[class*=btn-play]',"
+        + "'button[aria-label*=Play]','button[title*=Play]','[class*=watch-btn]','a[class*=watch]','[class*=play]'];"
+        + "for(var i=0;i<s.length;i++){var e=document.querySelector(s[i]);if(e&&e.offsetWidth>0&&e.offsetHeight>0){e.click();return 'c'+i}}return ''}catch(e){return ''}})()";
+
+    private boolean auto, reading, playMode, launched;
+    private int attempts, clicks;
+    private FrameLayout cover;
     private final Handler h = new Handler(Looper.getMainLooper());
     private float d;
     private FrameLayout root;
@@ -134,6 +180,7 @@ public class SiteActivity extends Activity {
         getWindow().setStatusBarColor(Color.BLACK); getWindow().setNavigationBarColor(Color.BLACK);
         startUrl = getIntent().getStringExtra("url");
         auto = getIntent().getBooleanExtra("auto", false);
+        playMode = getIntent().getBooleanExtra("play", false);
         if (startUrl == null || !startUrl.startsWith("http") || !Acct.active(this)) { finish(); return; }
 
         root = new FrameLayout(this);
@@ -154,7 +201,8 @@ public class SiteActivity extends Activity {
             @Override public void onPageStarted(WebView v, String u, android.graphics.Bitmap f) { pageUrl = u == null ? "" : u; }
             @Override public void onPageFinished(WebView v, String u) {
                 title.setText(v.getTitle() == null || v.getTitle().length() == 0 ? Uri_host(u) : v.getTitle());
-                if (auto && !reading) { reading = true; h.postDelayed(new Runnable() { public void run() { readPage(true); } }, 2500); }
+                if (auto && !reading) { reading = true; attempts = 0; h.postDelayed(new Runnable() { public void run() { readPage(true); } }, 2500); }
+                if (playMode && !launched && clicks == 0) { clicks = 1; h.postDelayed(autoClick, 1200); }
             }
             @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
                 try {
@@ -230,10 +278,31 @@ public class SiteActivity extends Activity {
         play.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { playSel(); } });
         save.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { askSave(); } });
 
+        if (playMode) {
+            cover = new FrameLayout(this); cover.setBackgroundColor(0xF2000000);
+            LinearLayout cl = new LinearLayout(this); cl.setOrientation(LinearLayout.VERTICAL); cl.setGravity(Gravity.CENTER); cl.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            android.widget.ProgressBar pb = new android.widget.ProgressBar(this); cl.addView(pb, new LinearLayout.LayoutParams(dp(48), dp(48)));
+            TextView ct = new TextView(this); ct.setText("جاري تجهيز التشغيل…"); ct.setTextColor(Color.WHITE); ct.setTextSize(18); ct.setTypeface(Typeface.DEFAULT_BOLD); ct.setPadding(0, dp(16), 0, dp(16)); cl.addView(ct);
+            TextView sh = btn("إظهار الصفحة", 0xFF2A2A2A, Color.WHITE); cl.addView(sh);
+            sh.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { reveal(); } });
+            cover.addView(cl, new FrameLayout.LayoutParams(-1, -1)); root.addView(cover, new FrameLayout.LayoutParams(-1, -1, Gravity.TOP));
+            h.postDelayed(new Runnable() { public void run() { if (!launched) { reveal(); Toast.makeText(SiteActivity.this, "اضغط زر التشغيل بالصفحة، وإذا لقط التطبيق البث يشغّله", Toast.LENGTH_LONG).show(); } } }, 16000);
+        }
         setContentView(root);
         web.loadUrl(startUrl);
         Toast.makeText(this, "افتح القناة بالصفحة، وإذا لقيت البث يطلع شريط الحفظ", Toast.LENGTH_LONG).show();
     }
+
+    private final Runnable autoClick = new Runnable() {
+        public void run() {
+            if (launched || isFinishing() || clicks > 9) return;
+            clicks++;
+            web.evaluateJavascript(CLICK_JS, null);
+            h.postDelayed(this, 1600);
+        }
+    };
+
+    private void reveal() { if (cover != null) cover.setVisibility(View.GONE); }
 
     private static String siteId(String url) { String h = Uri_host(url); return h == null ? "x" : h.replaceAll("^www\\.", "").replaceAll("[^a-z0-9]", "_"); }
 
@@ -252,6 +321,7 @@ public class SiteActivity extends Activity {
                         if (secs != null) for (int i = 0; i < secs.length(); i++) n += secs.getJSONObject(i).getJSONArray("items").length();
                         if (secs == null || secs.length() == 0 || n < 4) {
                             reading = false;
+                            if (quiet && ++attempts < 3) { reading = true; h.postDelayed(new Runnable() { public void run() { readPage(true); } }, 4500); return; }
                             Toast.makeText(SiteActivity.this, quiet ? "ما قدرت أقرأ ترتيب الصفحة، تصفّح الموقع واضغط «واجهة قنواتي» لما تطلع القوائم" : "ما لگيت قوائم أفلام بهالصفحة. افتح الصفحة الرئيسية للموقع وجرّب", Toast.LENGTH_LONG).show();
                             return;
                         }
@@ -291,6 +361,7 @@ public class SiteActivity extends Activity {
         found.add(it);
         while (found.size() > 8) found.remove(0);
         sel = found.size() - 1;
+        if (playMode && !launched) { launched = true; reveal(); playSel(true); }
         paint();
     }
 
@@ -310,12 +381,14 @@ public class SiteActivity extends Activity {
         }
     }
 
-    private void playSel() {
+    private void playSel() { playSel(false); }
+
+    private void playSel(boolean vod) {
         if (found.isEmpty()) return;
         String[] st = found.get(Math.min(sel, found.size() - 1));
         try {
             JSONObject c = new JSONObject().put("n", nameOf(st).length() > 0 ? nameOf(st) : "بث").put("u", st[0]).put("ua", st[2] == null ? "" : st[2]).put("r", st[1] == null ? "" : st[1]);
-            PlayerActivity.PACK = new JSONObject().put("vod", 0).put("list", new JSONArray().put(c)).toString();
+            PlayerActivity.PACK = new JSONObject().put("vod", vod ? 1 : 0).put("list", new JSONArray().put(c)).toString();
             startActivity(new Intent(this, PlayerActivity.class).putExtra("idx", 0));
         } catch (Throwable t) { Toast.makeText(this, "ما اشتغل البث", Toast.LENGTH_SHORT).show(); }
     }

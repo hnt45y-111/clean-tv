@@ -172,6 +172,11 @@ public class MainActivity extends Activity {
             if (!Acct.active(MainActivity.this)) return;
             runOnUiThread(() -> startActivity(new Intent(MainActivity.this, SiteActivity.class).putExtra("url", url).putExtra("auto", true)));
         }
+        /** opens a title of a saved site: the app clicks «play» for you and, when the page starts a stream, plays it in the app's own player */
+        @JavascriptInterface public void playSite(final String url) {
+            if (!Acct.active(MainActivity.this)) return;
+            runOnUiThread(() -> startActivity(new Intent(MainActivity.this, SiteActivity.class).putExtra("url", url).putExtra("play", true)));
+        }
         @JavascriptInterface public String version() { return "1.0"; }
     }
 }
