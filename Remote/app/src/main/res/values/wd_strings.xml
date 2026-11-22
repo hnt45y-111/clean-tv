@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wd_pad">أزرار التحكم بالتلفاز: اتجاهات وموافق ورجوع وصوت</string>
+    <string name="wd_volume">رفع وخفض وكتم صوت التلفاز</string>
+    <string name="wd_power">زر واحد لقائمة إيقاف التلفاز</string>
+    <string name="wd_channels">افتح القنوات أو قناة عشوائية أو غيّر الخلفية</string>
+    <string name="wd_media">تشغيل وإيقاف والتالي والسابق والرئيسية</string>
+    <string name="wd_grid">اختصارات جاهزة تختارها، وكل ما تكبّر الويدجت تطلع اقتراحات أكثر</string>
+    <string name="wd_status">متصل أو لا، وزر للإعدادات</string>
+</resources>

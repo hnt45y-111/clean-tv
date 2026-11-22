@@ -46,6 +46,19 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(), "Android");
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
+        route(getIntent());
+        try { com.msm.widgets.Shortcuts.publish(this, new com.cleantv.mobile.wd.MobileWidgets(), com.msm.widgets.ActActivity.class, com.msm.widgets.PickActivity.class); } catch (Throwable ignored) { }
+    }
+
+    /** a widget or an icon shortcut asked to open a place inside the app */
+    @Override
+    protected void onNewIntent(Intent i) { super.onNewIntent(i); setIntent(i); route(i); }
+
+    private void route(Intent i) {
+        String r = i == null ? null : i.getStringExtra("msm_route");
+        if (r == null || web == null) return;
+        i.removeExtra("msm_route");
+        web.evaluateJavascript("(function(){var r=" + JSONObject.quote(r) + ",n=0;function g(){try{if(window.__route&&window.__route(r)!==false)return;}catch(e){}if(++n<40)setTimeout(g,300)}g()})()", null);
     }
 
     @Override
@@ -90,7 +103,10 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> startActivity(Intent.createChooser(new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t), "مشاركة")));
         }
         @JavascriptInterface public String getPref(String k) { return prefs.getString(k, ""); }
-        @JavascriptInterface public void setPref(String k, String v) { prefs.edit().putString(k, v).apply(); }
+        @JavascriptInterface public void setPref(String k, String v) {
+            prefs.edit().putString(k, v).apply();
+            if (k.startsWith("w_") || k.equals("quietOn")) com.cleantv.mobile.wd.MobileWidgets.refreshAll(MainActivity.this);
+        }
         @JavascriptInterface public void toast(String t) { runOnUiThread(() -> Toast.makeText(MainActivity.this, t, Toast.LENGTH_SHORT).show()); }
         @JavascriptInterface public void copy(String t) {
             runOnUiThread(() -> { ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE); cm.setPrimaryClip(ClipData.newPlainText("t", t)); });

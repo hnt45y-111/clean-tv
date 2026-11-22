@@ -18,6 +18,10 @@ android {
         }
     }
     buildTypes { debug { signingConfig signingConfigs.fixed } }
+    sourceSets.main {
+        java.srcDirs += '../../widgets/java'
+        res.srcDirs += '../../widgets/res'
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17

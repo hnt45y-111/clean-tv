@@ -1,0 +1,35 @@
+        <receiver android:name="com.moamal.studio.wd.StudioWidgets$Health" android:exported="true" android:label="صحة الموبايل">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_health" />
+        </receiver>
+        <receiver android:name="com.moamal.studio.wd.StudioWidgets$Clean" android:exported="true" android:label="نظّف وسرّع">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_clean" />
+        </receiver>
+        <receiver android:name="com.moamal.studio.wd.StudioWidgets$Grid" android:exported="true" android:label="اختصاراتي">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_grid" />
+        </receiver>
+        <receiver android:name="com.moamal.studio.wd.StudioWidgets$Devices" android:exported="true" android:label="أجهزتي">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_devices" />
+        </receiver>
+        <receiver android:name="com.moamal.studio.wd.StudioWidgets$Nav" android:exported="true" android:label="شريط سريع">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_nav" />
+        </receiver>
+        <receiver android:name="com.moamal.studio.wd.StudioWidgets$Storage" android:exported="true" android:label="التخزين">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_storage" />
+        </receiver>
+        <receiver android:name="com.moamal.studio.wd.StudioWidgets$Tv" android:exported="true" android:label="جهّز الشاشة">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_tv" />
+        </receiver>
+        <activity android:name="com.msm.widgets.PickActivity" android:exported="true" android:excludeFromRecents="true" android:theme="@android:style/Theme.Material.NoActionBar">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+            <meta-data android:name="msm.app" android:value="com.moamal.studio.wd.StudioWidgets" />
+        </activity>
+        <activity android:name="com.msm.widgets.ActActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@android:style/Theme.NoDisplay">
+            <meta-data android:name="msm.app" android:value="com.moamal.studio.wd.StudioWidgets" />
+        </activity>

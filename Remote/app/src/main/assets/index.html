@@ -285,7 +285,13 @@
   };
   $('codeIn').addEventListener('input', function () { if (this.value.length === 6) $('pairBtn').onclick(); });
   $('otherTv').onclick = $('forget').onclick = function () { localStorage.removeItem('tvBase'); base = ''; startFind(); };
-  function showMain() { view('mainView'); setConn(true); $('tvUrl').textContent = base.replace('http://', ''); refresh(); }
+  function showMain() { view('mainView'); setConn(true); $('tvUrl').textContent = base.replace('http://', ''); refresh(); try { N && N.saveLink(base, token, $('tvName').textContent); } catch (e) {} }
+  /* widgets and the app-icon menu open a tab from outside; false = not ready yet (still pairing), the app tries again */
+  window.__route = function (r) {
+    var b = document.querySelector('#nav [data-go="' + r + '"]');
+    if (!b || $('nav').classList.contains('hidden')) return false;
+    b.click(); return true;
+  };
 
   // ---------- remote ----------
   function key(k) { buzz(k === 'ok' ? 25 : 10); api('key', { k: k }).catch(function () {}); }

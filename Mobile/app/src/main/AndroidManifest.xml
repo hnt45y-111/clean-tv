@@ -22,5 +22,42 @@
             android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
             android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
+        <!-- MSM-WIDGETS:BEGIN -->
+        <receiver android:name="com.cleantv.mobile.wd.MobileWidgets$Resume" android:exported="true" android:label="كمّل المشاهدة">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_resume" />
+        </receiver>
+        <receiver android:name="com.cleantv.mobile.wd.MobileWidgets$Favs" android:exported="true" android:label="مفضلتي">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_favs" />
+        </receiver>
+        <receiver android:name="com.cleantv.mobile.wd.MobileWidgets$Grid" android:exported="true" android:label="اختصاراتي">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_grid" />
+        </receiver>
+        <receiver android:name="com.cleantv.mobile.wd.MobileWidgets$Nav" android:exported="true" android:label="شريط سريع">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_nav" />
+        </receiver>
+        <receiver android:name="com.cleantv.mobile.wd.MobileWidgets$Clock" android:exported="true" android:label="ساعة وتحية">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_clock" />
+        </receiver>
+        <receiver android:name="com.cleantv.mobile.wd.MobileWidgets$Movies" android:exported="true" android:label="الأفلام">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_movies" />
+        </receiver>
+        <receiver android:name="com.cleantv.mobile.wd.MobileWidgets$Quiet" android:exported="true" android:label="وضع الهدوء">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wd_quiet" />
+        </receiver>
+        <activity android:name="com.msm.widgets.PickActivity" android:exported="true" android:excludeFromRecents="true" android:theme="@android:style/Theme.Material.NoActionBar">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+            <meta-data android:name="msm.app" android:value="com.cleantv.mobile.wd.MobileWidgets" />
+        </activity>
+        <activity android:name="com.msm.widgets.ActActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@android:style/Theme.NoDisplay">
+            <meta-data android:name="msm.app" android:value="com.cleantv.mobile.wd.MobileWidgets" />
+        </activity>
+        <!-- MSM-WIDGETS:END -->
     </application>
 </manifest>

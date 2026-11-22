@@ -6,7 +6,15 @@
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function J(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
-  function W(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function W(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} if (k === 'mFav' || k === 'mRec') mirror(); }
+  /* the home-screen widgets read these (they cannot open the page's storage): favourites, last channel, last film */
+  function mirror() {
+    try {
+      var f = J('mFav', []), r = J('mRec', []), lc = r.filter(function (x) { return !x.t; })[0], lv = r.filter(function (x) { return !!x.t; })[0];
+      A.setPref('w_fav', JSON.stringify(f.slice(0, 6).map(function (x) { return x.n; })));
+      A.setPref('w_lastch', lc ? lc.n : ''); A.setPref('w_lastvod', lv ? lv.n : '');
+    } catch (e) {}
+  }
   function toast(t) { try { A.toast(t); } catch (e) {} }
 
   /* ---------------------------------------------------------------- settings (kept on the phone) */
@@ -236,6 +244,27 @@
     else { st.vod.cat = t.getAttribute('data-vc'); st.vod.more = PAGE; st.vod.q = ''; drawVod(); }
   };
   $('sheet').onclick = function (e) { if (e.target === $('sheet')) $('sheet').classList.remove('on'); };
+  /* widgets and the app-icon menu open a place from outside; false = not ready yet, the app tries again */
+  window.__route = function (r) {
+    try {
+      if (typeof isActive === 'function' && !isActive()) return true;
+      if (r === 'live' || r === 'vod' || r === 'fav' || r === 'set') { show(r); return true; }
+      if (r === 'search') { show('live'); setTimeout(function () { var q = document.querySelector('.search'); q && q.focus(); }, 300); return true; }
+      if (r === 'quiet') { S.quietOn = !S.quietOn; save(); toast(S.quietOn ? 'وضع الهدوء شغّال' : 'وضع الهدوء متوقف'); return true; }
+      if (r === 'random') { var all = liveAll(); if (all.length) { var i = Math.floor(Math.random() * all.length); toast(all[i].n); playPack(all, i, false); } return true; }
+      if (r === 'resume' || r.indexOf('fav:') === 0) {
+        var src = r === 'resume' ? J('mRec', []) : J('mFav', []), it = r === 'resume' ? src[0] : src[+r.split(':')[1]];
+        if (!it) { show(r === 'resume' ? 'live' : 'fav'); return true; }
+        if (it.t === 'xs') { openSeries(it); return true; }
+        if (it.t) { playPack([it], 0, true); return true; }
+        var live = liveAll(), k = -1; for (var z = 0; z < live.length; z++) if (favKey(live[z]) === favKey(it)) { k = z; break; }
+        if (k >= 0) playPack(live, k, false); else playPack([it], 0, false);
+        return true;
+      }
+    } catch (e) { return false; }
+    return false;
+  };
+  mirror();
   window.onBack = function () { if ($('sheet').classList.contains('on')) { $('sheet').classList.remove('on'); return true; } if ($('greet').classList.contains('on')) { $('greet').classList.remove('on'); return true; } if (tab !== 'live') { show('live'); return true; } return false; };
 
   /* ---------------------------------------------------------------- the welcome, then go */

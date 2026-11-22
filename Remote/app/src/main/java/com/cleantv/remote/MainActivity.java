@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
     private NsdManager.DiscoveryListener discovery;
     private WifiManager.MulticastLock lock;
 
-    static SharedPreferences prefs(Context c) { return c.getSharedPreferences("remote", MODE_PRIVATE); }
+    public static SharedPreferences prefs(Context c) { return c.getSharedPreferences("remote", MODE_PRIVATE); }
 
     @Override
     protected void onCreate(Bundle b) {
@@ -82,6 +82,8 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(), "Native");
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
+        route(getIntent());
+        try { com.msm.widgets.Shortcuts.publish(this, new com.cleantv.remote.wd.RemoteWidgets(), com.msm.widgets.ActActivity.class, com.msm.widgets.PickActivity.class); } catch (Throwable ignored) { }
 
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationChannel ch = new NotificationChannel(CHANNEL, "تنبيهات التلفاز", NotificationManager.IMPORTANCE_HIGH);
@@ -94,6 +96,17 @@ public class MainActivity extends Activity {
         IntentFilter f = new IntentFilter(INSTALL_ACTION);
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(installReceiver, f, Context.RECEIVER_NOT_EXPORTED);
         else registerReceiver(installReceiver, f);
+    }
+
+    /** a widget or an icon shortcut asked to open a place inside the app */
+    @Override
+    protected void onNewIntent(Intent i) { super.onNewIntent(i); setIntent(i); route(i); }
+
+    private void route(Intent i) {
+        String r = i == null ? null : i.getStringExtra("msm_route");
+        if (r == null || web == null) return;
+        i.removeExtra("msm_route");
+        web.evaluateJavascript("(function(){var r=" + JSONObject.quote(r) + ",n=0;function g(){try{if(window.__route&&window.__route(r)!==false)return;}catch(e){}if(++n<40)setTimeout(g,300)}g()})()", null);
     }
 
     @Override
@@ -225,6 +238,10 @@ public class MainActivity extends Activity {
 
     // ---------------- bridge ----------------
     public class Bridge {
+        /** the page tells us which TV it is paired with, so the home-screen widgets can drive it without opening the app */
+        @JavascriptInterface public void saveLink(String base, String token, String name) {
+            prefs(MainActivity.this).edit().putString("tvBase", base == null ? "" : base).putString("tvToken", token == null ? "" : token).putString("tvName", name == null ? "" : name).apply();
+        }
         @JavascriptInterface public void discover() { runOnUiThread(new Runnable() { public void run() { startDiscovery(); } }); }
         @JavascriptInterface public void stopDiscover() { runOnUiThread(new Runnable() { public void run() { stopDiscovery(); } }); }
 

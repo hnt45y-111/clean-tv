@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wd_health">مؤشر تقديري للتخزين والرام والبطارية وزر تنظيف</string>
+    <string name="wd_clean">زر واحد يفتح تنظيف الموبايل</string>
+    <string name="wd_grid">اختصارات جاهزة تختارها، وكل ما تكبّر الويدجت تطلع اقتراحات أكثر</string>
+    <string name="wd_devices">هذا الموبايل، موبايل ثاني، أو الشاشة</string>
+    <string name="wd_nav">أجهزتي والتجهيز والواجهة والريموت</string>
+    <string name="wd_storage">المساحة الفاضية والرام</string>
+    <string name="wd_tv">تنظيف وتسريع التلفزيون وتصميم واجهته</string>
+</resources>
