@@ -193,11 +193,19 @@ public class SiteActivity extends Activity {
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         s.setJavaScriptCanOpenWindowsAutomatically(false); s.setSupportMultipleWindows(false);
         s.setUseWideViewPort(true); s.setLoadWithOverviewMode(true); s.setBuiltInZoomControls(true); s.setDisplayZoomControls(false);
-        ua = s.getUserAgentString();
+        /* a normal browser's name: many sites refuse (or hide the player from) a WebView */
+        ua = s.getUserAgentString().replace("; wv)", ")").replaceAll(" Version/\\d+\\.\\d+", "");
+        s.setUserAgentString(ua);
         CookieManager.getInstance().setAcceptCookie(true);
         try { CookieManager.getInstance().setAcceptThirdPartyCookies(web, true); } catch (Throwable ignored) { }
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) { return false; }
+            @Override public void onReceivedError(WebView v, WebResourceRequest r, android.webkit.WebResourceError e) {
+                if (r != null && r.isForMainFrame()) Toast.makeText(SiteActivity.this, "تعذّر فتح الصفحة: " + (e == null ? "" : e.getDescription()), Toast.LENGTH_LONG).show();
+            }
+            @Override public void onReceivedHttpError(WebView v, WebResourceRequest r, WebResourceResponse e) {
+                if (r != null && r.isForMainFrame() && e != null && e.getStatusCode() >= 400) Toast.makeText(SiteActivity.this, "الموقع رد بخطأ " + e.getStatusCode() + (e.getStatusCode() == 403 ? " (رافض الطلب أو يحتاج تحقق)" : ""), Toast.LENGTH_LONG).show();
+            }
             @Override public void onPageStarted(WebView v, String u, android.graphics.Bitmap f) { pageUrl = u == null ? "" : u; }
             @Override public void onPageFinished(WebView v, String u) {
                 title.setText(v.getTitle() == null || v.getTitle().length() == 0 ? Uri_host(u) : v.getTitle());
@@ -241,8 +249,8 @@ public class SiteActivity extends Activity {
                 return false;
             }
         });
-        root.addView(web, new FrameLayout.LayoutParams(-1, -1));
-        web.setPadding(0, dp(48), 0, 0);
+        FrameLayout.LayoutParams wl = new FrameLayout.LayoutParams(-1, -1); wl.topMargin = dp(48);
+        root.addView(web, wl);
 
         /* top bar: close · back · title */
         LinearLayout bar = new LinearLayout(this);
