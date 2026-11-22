@@ -162,6 +162,11 @@ public class MainActivity extends Activity {
             PlayerActivity.PACK = json;
             startActivity(new Intent(MainActivity.this, PlayerActivity.class).putExtra("idx", idx));
         }
+        /** opens a website inside the app: the streams the page plays can be played and saved (only on an activated phone) */
+        @JavascriptInterface public void openSite(final String url) {
+            if (!Acct.active(MainActivity.this)) return;
+            runOnUiThread(() -> startActivity(new Intent(MainActivity.this, SiteActivity.class).putExtra("url", url)));
+        }
         @JavascriptInterface public String version() { return "1.0"; }
     }
 }
