@@ -9,12 +9,26 @@
         android:usesCleartextTraffic="true"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
-        <activity android:name=".MainActivity" android:exported="true"
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- «مشاركة» رابط من أي تطبيق -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- روابط البث وقوائم التشغيل فقط (مو كل روابط الإنترنت) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" /><data android:scheme="https" />
+                <data android:mimeType="application/x-mpegurl" /><data android:mimeType="application/vnd.apple.mpegurl" /><data android:mimeType="audio/x-mpegurl" /><data android:mimeType="video/*" />
             </intent-filter>
         </activity>
         <activity android:name=".PlayerActivity" android:exported="false"
