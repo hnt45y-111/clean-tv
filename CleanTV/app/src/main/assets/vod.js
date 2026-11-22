@@ -248,6 +248,7 @@
       if (D.m) pick(); else pull(false).then(pick);
     },
     key: key,
+    data: function () { return D; }, go: function (it) { if (it.t === 'xs') { Vod.open(); play(it); } else play(it); }, favs: favs, toggleFav: toggleFav,
     _t: { state: st, data: D }
   };
 })();

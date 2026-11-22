@@ -473,13 +473,24 @@
     refresh: function () { siteCache = null; st.key = null; if (document.getElementById('liveModal').classList.contains('on')) draw(); },
     /* jumps straight to one category of قنواتي (used by «شنو أشوف الليلة؟») */
     openCategory: function (id) {
-      Live.open();
+      Live._open();
       var cs = cats(), i = cs.map(function (c) { return c.id; }).indexOf(id);
       if (i >= 0) { st.ci = i; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.sub = null; endSearch(true); st.f = filter(id).length ? 'grid' : 'cat'; }
       draw();
     },
     /* text typed from the phone (or the TV keyboard) */
     search: function (v) { startSearch(); var b = searchBox(); if (b) { b.value = v || ''; onSearchInput(); } },
+    _open: null,
+    /* the home screen (home.js) reads the channels and plays a list from here */
+    channels: function () { var out = (window.CHANNELS || []).slice(); try { custom().lists.forEach(function (L) { if (L.key === 'own') L.items.forEach(function (c) { out.push(c); }); }); } catch (e) {} return out; },
+    favs: function () { return favs(); }, recents: function () { return jget((window.__pk ? window.__pk('lvRecent') : 'lvRecent')); }, toggleFav: toggleFav, isFav: isFav,
+    playList: function (list, i, title) {
+      if (!list || !list[i]) return;
+      var chans = list.map(function (c) { return { n: c.n, u: c.u, i: c.i || '', s: subOf(c), r: c.r || '', ua: c.ua || '', l: c.l || '', yt: isYT(c.u) }; });
+      pushRecent(list[i]); if (window.__logWatch) window.__logWatch('live', list[i].n);
+      var pk = { list: chans, folders: [{ n: title || 'قنواتي', idx: chans.map(function (x, k) { return k; }) }], fold: 0, idx: i };
+      if (window.Android && window.Android.playLive) window.Android.playLive(JSON.stringify(pk), i); else if (window.toastMsg) window.toastMsg('التشغيل يحتاج الشاشة نفسها');
+    },
     key: function (k) {
       var cs = cats(), box = searchBox();
       if (box && document.activeElement === box) {

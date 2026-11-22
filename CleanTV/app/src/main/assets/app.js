@@ -2247,8 +2247,8 @@
     var t0 = Date.now();
     return ((HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u)).then(function (t) { noteNet(Date.now() - t0, String(t || '').indexOf('ERR:') !== 0); return t; });
   };
-  window.__closeVod = function () { var m = document.getElementById('vodModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
-  window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
+  window.__closeVod = function () { var m = document.getElementById('vodModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); if (window.Home) window.Home.back(); };
+  window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); if (window.Home) window.Home.back(); };
   var nav = (function () {
     var rowEls = qa('#content .row');
     var AR = rowEls.indexOf(document.getElementById('row-apps'));
@@ -2421,6 +2421,7 @@
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
     clickSound(); if (k === 'ok') pressFx();
+    if (layer === 'home') return window.Home.key(k);
     if (layer === 'live') return window.Live.key(k);
     if (layer === 'vod') return window.Vod.key(k);
     if (layer === 'bg') return pickerKey(k);
@@ -2464,7 +2465,7 @@
   /* the remote's INPUT / SOURCE button opens the source picker from the home screen (before, it only worked once «المداخل» was opened by hand) */
   window.__tvInput = function () {
     if (!HAS_ANDROID || !IS_TV) return;
-    if (layer !== 'main') { if (layer === 'live' || layer === 'vod') return; closeModal(); }
+    if (layer !== 'main') { if (layer === 'live' || layer === 'vod' || layer === 'home') return; closeModal(); }
     tvAction('tvinput');
   };
   window.remoteKey = function (k) { handleKey(k); };
