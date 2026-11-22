@@ -177,6 +177,6 @@ public class MainActivity extends Activity {
             if (!Acct.active(MainActivity.this)) return;
             runOnUiThread(() -> startActivity(new Intent(MainActivity.this, SiteActivity.class).putExtra("url", url).putExtra("play", true)));
         }
-        @JavascriptInterface public String version() { return "1.0"; }
+        @JavascriptInterface public String version() { return "2.0"; }
     }
 }

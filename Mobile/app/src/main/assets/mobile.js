@@ -103,6 +103,8 @@
   function pushRecent(it) { var k = favKey(it); W('mRec', [it].concat(J('mRec', []).filter(function (f) { return favKey(f) !== k; })).slice(0, 30)); }
 
   /* ---------------------------------------------------------------- playing */
+  /* the line under the name in the player: rating | kind | group */
+  function metaTxt(c) { return c.t ? (c.rt > 0 ? '★ ' + c.rt.toFixed(1) + '  |  ' : '') + (c.t === 'xs' ? 'مسلسل' : 'فيلم') + (c.g ? '  |  ' + c.g : '') : (c.grp || catName(c.g) || ''); }
   function playPack(list, i, vod) {
     /* live: the player gets every channel (with its group) and starts at the one you chose, so you can change channel inside the player */
     var src = list, k = i;
@@ -112,7 +114,7 @@
       if (f >= 0) { src = all; k = f; }
     }
     var lo = Math.max(0, k - 1500), sl = src.slice(lo, lo + 3000);
-    A.play(JSON.stringify({ vod: vod ? 1 : 0, list: sl.map(function (c) { return { n: c.n, u: c.u, ua: c.ua || '', r: c.r || '', g: c.grp || (c.g && catName(c.g)) || '' }; }) }), k - lo);
+    A.play(JSON.stringify({ vod: vod ? 1 : 0, list: sl.map(function (c) { return { n: c.n, u: c.u, ua: c.ua || '', r: c.r || '', g: c.grp || (c.g && catName(c.g)) || '', img: logoOf(c) || '', pl: c.pl || '', m: metaTxt(c) }; }) }), k - lo);
     pushRecent(list[i]);
   }
 
