@@ -54,7 +54,25 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent i) { super.onNewIntent(i); setIntent(i); route(i); }
 
+    /** a link sent with «share», or a stream/playlist opened with this app: the page offers to save it */
+    private void incoming(Intent i) {
+        if (i == null || web == null) return;
+        String t = null;
+        if (Intent.ACTION_SEND.equals(i.getAction())) t = i.getStringExtra(Intent.EXTRA_TEXT);
+        else if (Intent.ACTION_VIEW.equals(i.getAction()) && i.getData() != null && i.getStringExtra("msm_route") == null) {
+            String sc = i.getData().getScheme();
+            if ("http".equals(sc) || "https".equals(sc)) t = i.getDataString();
+        }
+        if (t == null) return;
+        i.setAction(Intent.ACTION_MAIN);
+        web.evaluateJavascript("(function(){var t=" + JSONObject.quote(t) + ",n=0;function g(){try{if(window.__incoming&&window.__incoming(t)!==false)return;}catch(e){}if(++n<40)setTimeout(g,300)}g()})()", null);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean f) { super.onWindowFocusChanged(f); if (f && web != null) web.evaluateJavascript("window.onFocused && window.onFocused()", null); }
+
     private void route(Intent i) {
+        incoming(i);
         String r = i == null ? null : i.getStringExtra("msm_route");
         if (r == null || web == null) return;
         i.removeExtra("msm_route");

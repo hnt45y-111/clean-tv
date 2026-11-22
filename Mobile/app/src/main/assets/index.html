@@ -66,6 +66,15 @@
   .lk .code { font-family: monospace; font-size: 30px; font-weight: 800; letter-spacing: 3px; padding: 14px; border-radius: 22px; background: var(--s2); direction: ltr; margin-bottom: 10px; }
   .lk input { width: 100%; padding: 15px 18px; border-radius: 999px; border: 2px solid transparent; background: var(--s2); color: #fff; font: 800 20px monospace; text-align: center; letter-spacing: 3px; outline: none; margin: 14px 0 10px; text-transform: uppercase; } .lk input:focus { border-color: var(--rz); }
   .lk .msg { min-height: 22px; color: var(--rz); font-weight: 700; font-size: 14px; margin-bottom: 6px; } .shake { animation: shake .4s; } @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+  .ed { color: #7a7a7a; padding: 8px 8px; display: grid; place-items: center; } .ed svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+  .sheet label.f { display: block; margin: 10px 10px 4px; font-size: 13px; color: var(--t2); }
+  .sheet input { display: block; width: calc(100% - 16px); margin: 0 8px 4px; padding: 13px 18px; border-radius: 999px; border: 2px solid transparent; background: var(--s2); color: #fff; font: inherit; outline: none; } .sheet input:focus { border-color: var(--rz); }
+  .sheet .btn { display: block; width: calc(100% - 16px); margin: 10px 8px 0; }
+  #clipBar { position: fixed; top: 10px; left: 12px; right: 12px; z-index: 40; display: none; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 28px; background: #1a1a1a; border: 1px solid #333; box-shadow: 0 12px 36px rgba(0,0,0,.6); }
+  #clipBar.on { display: flex; animation: up .35s var(--spring) both; } #clipBar > div { flex: 1; min-width: 0; } #clipBar b { display: block; font-size: 14px; } #clipBar small { display: block; color: var(--t2); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #clipBar button { border: 0; border-radius: 999px; padding: 10px 18px; background: var(--rz); color: #fff; font: inherit; font-weight: 700; } #clipBar button.x { background: #2a2a2a; padding: 10px 14px; }
+  .sv { border: 0; border-radius: 999px; padding: 10px 16px; background: var(--rz); color: #fff; font: inherit; font-weight: 700; flex: none; } .sv.on { background: #1f6f43; }
 </style>
 </head>
 <body>
@@ -84,6 +93,7 @@
   </nav>
 </div>
 <div class="sheet" id="sheet"><div id="sheetIn"></div></div>
+<div id="clipBar"></div>
 <div id="greet"></div>
 <div id="lock"></div>
 <script src="channels.js"></script>
