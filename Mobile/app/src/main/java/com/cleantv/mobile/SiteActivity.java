@@ -51,6 +51,34 @@ public class SiteActivity extends Activity {
             + "if(!t)t=(n.innerText||n.textContent||'');return String(t).replace(/\\s+/g,' ').trim();}"
             + "for(var i=0;i<6&&e;i++,e=e.parentElement){var t=tx(e);if(t&&t.length>=2&&t.length<=40)return t;}return '';}catch(_){return '';}})";
 
+    /** reads the arrangement of the page: rows of poster cards (a link with a picture and a name), each row with the heading above it */
+    private static final String READ_JS = "(function(){try{"
+        + "function abs(u){try{return new URL(u,location.href).href}catch(e){return ''}}"
+        + "function dom(h){var p=String(h).split('.');return p.slice(-2).join('.')}"
+        + "var base=dom(location.hostname),cards=[],seen={};"
+        + "var as=document.querySelectorAll('a[href]');"
+        + "for(var i=0;i<as.length&&cards.length<900;i++){var a=as[i],href=abs(a.getAttribute('href'));if(!href||/^(javascript|mailto|tel)/i.test(href)||href.split('#')[0]===location.href.split('#')[0])continue;"
+        + "var hn='';try{hn=new URL(href).hostname}catch(e){continue}if(dom(hn)!==base)continue;"
+        + "var im=a.querySelector('img'),src='';"
+        + "if(im){src=im.getAttribute('data-src')||im.getAttribute('data-lazy-src')||im.getAttribute('data-original')||im.currentSrc||im.src||'';}"
+        + "if(!src){var bg=a.querySelector('[style*=\"background-image\"]')||a;var m=(bg.getAttribute('style')||'').match(/url\\(['\"]?([^'\")]+)/);if(m)src=m[1];}"
+        + "if(!src||/^data:/.test(src)&&src.length<200)continue;"
+        + "var name=(a.getAttribute('title')||(im&&im.getAttribute('alt'))||a.getAttribute('aria-label')||a.innerText||'').replace(/\\s+/g,' ').trim();"
+        + "if(name.length<2||name.length>70||seen[href])continue;seen[href]=1;cards.push({n:name,u:href,img:abs(src),a:a});}"
+        + "if(cards.length<4)return JSON.stringify({sections:[]});"
+        + "function count(el){var n=0;for(var k=0;k<cards.length;k++)if(el.contains(cards[k].a))n++;return n}"
+        + "var groups=[];"
+        + "cards.forEach(function(c){var e=c.a.parentElement,best=null;for(var d=0;d<6&&e&&e!==document.body;d++,e=e.parentElement){if(count(e)>=4){best=e;break}}"
+        + "if(!best)best=document.body;var g=null;for(var j=0;j<groups.length;j++)if(groups[j].el===best)g=groups[j];if(!g){g={el:best,items:[]};groups.push(g)}g.items.push(c)});"
+        + "function head(el){var e=el;for(var d=0;d<5&&e;d++,e=e.parentElement){var q=e.querySelector&&e.querySelector('h1,h2,h3,h4,[class*=title],[class*=heading],[class*=head]');"
+        + "if(q&&!q.querySelector('a[href] img')){var t=(q.innerText||'').replace(/\\s+/g,' ').trim();if(t.length>=2&&t.length<=40)return t}"
+        + "var p=e.previousElementSibling;for(var k=0;k<2&&p;k++,p=p.previousElementSibling){if(/^H[1-6]$/.test(p.tagName)||/title|head/i.test(p.className||'')){var t2=(p.innerText||'').replace(/\\s+/g,' ').trim();if(t2.length>=2&&t2.length<=40)return t2}}}return ''}"
+        + "var out=[];groups.forEach(function(g,i){if(g.items.length<3)return;out.push({title:head(g.el)||('قسم '+(out.length+1)),items:g.items.slice(0,60).map(function(c){return{n:c.n,u:c.u,img:c.img}})})});"
+        + "var nm=(document.querySelector('meta[property=\"og:site_name\"]')||{}).content||(document.title||location.hostname).split(/\\s[-|–—]\\s/)[0];"
+        + "var ic=document.querySelector('link[rel~=\"icon\"],link[rel=\"apple-touch-icon\"]');"
+        + "return JSON.stringify({name:String(nm).trim().slice(0,40),icon:ic?abs(ic.getAttribute('href')):'',sections:out.slice(0,30)});}catch(e){return JSON.stringify({sections:[],err:String(e)})}})()";
+
+    private boolean auto, reading;
     private final Handler h = new Handler(Looper.getMainLooper());
     private float d;
     private FrameLayout root;
@@ -105,6 +133,7 @@ public class SiteActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().setStatusBarColor(Color.BLACK); getWindow().setNavigationBarColor(Color.BLACK);
         startUrl = getIntent().getStringExtra("url");
+        auto = getIntent().getBooleanExtra("auto", false);
         if (startUrl == null || !startUrl.startsWith("http") || !Acct.active(this)) { finish(); return; }
 
         root = new FrameLayout(this);
@@ -123,11 +152,15 @@ public class SiteActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) { return false; }
             @Override public void onPageStarted(WebView v, String u, android.graphics.Bitmap f) { pageUrl = u == null ? "" : u; }
-            @Override public void onPageFinished(WebView v, String u) { title.setText(v.getTitle() == null || v.getTitle().length() == 0 ? Uri_host(u) : v.getTitle()); }
+            @Override public void onPageFinished(WebView v, String u) {
+                title.setText(v.getTitle() == null || v.getTitle().length() == 0 ? Uri_host(u) : v.getTitle());
+                if (auto && !reading) { reading = true; h.postDelayed(new Runnable() { public void run() { readPage(true); } }, 2500); }
+            }
             @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
                 try {
                     String u = r.getUrl().toString();
-                    if (u.toLowerCase(Locale.ROOT).contains(".m3u8")) {
+                    String lu = u.toLowerCase(Locale.ROOT);
+                    if (lu.contains(".m3u8") || (lu.contains(".mp4") && !lu.contains("thumb") && !lu.contains("preview") && !lu.contains("trailer"))) {
                         Map<String, String> hd = r.getRequestHeaders();
                         String ref = hd == null ? null : hd.get("Referer");
                         String agent = hd == null ? null : hd.get("User-Agent");
@@ -169,11 +202,13 @@ public class SiteActivity extends Activity {
         bar.setLayoutDirection(View.LAYOUT_DIRECTION_RTL); bar.setPadding(dp(8), 0, dp(8), 0);
         TextView x = btn("✕", 0x00000000, Color.WHITE); x.setTextSize(20);
         TextView bk = btn("›", 0x00000000, Color.WHITE); bk.setTextSize(26);
+        TextView rd = btn("▦ واجهة قنواتي", 0x00000000, 0xFFFA4560); rd.setTextSize(13);
         title = new TextView(this); title.setTextColor(0xFFB8B8C6); title.setTextSize(13); title.setSingleLine(true); title.setEllipsize(android.text.TextUtils.TruncateAt.END);
         title.setText(Uri_host(startUrl));
-        bar.addView(x); bar.addView(title, new LinearLayout.LayoutParams(0, -2, 1)); bar.addView(bk);
+        bar.addView(x); bar.addView(title, new LinearLayout.LayoutParams(0, -2, 1)); bar.addView(rd); bar.addView(bk);
         root.addView(bar, new FrameLayout.LayoutParams(-1, dp(48), Gravity.TOP));
         x.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { finish(); } });
+        rd.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { readPage(false); } });
         bk.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { if (web.canGoBack()) web.goBack(); else finish(); } });
 
         /* the bar that appears when a stream is found */
@@ -198,6 +233,47 @@ public class SiteActivity extends Activity {
         setContentView(root);
         web.loadUrl(startUrl);
         Toast.makeText(this, "افتح القناة بالصفحة، وإذا لقيت البث يطلع شريط الحفظ", Toast.LENGTH_LONG).show();
+    }
+
+    private static String siteId(String url) { String h = Uri_host(url); return h == null ? "x" : h.replaceAll("^www\\.", "").replaceAll("[^a-z0-9]", "_"); }
+
+    /** scrolls a little (so lazy pictures load), reads the page's arrangement and keeps it as «a site» in the app */
+    private void readPage(final boolean quiet) {
+        reading = true;
+        web.evaluateJavascript("window.scrollTo(0,document.body.scrollHeight)", null);
+        h.postDelayed(new Runnable() { public void run() { web.evaluateJavascript("window.scrollTo(0,0)", null); } }, 700);
+        h.postDelayed(new Runnable() { public void run() {
+            web.evaluateJavascript(READ_JS, new ValueCallback<String>() {
+                @Override public void onReceiveValue(String val) {
+                    try {
+                        JSONObject o = new JSONObject(new JSONArray("[" + val + "]").getString(0));
+                        JSONArray secs = o.optJSONArray("sections");
+                        int n = 0;
+                        if (secs != null) for (int i = 0; i < secs.length(); i++) n += secs.getJSONObject(i).getJSONArray("items").length();
+                        if (secs == null || secs.length() == 0 || n < 4) {
+                            reading = false;
+                            Toast.makeText(SiteActivity.this, quiet ? "ما قدرت أقرأ ترتيب الصفحة، تصفّح الموقع واضغط «واجهة قنواتي» لما تطلع القوائم" : "ما لگيت قوائم أفلام بهالصفحة. افتح الصفحة الرئيسية للموقع وجرّب", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        String id = siteId(startUrl), name = o.optString("name", "").trim();
+                        if (name.length() == 0) name = Uri_host(startUrl);
+                        o.put("t", System.currentTimeMillis()).put("url", startUrl).put("id", id);
+                        SharedPreferences p = getSharedPreferences("mobile", Context.MODE_PRIVATE);
+                        p.edit().putString("site_" + id, o.toString()).apply();
+                        JSONObject st = new JSONObject(p.getString("settings", "{}"));
+                        JSONArray sites = st.optJSONArray("sites"), out = new JSONArray();
+                        JSONObject me = new JSONObject().put("id", id).put("name", name).put("url", startUrl).put("icon", o.optString("icon", ""));
+                        boolean done = false;
+                        if (sites != null) for (int i = 0; i < sites.length(); i++) { JSONObject x = sites.getJSONObject(i); if (id.equals(x.optString("id"))) { if (x.optString("name").length() > 0) me.put("name", x.optString("name")); out.put(me); done = true; } else out.put(x); }
+                        if (!done) out.put(me);
+                        st.put("sites", out);
+                        p.edit().putString("settings", st.toString()).putString("w_openSite", id).apply();
+                        Toast.makeText(SiteActivity.this, "انحفظ الموقع «" + name + "» بواجهة قنواتي", Toast.LENGTH_LONG).show();
+                        finish();
+                    } catch (Throwable t) { reading = false; Toast.makeText(SiteActivity.this, "تعذّرت القراءة", Toast.LENGTH_SHORT).show(); }
+                }
+            });
+        } }, 1500);
     }
 
     private static String Uri_host(String u) { try { return android.net.Uri.parse(u).getHost(); } catch (Throwable t) { return u; } }

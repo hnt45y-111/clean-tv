@@ -157,10 +157,11 @@
   function vodCats() { var l = VOD[st.vod.sub], seen = {}; l.forEach(function (c) { seen[c.g] = 1; }); return [['*', 'الكل (' + l.length + ')']].concat(Object.keys(seen).slice(0, 80).map(function (g) { return [g, g]; })); }
   function vodFilter() { var s = st.vod, l = VOD[s.sub]; if (s.cat !== '*') l = l.filter(function (c) { return c.g === s.cat; }); if (s.q) { var w = s.q.toLowerCase(); l = VOD[s.sub].filter(function (c) { return String(c.n).toLowerCase().indexOf(w) >= 0; }); } return l; }
   function drawVod(keepTop) {
-    var s = st.vod; cur = vodFilter();
+    var s = st.vod; if (s.sub === 'w') { drawSites(); return; }
+    cur = vodFilter();
     var cards = cur.slice(0, s.more).map(function (c, i) { return '<div class="card" data-v="' + i + '" style="position:relative">' + art(c, true) + (isFav(c) ? '<span class="fv">' + STAR + '</span>' : '') + '<b>' + esc(c.n) + '</b></div>'; }).join('');
     var msg = !VOD.loaded ? 'جاري التحميل…' : (!xt() && !String(S.vodLinks || '').trim() && !(S.vodItems || []).length) ? 'أضف حساب IPTV أو رابط قائمة من الإعدادات (أو من «الربط الذكي»).' : lastErr ? 'تعذّر جلب المحتوى (' + esc(lastErr) + ')' : s.q ? 'ماكو نتيجة' : 'ماكو محتوى بهذا القسم';
-    if (!keepTop) { $('top').innerHTML = searchBox(s.q, 'ابحث عن فيلم أو مسلسل…') + chips([['m', 'أفلام'], ['s', 'مسلسلات']], s.sub, 'vs') + chips(vodCats(), s.cat, 'vc') + '<div class="tools"><button id="vrf">تحديث القائمة</button></div>'; bindSearch(s, drawVod); }
+    if (!keepTop) { $('top').innerHTML = searchBox(s.q, 'ابحث عن فيلم أو مسلسل…') + chips([['m', 'أفلام'], ['s', 'مسلسلات'], ['w', 'مواقعي']], s.sub, 'vs') + chips(vodCats(), s.cat, 'vc') + '<div class="tools"><button id="vrf">تحديث القائمة</button></div>'; bindSearch(s, drawVod); }
     $('main').innerHTML = (cur.length ? '<div class="grid">' + cards + '</div>' + (cur.length > s.more ? '<button class="btn sec" id="more" style="margin-top:10px">عرض المزيد</button>' : '') : '<div class="empty">' + msg + '</div>');
   }
 
@@ -236,11 +237,12 @@
       out.innerHTML = '<div class="res"><b>' + esc(r.label) + '</b><small>' + esc(r.detail) + '</small></div>' +
         (asCh ? '<button class="btn" data-ch="1">أضفه كقناة (قنواتي المضافة)</button>' : '') +
         (r.kind === 'm3u' ? '<button class="btn" data-pl="1">افتح القنوات اللي بالقائمة واختار منها</button>' : '') +
-        (['bad', 'm3u', 'file', 'xtream', 'xtream-host'].indexOf(r.kind) < 0 ? '<button class="btn" data-site="1">افتح الموقع واختار القناة</button>' : '') +
+        (['bad', 'm3u', 'file', 'xtream', 'xtream-host'].indexOf(r.kind) < 0 ? '<button class="btn" data-site="1">افتح الموقع واختار القناة</button><button class="btn" data-sv="1">احفظه كموقع بواجهة قنواتي</button>' : '') +
         (r.kind === 'web' || r.kind === 'unknown' ? '<button class="btn sec" data-pg="1">دوّر على روابط بث بالصفحة</button>' : '') +
         (ok ? (r.targets || ['both']).map(function (t) { return '<button class="btn' + (asCh ? ' sec' : '') + '" data-t="' + t + '">أضفه ' + T[t] + '</button>'; }).join('') : '') + '<button class="btn sec" data-lg="1">نسخ التشخيص</button>';
       var ch = out.querySelector('[data-ch]'); if (ch) ch.onclick = function () { chSheet({ u: url, n: nameFromUrl(url) }); };
       var pl = out.querySelector('[data-pl]'); if (pl) pl.onclick = function () { openFound(url, false); };
+      var sv = out.querySelector('[data-sv]'); if (sv) sv.onclick = function () { $('sheet').classList.remove('on'); toast('جاري قراءة الموقع…'); A.readSite(url); };
       var sb = out.querySelector('[data-site]'); if (sb) sb.onclick = function () { $('sheet').classList.remove('on'); A.openSite(url); };
       var pg = out.querySelector('[data-pg]'); if (pg) pg.onclick = function () { openFound(url, true); };
       [].forEach.call(out.querySelectorAll('[data-t]'), function (b) { b.onclick = function () { r.apply(S, b.getAttribute('data-t')); save(); $('sheet').classList.remove('on'); refreshAll('انضاف ' + T[b.getAttribute('data-t')]); }; });
@@ -292,8 +294,9 @@
   /* «فتح موقع»: paste a website address; it opens inside the app and the channel you tap there can be played and saved */
   function siteSheet() {
     showSheet('<h3>فتح موقع</h3><div class="res">الصق رابط الموقع، افتح القناة بالصفحة، وإذا لقى البث يطلع لك شريط «شغّل» و«حفظ القناة».</div>' +
-      '<input dir="ltr" id="sU" placeholder="https://…"><button class="btn sec" id="sP">لصق من الحافظة</button><button class="btn" id="sGo">افتح الموقع</button>');
+      '<input dir="ltr" id="sU" placeholder="https://…"><button class="btn sec" id="sP">لصق من الحافظة</button><button class="btn" id="sGo">افتح الموقع</button><button class="btn sec" id="sSv">احفظه كموقع بواجهة قنواتي</button>');
     $('sP').onclick = function () { var t = String(A.paste() || '').trim(), m = t.match(/https?:\/\/[^\s"'<>]+/); if (m) $('sU').value = m[0]; else toast('الحافظة ما فيها رابط'); };
+    $('sSv').onclick = function () { var u = $('sU').value.trim(); if (!/^https?:\/\//i.test(u)) { toast('اكتب رابط يبدأ بـ http'); return; } $('sheet').classList.remove('on'); toast('جاري قراءة الموقع…'); A.readSite(u); };
     $('sGo').onclick = function () { var u = $('sU').value.trim(); if (!/^https?:\/\//i.test(u)) { toast('اكتب رابط يبدأ بـ http'); return; } $('sheet').classList.remove('on'); A.openSite(u); };
   }
   function linkSheet(url) { showSheet('<h3>رابط جديد</h3><div class="res" dir="ltr" style="word-break:break-all;font-size:12px">' + esc(url.length > 140 ? url.slice(0, 140) + '…' : url) + '</div><div id="lkOut"></div>'); smartRun(url, $('lkOut')); }
@@ -326,8 +329,56 @@
   /* coming back from the site browser (or the player): channels saved there live in the app's settings, read them again */
   window.onResumed = function () {
     try { var ns = JSON.parse(A.getPref('settings') || '{}'); if (ns && typeof ns === 'object') S = ns; } catch (e) {}
+    try {
+      var ow = A.getPref('w_openSite');
+      if (ow) { A.setPref('w_openSite', ''); st.vod.sub = 'w'; siteView = ow; show('vod'); return; }
+    } catch (e) {}
     try { if (tab === 'live' && !$('sheet').classList.contains('on')) drawLive(); } catch (e) {}
   };
+
+  /* ---------------------------------------------------------------- «مواقعي»: a saved website shown in قنواتي's own look, rows as the site arranges them */
+  var siteView = null, siteFlat = [];
+  function siteById(id) { var a = S.sites || []; for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i]; return null; }
+  function siteCache(id) { try { return JSON.parse(A.getPref('site_' + id) || 'null'); } catch (e) { return null; } }
+  function addSiteSheet() {
+    showSheet('<h3>إضافة موقع</h3><div class="res">الصق رابط موقعك. ينفتح، ولما تطلع قوائم الأفلام والمسلسلات يحفظه التطبيق ويعرضها بواجهة قنواتي وبنفس ترتيب الموقع. إذا طلب الموقع تحقق أو تسجيل دخول سوّيه، وبعدين اضغط «▦ واجهة قنواتي» فوق.</div>' +
+      '<input dir="ltr" id="aU" placeholder="https://…"><button class="btn sec" id="aP">لصق من الحافظة</button><button class="btn" id="aGo">احفظ الموقع</button>');
+    $('aP').onclick = function () { var t = String(A.paste() || '').trim(), m = t.match(/https?:\/\/[^\s"'<>]+/); if (m) $('aU').value = m[0]; else toast('الحافظة ما فيها رابط'); };
+    $('aGo').onclick = function () { var u = $('aU').value.trim(); if (!/^https?:\/\//i.test(u)) { toast('اكتب رابط يبدأ بـ http'); return; } $('sheet').classList.remove('on'); toast('جاري قراءة الموقع…'); A.readSite(u); };
+  }
+  function removeSite(id) {
+    S.sites = (S.sites || []).filter(function (x) { return x.id !== id; }); if (!S.sites.length) delete S.sites;
+    save(); try { A.setPref('site_' + id, ''); } catch (e) {} if (siteView === id) siteView = null; drawSites(); toast('انحذف الموقع');
+  }
+  function openSiteView(id) {
+    var x = siteById(id); if (!x) return;
+    if (!siteCache(id)) { toast('جاري قراءة الموقع…'); A.readSite(x.url); return; }
+    siteView = id; drawSites();
+  }
+  function drawSites() {
+    $('top').innerHTML = chips([['m', 'أفلام'], ['s', 'مسلسلات'], ['w', 'مواقعي']], 'w', 'vs') +
+      '<div class="tools"><button id="siteAdd">إضافة موقع</button>' + (siteView ? '<button id="siteBack">‹ المواقع</button><button id="siteRef">تحديث</button>' : '') + '</div>';
+    siteFlat = [];
+    var list = S.sites || [], html = '';
+    if (siteView) {
+      var x = siteById(siteView), c = siteCache(siteView);
+      if (!x || !c) { siteView = null; }
+      else {
+        html = '<div class="sh">' + esc(x.name) + '</div>' + (c.sections || []).map(function (sec) {
+          return '<div class="sh">' + esc(sec.title) + '</div><div class="hs">' + (sec.items || []).map(function (it) {
+            var i = siteFlat.push(it) - 1; return '<div class="card" data-sl="' + i + '">' + art({ n: it.n, img: it.img }, true) + '<b>' + esc(it.n) + '</b></div>';
+          }).join('') + '</div>';
+        }).join('') + '<div class="empty" style="padding:14px">اضغط أي عنوان: ينفتح بالموقع، شغّله، وإذا لقط التطبيق البث يطلع «شغّل» و«حفظ القناة».</div>';
+      }
+    }
+    if (!siteView) {
+      html = list.length ? list.map(function (x) {
+        var has = !!siteCache(x.id);
+        return '<div class="row" data-st="' + esc(x.id) + '">' + art({ n: x.name, l: x.icon }) + '<div class="tx"><b>' + esc(x.name) + '</b><small>' + esc((x.url || '').replace(/^https?:\/\//, '').slice(0, 40)) + (has ? '' : ' · ما انقرأ بعد') + '</small></div><span class="ed" data-sd="' + esc(x.id) + '">✕</span></div>';
+      }).join('') : '<div class="empty">ماكو مواقع بعد. اضغط «إضافة موقع» والصق رابط موقعك المتفق معه.</div>';
+    }
+    $('main').innerHTML = html;
+  }
 
   /* ---------------------------------------------------------------- series sheet */
   function openSeries(it) {
@@ -351,6 +402,9 @@
   $('main').onclick = function (e) {
     var t = e.target;
     if (t.id === 'more') { (tab === 'live' ? st.live : st.vod).more += PAGE; tab === 'live' ? drawLive(true) : drawVod(true); return; }
+    var sd = t.closest('[data-sd]'); if (sd) { removeSite(sd.getAttribute('data-sd')); e.stopPropagation(); return; }
+    var stc = t.closest('[data-st]'); if (stc) { openSiteView(stc.getAttribute('data-st')); return; }
+    var sl = t.closest('[data-sl]'); if (sl) { var it0 = siteFlat[+sl.getAttribute('data-sl')]; if (it0) A.openSite(it0.u); return; }
     var ed = t.closest('[data-ed]'); if (ed) { var c0 = (S.myCh || [])[+ed.getAttribute('data-ed')]; if (c0) chSheet({ ix: +ed.getAttribute('data-ed'), n: c0.n, u: c0.u, l: c0.l }); e.stopPropagation(); return; }
     var s = t.closest('[data-s]'); if (s) { var c = cur[+s.getAttribute('data-s')]; s.classList.toggle('on', toggleFav(c)); e.stopPropagation(); return; }
     var fs = t.closest('[data-fs]'); if (fs) { toggleFav(cur[+fs.getAttribute('data-fs')]); drawFav(); return; }
@@ -363,7 +417,10 @@
   $('main').addEventListener('touchend', function (e) { if (lp === 'done') { e.preventDefault(); } clearTimeout(lp); lp = null; });
   $('main').addEventListener('touchmove', function () { clearTimeout(lp); lp = null; }, { passive: true });
   $('top').onclick = function (e) {
-    var t = e.target.closest('[data-lc],[data-vs],[data-vc],#rnd,#vrf,#siteBtn'); if (!t) return;
+    var t = e.target.closest('[data-lc],[data-vs],[data-vc],#rnd,#vrf,#siteBtn,#siteAdd,#siteBack,#siteRef'); if (!t) return;
+    if (t.id === 'siteAdd') { addSiteSheet(); return; }
+    if (t.id === 'siteBack') { siteView = null; drawSites(); return; }
+    if (t.id === 'siteRef') { var sx = siteById(siteView); if (sx) { toast('جاري قراءة الموقع…'); A.readSite(sx.url); } return; }
     if (t.id === 'siteBtn') { siteSheet(); return; }
     if (t.id === 'rnd') { var all = liveAll(); if (all.length) { var i = Math.floor(Math.random() * all.length); toast(all[i].n); playPack(all, i, false); } return; }
     if (t.id === 'vrf') { toast('جاري التحديث…'); lastErr = ''; loadVod(true).then(function () { drawVod(); }); return; }

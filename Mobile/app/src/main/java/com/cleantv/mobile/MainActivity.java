@@ -167,6 +167,11 @@ public class MainActivity extends Activity {
             if (!Acct.active(MainActivity.this)) return;
             runOnUiThread(() -> startActivity(new Intent(MainActivity.this, SiteActivity.class).putExtra("url", url)));
         }
+        /** opens a website to read its arrangement: it is kept as a site with a قنواتي-style front (rows of posters) */
+        @JavascriptInterface public void readSite(final String url) {
+            if (!Acct.active(MainActivity.this)) return;
+            runOnUiThread(() -> startActivity(new Intent(MainActivity.this, SiteActivity.class).putExtra("url", url).putExtra("auto", true)));
+        }
         @JavascriptInterface public String version() { return "1.0"; }
     }
 }
