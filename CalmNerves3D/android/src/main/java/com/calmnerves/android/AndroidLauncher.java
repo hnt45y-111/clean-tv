@@ -21,6 +21,7 @@ public class AndroidLauncher extends AndroidApplication {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        if (android.os.Build.VERSION.SDK_INT >= 28) getWindow().getAttributes().layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         File cf = crashFile();
         File sf = new File(getFilesDir(), "stage.txt");
         String stage = sf.exists() ? read(sf).trim() : "";

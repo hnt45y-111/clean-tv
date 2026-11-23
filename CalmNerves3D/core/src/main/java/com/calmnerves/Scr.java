@@ -65,7 +65,7 @@ public abstract class Scr extends ScreenAdapter {
     protected Group back() { Group b = round("round_back", 110, this::onBack); b.setPosition(26, H - 26 - b.getHeight()); ui.addActor(b); return b; }
     protected Group banner(String text, boolean crowned, float cx, float top) {
         Image bn = img(crowned ? "banner_map" : "banner_stage", crowned ? 640 : 400); Group gp = new Group(); gp.setSize(bn.getWidth(), bn.getHeight()); gp.addActor(bn);
-        Image t = crowned ? txt(text, 50, Color.WHITE, 7, bn.getWidth() * .78f) : txt(text, 48, new Color(0x5a2a05ff), 0, bn.getWidth() * .8f);
+        Image t = crowned ? txt(text, 50, Color.WHITE, 7, 0) : txt(text, 46, new Color(0x5a2a05ff), 0, 0); float fit = Math.min(1f, bn.getWidth() * (crowned ? .8f : .82f) / t.getWidth()); t.setScale(fit);
         t.setPosition(gp.getWidth() / 2 - t.getWidth() / 2, gp.getHeight() * (crowned ? .46f : .5f) - t.getHeight() / 2); gp.addActor(t);
         if (crowned) { Image c = img("crown", 210); c.setPosition(gp.getWidth() / 2 - c.getWidth() / 2, gp.getHeight() - 28); gp.addActor(c); c.addAction(Actions.forever(Actions.sequence(Actions.moveBy(0, 8, 1.2f, Interpolation.sine), Actions.moveBy(0, -8, 1.2f, Interpolation.sine)))); }
         put(gp, cx, crowned ? top + 75 : top); gp.setTransform(true); gp.setOrigin(Align.center); gp.setScale(1, 0); gp.addAction(Actions.scaleTo(1, 1, .6f, Interpolation.bounceOut)); return gp;

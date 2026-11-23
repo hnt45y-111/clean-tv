@@ -19,19 +19,20 @@ public class ShotGame extends CalmGame {
     }
     @Override public void create() {
         super.create();
+        step(.3f, null, () -> { s.moves = 30; s.level = 23; s.tutorialDone = true; s.avatar = 0; s.typePlays[4] = 9; s.typeWins[4] = 6; s.wins = 12; s.played = 20; s.fastest = 3; });
         step(1.8f, "menu", null);
         step(.1f, null, () -> go(new MapScr(this))); step(1.5f, "map", null);
-        step(.1f, null, () -> go(new SettingsScr(this))); step(1.2f, "settings", null);
-        step(.1f, null, () -> go(new ProfileScr(this))); step(1.2f, "profile", null);
-        step(.1f, null, () -> go(new AchScr(this))); step(1.2f, "ach", null);
-        step(.1f, null, () -> go(new DailyScr(this))); step(1.2f, "daily", null);
-        step(.1f, null, () -> go(new DiffScr(this))); step(1.5f, "diff", null);
-        for (String id : Challenges.IDS) ch(id, id, false, 12);
-        ch("boss", null, true, 10);
+        step(.1f, null, () -> go(new ProfileScr(this))); step(1.3f, "profile", null);
+        step(.1f, null, () -> go(new ArenaScr(this))); step(1.4f, "arena", null);
+        step(.1f, null, () -> go(new Match3Scr(this))); step(1.4f, "match3", null);
+        step(.1f, null, () -> go(new PairsScr(this))); step(1.4f, "pairs", null);
+        step(.1f, null, () -> go(new SimonScr(this))); step(1.4f, "simon", null);
+        step(.1f, null, () -> go(new WhackScr(this))); step(2.6f, "whack", null);
+        step(.1f, null, () -> go(new TournamentScr(this))); step(1.4f, "tournament", null);
+        ch("reverse", "reverse", false, 15); ch("boss", null, true, 10); ch("dontpress", "dontpress", false, 3);
         step(.1f, null, () -> { s.tutorialDone = false; Modes.campaign(this, 1); }); step(1.8f, "tutorial1", null);
+        step(.1f, null, () -> { s.tutorialDone = true; GameScr.Opts o = new GameScr.Opts(); o.level = 14; o.seed = 3; o.title = I18n.t("endless") + " · 7"; go(new GameScr(this, o, r -> { })); }); step(1.6f, "steel_title", null);
         step(.1f, null, () -> go(new ResultScr(this, true, 3, 5, 485, 1.3f, () -> { }))); step(2.6f, "result_win", null);
-        step(.1f, null, () -> go(new ResultScr(this, false, 3, 5, 0, 1f, () -> { }))); step(1.6f, "result_lose", null);
-        step(.1f, null, () -> { setLang("en"); go(new MenuScr(this)); }); step(2f, "menu_en", null);
         step(.1f, null, () -> Gdx.app.exit());
     }
     @Override public void render() {

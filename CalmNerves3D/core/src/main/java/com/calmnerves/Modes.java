@@ -20,14 +20,15 @@ public class Modes {
                 int sc = afterWin(g, r, level, true); final boolean t = tut;
                 Runnable next = t && level == 5 ? () -> g.go(new DiffScr(g)) : boss && !t ? () -> g.go(new StoryScr(g, level / 10)) : () -> campaign(g, level + 1);
                 g.go(new ResultScr(g, true, level, o.seed, sc, mult(g.s.streak), next));
-            } else { g.s.streak = 0; g.s.save(); g.go(new ResultScr(g, false, level, o.seed, 0, 1, () -> campaign(g, level))); }
+            } else { g.s.streak = 0; int fi = typeIndex(r.type); if (fi >= 0) g.s.typePlays[fi]++; g.s.played++; g.s.save(); g.go(new ResultScr(g, false, level, o.seed, 0, 1, () -> campaign(g, level))); }
         }));
     }
     static int afterWin(CalmGame g, Result r, int level, boolean campaign) {
-        Store s = g.s; s.streak++; s.maxStreak = Math.max(s.maxStreak, s.streak); s.wins++; if (r.secs < 4) s.fast++; if (r.boss) s.bosses++;
+        Store s = g.s; int ti = typeIndex(r.type); if (ti >= 0) { s.typePlays[ti]++; s.typeWins[ti]++; } s.played++; s.fastest = Math.min(s.fastest, Math.max(1, Math.round(r.secs))); int mv = Difficulty.moves(level); s.moves += mv; g.toasts.add(I18n.t("movesEarned", "n", mv)); s.streak++; s.maxStreak = Math.max(s.maxStreak, s.streak); s.wins++; if (r.secs < 4) s.fast++; if (r.boss) s.bosses++;
         int sc = score(r, s.streak); s.best = Math.max(s.best, sc); s.stars += 5 + (r.boss ? 25 : 0) + Math.min(10, s.streak);
         if (campaign && level == s.level && level < 500) s.level++; if (s.streak >= 3) g.snd.play("combo"); checkAch(g); s.save(); return sc;
     }
+    public static int typeIndex(String t) { String[] a = Challenges.IDS; for (int i = 0; i < a.length; i++) if (a[i].equals(t)) return i; return t.equals("boss") ? 11 : -1; }
     static void checkAch(CalmGame g) {
         Store s = g.s; boolean[] c = {s.wins >= 1, s.level > 10, s.level > 50, s.maxStreak >= 5, s.maxStreak >= 10, s.bosses >= 1, s.stars >= 100, s.stars >= 500, !s.lastDaily.isEmpty(), s.steelBest > 0};
         for (int i = 0; i < c.length; i++) if (c[i] && (s.achBits >> i & 1) == 0) { s.achBits |= 1 << i; g.toasts.add("🏅 " + I18n.sub("achNames", AchScr.KEYS[i])); }
@@ -51,6 +52,9 @@ public class Modes {
             case "practice": practice(g); break;
             case "steel": steel(g, 0, 0); break;
             case "duel": duel(g); break;
+            case "tournament": g.go(new TournamentScr(g)); break;
+            case "arena": g.go(new ArenaScr(g)); break;
+            case "join": joinCode(g); break;
         }
     }
     static void practice(CalmGame g) { GameScr.Opts o = new GameScr.Opts(); o.level = Math.max(1, g.s.level); o.seed = (long) (Math.random() * 1e9); o.practice = true; o.noPU = true; o.title = I18n.t("practice"); g.go(new GameScr(g, o, r -> { if (r.quit) g.go(new MenuScr(g)); else practice(g); })); }
@@ -59,11 +63,32 @@ public class Modes {
         g.go(new GameScr(g, o, r -> {
             if (r.quit) { g.go(new MenuScr(g)); return; }
             if (r.win) { steel(g, wins + 1, score + score(r, wins + 1)); return; }
-            String wk = Calendar.getInstance().get(Calendar.YEAR) + "-" + Calendar.getInstance().get(Calendar.WEEK_OF_YEAR); if (!wk.equals(g.s.weeklyKey)) { g.s.weeklyKey = wk; g.s.weekly = new int[5]; }
-            int[] w = g.s.weekly; int[] all = java.util.Arrays.copyOf(w, 6); all[5] = score; java.util.Arrays.sort(all); for (int i = 0; i < 5; i++) w[i] = all[5 - i]; g.s.steelBest = Math.max(g.s.steelBest, Math.max(1, score)); checkAch(g); g.s.save();
-            g.toasts.add(I18n.t("weekly") + ": " + w[0] + " · " + w[1] + " · " + w[2]);
+            g.s.steelBest = Math.max(g.s.steelBest, Math.max(1, score)); checkAch(g); g.s.save();
             g.go(new ResultScr(g, wins >= 3, wins, 0, score, 1, () -> steel(g, 0, 0)));
         }));
+    }
+    // ---- tournament: same seeded endless run for everybody, best score kept online ----
+    public static void tournamentRun(CalmGame g) { int tid = TournamentScr.tid(); if (g.s.tourPlayed != tid) { g.s.tourPlayed = tid; g.s.tourBest = 0; g.s.save(); } tour(g, tid, 0, 0); }
+    static void tour(CalmGame g, int tid, int i, int score) {
+        GameScr.Opts o = new GameScr.Opts(); o.level = 8 + i; o.seed = hash("tour" + tid) + i * 7919L; o.noPU = true; o.title = I18n.t("tournament") + " · " + i;
+        g.go(new GameScr(g, o, r -> {
+            if (r.quit && score == 0) { g.go(new TournamentScr(g)); return; }
+            if (!r.quit && r.win) { tour(g, tid, i + 1, score + score(r, i + 1)); return; }
+            int fin = score; if (fin > g.s.tourBest) { g.s.tourBest = fin; g.s.save(); }
+            Online.submit(tid, g.s.pid, g.s.name, g.s.tourBest, () -> { }, () -> g.toasts.add(I18n.t("noServer")));
+            g.go(new ResultScr(g, i >= 3, i, tid, fin, 1, () -> g.go(new TournamentScr(g))));
+        }));
+    }
+    /** pay out stars for a finished tournament we played (top 3) */
+    public static void claim(CalmGame g) {
+        int tid = TournamentScr.tid(), p = g.s.tourPlayed; if (p < 0 || p >= tid || g.s.tourClaimed >= p || !Config.online()) return;
+        Online.top(p, rows -> { int rank = -1; for (int i = 0; i < rows.size(); i++) if (rows.get(i).pid.equals(g.s.pid)) rank = i; g.s.tourClaimed = p;
+            if (rank >= 0 && rank < 3) { int pay = new int[]{500, 250, 100}[rank]; g.s.stars += pay; if (rank == 0) g.s.tourTrophies++; g.toasts.add(I18n.t("tourWon", "n", pay)); } g.s.save(); }, () -> { });
+    }
+    public static void joinCode(CalmGame g) {
+        com.badlogic.gdx.Gdx.input.getTextInput(new com.badlogic.gdx.Input.TextInputListener() {
+            public void input(String t) { com.badlogic.gdx.Gdx.app.postRunnable(() -> { String[] p = t.trim().toUpperCase().split("-"); try { if (p.length != 3 || !p[0].equals("CALM")) throw new NumberFormatException(); long seed = Long.parseLong(p[1]); int lv = Integer.parseInt(p[2]); runSet(g, seed, 3, Math.max(1, lv), I18n.t("challengeFriends"), res -> { if (res == null) { g.go(new MenuScr(g)); return; } g.go(new ResultScr(g, res[0] >= 2, lv, seed, res[1], 1, () -> g.go(new MenuScr(g)))); }); } catch (Exception e) { g.toasts.add(I18n.t("badCode")); g.go(new MenuScr(g)); } }); }
+            public void canceled() { } }, I18n.t("joinCode"), "CALM-", "");
     }
     static void duel(CalmGame g) {
         long seed = (long) (Math.random() * 1e9); int lv = Math.max(5, g.s.level);

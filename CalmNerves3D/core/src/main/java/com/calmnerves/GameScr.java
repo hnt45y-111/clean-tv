@@ -22,7 +22,7 @@ public class GameScr extends Scr {
     static String lastType = "";
     final Opts o; final Consumer<Result> cb; Challenge ch; final Random rnd; boolean surv, noTimer, over, armed, bossMode; float total, left, frozen, tauntT = 2f, glitchT; int d;
     Group play = new Group(), hud = new Group(), promptG = new Group(), puRow = new Group(); Image digits, taunt, promptTxt; String digitsStr = "", ptxt = ""; boolean parch, mirror, low;
-    Layer3 hero; Texture calmTex; String state = "calm"; ShapeRenderer sr = new ShapeRenderer(); float pct = 1; Image flash;
+    Layer3 hero; String type = ""; Texture calmTex; String state = "calm"; ShapeRenderer sr = new ShapeRenderer(); float pct = 1; Image flash;
     String[] puKeys = {"freeze", "fifty", "second"}; int[] puCost = {20, 25, 30};
 
     public GameScr(CalmGame g, Opts o, Consumer<Result> cb) { super(g); this.o = o; this.cb = cb; rnd = new Random(o.seed); }
@@ -30,12 +30,12 @@ public class GameScr extends Scr {
     @Override protected void onBack() { finish(false, true); }
 
     @Override protected void build() {
-        String id = o.boss ? "boss" : o.type != null ? o.type : Challenges.pick(o.level, rnd, lastType); lastType = id; ch = Challenges.create(id); bossMode = id.equals("boss"); d = g.s.diffIndex();
-        total = left = ch.time(); noTimer = o.practice || o.tutorial != null; if (noTimer) total = left = 99; if (o.shrink > 0) total = left = Math.max(4, total - o.shrink); surv = ch.survive() || bossMode;
+        String id = o.boss ? "boss" : o.type != null ? o.type : Challenges.pick(o.level, rnd, lastType); lastType = id; ch = Challenges.create(id); bossMode = id.equals("boss"); d = Difficulty.d(o.level, g.s.diffIndex()); type = id;
+        total = left = ch.time(); noTimer = (o.practice || o.tutorial != null) && !ch.survive() && !bossMode; if (noTimer) total = left = 99; if (o.shrink > 0) total = left = Math.max(4, total - o.shrink); surv = ch.survive() || bossMode;
         back(); banner(o.title != null ? o.title : I18n.t("stage") + " " + o.level, false, W / 2, 48);
         buildHud(); calmTex = g.a.hue("char_calm", MenuScr.hueFor(g.s.avatar)); hero = hero(calmTex, W / 2, 470, 500); react(bossMode ? "furious" : "calm");
         promptG.setSize(840, 150); put(promptG, W / 2, 880); renderPrompt();
-        play.setSize(Challenge.PW, Challenge.PH); play.setPosition(36, H - 1000 - Challenge.PH - 10); ui.addActor(play);
+        play.setSize(Challenge.PW, Challenge.PH); play.setPosition(36, H - 1040 - Challenge.PH - 10); ui.addActor(play);
         taunt = null; buildPu();
         flash = new Image(Gfx.white()); flash.setSize(W, H); flash.setColor(1, 1, 1, 0); flash.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled); ui.addActor(flash);
         ch.attach(this, play, rnd, o.level, d); ch.build();
@@ -69,7 +69,7 @@ public class GameScr extends Scr {
         hud.setTransform(true); hud.setOrigin(Align.center); updateDigits(true);
     }
     void updateDigits(boolean force) {
-        int sec = Math.max(0, (int) Math.ceil(left)); String s = noTimer ? "--" : surv ? "00:" + (sec < 10 ? "0" : "") + sec : "" + sec; Color c = surv ? new Color(0xff1a1aff) : Color.WHITE; if (low && (int) (left * 4) % 2 == 0) c = new Color(1, .5f, .5f, 1);
+        int sec = Math.max(0, (int) Math.ceil(left)); String s = noTimer ? "" : surv ? "00:" + (sec < 10 ? "0" : "") + sec : "" + sec; Color c = surv ? new Color(0xff1a1aff) : Color.WHITE; if (low && (int) (left * 4) % 2 == 0) c = new Color(1, .5f, .5f, 1);
         String key = s + (int) (c.r * 255) + (int) (c.g * 255); if (key.equals(digitsStr) && !force) return; digitsStr = key; if (digits != null) digits.remove();
         digits = txt(s, surv ? 118 : 100, c, surv ? 8 : 10, 400); digits.setPosition(surv ? 330 - digits.getWidth() / 2 + 35 : hud.getWidth() / 2 - digits.getWidth() / 2, hud.getHeight() / 2 - digits.getHeight() / 2); hud.addActor(digits);
     }
@@ -81,7 +81,7 @@ public class GameScr extends Scr {
     void renderPrompt() {
         promptG.clearChildren(); if (ptxt.isEmpty()) return;
         if (parch) { Image bg = img("parch", 560); bg.setPosition(promptG.getWidth() / 2 - 280, -20); promptG.addActor(bg); Image t = txt(ptxt, 44, new Color(0x3a2410ff), 0, 480); t.setPosition(promptG.getWidth() / 2 - t.getWidth() / 2, 82); promptG.addActor(t); }
-        else { promptG.addActor(panelImg(840, 150, 36, 0x0a0528e8, 0x5a3ac8ff, 5)); promptTxt = txt(ptxt, ptxt.length() > 90 ? 32 : ptxt.length() > 50 ? 40 : 54, Color.WHITE, 5, 780); promptTxt.setPosition(420 - promptTxt.getWidth() / 2, 75 - promptTxt.getHeight() / 2); if (mirror) { promptTxt.setScaleX(-1); } promptG.addActor(promptTxt); }
+        else { promptG.addActor(panelImg(840, 150, 36, 0x0a0528e8, 0x5a3ac8ff, 5)); promptTxt = txt(ptxt, ptxt.length() > 90 ? 36 : ptxt.length() > 50 ? 44 : 56, Color.WHITE, 5, 780); float fit = Math.min(1f, 126f / promptTxt.getHeight()); promptTxt.setScale(fit); promptTxt.setPosition(420 - promptTxt.getWidth() / 2, 75 - promptTxt.getHeight() / 2); promptG.addActor(promptTxt); }
     }
     public void say(String s) { if (taunt != null) taunt.remove(); taunt = txt(s, 38, new Color(0xffd27aff), 5, 800); put(taunt, W / 2, 1690); taunt.getColor().a = 0; taunt.addAction(Actions.fadeIn(.2f)); }
     public void react(String st) {
@@ -122,7 +122,7 @@ public class GameScr extends Scr {
         if (over) return;
         if (!win && armed && !quit) { armed = false; ch.dispose(); play.clearChildren(); play.clearActions(); ch.wrongBtns.clear(); left = Math.max(left, total * .5f); ch.build(); g.snd.play("combo"); return; }
         if (!win && o.tutorial != null && !quit) { ch.dispose(); play.clearChildren(); play.clearActions(); ch.wrongBtns.clear(); left = total; ch.build(); say("👍"); Fx.shake(play, 14, .3f); return; }
-        over = true; ch.dispose(); g.snd.musicStop(); Result r = new Result(); r.quit = quit; r.win = win; r.left = Math.max(0, left); r.secs = total - left; r.boss = bossMode;
+        over = true; ch.dispose(); g.snd.musicStop(); Result r = new Result(); r.quit = quit; r.win = win; r.left = Math.max(0, left); r.secs = total - left; r.boss = bossMode; r.type = type;
         if (quit) { Gdx.app.postRunnable(() -> cb.accept(r)); return; }
         react(win ? "win" : "furious"); Fx.burst(ui, W / 2, 640, win ? 36 : 24, win ? null : new int[]{0xff3b3bff, 0xff8a14ff, 0xffffffff});
         Fx.popText(this, ui, win ? (g.s.streak >= 1 ? I18n.t("combo") + " ×" + String.format(java.util.Locale.US, "%.1f", 1 + Math.min(g.s.streak + 1, 10) * .1) : I18n.t("correct")) : I18n.t("wrong"), !win);

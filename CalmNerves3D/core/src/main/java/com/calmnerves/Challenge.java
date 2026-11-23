@@ -24,7 +24,7 @@ public abstract class Challenge {
     public void dispose() { }
     public void reverse() { for (Actor a : answerBtns) a.setY(PH - a.getY() - a.getHeight()); }
     protected void win() { onWin.run(); } protected void fail() { onFail.run(); }
-    protected float timerSec(float base) { return Math.max(4, Math.round(base - d * 1.5f - Math.min(level, 100) * .03f)); }
+    protected float timerSec(float base) { return Math.max(5, Math.round(base - d * .9f - Math.min(level, 100) * .02f)); }
     protected Group sbtn(String asset, float w, float h, String label, int size, Runnable r) {
         Group b = new Group(); b.setSize(w, h); Image bg = new Image(gs.g.a.tex(asset)); bg.setSize(w, h); b.addActor(bg);
         if (label != null) { Image t = Txt.label(label, size, Color.WHITE, Math.max(4, size / 9), w * .86f); t.setPosition(w / 2 - t.getWidth() / 2, h / 2 - t.getHeight() / 2 + 2); b.addActor(t); }
@@ -44,7 +44,7 @@ public abstract class Challenge {
             final int k = i; Group b = sbtn(asset[i % 4], 800, bh, labels[i], 58, () -> { if (done[0]) return; done[0] = true; if (k == 0) win(); else fail(); });
             b.setPosition(14, PH - (slot[i] + 1) * bh - slot[i] * gap); b.setTransform(true); root.addActor(b); btns[i] = b; answerBtns.add(b); if (i > 0) wrongBtns.add(b);
         }
-        if (glide) root.addAction(Actions.forever(Actions.delay(Math.max(.8f, 1.6f - d * .25f), Actions.run(() -> {
+        if (glide) root.addAction(Actions.forever(Actions.delay(Math.max(.6f, 1.6f - d * .11f), Actions.run(() -> {
             int a = rnd.nextInt(n), c = (a + 1 + rnd.nextInt(n - 1)) % n, t = slot[a]; slot[a] = slot[c]; slot[c] = t;
             for (int i = 0; i < n; i++) btns[i].addAction(Actions.moveTo(14, PH - (slot[i] + 1) * bh - slot[i] * gap, .7f, Interpolation.sine));
         }))));
