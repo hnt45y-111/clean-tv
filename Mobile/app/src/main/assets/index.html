@@ -176,24 +176,6 @@
   body[data-top=neon] .tn .nm { color: transparent; -webkit-text-stroke: 3px var(--rz); filter: drop-shadow(0 0 8px var(--rz)); }
   body[data-fx=scan] #app::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px); mix-blend-mode: screen; }
 
-  /* ===== each theme re-shapes the whole app, not only the colour ===== */
-  /* royal: serif, centred header, framed square cards laid out as grids, ornamented titles */
-  body[data-th=royal] header { flex-direction: column; text-align: center; padding-top: 12px; } body[data-th=royal] header h1 { font-family: 'Amiri', serif; font-size: 34px; flex: none; } body[data-th=royal] .hav { position: absolute; top: 14px; left: 16px; }
-  body[data-th=royal] .sh { justify-content: center; font-family: 'Amiri', serif; font-size: 21px; color: var(--rz); } body[data-th=royal] .sh::before, body[data-th=royal] .sh::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--rz)); margin: 0 10px; } body[data-th=royal] .sh::before { transform: scaleX(-1); } body[data-th=royal] .sh span { flex: none; } body[data-th=royal] .sh a { display: none; }
-  body[data-th=royal] .hs:not(.t10):not(.cats) { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; margin: 0; padding: 4px 2px 12px; } body[data-th=royal] .hs:not(.t10):not(.cats) .card { width: auto; } body[data-th=royal] .hs:not(.t10):not(.cats) .card:nth-child(n+7), body[data-th=royal] .hs:not(.t10):not(.cats) .ch:nth-child(n+7) { display: none; }
-  body[data-th=royal] .card .art, body[data-th=royal] .ch .art, body[data-th=royal] .art { border-radius: 4px; box-shadow: 0 0 0 1px var(--rz); } body[data-th=royal] .card b { text-align: center; font-family: 'Amiri', serif; font-size: 14px; } body[data-th=royal] .chip, body[data-th=royal] .row, body[data-th=royal] .btn, body[data-th=royal] .search { border-radius: 8px; }
-  /* karbala: arch-topped cards, dark red bands */
-  body[data-th=karbala] .card .art, body[data-th=karbala] .tn .art { border-radius: 70px 70px 14px 14px; } body[data-th=karbala] .ch .art { border-radius: 50% 50% 16px 16px; } body[data-th=karbala] .row { border-radius: 40px 14px 14px 40px; border-right: 6px solid var(--rz); } body[data-th=karbala] .chip { border-radius: 16px 16px 4px 4px; }
-  body[data-th=karbala] .sh { border-right: 5px solid var(--rz); padding-right: 10px; margin-right: 14px; } body[data-th=karbala] .hero { border-radius: 0 0 120px 0; }
-  /* alawi: round channel badges, landscape movie cards, soft green bands */
-  body[data-th=alawi] .ch .art { border-radius: 50%; } body[data-th=alawi] .ch { flex-basis: 96px; } body[data-th=alawi] .card .art { aspect-ratio: 16/10; border-radius: 22px; } body[data-th=alawi] .hs .card { flex: 0 0 190px; width: 190px; } body[data-th=alawi] .grid { grid-template-columns: repeat(2, 1fr); } body[data-th=alawi] .grid .card .art { aspect-ratio: 16/10; }
-  body[data-th=alawi] .row { border-radius: 60px; } body[data-th=alawi] .sh { color: var(--rz); }
-  /* apple glass: large translucent cards */
-  body[data-th=apple] .card .art, body[data-th=apple] .tn .art { border-radius: 30px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.22); } body[data-th=apple] .row, body[data-th=apple] .panel, body[data-th=apple] .now { background: rgba(255,255,255,.07); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); border-radius: 30px; }
-  body[data-th=apple] .hs .card { flex-basis: 150px; width: 150px; } body[data-th=apple] .sh { font-size: 22px; } body[data-th=apple] header h1 { font-weight: 700; } body[data-th=apple] .chip { background: rgba(255,255,255,.1); } body[data-th=apple] .chip.on { background: #fff; }
-  /* neon: outlined glowing cards, scan lines, mono labels */
-  body[data-th=neon] .card .art, body[data-th=neon] .ch .art, body[data-th=neon] .tn .art { border-radius: 8px; box-shadow: 0 0 0 2px var(--rz), 0 0 16px var(--rz); } body[data-th=neon] .row { border-radius: 10px; background: #02020a; box-shadow: inset 0 0 0 1px var(--rz); } body[data-th=neon] .chip { border-radius: 6px; background: #02020a; box-shadow: inset 0 0 0 1px var(--rz); } body[data-th=neon] .chip.on { background: var(--rz); color: #000; }
-  body[data-th=neon] .sh, body[data-th=neon] header h1 { font-family: monospace; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 14px var(--rz); } body[data-th=neon] .card b { font-family: monospace; } body[data-th=neon] main { background-image: linear-gradient(rgba(var(--rzrgb),.06) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--rzrgb),.06) 1px, transparent 1px); background-size: 28px 28px; }
 </style>
 </head>
 <body>
