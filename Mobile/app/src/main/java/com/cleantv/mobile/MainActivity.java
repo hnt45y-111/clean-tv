@@ -177,6 +177,22 @@ public class MainActivity extends Activity {
             if (!Acct.active(MainActivity.this)) return;
             runOnUiThread(() -> startActivity(new Intent(MainActivity.this, SiteActivity.class).putExtra("url", url).putExtra("play", true)));
         }
+        /** The app icon takes the colour of the chosen theme: one launcher alias is enabled, the others disabled. */
+        @JavascriptInterface public void setIcon(String id) {
+            try {
+                final String[][] T = {{"cinema", "IconCinema"}, {"royal", "IconRoyal"}, {"karbala", "IconKarbala"}, {"alawi", "IconAlawi"}, {"apple", "IconApple"}, {"neon", "IconNeon"}};
+                boolean known = false; for (String[] t : T) if (t[0].equals(id)) known = true;
+                if (!known) return;
+                android.content.pm.PackageManager pm = getPackageManager();
+                for (String[] t : T) {
+                    android.content.ComponentName cn = new android.content.ComponentName(getPackageName(), "com.cleantv.mobile." + t[1]);
+                    int s = pm.getComponentEnabledSetting(cn);
+                    boolean now = s == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DEFAULT ? t[0].equals("cinema") : s == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+                    boolean want = t[0].equals(id);
+                    if (now != want) pm.setComponentEnabledSetting(cn, want ? android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED : android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                }
+            } catch (Throwable ignored) { }
+        }
         @JavascriptInterface public String version() { return "2.0"; }
     }
 }

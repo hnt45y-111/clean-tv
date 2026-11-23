@@ -544,6 +544,7 @@
     var t = themeOf(), u = U(), b = document.body;
     b.setAttribute('data-th', t.id); b.setAttribute('data-hero', t.hero); b.setAttribute('data-nav', t.nav); b.setAttribute('data-top', t.top); b.setAttribute('data-fx', t.fx);
     b.setAttribute('data-size', u.size); b.setAttribute('data-anim', u.anim === 'off' ? 'off' : 'on'); b.setAttribute('data-bg', u.bg || 'theme');
+    try { if (localStorage.getItem('icTheme') !== t.id) { localStorage.setItem('icTheme', t.id); A.setIcon(t.id); } } catch (e) {}
     var rz = u.accent || t.rz, st2 = b.style; st2.setProperty('--rz', rz);
     var rgb = rz.replace('#', ''); st2.setProperty('--rzrgb', parseInt(rgb.slice(0, 2), 16) + ',' + parseInt(rgb.slice(2, 4), 16) + ',' + parseInt(rgb.slice(4, 6), 16));
     if (u.bg === 'img' && u.bgimg) st2.setProperty('--bgimg', 'url("' + String(u.bgimg).replace(/"/g, '') + '")'); else st2.removeProperty('--bgimg');
