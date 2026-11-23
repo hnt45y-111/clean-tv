@@ -532,6 +532,68 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void schedule(String kind, String hhmm) { DeviceTools.schedule(MainActivity.this, kind, hhmm); }
 
+        /** Other launchers (the old interface), cleaner/booster/antivirus-style apps, and everything the user installed: so they can be removed from here. */
+        @JavascriptInterface
+        public String appsAudit() {
+            JSONObject out = new JSONObject();
+            try {
+                PackageManager pm = getPackageManager();
+                String self = getPackageName();
+                java.util.HashSet<String> seen = new java.util.HashSet<>();
+                JSONArray la = new JSONArray(), ju = new JSONArray(), us = new JSONArray();
+                Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
+                for (ResolveInfo ri : pm.queryIntentActivities(home, 0)) {
+                    if (ri.activityInfo == null) continue;
+                    String p = ri.activityInfo.packageName;
+                    if (p.equals(self) || !seen.add(p)) continue;
+                    la.put(auditRow(pm, p));
+                }
+                java.util.regex.Pattern junk = java.util.regex.Pattern.compile("clean|boost|antivirus|virus|speed.?up|battery.?sav|cpu.?cool|ram|junk|optimi|booster|master|security|vpn.?free", java.util.regex.Pattern.CASE_INSENSITIVE);
+                for (android.content.pm.ApplicationInfo ai : pm.getInstalledApplications(0)) {
+                    String p = ai.packageName;
+                    if (p.equals(self) || seen.contains(p)) continue;
+                    boolean sys = (ai.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0;
+                    String label = String.valueOf(pm.getApplicationLabel(ai));
+                    boolean launchable = pm.getLaunchIntentForPackage(p) != null || pm.getLeanbackLaunchIntentForPackage(p) != null;
+                    if (!launchable) continue;
+                    if (junk.matcher(p + " " + label).find() && !p.startsWith("com.android.") && !p.startsWith("com.google.android.")) { seen.add(p); ju.put(auditRow(pm, p)); }
+                    else if (!sys) { seen.add(p); us.put(auditRow(pm, p)); }
+                }
+                out.put("launchers", la); out.put("junk", ju); out.put("user", us);
+            } catch (Throwable t) { }
+            return out.toString();
+        }
+
+        private JSONObject auditRow(PackageManager pm, String p) throws Exception {
+            android.content.pm.ApplicationInfo ai = pm.getApplicationInfo(p, 0);
+            JSONObject o = new JSONObject();
+            o.put("p", p); o.put("l", String.valueOf(pm.getApplicationLabel(ai)));
+            o.put("s", (ai.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0);
+            o.put("u", (ai.flags & android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0);
+            return o;
+        }
+
+        /** Opens the system's own «remove this app» screen (the user confirms there). */
+        @JavascriptInterface
+        public void uninstallApp(String pkg) {
+            try {
+                if (pkg == null || pkg.equals(getPackageName())) return;
+                Intent i = new Intent(Intent.ACTION_DELETE, android.net.Uri.parse("package:" + pkg));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+            } catch (Throwable ignored) { }
+        }
+
+        /** The app's info screen: where a system app can be disabled or stripped of updates. */
+        @JavascriptInterface
+        public void appInfo(String pkg) {
+            try {
+                Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + pkg));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+            } catch (Throwable ignored) { }
+        }
+
         @JavascriptInterface
         public void openSettings() {
             try {

@@ -952,12 +952,40 @@
     });
   }
   function liveApp() { for (var i = 0; i < apps.length; i++) if (/tvcenter|\.android\.tv$|livetv|live\.tv|tvplayer|\.tv\.tuner|iptv|channels/i.test(apps[i].pkg)) return apps[i].pkg; return null; }
+  /* find the old launcher (and cleaner-style junk, and everything installed) and send each one to the system's remove screen */
+  function openAppClean() {
+    if (!HAS_ANDROID || !A.appsAudit) { toast('هذي الميزة تحتاج الشاشة نفسها'); return; }
+    var confirmPkg = '';
+    function rowOf(o, why) {
+      var hint = o.s ? (o.u ? 'نظام (محدَّث)' : 'نظام') : 'مثبّت';
+      return { label: o.l + '  ·  ' + o.p, value: hint, act: function (k) {
+        if (k === 'ArrowLeft' || k === 'ArrowRight') { A.appInfo(o.p); return false; }
+        if (k !== 'ok') return;
+        if (why && confirmPkg !== o.p) { confirmPkg = o.p; toast('«' + o.l + '» ' + why + ' · اضغط OK مرة ثانية للتأكيد', 6000); return false; }
+        confirmPkg = '';
+        A.uninstallApp(o.p);
+        if (o.s && !o.u) toast('هذا تطبيق نظام: إذا ما انحذف، اضغط يمين/يسار وعطّله من معلومات التطبيق، أو من الكمبيوتر: adb shell pm uninstall -k --user 0 ' + o.p, 12000);
+        return false;
+      } };
+    }
+    openList('حذف التطبيقات غير اللازمة', 'OK = حذف (تأكيد من النظام) · يمين/يسار = معلومات التطبيق (تعطيل) · رجوع للإغلاق', function () {
+      var d = {}; try { d = JSON.parse(A.appsAudit()) || {}; } catch (e) {}
+      var rows = [], L = d.launchers || [], J = d.junk || [], U = d.user || [];
+      rows.push({ head: true, label: 'واجهات ثانية (الواجهة القديمة)' });
+      if (L.length) L.forEach(function (o) { rows.push(rowOf(o, 'واجهة ثانية: حذفها يخليك تعتمد على واجهتك بس')); }); else rows.push({ label: 'ماكو واجهة ثانية ظاهرة للتطبيق', value: '', act: function () { return false; } });
+      rows.push({ head: true, label: 'تطبيقات تنظيف وتسريع وحماية (غالباً ما تنفع)' });
+      if (J.length) J.forEach(function (o) { rows.push(rowOf(o, '')); }); else rows.push({ label: 'ماكو تطبيقات من هذا النوع', value: '', act: function () { return false; } });
+      rows.push({ head: true, label: 'كل التطبيقات اللي ثبّتّها' });
+      U.forEach(function (o) { rows.push(rowOf(o, '')); });
+      return rows;
+    });
+  }
   function openOsMenu() {
     var rows = [
       ['قنواتي: البث المباشر المجاني', function () { window.Live.open(); }], ['خلفية الشاشة', function () { openPicker(); }], ['الثيمات والألوان', function () { openThemes(); }], ['إعدادات الواجهة', function () { openSettings(); }],
       ['تعديل الشاشة', function () { openEdit(); }], ['ترتيب التطبيقات', function () { setMode('move'); nav.goId('row-apps'); }], ['إخفاء التطبيقات', function () { setMode('hide'); nav.goId('row-apps'); }],
       ['تغيير أيقونة تطبيق', function () { setMode('icon'); nav.goId('row-apps'); }], ['وضع الأطفال', function () { toggleKids(); }],
-      ['شاشة التوقف', function () { if (!PREVIEW) startSaver(); }], ['الطاقة', function () { openPower(); }], ['إعدادات الجهاز', function () { if (HAS_ANDROID) A.openSettings(); }],
+      ['شاشة التوقف', function () { if (!PREVIEW) startSaver(); }], ['الطاقة', function () { openPower(); }], ['إعدادات الجهاز', function () { if (HAS_ANDROID) A.openSettings(); }], ['حذف الواجهة القديمة والتطبيقات غير اللازمة', function () { openAppClean(); }],
       ['تحديث', function () { toast('جاري التحديث…'); loadApps(true); showBg(); }]
     ];
     rows.splice(1, 0, ['تطبيق زر «مباشر»', function () { pickLiveApp(false); }], ['شريط النتائج المباشرة: ' + (settings.ticker === false ? 'متوقف' : 'شغّال'), function () { settings.ticker = settings.ticker === false; saveSettings(); renderTicker(); toast(settings.ticker === false ? 'وقف شريط النتائج' : 'اشتغل شريط النتائج'); }]);
@@ -1919,7 +1947,7 @@
       computeOccasions().forEach(function (o) { if (has(o.name)) out.push({ label: '🕌 ' + o.name, value: daysLeftText(o.left), run: function () { nav.goId('row-occasions'); } }); });
       matches.forEach(function (m) { if (has(m.home.name) || has(m.away.name) || has(m.league)) out.push({ label: '⚽ ' + m.home.name + ' × ' + m.away.name, value: fmtDay.format(new Date(m.date)), run: function () { nav.goId('row-matches'); } }); });
       (window.WISDOM || []).forEach(function (w) { if (has(w[0]) || has(w[1])) out.push({ label: (w[2] === 'ayah' ? '۞ ' : '« ') + w[0].slice(0, 60), value: w[1], run: function () { toast(w[0], 8000); } }); });
-      [['الخلفيات', openPicker], ['الثيمات', openThemes], ['مصادر الخلفيات', openBgSources], ['إعدادات الواجهة', openSettings], ['القرآن الكريم', openQuran], ['تعديل الشاشة', openEdit], ['الطاقة', openPower], ['الواي فاي', function () { if (HAS_ANDROID) A.openWifi(); }], ['إعدادات الجهاز', function () { if (HAS_ANDROID) A.openSettings(); }]]
+      [['الخلفيات', openPicker], ['الثيمات', openThemes], ['مصادر الخلفيات', openBgSources], ['إعدادات الواجهة', openSettings], ['القرآن الكريم', openQuran], ['تعديل الشاشة', openEdit], ['الطاقة', openPower], ['حذف الواجهة القديمة والتطبيقات', openAppClean], ['الواي فاي', function () { if (HAS_ANDROID) A.openWifi(); }], ['إعدادات الجهاز', function () { if (HAS_ANDROID) A.openSettings(); }]]
         .forEach(function (t) { if (has(t[0])) out.push({ label: '⚙ ' + t[0], value: 'فتح', run: t[1] }); });
       out.push({ label: '🛒 ابحث في متجر Google Play عن «' + q + '»', value: 'المتجر', run: function () { if (HAS_ANDROID) A.openMarketSearch(q); } });
     }
