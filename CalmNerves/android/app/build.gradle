@@ -1,0 +1,15 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.calmnerves.game'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.calmnerves.game'
+        minSdk 24
+        targetSdk 34
+        versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
+        versionName '1.0'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    // the game itself is plain HTML5 in ../www: used directly as the APK's assets (single source of truth)
+    sourceSets.main.assets.srcDirs = ['../../www']
+}
