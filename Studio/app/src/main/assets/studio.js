@@ -499,6 +499,7 @@ function panelClick(e) {
   else if (ds.tgap) S.topGap = +ds.tgap;
   else if (ds.inpos) {
     S.inputsPos = ds.inpos;
+    S.inputsBtn = 'on'; /* picking a place means the button is wanted (also on boxes that do not report TV inputs) */
     if (ds.inpos === 'list') { const l = topTools().filter(x => x !== 'tvinput'); l.unshift('tvinput'); S.topTools = l; if (S.inputsBtn === 'off') S.inputsBtn = 'on'; }
     else if (S.topTools) S.topTools = S.topTools.filter(x => x !== 'tvinput');
   }
