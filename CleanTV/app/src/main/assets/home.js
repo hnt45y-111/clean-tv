@@ -304,5 +304,5 @@
 
   window.__closeHome = function () { if (window.__setLayer) window.__setLayer('main'); if (window.__refreshBadges) window.__refreshBadges(); };
   window.Home = { open: open, key: key, back: back };
-  L.open = open;
+  /* not wired in as the entry: the old channels screen stays (the old TV WebView cannot draw this layout well) */
 })();

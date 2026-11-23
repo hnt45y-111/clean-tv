@@ -7,7 +7,7 @@
   var VIEWS = [['grid', 'شبكة', 4], ['list', 'قائمة', 1], ['big', 'بطاقات كبيرة', 3], ['logos', 'شعارات', 6]];
   var COLS = 4, st = { f: 'grid', ci: 0, gi: 0, list: [], off: 0, vi: 0 };
   try { var sv = localStorage.getItem('lvView'); VIEWS.forEach(function (v, i) { if (v[0] === sv) st.vi = i; }); } catch (e) {}
-  function setView(i) { st.vi = i; COLS = VIEWS[i][2]; try { localStorage.setItem('lvView', VIEWS[i][0]); } catch (e) {} st.off = 0; }
+  function setView(i) { try { localStorage.setItem('lvViewUser', '1'); } catch (e) {} st.vi = i; COLS = VIEWS[i][2]; try { localStorage.setItem('lvView', VIEWS[i][0]); } catch (e) {} st.off = 0; }
   COLS = VIEWS[st.vi][2];
   st.hi = st.vi; st.ti = 0; st.edit = false; st.del = false; st.pick = null; st.q = ''; st.ver = 0;
   /* the user's own order of folders and channels (changed from the «ترتيب» chip) */
@@ -461,6 +461,8 @@
     prefetch: function () { try { xtPull((window.__getSettings && window.__getSettings()) || {}); } catch (e) {} },
     hasNew: function () { try { return liveSig() > (+localStorage.getItem('lvSeenSig') || 0); } catch (e) { return false; } },
     open: function () {
+      /* each launcher theme has its own way of laying the channels out, until the user picks a view himself */
+      try { if (!localStorage.getItem('lvViewUser')) { var TV = { royal: 'list', karbala: 'big', alawi: 'logos', neon: 'big', glass: 'big', appletv: 'big' }, want = TV[document.body.getAttribute('data-theme') || ''] || 'grid'; VIEWS.forEach(function (v, i) { if (v[0] === want) st.vi = i; }); } } catch (e) {}
       st.f = 'grid'; st.ci = 0; st.gi = 0; st.off = 0; st.key = null; st.fold = null; st.pick = null; st.del = false; siteCache = null; st.hi = st.vi; st.ti = 0; COLS = VIEWS[st.vi][2];
       ORD = loadOrd(); endSearch(true);
       restoreLast();
