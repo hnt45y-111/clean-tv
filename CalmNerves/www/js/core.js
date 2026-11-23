@@ -66,8 +66,9 @@ window.G = window.G || {};
 
   // ---------- fx ----------
   G.shake = function (el, ms) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); setTimeout(function () { el.classList.remove('shake'); }, ms || 400); };
+  G.ic = function (t) { return t.indexOf('img:') === 0 ? '<img class="ic" src="img/' + (t.slice(4).indexOf('_') > 0 ? t.slice(4) : 'ic_' + t.slice(4)) + '.png" alt="">' : t; };
   G.floatEmoji = function (host, ch, x, y) {
-    var e = G.el('div', 'fl-emoji', ch); e.style.left = (x != null ? x : 10 + Math.random() * 80) + '%'; e.style.top = (y != null ? y : 60) + '%';
+    var e = G.el('div', 'fl-emoji', G.ic(ch)); e.style.left = (x != null ? x : 10 + Math.random() * 80) + '%'; e.style.top = (y != null ? y : 60) + '%';
     host.appendChild(e); setTimeout(function () { e.remove(); }, 1500);
   };
   G.sparkle = function (host, x, y) {

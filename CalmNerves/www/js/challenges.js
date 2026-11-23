@@ -98,22 +98,22 @@ G.CH.push({ id: 'gauge', weight: 3, minLevel: 4, time: function (c) { return G.t
   } });
 
 // 5. Memory sequence
-G.ICONS = ['⚽', '🚗', '⭐', '🎁', '👑', '🍕', '🐱', '🌙', '🔥', '💎', '🎈', '🍉'];
+G.ICONS = ['img:ball', 'img:car', 'img:star', 'img:gift', 'img:crown', '🍕', '🐱', '🌙', '🔥', '💎', '🎈', '🍉'];
 G.CH.push({ id: 'memory', weight: 3, minLevel: 3, time: function (c) { return G.timerSec(18, c); },
   mount: function (ctx) {
     var n = 3 + Math.min(2, ctx.d), seq = ctx.rng.shuffle(G.ICONS).slice(0, n + 1), nth = 1 + ctx.rng.int(n), box = G.el('div', 'memory'), dead = false;
-    ctx.root.appendChild(box); ctx.prompt(G.t('memorize'));
+    ctx.root.appendChild(box); ctx.promptCls(''); ctx.prompt(G.t('memorize'));
     var grid = G.el('div', 'mgrid'); box.appendChild(grid);
-    seq.slice(0, n).forEach(function (ic) { grid.appendChild(G.el('div', 'mcell', ic)); });
+    seq.slice(0, n).forEach(function (ic) { grid.appendChild(G.el('div', 'mcell', G.ic(ic))); });
     var show = 2600 - ctx.d * 350; var left = show / 1000;
-    var tick = setInterval(function () { G.floatEmoji(ctx.root, ['😎', '😍', '🤪', '😜'][ctx.rng.int(4)]); }, 700);
+    var tick = setInterval(function () { G.floatEmoji(ctx.root, ['img:em_heart', 'img:em_sun1', 'img:em_sun2'][ctx.rng.int(3)]); }, 700);
     setTimeout(function () {
-      if (dead) return; grid.innerHTML = ''; ctx.prompt(G.t('whichWasNth', { n: nth }));
+      if (dead) return; grid.innerHTML = ''; ctx.promptCls('parch'); ctx.prompt(G.t('whichWasNth', { n: nth }));
       var opts = seq.slice(0, n).slice(); // the Nth shown icon is correct; wrong = others (+distractor)
       var correct = seq[nth - 1], wrong = ctx.rng.shuffle(opts.filter(function (x) { return x !== correct; }).concat([seq[n]])).slice(0, 3);
       var labels = [correct].concat(wrong), order = ctx.rng.shuffle(labels.map(function (_, i) { return i; }));
       var done = false; order.forEach(function (i) {
-        var b = G.el('button', 'mcell pick', labels[i]); if (i) ctx.wrongBtns.push(b);
+        var b = G.el('button', 'mcell pick', G.ic(labels[i])); if (i) ctx.wrongBtns.push(b);
         b.onclick = function () { if (done) return; done = true; G.sfx('tap'); i === 0 ? ctx.win() : ctx.fail(); }; grid.appendChild(b);
       });
     }, show);
@@ -170,7 +170,7 @@ G.CH.push({ id: 'spot', weight: 2, minLevel: 7, time: function (c) { return G.ti
   mount: function (ctx) {
     var n = 9, base = ctx.rng.shuffle(G.ICONS).slice(0, n), diff = ctx.rng.int(n), repl = ctx.rng.pick(G.ICONS.filter(function (x) { return base.indexOf(x) < 0; }));
     var w = G.el('div', 'spot'); [0, 1].forEach(function (side) {
-      var g = G.el('div', 'sgrid'); base.forEach(function (ic, i) { var b = G.el('button', 'mcell pick', side && i === diff ? repl : ic);
+      var g = G.el('div', 'sgrid'); base.forEach(function (ic, i) { var b = G.el('button', 'mcell pick', G.ic(side && i === diff ? repl : ic));
         if (side) b.onclick = function () { G.sfx('tap'); i === diff ? ctx.win() : ctx.fail(); }; else b.disabled = true; g.appendChild(b); }); w.appendChild(g);
     }); ctx.prompt(G.t('spot')); ctx.root.appendChild(w);
   } });

@@ -25,10 +25,10 @@
   // ================= screens =================
   var S = {};
   S.menu = function (s) {
-    var logo = el('div', 'logo', '<b class="l1">' + t('title1') + '</b><b class="l2">' + t('title2') + '</b><u>⚡</u><u class="b">⚡</u><i class="st s1">★</i><i class="st s2">★</i>');
+    var logo = el('div', 'logo', '<img src="img/logo.png" alt="">' + (G.lang === 'ar' ? '' : '<small>' + t('title1') + ' ' + t('title2') + '</small>'));
     var cw = el('div', 'charwrap', G.charSVG('calm')); var ledge = el('div', 'ledge');
-    var start = btn('green big', '<em>▶</em>' + t('start'), function () { go('map'); });
-    var row = el('div', 'row2'); row.appendChild(round('purple', '⚙', t('settings'), function () { go('settings'); })); row.appendChild(round('orange', '🏆', t('achievements'), function () { go('ach'); }));
+    var start = btn('start', t('start'), function () { go('map'); });
+    var row = el('div', 'row2'); row.appendChild(round('gear', '', t('settings'), function () { go('settings'); })); row.appendChild(round('rtrophy', '', t('achievements'), function () { go('ach'); }));
     var prof = el('button', 'prof', G.charSVG('calm', { avatar: G.S.avatar }) + '<span>' + G.S.name + '</span>'); prof.onclick = function () { G.sfx('tap'); go('profile'); };
     var modes = el('div', 'modes'); [['🎁', t('daily'), 'daily'], ['♾️', t('endless'), 'steel'], ['🧘', t('practice'), 'practice'], ['⚔️', t('duel'), 'duel']].forEach(function (m) {
       var b = el('button', 'mode', '<i>' + m[0] + '</i><small>' + m[1] + '</small>'); b.onclick = function () { G.sfx('tap'); startMode(m[2]); }; modes.appendChild(b); });
@@ -36,14 +36,14 @@
   };
 
   S.map = function (s) {
-    var top = el('div', 'topbar'); top.append(back(), banner(t('titles')[G.titleIdx()], true), (function () { var b = el('button', 'trophy', '🏆'); b.onclick = function () { go('ach'); }; return b; })()); s.appendChild(top);
+    var top = el('div', 'topbar'); top.append(back(), banner(t('titles')[G.titleIdx()], true), (function () { var b = el('button', 'trophy', ''); b.onclick = function () { go('ach'); }; return b; })()); s.appendChild(top);
     var sc = el('div', 'mapscroll'), H = 96, N = 500, tot = N * H + 260, inner = el('div', 'mapinner'); inner.style.height = tot + 'px';
     var xs = function (i) { return 50 + 26 * Math.sin(i * .9); }, ys = function (i) { return tot - 130 - (i - 1) * H; }, d = '';
     for (var i = 1; i <= N; i++) { var px = xs(i) * 4.2, py = ys(i); d += (i === 1 ? 'M' : 'L') + px.toFixed(0) + ' ' + py; }
     inner.innerHTML = '<svg class="trail" viewBox="0 0 420 ' + tot + '" preserveAspectRatio="none" style="height:' + tot + 'px"><path d="' + d + '" fill="none" stroke="#ff8a14" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><path d="' + d + '" fill="none" stroke="#ffd27a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     for (var n = 1; n <= N; n++) (function (n) {
       var boss = n % 10 === 0, st = n < G.S.level ? 'done' : n === G.S.level ? 'cur' : 'lock';
-      var nd = el('button', 'node ' + st + (boss ? ' boss' : '') + (n === N ? ' final' : ''), (boss ? '<span class="flame">🔥</span><b class="face">😡</b>' : '') + '<em>' + n + '</em>' + (n === N ? '<small>' + t('finalStage') + '</small>' : ''));
+      var nd = el('button', 'node ' + st + (boss ? ' boss' : '') + (n === N ? ' final' : ''), (boss ? '<img class="face" src="img/' + (n === N ? 'flame2' : 'flame') + '.png" alt="">' : '') + '<em>' + n + '</em>' + (n === N ? '<small>' + t('finalStage') + '</small>' : ''));
       nd.style.left = xs(n) + '%'; nd.style.top = ys(n) + 'px';
       if (st === 'cur') nd.insertAdjacentHTML('beforeend', '<u class="flag">🚩</u>');
       nd.onclick = function () { if (n > G.S.level) { G.sfx('wrong'); G.shake(nd); return; } G.sfx('tap'); startLevel(n); }; inner.appendChild(nd);
@@ -115,9 +115,9 @@
     s.appendChild(banner(r.win ? t('winLines')[Math.floor(Math.random() * 4)] : t('loseLines')[Math.floor(Math.random() * 4)], true));
     s.appendChild(el('div', 'charwrap res', G.charSVG(r.win ? 'win' : 'furious')));
     s.appendChild(el('div', 'scorepanel', '<small>' + t('score') + '</small><b><i>★</i>' + r.score + '</b>' + (r.combo > 1 ? '<em>' + t('combo') + ' ×' + r.combo.toFixed(1) + '</em>' : '')));
-    s.appendChild(btn('green wide', '<em>👤</em>' + t('challengeFriends'), function () { friendLink(r); }));
-    var row = el('div', 'row3'); row.appendChild(round('purple', '🏠', '', function () { go('menu'); }));
-    row.appendChild(btn('blue grow', '<em>⤴</em>' + t('share'), function () { shareCard(r.win ? t('winLines')[0] : t('loseLines')[0], r.level, r.score); }));
+    s.appendChild(btn('challenge wide', t('challengeFriends'), function () { friendLink(r); }));
+    var row = el('div', 'row3'); row.appendChild(round('home', '', '', function () { go('menu'); }));
+    row.appendChild(btn('share grow', t('share'), function () { shareCard(r.win ? t('winLines')[0] : t('loseLines')[0], r.level, r.score); }));
     row.appendChild(round(r.win ? 'green' : 'orange', r.win ? '▶' : '↻', '', function () { r.next(); })); s.appendChild(row);
     if (r.win) { G.confetti(s, 80); G.sfx('win'); speak(t('correct')); } else { G.cracks(s); G.sfx('wrong'); speak(t('wrong')); G.shake(app, 600); }
   };
@@ -161,10 +161,10 @@
       var surv = def.survive || def.id === 'boss';
       var top = el('div', 'topbar'); top.append(back(function () { finish(false, true); }), banner(o.title || (t('stage') + ' ' + o.level)));
       var hud = el('div', 'hud ' + (surv ? 'plate' : 'ringhud')), pu = el('div', 'pus');
-      hud.innerHTML = surv ? '<i class="sw">⏱</i><b class="digits">00:00</b>' : '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="bgc"/><circle cx="50" cy="50" r="44" class="fg" pathLength="100"/></svg><b class="digits">0</b>';
+      hud.innerHTML = surv ? '<img class="sw" src="img/stopwatch.png" alt=""><b class="digits">00:00</b>' : '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="bgc"/><circle cx="50" cy="50" r="44" class="fg" pathLength="100"/></svg><b class="digits">0</b>';
       var cw = el('div', 'charwrap game', def.id === 'boss' ? G.bossSVG() : G.charSVG('calm')), prompt = el('div', 'prompt'), area = el('div', 'play'), taunt = el('div', 'taunt', '');
       var ph = el('div', 'phold'); ph.appendChild(prompt); ctx.root = area;
-      ctx.prompt = function (h, sub) { if (!sub) prompt.innerHTML = h; else taunt.textContent = h; }; ctx.say = function (h) { taunt.textContent = h; };
+      ctx.prompt = function (h, sub) { if (!sub) prompt.innerHTML = h; else taunt.textContent = h; }; ctx.say = function (h) { taunt.textContent = h; }; ctx.promptCls = function (c) { prompt.className = 'prompt ' + (c || ''); };
       ctx.react = function (st) { if (def.id === 'boss' && st !== 'furious') return; if (def.id === 'boss') return; cw.innerHTML = G.charSVG(st); };
       ctx.sub = function () { G.sfx('correct'); G.shake(app, 300); };
       ctx.win = function () { finish(true); }; ctx.fail = function () { finish(false); };
