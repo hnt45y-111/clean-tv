@@ -13,11 +13,16 @@
   function banner(txt, crown) { return el('div', 'banner' + (crown ? ' crowned' : ''), (crown ? G.crownSVG : '') + '<span>' + txt + '</span>'); }
   function speak(txt) { if (!G.S.sound || !window.speechSynthesis) return; try { var u = new SpeechSynthesisUtterance(txt); u.lang = { ar: 'ar', en: 'en-US', tr: 'tr-TR', fr: 'fr-FR', es: 'es-ES' }[G.lang]; u.pitch = 1.9; u.rate = 1.2; u.volume = .6; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
 
-  function go(name, args) {
-    cur = { name: name, args: args || {} }; var next = el('div', 'screen ' + name); scr.classList.add('out');
-    var old = scr; setTimeout(function () { old.remove(); }, 220);
+  var goT = null;
+  function swap(name, args) {
+    cur = { name: name, args: args || {} }; var next = el('div', 'screen ' + name); var old = scr; old.remove();
     scr = next; app.appendChild(scr); (S[name] || S.menu)(scr, cur.args); scr.classList.add('in');
     if (name !== 'game') { G.musicStop(); }
+  }
+  function go(name, args) {
+    cur = { name: name, args: args || {} }; clearTimeout(goT);
+    var w = el('div', 'wipe', '<i>★</i>'); app.appendChild(w); setTimeout(function () { w.remove(); }, 620);
+    goT = setTimeout(function () { swap(name, args); }, 260);
   }
   G.go = go;
   G.goBack = function () { if (cur.name === 'menu') return false; go(cur.name === 'game' ? 'map' : 'menu'); return true; };
@@ -114,11 +119,12 @@
     s.appendChild(back());
     s.appendChild(banner(r.win ? t('winLines')[Math.floor(Math.random() * 4)] : t('loseLines')[Math.floor(Math.random() * 4)], true));
     s.appendChild(el('div', 'charwrap res', G.charSVG(r.win ? 'win' : 'furious')));
-    s.appendChild(el('div', 'scorepanel', '<small>' + t('score') + '</small><b><i>★</i>' + r.score + '</b>' + (r.combo > 1 ? '<em>' + t('combo') + ' ×' + r.combo.toFixed(1) + '</em>' : '')));
+    s.appendChild(el('div', 'scorepanel', '<small>' + t('score') + '</small><b><img src="img/star.png" alt=""><span class="n">0</span></b>' + (r.combo > 1 ? '<em>' + t('combo') + ' ×' + r.combo.toFixed(1) + '</em>' : '')));
     s.appendChild(btn('challenge wide', t('challengeFriends'), function () { friendLink(r); }));
     var row = el('div', 'row3'); row.appendChild(round('home', '', '', function () { go('menu'); }));
-    row.appendChild(btn('share grow', t('share'), function () { shareCard(r.win ? t('winLines')[0] : t('loseLines')[0], r.level, r.score); }));
-    row.appendChild(round(r.win ? 'green' : 'orange', r.win ? '▶' : '↻', '', function () { r.next(); })); s.appendChild(row);
+    row.appendChild(btn('share grow', t('share'), function () { shareCard(r.win ? t('winLines')[0] : t('loseLines')[0], r.level, r.score); })); s.appendChild(row);
+    s.appendChild(btn('purple wide cont', r.win ? t('next') : t('retry'), function () { r.next(); }));
+    var nEl = $('.scorepanel .n', s), t0 = performance.now(); (function cnt(t1) { var k = Math.min(1, (t1 - t0 - 350) / 900); if (k < 0) k = 0; nEl.textContent = Math.round(r.score * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(cnt); })(t0);
     if (r.win) { G.confetti(s, 80); G.sfx('win'); speak(t('correct')); } else { G.cracks(s); G.sfx('wrong'); speak(t('wrong')); G.shake(app, 600); }
   };
 
@@ -149,6 +155,11 @@
     for (var i = 0; i < pool.length; i++) { r -= pool[i].weight; if (r <= 0) return pool[i]; } return pool[0];
   };
   var lastType = '';
+  var PUI = { // power-up icons drawn in the game's art style (thick dark outline, glossy gradients)
+    freeze: '<img src="img/stopwatch.png" alt="">',
+    fifty: '<svg viewBox="0 0 64 64"><path d="M16 6l24 36M48 6L24 42" stroke="#1a0a3a" stroke-width="10" stroke-linecap="round"/><path d="M16 6l24 36M48 6L24 42" stroke="#e6eef8" stroke-width="5" stroke-linecap="round"/><path d="M19 9l9 14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="50" r="9" fill="none" stroke="#1a0a3a" stroke-width="10"/><circle cx="44" cy="50" r="9" fill="none" stroke="#1a0a3a" stroke-width="10"/><circle cx="20" cy="50" r="9" fill="none" stroke="#ff4a3a" stroke-width="5"/><circle cx="44" cy="50" r="9" fill="none" stroke="#ff4a3a" stroke-width="5"/></svg>',
+    second: '<svg viewBox="0 0 64 64"><defs><linearGradient id="gs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1faff"/><stop offset="1" stop-color="#6fa8d8"/></linearGradient></defs><path d="M32 5l22 8v17c0 14-9 24-22 29C19 54 10 44 10 30V13z" fill="url(#gs)" stroke="#1a0a3a" stroke-width="5" stroke-linejoin="round"/><path d="M32 13l14 5v12c0 9-5 15-14 19z" fill="#3d95ff"/><path d="M32 13v36" stroke="#1a0a3a" stroke-width="2"/><path d="M17 17l9-4" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>'
+  };
   var TUT = ['dontpress', 'riddle', 'memory', 'gauge', 'boss'];
 
   // plays ONE challenge; resolves {win, left, secs}
@@ -157,7 +168,7 @@
       var s = el('div', 'screen game'); scr.classList.add('out'); var old = scr; setTimeout(function () { old.remove(); }, 200); scr = s; app.appendChild(s); s.classList.add('in'); cur = { name: 'game' };
       var rng = G.rng(o.seed), def = o.boss ? G.BOSS : (o.type ? G.CH.filter(function (c) { return c.id === o.type; })[0] : G.pickType(o.level, rng, lastType));
       lastType = def.id; var d = Math.max(0, dIndex()), ctx = { rng: rng, level: o.level, d: d, wrongBtns: [], level_: o.level }, total = def.time(ctx), left = total, frozen = 0, armed = false, over = false, cleanup, twistT = [];
-      if (o.practice) total = left = 99; if (o.shrink) { total = left = Math.max(4, total - o.shrink); }
+      var noTimer = !!(o.practice || o.tutorial); if (noTimer) total = left = 99; if (o.shrink) { total = left = Math.max(4, total - o.shrink); }
       var surv = def.survive || def.id === 'boss';
       var top = el('div', 'topbar'); top.append(back(function () { finish(false, true); }), banner(o.title || (t('stage') + ' ' + o.level)));
       var hud = el('div', 'hud ' + (surv ? 'plate' : 'ringhud')), pu = el('div', 'pus');
@@ -166,14 +177,14 @@
       var ph = el('div', 'phold'); ph.appendChild(prompt); ctx.root = area;
       ctx.prompt = function (h, sub) { if (!sub) prompt.innerHTML = h; else taunt.textContent = h; }; ctx.say = function (h) { taunt.textContent = h; }; ctx.promptCls = function (c) { prompt.className = 'prompt ' + (c || ''); };
       ctx.react = function (st) { if (def.id === 'boss' && st !== 'furious') return; if (def.id === 'boss') return; cw.innerHTML = G.charSVG(st); };
-      ctx.sub = function () { G.sfx('correct'); G.shake(app, 300); };
+      ctx.sub = function () { G.sfx('correct'); G.shake(app, 300); var r = area.getBoundingClientRect(), sr = s.getBoundingClientRect(); G.burst(s, r.left - sr.left + r.width / 2, r.top - sr.top + r.height / 2, 18); };
       ctx.win = function () { finish(true); }; ctx.fail = function () { finish(false); };
       ctx.removeTwo = function () { ctx.wrongBtns.slice(0, 2).forEach(function (b) { b.style.opacity = .15; b.style.pointerEvents = 'none'; }); };
       if (!surv) hud.classList.add('ringhud');
       s.append(top, hud, cw, ph, area, taunt, pu);
-      var bossLoop; if (def.id === 'boss') { s.classList.add('bossmode'); G.confetti; }
+      if (def.id === 'boss') { s.classList.add('bossmode'); twistT.push(setInterval(function () { s.classList.add('flash'); G.shake(cw, 260); setTimeout(function () { s.classList.remove('flash'); }, 110); }, 1700)); }
       // power-ups
-      if (!o.noPU) [['freeze', '❄️', 20], ['fifty', '✂️', 25], ['second', '🛡️', 30]].forEach(function (p) {
+      if (!o.noPU) [['freeze', PUI.freeze, 20], ['fifty', PUI.fifty, 25], ['second', PUI.second, 30]].forEach(function (p) {
         var b = el('button', 'pu', '<i>' + p[1] + '</i><small>' + (G.S.pu[p[0]] || ('★' + p[2])) + '</small>');
         b.onclick = function () { if (over) return; G.sfx('tap');
           if (!G.S.pu[p[0]]) { if (G.S.stars < p[2]) { G.sfx('wrong'); return; } G.S.stars -= p[2]; G.S.pu[p[0]] = 1; } G.S.pu[p[0]]--; G.save();
@@ -183,13 +194,13 @@
       if (o.tutorial) { var bub = el('div', 'bubble tut', o.tutorial); s.appendChild(bub); area.classList.add('hl'); setTimeout(function () { bub.classList.add('fade'); }, 6000); speak(o.tutorial); }
       G.musicStart(Math.ceil(o.level / 10)); cleanup = def.mount(ctx) || function () {};
             var tick = setInterval(function () {
-        if (over) return; if (!o.practice) { if (frozen > 0) frozen -= .1; else left -= .1; }
+        if (over) return; if (!noTimer) { if (frozen > 0) frozen -= .1; else left -= .1; }
         var pct = left / total, ring = $('.fg', hud), dg = $('.digits', hud);
         if (ring) { ring.style.strokeDashoffset = (100 - pct * 100); ring.style.stroke = pct > .5 ? '#34d52a' : pct > .25 ? '#ff9a14' : '#ff2a2a'; }
-        var sec = Math.max(0, Math.ceil(left)); if (dg) { dg.textContent = surv ? '00:' + (sec < 10 ? '0' : '') + sec : sec; dg.classList.toggle('low', pct < .3); }
-        if (pct < .3 && !o.practice) { hud.classList.add('glitch'); G.musicTempo(1.6); if (Math.round(left * 10) % 10 === 0) G.sfx('tick'); } else { hud.classList.remove('glitch'); }
+        var sec = Math.max(0, Math.ceil(left)); if (dg) { dg.textContent = noTimer ? '∞' : surv ? '00:' + (sec < 10 ? '0' : '') + sec : sec; dg.classList.toggle('low', pct < .3); }
+        if (pct < .3 && !noTimer) { hud.classList.add('glitch'); G.musicTempo(1.6); if (Math.round(left * 10) % 10 === 0) G.sfx('tick'); } else { hud.classList.remove('glitch'); }
         if (pct < .6 && def.id !== 'boss' && !cw.dataset.s) { cw.dataset.s = 1; cw.innerHTML = G.charSVG('worried'); } if (pct < .3 && cw.dataset.s !== '2' && def.id !== 'boss') { cw.dataset.s = 2; cw.innerHTML = G.charSVG('sweat'); }
-        if (!o.practice && Math.round(left * 10) % 25 === 0 && pct > .1) taunt.textContent = t('taunts')[Math.floor(Math.random() * 6)];
+        if (!noTimer && Math.round(left * 10) % 25 === 0 && pct > .1) taunt.textContent = t('taunts')[Math.floor(Math.random() * 6)];
         if (left <= 0) { if (def.survive) finish(true); else finish(false); }
       }, 100);
       // surprise twists after level 10
@@ -202,10 +213,10 @@
       function finish(win, quit) {
         if (over) return;
         if (!win && armed && !quit) { armed = false; $('.pu.armed', s) && $('.pu.armed', s).classList.remove('armed'); cleanup(); area.innerHTML = ''; left = Math.max(left, total * .5); cleanup = def.mount(ctx) || function () {}; G.sfx('combo'); return; }
-        if (!win && (o.tutorial) && !quit) { cleanup(); area.innerHTML = ''; ctx.wrongBtns.length = 0; cleanup = def.mount(ctx) || function () {}; ctx.say('👍'); G.shake(area); return; }
+        if (!win && (o.tutorial) && !quit) { cleanup(); area.innerHTML = ''; ctx.wrongBtns.length = 0; left = total; cleanup = def.mount(ctx) || function () {}; ctx.say('👍'); G.shake(area); return; }
         over = true; clearInterval(tick); twistT.forEach(clearTimeout); cleanup(); G.musicStop();
         if (quit) { resolve({ quit: true }); return; }
-        var secs = total - left; cw.innerHTML = win ? G.charSVG('win') : G.charSVG('furious'); G.floatEmoji(s, win ? '🎉' : '💥', 50, 50);
+        var secs = total - left; cw.innerHTML = win ? G.charSVG('win') : G.charSVG('furious'); G.floatEmoji(s, win ? 'img:ic_star' : '💥', 50, 50); var rr = area.getBoundingClientRect(), sr2 = s.getBoundingClientRect(); G.burst(s, rr.left - sr2.left + rr.width / 2, rr.top - sr2.top + rr.height / 2, win ? 34 : 22, win ? null : ['#ff3b3b', '#ff8a14', '#fff']); G.popText(s, win ? (G.S.streak >= 1 ? t('combo') + ' ×' + (1 + Math.min(G.S.streak + 1, 10) * .1).toFixed(1) : t('correct')) : t('wrong'), win ? '' : 'bad');
         if (win) { G.sfx('correct'); G.vib(40); } else { G.sfx('wrong'); G.vib([120, 60, 120]); G.shake(app, 500); }
         setTimeout(function () { resolve({ win: win, left: Math.max(0, left), secs: secs, boss: def.id === 'boss' }); }, 800);
       }

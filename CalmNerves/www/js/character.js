@@ -20,10 +20,3 @@ G.charSVG = function (state, opt) {
 };
 G.bossSVG = function () { return '<div class="char boss"><div class="breathe"><img src="' + G.IMG('boss') + '" draggable="false" alt=""></div></div>'; };
 G.crownSVG = '<img class="crown" src="img/crown.png" alt="">';
-// character leans toward the finger (replaces eye-tracking, since the face is the original artwork)
-document.addEventListener('pointermove', function (e) {
-  document.querySelectorAll('.char .breathe img').forEach(function (p) {
-    var r = p.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2), d = Math.hypot(dx, dy) || 1, m = Math.min(1, d / 250) * 4;
-    p.style.transform = 'translate(' + dx / d * m + 'px,' + dy / d * m + 'px)';
-  });
-});
