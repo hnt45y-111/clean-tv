@@ -1,0 +1,7 @@
+pluginManagement { repositories { gradlePluginPortal(); mavenCentral(); google() } }
+// Android needs the Android SDK + Google's Maven (available on CI / on your PC). Desktop testing only needs Maven Central.
+def hasAndroid = System.getenv('ANDROID_HOME') != null || System.getenv('ANDROID_SDK_ROOT') != null || file('local.properties').exists()
+dependencyResolutionManagement { repositories { mavenCentral(); if (hasAndroid) google() } }
+rootProject.name = 'CalmNerves3D'
+include ':core', ':desktop'
+if (hasAndroid) include ':android'
