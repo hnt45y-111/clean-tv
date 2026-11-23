@@ -1049,7 +1049,7 @@
     var l = settings.topTools && settings.topTools.length ? settings.topTools.slice() : null;
     if (!l) { l = ['channels', 'saver', 'search', 'settings', 'wifi', 'edit', 'power']; if (tvShortcutsOn()) l = ['tvpic', 'tvsound', 'sleep', 'tvdim'].concat(l); }
     if (settings.inputsPos === 'list' && inputsOn() && l.indexOf('tvinput') < 0) l.unshift('tvinput');
-    return l.filter(function (id) { return TOP_TOOLS[id] && !(id === 'saver' && settings.saverOn === false) && !(id === 'tvinput' && !(IS_TV || PREVIEW)); });
+    return l.filter(function (id) { return TOP_TOOLS[id] && !(id === 'saver' && settings.saverOn === false) && !(id === 'tvinput' && !(IS_TV || PREVIEW || settings.inputsBtn === 'on')); });
   }
   function inputsOn() { var m = settings.inputsBtn || 'auto'; return m === 'on' || (m === 'auto' && tvShortcutsOn()); }
   /* where «المداخل» sits: 'list' (inside the ordered tools), 'center', 'right' / 'left' (alone in the top corner) or 'off' */
@@ -1829,7 +1829,7 @@
         { label: 'صوت النقر عند التنقل', value: settings.clickSound ? 'شغّال' : 'متوقف', act: function () { settings.clickSound = !settings.clickSound; saveSettings(); clickSound(); } },
         { label: 'شكل أيقونات الأعلى', value: (TOP_SHAPES.filter(function (x) { return x[0] === (settings.topShape || 'circle'); })[0] || TOP_SHAPES[0])[1], act: function (k) { settings.topShape = cycle(TOP_SHAPES.map(function (x) { return x[0]; }), settings.topShape || 'circle', k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'المسافة بين أيقونات الأعلى', value: nf.format(settings.topGap || 30), act: function (k) { settings.topGap = cycle([10, 20, 30, 40, 54, 70], settings.topGap || 30, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
-        { label: 'مكان زر المداخل', value: { center: 'وسط الشريط', right: 'فوق يمين لحاله', left: 'فوق يسار لحاله', list: 'ضمن الأيقونات' }[settings.inputsPos || 'center'], act: function (k) { settings.inputsPos = cycle(['center', 'right', 'left', 'list'], settings.inputsPos || 'center', k === 'ArrowRight' ? -1 : 1); if (settings.topTools) settings.topTools = settings.topTools.filter(function (x) { return x !== 'tvinput'; }); saveSettings(); } },
+        { label: 'مكان زر المداخل', value: { center: 'وسط الشريط', right: 'فوق يمين لحاله', left: 'فوق يسار لحاله', list: 'ضمن الأيقونات' }[settings.inputsPos || 'center'], act: function (k) { settings.inputsPos = cycle(['center', 'right', 'left', 'list'], settings.inputsPos || 'center', k === 'ArrowRight' ? -1 : 1); settings.inputsBtn = 'on'; if (settings.topTools) settings.topTools = settings.topTools.filter(function (x) { return x !== 'tvinput'; }); saveSettings(); } },
         { label: 'الوضع الخفيف (للشاشات الضعيفة)', value: { auto: 'تلقائي حسب الرام', on: 'شغّال', off: 'متوقف' }[settings.lite || 'auto'], act: function (k) { settings.lite = cycle(['auto', 'on', 'off'], settings.lite || 'auto', k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'شريط النتائج المباشرة', value: settings.ticker === false ? 'متوقف' : 'شغّال', act: function () { settings.ticker = settings.ticker === false; saveSettings(); refreshLive(); } },
         { label: 'شريط النتائج فوق التطبيقات (يوتيوب وغيره)', value: settings.tickerApps === true ? 'شغّال' : 'متوقف', act: function () {
