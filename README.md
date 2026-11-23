@@ -7,6 +7,8 @@
 **One identity across your TV, car and phone — built for Arabic-speaking users.**
 **شاشاتك كلها بيد وحدة: تلفزيون، سيارة، وموبايل بهوية واحدة.**
 
+![License: MIT](https://img.shields.io/badge/license-MIT-D9822B) ![Android](https://img.shields.io/badge/platform-Android%20TV%20%7C%20Auto%20%7C%20Mobile-1F6F6B)
+
 [English](#english) · [العربية](#العربية)
 
 </div>
@@ -156,7 +158,7 @@ index.html Project website
 
 ### Contributing
 
-Contributions are welcome: bug reports, Arabic/English localization, new themes for the gallery, device-compatibility reports (brand + model + Android version), and performance fixes for low-end TV hardware. Open an issue first for larger changes.
+Contributions are welcome: bug reports, Arabic/English localization, new themes for the gallery, device-compatibility reports (brand + model + Android version), and performance fixes for low-end TV hardware. Open an issue first for larger changes. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Contact
 
@@ -164,7 +166,7 @@ Telegram: **@KMK3993** · Instagram: **@HN_45Y**
 
 ### License
 
-No license file has been added yet. Until one is, all rights are reserved by the author. A license will be added to this repository.
+Released under the [MIT License](LICENSE). Bundled third-party libraries keep their own licenses (see `Orders/pdfjs.LICENSE.txt` and `Orders/xlsx.LICENSE.txt`). Channel names, logos and TV-brand names belong to their respective owners and are used only to identify them.
 
 ---
 
@@ -240,4 +242,4 @@ cd CleanTV && gradle assembleDebug --no-daemon
 
 ### الرخصة
 
-ما انضاف ملف رخصة بعد. لحد ما ينضاف، الحقوق محفوظة للمطوّر.
+مرخّص تحت [رخصة MIT](LICENSE). المكتبات الخارجية المرفقة تبقى برخصها الأصلية. أسماء وشعارات القنوات والشركات تعود لأصحابها وتُستخدم للتعريف فقط.
