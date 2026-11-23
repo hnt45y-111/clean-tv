@@ -10,7 +10,7 @@ public class Gfx {
     private static final ObjectMap<String, Texture> cache = new ObjectMap<>();
     private static Texture mk(String key, Pixmap p) { Texture t = new Texture(p, true); t.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear); p.dispose(); cache.put(key, t); return t; }
     private static void rr(Pixmap p, int x, int y, int w, int h, int r, int col) {
-        p.setColor(col); p.fillRectangle(x + r, y, w - 2 * r, h); p.fillRectangle(x, y + r, w, h - 2 * r);
+        p.setColor(col); if (w - 2 * r > 0) p.fillRectangle(x + r, y, w - 2 * r, h); if (h - 2 * r > 0) p.fillRectangle(x, y + r, w, h - 2 * r);
         p.fillCircle(x + r, y + r, r); p.fillCircle(x + w - r - 1, y + r, r); p.fillCircle(x + r, y + h - r - 1, r); p.fillCircle(x + w - r - 1, y + h - r - 1, r);
     }
     /** rounded panel with border, drawn at 2x for smooth edges */

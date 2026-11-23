@@ -22,11 +22,12 @@ public class Bg3D {
         this.sb = sb; java.util.Random r = new java.util.Random(7);
         for (int i = 0; i < sx.length; i++) { sx[i] = r.nextFloat(); sy[i] = r.nextFloat(); sz[i] = -80 - r.nextFloat() * 360; sp[i] = r.nextFloat() * 6; }
         setWorld(0);
-        Pixmap p = new Pixmap(1024, 1024, Pixmap.Format.RGBA8888); p.setColor(.75f, .7f, 1, .05f);
-        for (int k = 0; k < 24; k++) { double a0 = k * Math.PI / 12, a1 = a0 + Math.PI / 24; p.fillTriangle(512, 512, 512 + (int) (1500 * Math.cos(a0)), 512 + (int) (1500 * Math.sin(a0)), 512 + (int) (1500 * Math.cos(a1)), 512 + (int) (1500 * Math.sin(a1))); }
+        // sunburst rays: per-pixel (no out-of-bounds triangles) so it is safe on every ABI
+        Pixmap p = new Pixmap(512, 512, Pixmap.Format.RGBA8888); p.setBlending(Pixmap.Blending.None); int rc = Color.rgba8888(.8f, .75f, 1, .10f);
+        for (int y = 0; y < 512; y++) for (int x = 0; x < 512; x++) { double a = Math.atan2(y - 256, x - 256) + Math.PI; p.drawPixel(x, y, ((int) (a / (Math.PI / 12)) % 2 == 0 && Math.hypot(x - 256, y - 256) < 256) ? rc : 0); }
         rays = tex(p);
         p = new Pixmap(512, 160, Pixmap.Format.RGBA8888); java.util.Random q = new java.util.Random(3); int x = 0;
-        while (x < 512) { int w = 24 + q.nextInt(40), h = 40 + q.nextInt(100); p.setColor(0x12083aff); p.fillRectangle(x, 160 - h, w, h); p.setColor(0xffd25acc); for (int k = 0; k < 3; k++) if (q.nextInt(3) == 0) p.fillRectangle(x + 5 + q.nextInt(Math.max(1, w - 12)), 160 - h + 8 + q.nextInt(Math.max(1, h - 16)), 4, 5); x += w + 2 + q.nextInt(6); }
+        while (x < 512) { int w = Math.min(24 + q.nextInt(40), 512 - x), h = 40 + q.nextInt(100); p.setColor(0x12083aff); p.fillRectangle(x, 160 - h, w, h); p.setColor(0xffd25acc); for (int k = 0; k < 3; k++) if (q.nextInt(3) == 0) { int wx = x + 5 + q.nextInt(Math.max(1, w - 12)); if (wx + 4 < 512) p.fillRectangle(wx, 160 - h + 8 + q.nextInt(Math.max(1, h - 16)), 4, 5); } x += w + 2 + q.nextInt(6); }
         sky = tex(p);
         p = new Pixmap(48, 48, Pixmap.Format.RGBA8888); for (int i = 0; i < 24; i++) { p.setColor(1, 1, 1, (1 - i / 24f) * .9f); p.drawLine(24 - i, 24, 24 + i, 24); p.drawLine(24, 24 - i, 24, 24 + i); } p.setColor(1, 1, 1, 1); p.fillCircle(24, 24, 3); star = tex(p);
     }

@@ -13,10 +13,11 @@ public class CalmGame extends Game {
     private Scr pending; private float curtain; private int phase; private Texture white; private com.badlogic.gdx.graphics.g2d.TextureRegion starReg; private final OrthographicCamera oc = new OrthographicCamera();
     public CalmGame(TextRenderer tr, Platform p) { this.tr = tr; this.plat = p; }
     @Override public void create() {
-        Txt.R = tr; s = new Store(); I18n.init(); I18n.lang = s.lang; Bank.init(); a = new Assets(); batch = new SpriteBatch(); snd = new Snd(s); bg = new Bg3D(batch);
+        Dbg.mark("1-start"); Txt.R = tr; s = new Store(); Dbg.mark("2-store"); I18n.init(); I18n.lang = s.lang; Dbg.mark("3-i18n"); Bank.init(); Dbg.mark("4-bank"); a = new Assets(); batch = new SpriteBatch(); Dbg.mark("5-batch"); snd = new Snd(s); Dbg.mark("6-sound"); bg = new Bg3D(batch); Dbg.mark("7-bg3d");
         Pixmap p = new Pixmap(2, 2, Pixmap.Format.RGBA8888); p.setColor(Color.WHITE); p.fill(); white = new Texture(p); p.dispose(); starReg = new com.badlogic.gdx.graphics.g2d.TextureRegion(a.tex("star"));
-        setScreen(new MenuScr(this));
+        setScreen(new MenuScr(this)); Dbg.mark("8-menu-built");
     }
+    private int frames;
     /** screen change behind a sliding star curtain */
     public void go(Scr next) { if (phase != 0) { pending = next; return; } pending = next; phase = 1; curtain = 0; }
     public void setLang(String l) { s.lang = l; I18n.lang = l; Txt.clear(); s.save(); }
@@ -24,7 +25,7 @@ public class CalmGame extends Game {
         float dt = Math.min(Gdx.graphics.getDeltaTime(), 1 / 20f);
         if (phase == 1) { curtain += dt / .28f; if (curtain >= 1) { curtain = 1; phase = 2; Scr old = (Scr) getScreen(); Txt.clear(); setScreen(pending); if (old != null) old.dispose(); } }
         else if (phase == 2) { curtain -= dt / .28f; if (curtain <= 0) { curtain = 0; phase = 0; } }
-        super.render();
+        super.render(); if (++frames == 45) Dbg.mark("OK");
         if (phase != 0) {
             float W = Gdx.graphics.getWidth(), H = Gdx.graphics.getHeight(), k = com.badlogic.gdx.math.Interpolation.pow2.apply(curtain);
             float px = phase == 1 ? -W + W * k : W * (1 - k);               // closing: slide in from the left, opening: slide out to the right

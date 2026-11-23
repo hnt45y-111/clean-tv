@@ -22,7 +22,9 @@ public class AndroidLauncher extends AndroidApplication {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         File cf = crashFile();
-        if (cf.exists()) { showCrash(read(cf)); return; }   // last run crashed: show the reason instead of closing silently
+        File sf = new File(getFilesDir(), "stage.txt");
+        String stage = sf.exists() ? read(sf).trim() : "";
+        if (cf.exists() || (!stage.isEmpty() && !stage.equals("OK"))) { showCrash("last stage: " + stage + "\n\n" + (cf.exists() ? read(cf) : "(no Java exception: native crash)")); return; }   // last run crashed: show the reason instead of closing silently
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> { save("thread " + t.getName() + "\n" + trace(e)); android.os.Process.killProcess(android.os.Process.myPid()); System.exit(10); });
         try {
             AndroidApplicationConfiguration c = new AndroidApplicationConfiguration();
@@ -39,7 +41,7 @@ public class AndroidLauncher extends AndroidApplication {
         LinearLayout ll = new LinearLayout(this); ll.setOrientation(LinearLayout.VERTICAL); ll.setBackgroundColor(Color.parseColor("#1b1250")); ll.setPadding(24, 60, 24, 24);
         TextView h = new TextView(this); h.setText("CRASH REPORT - screenshot this"); h.setTextColor(Color.YELLOW); h.setTextSize(18); ll.addView(h);
         ScrollView sv = new ScrollView(this); TextView t = new TextView(this); t.setText(text.length() > 4000 ? text.substring(0, 4000) : text); t.setTextColor(Color.WHITE); t.setTextSize(10); t.setTextIsSelectable(true); sv.addView(t); ll.addView(sv, new LinearLayout.LayoutParams(-1, 0, 1f));
-        Button bt = new Button(this); bt.setText("Clear & retry"); bt.setOnClickListener(v -> { crashFile().delete(); recreate(); }); ll.addView(bt);
+        Button bt = new Button(this); bt.setText("Clear & retry"); bt.setOnClickListener(v -> { crashFile().delete(); new File(getFilesDir(), "stage.txt").delete(); recreate(); }); ll.addView(bt);
         setContentView(ll);
     }
 }
