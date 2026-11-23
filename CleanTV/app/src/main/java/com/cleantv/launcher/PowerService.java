@@ -36,6 +36,7 @@ public class PowerService extends AccessibilityService {
         lastInput = System.currentTimeMillis();
         h.removeCallbacks(watcher);
         h.postDelayed(watcher, 20000);
+        BootReceiver.bringFront(this); // an accessibility service may open activities from the background, so this also works where the boot broadcast is blocked
     }
 
     @Override
