@@ -1,0 +1,5 @@
+@font-face{font-family:'Kufi';font-weight:700;src:url('../node_modules/@fontsource/reem-kufi/files/reem-kufi-arabic-700-normal.woff2') format('woff2');}
+@font-face{font-family:'Plex';font-weight:500;unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF;src:url('../node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-500-normal.woff2') format('woff2');}
+@font-face{font-family:'Plex';font-weight:500;unicode-range:U+0000-00FF;src:url('../node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-latin-500-normal.woff2') format('woff2');}
+@font-face{font-family:'Plex';font-weight:700;unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF;src:url('../node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-700-normal.woff2') format('woff2');}
+@font-face{font-family:'Plex';font-weight:700;unicode-range:U+0000-00FF;src:url('../node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-latin-700-normal.woff2') format('woff2');}
