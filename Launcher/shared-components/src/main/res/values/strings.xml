@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="act_app_info">معلومات التطبيق</string>
+    <string name="act_uninstall">إلغاء التثبيت</string>
+    <string name="act_remove_home">إزالة من الشاشة الرئيسية</string>
+    <string name="act_add_home">إضافة إلى الشاشة الرئيسية</string>
+    <string name="act_rename">إعادة تسمية المجلد</string>
+    <string name="act_ungroup">فك المجلد</string>
+    <string name="act_remove_folder">إزالة المجلد</string>
+    <string name="act_remove_widget">إزالة الأداة</string>
+    <string name="act_remove_from_folder">إخراج من المجلد</string>
+    <string name="zone_remove">إزالة</string>
+    <string name="zone_info">معلومات</string>
+    <string name="folder_name_hint">اسم المجلد</string>
+    <string name="home_menu_wallpaper">الخلفيات</string>
+    <string name="home_menu_widgets">الأدوات</string>
+    <string name="home_menu_settings">إعدادات الشاشة الرئيسية</string>
+    <string name="widgets_title">الأدوات</string>
+    <string name="widgets_empty">لا توجد أدوات متاحة</string>
+    <string name="search_hint">ابحث في التطبيقات</string>
+    <string name="search_no_results">لا توجد نتائج</string>
+    <string name="system_apps">تطبيقات النظام</string>
+    <string name="close">إغلاق</string>
+</resources>
