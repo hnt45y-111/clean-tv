@@ -104,6 +104,12 @@ fun HomeWorkspace(
 
     LaunchedEffect(spec.headerRows) { vm.applyHeaderRows(spec.headerRows) }
 
+    // The gesture coroutine outlives recompositions: read skin callbacks through "updated" holders so they never go stale.
+    val blockedNow by rememberUpdatedState(blocked)
+    val onVDragNow by rememberUpdatedState(onVerticalDrag)
+    val onVEndNow by rememberUpdatedState(onVerticalEnd)
+    val onBgLongNow by rememberUpdatedState(onBackgroundLongPress)
+
     var rootTopLeft by remember { mutableStateOf(Offset.Zero) }
     var rootSize by remember { mutableStateOf(Size.Zero) }
     var pagerRect by remember { mutableStateOf(Rect.Zero) }
@@ -211,9 +217,11 @@ fun HomeWorkspace(
         modifier
             .fillMaxSize()
             .onGloballyPositioned { rootTopLeft = it.boundsInRoot().topLeft; rootSize = Size(it.size.width.toFloat(), it.size.height.toFloat()) }
-            .pointerInput(p.cols, p.rows, p.dockCount, rtl) {
+            // Keyed on geometry + data: the helper lambdas above close over cell sizes / items, so the recogniser
+            // is restarted (only while idle in practice) whenever they change instead of using stale values.
+            .pointerInput(pagerRect, dockRect, appByKey, items, p.cols, p.rows, p.dockCount, rtl) {
                 workspaceGestures(
-                    enabled = { !blocked && ws.openFolder == null },
+                    enabled = { !blockedNow && ws.openFolder == null },
                     onTap = { pt ->
                         if (ws.menu != null) { ws.menu = null; return@workspaceGestures }
                         val t = targetAt(pt) ?: return@workspaceGestures
@@ -229,7 +237,7 @@ fun HomeWorkspace(
                         val t = targetAt(pt)
                         val item = t?.let(::itemAtTarget)
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if (t == null || item == null) { onBackgroundLongPress(pt); false }
+                        if (t == null || item == null) { onBgLongNow(pt); false }
                         else {
                             drag = Drag(item, pt, false)
                             val r = cellRect(t, item)
@@ -261,8 +269,8 @@ fun HomeWorkspace(
                             }
                         }
                     },
-                    onVerticalDrag = { start, dy -> onVerticalDrag(start.y, dy) },
-                    onVerticalEnd = onVerticalEnd,
+                    onVerticalDrag = { start, dy -> onVDragNow(start.y, dy) },
+                    onVerticalEnd = { dy, vy, c -> onVEndNow(dy, vy, c) },
                 )
             },
     ) {
