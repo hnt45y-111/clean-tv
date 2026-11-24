@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_folder">مجلد</string>
+    <string name="app_unavailable">هذا التطبيق غير متوفر على الجهاز</string>
+    <string name="sys_calculator">الآلة الحاسبة</string>
+    <string name="sys_clock">الساعة</string>
+    <string name="sys_calendar">التقويم</string>
+    <string name="sys_settings">الإعدادات</string>
+    <string name="sys_phone">الهاتف</string>
+    <string name="sys_messages">الرسائل</string>
+    <string name="sys_gallery">المعرض</string>
+    <string name="wallpaper_chooser">اختيار الخلفية</string>
+    <string name="wp_applied">تم تطبيق الخلفية</string>
+    <string name="wp_failed">تعذّر تطبيق الخلفية</string>
+    <string name="search_web_prefix">بحث في الويب عن «%1$s»</string>
+    <string name="widget_no_space">لا توجد مساحة كافية لهذه الأداة</string>
+    <string name="home_full">الشاشة الرئيسية ممتلئة</string>
+</resources>

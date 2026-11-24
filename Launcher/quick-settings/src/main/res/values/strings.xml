@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="qs_wifi">الواي فاي</string>
+    <string name="qs_bluetooth">البلوتوث</string>
+    <string name="qs_mobile_data">بيانات الجوال</string>
+    <string name="qs_airplane">وضع الطيران</string>
+    <string name="qs_flashlight">كشّاف الضوء</string>
+    <string name="qs_rotation">تدوير تلقائي</string>
+    <string name="qs_dnd">عدم الإزعاج</string>
+    <string name="qs_location">الموقع</string>
+    <string name="qs_battery_saver">توفير الطاقة</string>
+    <string name="qs_on">يعمل</string>
+    <string name="qs_off">متوقف</string>
+    <string name="qs_opens_panel">يفتح لوحة النظام</string>
+    <string name="qs_needs_permission">يحتاج إذنًا</string>
+    <string name="qs_connected">متصل</string>
+    <string name="qs_brightness">السطوع</string>
+    <string name="qs_volume">الصوت</string>
+    <string name="qs_no_torch">لا يوجد فلاش</string>
+</resources>

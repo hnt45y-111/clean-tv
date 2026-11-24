@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_service_label">إشعارات اللانشر</string>
+    <string name="notif_empty">لا توجد إشعارات</string>
+    <string name="notif_access_title">السماح بقراءة الإشعارات</string>
+    <string name="notif_access_body">لعرض إشعاراتك داخل اللانشر، امنح التطبيق «الوصول إلى الإشعارات» من إعدادات النظام. لا تُرسل الإشعارات إلى أي جهة.</string>
+    <string name="notif_access_button">فتح إعدادات الوصول</string>
+    <string name="notif_clear_all">مسح الكل</string>
+    <string name="notif_dismiss">إزالة</string>
+    <string name="notif_more">%1$s إشعارات أخرى</string>
+</resources>

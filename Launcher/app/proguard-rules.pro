@@ -1,0 +1,2 @@
+-keep class app.dualui.notifications.LauncherNotificationListener { *; }
+-keepclassmembers class * extends androidx.room.RoomDatabase { *; }
