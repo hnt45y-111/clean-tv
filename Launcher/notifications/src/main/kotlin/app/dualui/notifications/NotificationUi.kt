@@ -45,7 +45,7 @@ data class NotificationStyle(
 
 private val iconCache = HashMap<String, Bitmap?>()
 
-private fun appBitmap(context: Context, pkg: String): Bitmap? = iconCache.getOrPut(pkg) {
+fun appBitmap(context: Context, pkg: String): Bitmap? = iconCache.getOrPut(pkg) {
     try {
         val d = context.packageManager.getApplicationIcon(pkg)
         val b = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)

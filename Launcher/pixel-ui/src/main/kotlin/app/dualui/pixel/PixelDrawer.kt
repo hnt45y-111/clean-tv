@@ -44,6 +44,7 @@ import app.dualui.core.engine.SearchEngine
 import app.dualui.core.model.AppInfo
 import app.dualui.core.R as CoreR
 import app.dualui.shared.*
+import app.dualui.core.engine.Reveal
 import app.dualui.shared.R as SharedR
 
 /** Pixel "All apps": a bottom sheet that slides up with the finger, search on top, long scrolling grid. */

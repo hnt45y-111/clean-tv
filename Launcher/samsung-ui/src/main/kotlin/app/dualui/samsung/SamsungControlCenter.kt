@@ -33,11 +33,13 @@ import app.dualui.notifications.NotificationStore
 import app.dualui.notifications.NotificationStyle
 import app.dualui.quicksettings.QsMode
 import app.dualui.shared.*
+import app.dualui.core.engine.Reveal
 
 /**
  * Samsung-style quick panel INSIDE the launcher (Android does not let third-party apps replace the real shade):
  * round tiles + wide brightness / volume bars + grouped notifications. Everything shown is backed by real APIs.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun SamsungControlCenter(host: SkinHost, reveal: Reveal, dark: Boolean) {
     if (!reveal.visible) return
@@ -61,7 +63,7 @@ fun SamsungControlCenter(host: SkinHost, reveal: Reveal, dark: Boolean) {
                 .graphicsLayer { translationY = -(1f - p) * size.height }
                 .clip(RoundedCornerShape(bottomStart = 34.dp, bottomEnd = 34.dp))
                 .background(cs.background)
-                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility)
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                 .padding(horizontal = 18.dp),
         ) {

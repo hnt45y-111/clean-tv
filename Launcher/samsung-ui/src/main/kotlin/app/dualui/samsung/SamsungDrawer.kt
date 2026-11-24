@@ -42,6 +42,7 @@ import app.dualui.core.engine.SearchEngine
 import app.dualui.core.model.AppInfo
 import app.dualui.core.R as CoreR
 import app.dualui.shared.*
+import app.dualui.core.engine.Reveal
 import app.dualui.shared.R as SharedR
 
 /** One UI app drawer: paged grid, system-apps card on top, search pill anchored at the bottom (thumb reach). */

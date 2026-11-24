@@ -30,6 +30,7 @@ object SamsungSkin : LauncherSkin {
 
     @Composable override fun Theme(dark: Boolean, content: @Composable () -> Unit) = SamsungTheme(dark, content)
     @Composable override fun Home(host: SkinHost) = SamsungHome(host)
+    @Composable override fun Panel(host: SkinHost, reveal: app.dualui.core.engine.Reveal, dark: Boolean) = SamsungTheme(dark) { SamsungControlCenter(host, reveal, dark) }
     @Composable override fun Preview(modifier: Modifier) = SamsungPreview(modifier)
 }
 

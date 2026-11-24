@@ -16,7 +16,9 @@ class PrefsRepository(context: Context) {
     private object K {
         val skin = stringPreferencesKey("skin")
         val setup = booleanPreferencesKey("setup_done")
-        val seeded = booleanPreferencesKey("seeded")
+        val seeded = booleanPreferencesKey("seed_v2")
+        val panel = stringPreferencesKey("panel_style")
+        val sysIcons = booleanPreferencesKey("system_icons")
         val cols = intPreferencesKey("cols")
         val rows = intPreferencesKey("rows")
         val dock = intPreferencesKey("dock")
@@ -37,6 +39,8 @@ class PrefsRepository(context: Context) {
             iconScale = p[K.scale] ?: 1f,
             showLabels = p[K.labels] ?: true,
             themedIcons = p[K.themed] ?: false,
+            panelStyle = p[K.panel] ?: "",
+            systemIcons = p[K.sysIcons] ?: true,
             themeMode = runCatching { ThemeMode.valueOf(p[K.theme] ?: "SYSTEM") }.getOrDefault(ThemeMode.SYSTEM),
         )
     }
@@ -49,5 +53,7 @@ class PrefsRepository(context: Context) {
     suspend fun setIconScale(v: Float) = store.edit { it[K.scale] = v }
     suspend fun setLabels(v: Boolean) = store.edit { it[K.labels] = v }
     suspend fun setThemedIcons(v: Boolean) = store.edit { it[K.themed] = v }
+    suspend fun setPanelStyle(v: String) = store.edit { it[K.panel] = v }
+    suspend fun setSystemIcons(v: Boolean) = store.edit { it[K.sysIcons] = v }
     suspend fun setThemeMode(m: ThemeMode) = store.edit { it[K.theme] = m.name }
 }

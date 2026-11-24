@@ -16,6 +16,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
+import app.dualui.shared.TajawalFamily
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -50,7 +53,7 @@ fun LauncherRoot(vm: LauncherViewModel, versionName: String) {
 
         // Pressing Home while a sub-screen is open returns to the home screen.
         LaunchedEffect(Unit) {
-            vm.homePressed.collect { if (nav.currentDestination?.route?.startsWith("settings") == true || nav.currentDestination?.route == ROUTE_PREVIEW) nav.popBackStack(ROUTE_HOME, false) }
+            vm.homePressed.collect { vm.panel.close(); if (nav.currentDestination?.route?.startsWith("settings") == true || nav.currentDestination?.route == ROUTE_PREVIEW) nav.popBackStack(ROUTE_HOME, false) }
         }
 
         NavHost(
@@ -71,7 +74,7 @@ fun LauncherRoot(vm: LauncherViewModel, versionName: String) {
             }
             composable(ROUTE_HOME) {
                 StatusBarTone(vm)
-                activeSkin.Theme(dark) { activeSkin.Home(SkinHost(vm) { section -> nav.navigate(settingsRoute(section)) }) }
+                HomeWithSystemUi(vm, activeSkin, dark, p.effectivePanel()) { section -> nav.navigate(settingsRoute(section)) }
             }
             composable(ROUTE_PREVIEW) { entry ->
                 val skin = SkinRegistry.byId(entry.arguments?.getString("id")) ?: activeSkin
@@ -122,5 +125,47 @@ private fun StatusBarTone(vm: LauncherViewModel) {
         val c = WindowCompat.getInsetsController(w, view)
         c.isAppearanceLightStatusBars = tone.supportsDarkText
         c.isAppearanceLightNavigationBars = tone.supportsDarkText
+    }
+}
+
+/**
+ * Home screen + the notification / status-bar style the user picked.
+ *  - "system": the device's own status bar and notification shade (nothing is replaced).
+ *  - "samsung" / "pixel": the real status bar is hidden on the home screen only and replaced by a launcher-drawn strip;
+ *    pulling it down opens that interface's panel. Swiping from the very top edge still reveals the real bar briefly.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun HomeWithSystemUi(vm: LauncherViewModel, skin: LauncherSkin, dark: Boolean, style: String, openSettings: (String?) -> Unit) {
+    val custom = style != "system" && SkinRegistry.byId(style) != null
+    val view = LocalView.current
+    DisposableEffect(custom) {
+        val w = (view.context as? android.app.Activity)?.window
+        val c = w?.let { WindowCompat.getInsetsController(it, view) }
+        if (custom) {
+            c?.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            c?.hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+        } else c?.show(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+        onDispose { c?.show(androidx.core.view.WindowInsetsCompat.Type.statusBars()) }
+    }
+    BackHandler(enabled = vm.panel.visible) { vm.panel.close() }
+    val barH = androidx.compose.foundation.layout.WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding()
+    val tone by vm.services.wallpaper.tone.collectAsState()
+    val host = remember(vm) { SkinHost(vm, openSettings) }
+    Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().padding(top = if (custom) barH.coerceAtLeast(24.dp) else 0.dp)) {
+            skin.Theme(dark) { skin.Home(host) }
+        }
+        if (custom) {
+            val ink = if (tone.supportsDarkText) Color(0xFF111111) else Color.White
+            val pixel = style == "pixel"
+            Box(Modifier.align(Alignment.TopCenter)) {
+                app.dualui.shared.LauncherStatusBar(
+                    vm, ink, if (pixel) app.dualui.shared.PlexArabicFamily else TajawalFamily,
+                    textSp = if (pixel) 14 else 13, iconDp = if (pixel) 17 else 15,
+                )
+            }
+            SkinRegistry.byId(style)?.Panel(host, vm.panel, dark)
+        }
     }
 }

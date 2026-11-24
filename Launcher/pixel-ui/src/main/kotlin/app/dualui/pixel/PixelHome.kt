@@ -36,7 +36,7 @@ fun PixelHome(host: SkinHost) {
     val prefs by vm.prefs.collectAsState()
     val ws = rememberWorkspaceState(vm)
     val drawer = rememberReveal()
-    val panel = rememberReveal()
+    val panel = vm.panel
     var showWidgets by remember { mutableStateOf(false) }
     var editAnchor by remember { mutableStateOf<Offset?>(null) }
     var focusSearch by remember { mutableStateOf(false) }
@@ -84,7 +84,10 @@ fun PixelHome(host: SkinHost) {
         }
     }
 
-    CompositionLocalProvider(LocalThemedIcons provides themed) {
+    CompositionLocalProvider(
+        LocalThemedIcons provides themed,
+        LocalIconPack provides (if (prefs?.systemIcons != false) PixelIconPack else null),
+    ) {
         Box(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxSize().graphicsLayer { val s = 1f - 0.04f * drawer.progress; scaleX = s; scaleY = s; alpha = 1f - 0.6f * drawer.progress }) {
                 HomeWorkspace(
@@ -92,18 +95,17 @@ fun PixelHome(host: SkinHost) {
                     blocked = drawer.visible || panel.visible || showWidgets || editAnchor != null,
                     onVerticalDrag = { startY, dy ->
                         if (gesture == 0) gesture = if (dy > 0) 2 else 1      // Pixel: swipe down = notifications, swipe up = apps
-                        if (gesture == 1) drawer.drag(-dy / (screenH * 0.6f)) else panel.drag(dy / (screenH * 0.55f))
+                        if (gesture == 1) drawer.drag(-dy / (screenH * 0.6f)) else vm.panelDrag(dy / (screenH * 0.55f))
                     },
                     onVerticalEnd = { dy, vy, cancelled ->
                         val g = gesture; gesture = 0
                         if (g == 1) drawer.settle(!cancelled && (drawer.progress > 0.3f || -vy > 1200f))
-                        if (g == 2) panel.settle(!cancelled && (panel.progress > 0.3f || vy > 1200f))
+                        if (g == 2) vm.panelRelease(!cancelled && (dy > screenH * 0.12f || vy > 1200f))
                     },
                     onBackgroundLongPress = { editAnchor = it },
                 )
             }
             PixelDrawer(vm, drawer, focusSearch) { focusSearch = false }
-            PixelControlCenter(host, panel)
             editAnchor?.let { at ->
                 val r = Rect(at.x - 1f, at.y - 1f, at.x + 1f, at.y + 1f)
                 PixelMenu(

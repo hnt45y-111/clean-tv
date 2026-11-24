@@ -46,4 +46,13 @@
     <string name="wp_failed_st">تعذّر تطبيق الخلفية</string>
     <string name="st_on">مفعّل</string>
     <string name="st_off">متوقف</string>
+    <string name="st_sec_panel">الإشعارات وشريط الحالة</string>
+    <string name="st_panel_hint">اختر شكل شريط الحالة ولوحة الإشعارات والإعدادات السريعة: بنمط سامسونج أو جوجل داخل اللانشر، أو إشعارات الجهاز الأساسية كما هي. الأنماط المخصصة تعمل في الشاشة الرئيسية فقط (أندرويد لا يسمح باستبدالها خارج اللانشر).</string>
+    <string name="st_panel_samsung">سامسونج</string>
+    <string name="st_panel_pixel">جوجل</string>
+    <string name="st_panel_system">الجهاز الأساسي</string>
+    <string name="st_system_icons">أيقونات تطبيقات النظام بنمط الواجهة</string>
+    <string name="st_system_icons_hint">الهاتف والرسائل والكاميرا والمعرض والحاسبة والساعة وغيرها تظهر بأيقونات الواجهة المختارة، وتفتح تطبيقاتك الحقيقية. تطبيقات سامسونج وجوجل نفسها لا يمكن تنزيلها أو تضمينها لأنها محمية بحقوق الشركتين؛ يظهر منها ما هو مثبت على جهازك.</string>
+    <string name="st_reset_layout">إعادة بناء الشاشة الرئيسية</string>
+    <string name="st_reset_done">تمت إعادة بناء الشاشة الرئيسية</string>
 </resources>

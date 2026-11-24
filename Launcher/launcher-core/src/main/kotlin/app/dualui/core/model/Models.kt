@@ -51,4 +51,10 @@ data class LauncherPrefs(
     val showLabels: Boolean = true,
     val themedIcons: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-)
+    /** "" = same as the active interface, else "samsung" | "pixel" | "system" (the device's own shade + status bar). */
+    val panelStyle: String = "",
+    /** Restyle the device's system apps (phone, messages, camera...) with the interface's own icon set. */
+    val systemIcons: Boolean = true,
+) {
+    fun effectivePanel(): String = panelStyle.ifEmpty { skinId ?: "system" }
+}

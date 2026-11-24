@@ -14,6 +14,7 @@ class LauncherServices private constructor(context: Context) {
     val widgets = WidgetController(context)
     val wallpaper = WallpaperHelper(context)
     val quickSettings = QuickSettingsController(context)
+    val roles by lazy { SystemRoles(context) }
 
     companion object {
         @Volatile private var instance: LauncherServices? = null

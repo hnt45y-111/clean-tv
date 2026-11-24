@@ -115,6 +115,18 @@ fun SettingsScreen(
                 }
             }
             item {
+                Section(stringResource(R.string.st_sec_panel)) {
+                    Hint(stringResource(R.string.st_panel_hint))
+                    Spacer(Modifier.height(10.dp))
+                    Segmented(
+                        listOf("samsung" to R.string.st_panel_samsung, "pixel" to R.string.st_panel_pixel, "system" to R.string.st_panel_system),
+                        p.effectivePanel(),
+                    ) { vm.setPanelStyle(it) }
+                    SwitchRow(stringResource(R.string.st_system_icons), p.systemIcons) { vm.setSystemIcons(it) }
+                    Hint(stringResource(R.string.st_system_icons_hint))
+                }
+            }
+            item {
                 Section(stringResource(R.string.st_sec_home)) {
                     Label(stringResource(R.string.st_columns))
                     Segmented((4..6).map { it to null }, p.cols, labelOf = { ArabicFormat.number(it) }) { vm.setGrid(it, p.rows) }
@@ -127,6 +139,10 @@ fun SettingsScreen(
                     SwitchRow(stringResource(R.string.st_labels), p.showLabels) { vm.setLabels(it) }
                     SwitchRow(stringResource(R.string.st_themed), p.themedIcons) { vm.setThemedIcons(it) }
                     Hint(stringResource(R.string.st_themed_hint))
+                    ActionRow(Icons.Rounded.Refresh, stringResource(R.string.st_reset_layout)) {
+                        vm.resetLayout()
+                        android.widget.Toast.makeText(ctx, R.string.st_reset_done, android.widget.Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             item {

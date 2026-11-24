@@ -36,7 +36,8 @@ fun SamsungHome(host: SkinHost) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val ws = rememberWorkspaceState(vm)
     val drawer = rememberReveal()
-    val panel = rememberReveal()
+    val panel = vm.panel
+    val prefsState by vm.prefs.collectAsState()
     var showWidgets by remember { mutableStateOf(false) }
     var showEdit by remember { mutableStateOf(false) }
     val tone by vm.services.wallpaper.tone.collectAsState()
@@ -78,6 +79,7 @@ fun SamsungHome(host: SkinHost) {
     }
     // Home button / back from outside returns to first page (handled by activity via vm.currentPage reset)
 
+    CompositionLocalProvider(LocalIconPack provides (if (prefsState?.systemIcons != false) SamsungIconPack else null)) {
     Box(Modifier.fillMaxSize()) {
         Box(
             Modifier.fillMaxSize().graphicsLayer {
@@ -91,18 +93,17 @@ fun SamsungHome(host: SkinHost) {
                 onVerticalDrag = { startY, dy ->
                     if (gesture == 0) gesture = if (dy > 0 && startY < screenH * 0.18f) 2 else 1
                     if (gesture == 1) drawer.drag(abs(dy) / (screenH * 0.5f))
-                    else panel.drag(dy / (screenH * 0.55f))
+                    else vm.panelDrag(dy / (screenH * 0.55f))
                 },
                 onVerticalEnd = { dy, vy, cancelled ->
                     val g = gesture; gesture = 0
                     if (g == 1) drawer.settle(!cancelled && (drawer.progress > 0.3f || abs(vy) > 1200f))
-                    if (g == 2) panel.settle(!cancelled && (panel.progress > 0.3f || vy > 1200f))
+                    if (g == 2) vm.panelRelease(!cancelled && (dy > screenH * 0.12f || vy > 1200f))
                 },
                 onBackgroundLongPress = { showEdit = true },
             )
         }
         SamsungDrawer(vm, drawer, dark)
-        SamsungControlCenter(host, panel, dark)
         if (showEdit) SamsungEditSheet(
             onDismiss = { showEdit = false },
             onWallpaper = { showEdit = false; host.openSettings("wallpaper") },
@@ -114,6 +115,7 @@ fun SamsungHome(host: SkinHost) {
                 RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp), TajawalFamily),
             onDismiss = { showWidgets = false },
         )
+    }
     }
 }
 

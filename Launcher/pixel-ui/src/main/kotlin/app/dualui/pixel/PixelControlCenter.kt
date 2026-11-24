@@ -32,11 +32,13 @@ import app.dualui.notifications.NotificationStore
 import app.dualui.notifications.NotificationStyle
 import app.dualui.quicksettings.QsMode
 import app.dualui.shared.*
+import app.dualui.core.engine.Reveal
 
 /**
  * Pixel-style panel inside the launcher: brightness on top, two-column pill tiles with state text,
  * then grouped notification cards. (The real system shade stays reachable through a button.)
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun PixelControlCenter(host: SkinHost, reveal: Reveal) {
     if (!reveal.visible) return
@@ -57,7 +59,7 @@ fun PixelControlCenter(host: SkinHost, reveal: Reveal) {
             Modifier.fillMaxWidth().fillMaxHeight(0.94f)
                 .graphicsLayer { translationY = -(1f - p) * size.height; alpha = (p * 2f).coerceIn(0f, 1f) }
                 .clip(RoundedCornerShape(bottomStart = 36.dp, bottomEnd = 36.dp)).background(cs.surfaceContainer)
-                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility)
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                 .padding(horizontal = 16.dp),
         ) {

@@ -26,5 +26,7 @@ interface LauncherSkin {
 
     @Composable fun Theme(dark: Boolean, content: @Composable () -> Unit)
     @Composable fun Home(host: SkinHost)
+    /** This interface's notification + quick-settings panel (shown by the app shell when the user picks this style). */
+    @Composable fun Panel(host: SkinHost, reveal: Reveal, dark: Boolean)
     @Composable fun Preview(modifier: Modifier)
 }

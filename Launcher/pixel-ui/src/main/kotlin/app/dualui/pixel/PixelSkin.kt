@@ -31,6 +31,7 @@ object PixelSkin : LauncherSkin {
 
     @Composable override fun Theme(dark: Boolean, content: @Composable () -> Unit) = PixelTheme(dark, content)
     @Composable override fun Home(host: SkinHost) = PixelHome(host)
+    @Composable override fun Panel(host: SkinHost, reveal: app.dualui.core.engine.Reveal, dark: Boolean) = PixelTheme(dark) { PixelControlCenter(host, reveal) }
     @Composable override fun Preview(modifier: Modifier) = PixelPreview(modifier)
 }
 
