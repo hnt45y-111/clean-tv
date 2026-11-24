@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">لانشر ثنائي</string>
+    <string name="setup_title">اختر واجهتك</string>
+    <string name="setup_sub">واجهتان كاملتان في تطبيق واحد. يمكنك التبديل بينهما لاحقًا من الإعدادات دون فقدان اختصاراتك.</string>
+    <string name="setup_preview">معاينة</string>
+    <string name="setup_choose">اختيار</string>
+    <string name="setup_selected">محددة</string>
+    <string name="setup_default_title">خطوة أخيرة</string>
+    <string name="setup_default_body">لتعمل كشاشتك الرئيسية، اجعل التطبيق «الشاشة الرئيسية» الافتراضية. سيعرض أندرويد نافذة تأكيد، ويمكنك الرجوع إلى لانشرك السابق في أي وقت من إعدادات النظام.</string>
+    <string name="setup_default_button">تعيين كشاشة رئيسية</string>
+    <string name="setup_later">لاحقًا</string>
+    <string name="setup_start">ابدأ الاستخدام</string>
+    <string name="preview_banner">معاينة حيّة: %1$s</string>
+    <string name="preview_apply">تطبيق هذه الواجهة</string>
+    <string name="preview_back">رجوع</string>
+</resources>

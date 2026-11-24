@@ -38,6 +38,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _events = MutableSharedFlow<LauncherEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<LauncherEvent> = _events.asSharedFlow()
 
+    /** Fired when the user presses Home while the launcher is already showing: skins close overlays and go to page 0. */
+    private val _homePressed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val homePressed: SharedFlow<Unit> = _homePressed.asSharedFlow()
+    fun onHomePressed() { _homePressed.tryEmit(Unit) }
+
     /** Set by the active skin; page 0 reserves this many rows for its built-in header. */
     @Volatile var headerRows: Int = 0
         private set

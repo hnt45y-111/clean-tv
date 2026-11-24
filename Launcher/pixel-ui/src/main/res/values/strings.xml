@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pixel_name">جوجل Pixel</string>
+    <string name="pixel_tagline">ألوان Material You، شريط بحث سفلي، وورقة تطبيقات انسيابية</string>
+    <string name="px_search_home">ابحث في جهازك والويب</string>
+    <string name="px_search_apps">ابحث في التطبيقات</string>
+    <string name="px_notifications">الإشعارات</string>
+    <string name="px_open_system_shade">فتح لوحة النظام الأصلية</string>
+    <string name="px_brightness_permission">السماح بتعديل السطوع</string>
+    <string name="px_battery_charging">يشحن</string>
+    <string name="px_battery">البطارية</string>
+</resources>

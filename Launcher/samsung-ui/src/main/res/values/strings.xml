@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="samsung_name">سامسونج One UI</string>
+    <string name="samsung_tagline">أيقونات مستديرة، درج صفحات، وشريط بحث سفلي مريح للإبهام</string>
+    <string name="sm_apps_title">التطبيقات</string>
+    <string name="sm_search_placeholder">بحث</string>
+    <string name="sm_panel_title">اللوحة السريعة</string>
+    <string name="sm_notifications">الإشعارات</string>
+    <string name="sm_open_system_shade">لوحة النظام الأصلية</string>
+    <string name="sm_brightness_permission">اسمح بتعديل السطوع من إعدادات النظام</string>
+    <string name="sm_edit_title">تخصيص الشاشة الرئيسية</string>
+    <string name="sm_settings_short">الإعدادات</string>
+</resources>
