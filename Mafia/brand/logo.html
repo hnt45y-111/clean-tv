@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Cinzel; font-weight: 700; src: url(../client/fonts/cinzel-latin-700-normal.woff2); }
+@font-face { font-family: Cinzel; font-weight: 900; src: url(../client/fonts/cinzel-latin-900-normal.woff2); }
+@font-face { font-family: ReemKufi; font-weight: 700; src: url(../client/fonts/reem-kufi-arabic-700-normal.woff2); }
+html, body { margin: 0; background: transparent; }
+body.dark { background: #080A12; }
+.stage { display: inline-flex; align-items: center; justify-content: center; padding: 80px; box-sizing: border-box; }
+/* الشارة: إطار بطاقة مشطوف الزوايا (مثل إطارات بطاقات الشخصيات) */
+.emblem { position: relative; width: var(--w, 420px); aspect-ratio: 4 / 4.6; filter: drop-shadow(0 0 28px rgba(217,35,60,.55)) drop-shadow(0 18px 30px rgba(0,0,0,.6)); }
+.emblem .frame, .emblem .inner, .emblem .art { position: absolute; clip-path: polygon(14% 0, 86% 0, 100% 12%, 100% 88%, 86% 100%, 14% 100%, 0 88%, 0 12%); }
+.emblem .frame { inset: 0; background: linear-gradient(160deg, #FFE3A0 0%, #E8AE42 28%, #8A5A0A 52%, #E8AE42 74%, #FFF1C9 100%); }
+.emblem .inner { inset: 3.2%; background: #2a0a10; }
+.emblem .art { inset: 5.2%; background: #12060a url(../client/assets/characters/portraits/mafia.webp) 50% 8% / 118% auto no-repeat; }
+.emblem .art::after { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 70% at 50% 110%, rgba(8,10,18,.95), transparent 55%), linear-gradient(180deg, rgba(217,35,60,.15), transparent 40%); }
+.emblem .gem { position: absolute; left: 50%; bottom: -6%; transform: translateX(-50%) rotate(45deg); width: 13%; aspect-ratio: 1; background: linear-gradient(135deg, #ff6a80, #D9233C 50%, #7a0f20); border: 4px solid #E8AE42; box-shadow: 0 0 18px rgba(217,35,60,.9); }
+/* الشعار النصي */
+.word { font-family: Cinzel; font-weight: 900; font-size: var(--fs, 170px); letter-spacing: .14em; line-height: 1; padding-left: .14em;
+  background: linear-gradient(180deg, #FFF4D6 0%, #F3C567 38%, #B9801C 55%, #F7D98A 72%, #9A6512 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 3px 0 #3a0a12) drop-shadow(0 0 22px rgba(217,35,60,.45)); }
+.word.mono { background: none; color: #fff; filter: none; }
+.rule { display: flex; align-items: center; gap: 18px; justify-content: center; margin-top: .18em; }
+.rule i { height: 3px; flex: 1; max-width: 220px; background: linear-gradient(90deg, transparent, #D9233C); }
+.rule i:last-child { background: linear-gradient(270deg, transparent, #D9233C); }
+.rule b { width: 14px; height: 14px; transform: rotate(45deg); background: #D9233C; box-shadow: 0 0 12px #D9233C; }
+.ar { font-family: ReemKufi; font-weight: 700; font-size: calc(var(--fs, 170px) * .3); color: #DCE5F5; text-align: center; margin-top: .25em; letter-spacing: 0; direction: rtl; }
+.col { display: flex; flex-direction: column; align-items: center; gap: 34px; }
+.row { display: flex; align-items: center; gap: 54px; }
+.hidden { display: none; }
+</style></head>
+<body>
+<div class="stage" id="v-primary"><div class="col"><div class="emblem"><div class="frame"></div><div class="inner"></div><div class="art"></div><div class="gem"></div></div>
+  <div><div class="word">MAFIA</div><div class="rule"><i></i><b></b><i></i></div><div class="ar">مافيا</div></div></div></div>
+<div class="stage hidden" id="v-horizontal"><div class="row"><div class="emblem" style="--w:300px"><div class="frame"></div><div class="inner"></div><div class="art"></div><div class="gem"></div></div>
+  <div><div class="word" style="--fs:190px">MAFIA</div><div class="rule"><i></i><b></b><i></i></div><div class="ar" style="--fs:190px">مافيا</div></div></div></div>
+<div class="stage hidden" id="v-mark"><div class="emblem" style="--w:560px"><div class="frame"></div><div class="inner"></div><div class="art"></div><div class="gem"></div></div></div>
+<div class="stage hidden" id="v-wordmark"><div><div class="word" style="--fs:220px">MAFIA</div><div class="rule"><i></i><b></b><i></i></div></div></div>
+<div class="stage hidden" id="v-mono"><div class="col"><div class="word mono" style="--fs:200px">MAFIA</div><div class="ar" style="--fs:200px;color:#fff">مافيا</div></div></div>
+<script>
+const v = location.hash.slice(1) || 'primary';
+document.querySelectorAll('.stage').forEach((s) => s.classList.toggle('hidden', s.id !== 'v-' + v));
+if (new URLSearchParams(location.search).has('dark')) document.body.classList.add('dark');
+</script>
+</body></html>

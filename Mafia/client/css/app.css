@@ -8,8 +8,13 @@
 @font-face { font-family: Tajawal; font-weight: 700; src: url(../fonts/tajawal-latin-700-normal.woff2) format('woff2'); unicode-range: U+0000-00FF; font-display: swap; }
 @font-face { font-family: Tajawal; font-weight: 800; src: url(../fonts/tajawal-latin-800-normal.woff2) format('woff2'); unicode-range: U+0000-00FF; font-display: swap; }
 
+@font-face { font-family: Cinzel; font-weight: 700; src: url(../fonts/cinzel-latin-700-normal.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: Cinzel; font-weight: 900; src: url(../fonts/cinzel-latin-900-normal.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: ReemKufi; font-weight: 500; src: url(../fonts/reem-kufi-arabic-500-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; font-display: swap; }
+@font-face { font-family: ReemKufi; font-weight: 700; src: url(../fonts/reem-kufi-arabic-700-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; font-display: swap; }
+
 :root {
-  --navy: #090D1B; --navy2: #0f1530; --navy3: #151c3d;
+  --navy: #080A12; --navy2: #10182B; --navy3: #172240;
   --red: #D9233C; --blue: #2478E8; --green: #21A875; --purple: #A45BE7; --gold: #E8AE42; --silver: #DCE5F5;
   --dim: rgba(220,229,245,.62); --faint: rgba(220,229,245,.12); --card: rgba(220,229,245,.055); --card2: rgba(220,229,245,.09);
   --r: 18px; --r-sm: 12px; --ease: cubic-bezier(.2,.8,.2,1);
@@ -22,7 +27,7 @@ body { overflow: hidden; font-size: 16px; line-height: 1.5; -webkit-font-smoothi
 input, textarea { user-select: text; -webkit-user-select: text; }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
 h1, h2, h3, p { margin: 0; }
-h1 { font-size: 28px; font-weight: 800; } h2 { font-size: 20px; font-weight: 800; } h3 { font-size: 16px; font-weight: 700; }
+h1 { font-size: 28px; font-weight: 700; font-family: ReemKufi, Tajawal, sans-serif; } h2 { font-size: 20px; font-weight: 700; font-family: ReemKufi, Tajawal, sans-serif; } h3 { font-size: 16px; font-weight: 700; }
 .dim { color: var(--dim); } .small { font-size: 13px; } .tiny { font-size: 11px; } .center { text-align: center; } .bold { font-weight: 700; }
 .num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; display: inline-block; }
 
@@ -130,12 +135,12 @@ body.is-day #bg { background: radial-gradient(110% 60% at 50% -10%, rgba(232,174
 .timer .sub { position: absolute; bottom: 26%; font-size: 11px; color: var(--dim); }
 
 /* بطاقة الدور (Flip) */
-.flip { perspective: 1200px; width: min(78vw, 300px); aspect-ratio: 3/4.4; margin: 0 auto; cursor: pointer; }
+.flip { perspective: 1200px; width: min(78vw, 320px); aspect-ratio: 640/820; margin: 0 auto; cursor: pointer; }
 .flip .in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .8s var(--ease); }
 .flip.on .in { transform: rotateY(180deg); } .flip.instant .in { transition: none; }
 .flip .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 18px; text-align: center; }
-.flip .back { background: repeating-linear-gradient(45deg, #12193a 0 12px, #0e1430 12px 24px); border: 2px solid var(--faint); box-shadow: 0 24px 50px -20px #000; }
-.flip .back::before { content: "?"; font-size: 110px; font-weight: 800; color: rgba(220,229,245,.18); }
+.flip .back { background: url(../assets/brand/mafia-logo-mark.webp) 50% 42% / 58% auto no-repeat, radial-gradient(80% 60% at 50% 40%, rgba(217,35,60,.35), transparent 70%), repeating-linear-gradient(45deg, #140a12 0 12px, #0c0a14 12px 24px); border: 2px solid rgba(232,174,66,.55); box-shadow: 0 0 30px -6px rgba(217,35,60,.5), 0 24px 50px -20px #000; justify-content: flex-end; padding-bottom: 28px; }
+.flip .back::before { content: none; }
 .flip .front { transform: rotateY(180deg); background: radial-gradient(90% 60% at 50% 0, color-mix(in srgb, var(--role) 38%, transparent), transparent 70%), linear-gradient(180deg, var(--navy3), var(--navy)); border: 2px solid var(--role); box-shadow: 0 0 40px -6px color-mix(in srgb, var(--role) 60%, transparent), 0 24px 50px -20px #000; }
 .flip .front .art { width: 70%; animation: float 4s ease-in-out infinite; } .flip .front h1 { color: var(--role); font-size: 34px; }
 .deal { animation: deal .6s var(--ease) both; } @keyframes deal { from { opacity: 0; transform: translateY(-120px) rotate(-14deg) scale(.7); } to { opacity: 1; transform: none; } }
@@ -176,3 +181,14 @@ body.is-day #bg { background: radial-gradient(110% 60% at 50% -10%, rgba(232,174
 .lite *, .lite *::before, .lite *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 .card > .art, .card .col > .art { width: 140px; height: auto; }
+
+/* ===== الهوية الأنمي: الشعار وصور الشخصيات ===== */
+.logo-full { width: min(64vw, 250px); height: auto; display: block; filter: drop-shadow(0 10px 30px rgba(217,35,60,.35)); }
+.logo-mark { width: 120px; height: auto; display: block; }
+.hero .logo-full { animation: float 6s ease-in-out infinite; }
+.splash .box .logo-full { width: min(70vw, 280px); animation: pop .8s var(--ease) both, float 5s 1s ease-in-out infinite; }
+.char-art { width: 100%; max-width: 230px; height: auto; display: block; border-radius: 16px; box-shadow: 0 0 30px -8px var(--role); }
+.char-card { width: 100%; height: 100%; object-fit: contain; display: block; }
+.flip .front.card-face { padding: 0; background: transparent; border: 0; overflow: visible; box-shadow: none; filter: drop-shadow(0 0 26px color-mix(in srgb, var(--role) 70%, transparent)); }
+.flip .front .team-chip { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(8,10,18,.75); backdrop-filter: blur(4px); }
+.sheet-card { width: min(70vw, 280px); height: auto; filter: drop-shadow(0 0 22px color-mix(in srgb, var(--role) 70%, transparent)); }

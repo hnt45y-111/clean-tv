@@ -141,7 +141,7 @@ public class HostService extends Service {
         nm.createNotificationChannel(new NotificationChannel("host", "غرفة اللعب", NotificationManager.IMPORTANCE_LOW));
         PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_IMMUTABLE);
         PendingIntent stop = PendingIntent.getService(this, 1, new Intent(this, HostService.class).setAction(STOP), PendingIntent.FLAG_IMMUTABLE);
-        return new Notification.Builder(this, "host").setSmallIcon(R.drawable.ic_app).setContentTitle("غرفة مافيا تعمل")
+        return new Notification.Builder(this, "host").setSmallIcon(R.drawable.ic_stat).setContentTitle("غرفة مافيا تعمل")
                 .setContentText("هاتفك يستضيف اللعبة الآن — اضغط للعودة").setContentIntent(open).setOngoing(true)
                 .addAction(new Notification.Action.Builder(null, "إيقاف الغرفة", stop).build()).build();
     }

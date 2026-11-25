@@ -4,7 +4,7 @@ import { S, saveToken, notify } from '../store.js';
 import { api, send, dropSession, connect } from '../net.js';
 import { go, screen, topbar, navbar, act, fail, xpBar, cached, liveCfg } from './common.js';
 import { join as joinScreen } from './rooms.js';
-import { logoArt } from '../art.js';
+import { logoFull, roleAvatar } from '../art.js';
 
 export const home = () => {
   if (S.cfg.local) return localHome();
@@ -27,9 +27,9 @@ function localHome() {
   if (!cfg.isHost) { S.params = { mode: 'offline' }; return joinScreen(); }
   const w = cfg.wifi;
   return [screen(
-    h('div', { class: 'row' }, avatar(S.user), h('div', { class: 'grow' }, h('div', { class: 'small dim' }, t('narrator')), h('div', { class: 'bold' }, S.user.name)),
+    h('div', { class: 'row' }, avatar({ ...S.user, avatar: S.user.avatar || roleAvatar('narrator') }), h('div', { class: 'grow' }, h('div', { class: 'small dim' }, t('narrator')), h('div', { class: 'bold' }, S.user.name)),
       h('button', { class: 'iconbtn', onclick: () => go('settings'), 'aria-label': t('settings') }, ic('gear'))),
-    h('div', { class: 'hero' }, logoArt(), h('div', { class: 'logo' }, 'مافيا')),
+    h('div', { class: 'hero' }, logoFull()),
     w ? h('div', { class: 'banner', style: { background: 'rgba(33,168,117,.14)', borderColor: 'rgba(33,168,117,.5)', color: '#5fe0ad' } }, ic('wifi', 'sm'), t('hotspot_on', { ssid: w.ssid }))
       : h('div', { class: 'banner red' }, ic('wifioff', 'sm'), cfg.hotspotError ? t('hotspot_err_' + cfg.hotspotError) : t('hotspot_starting')),
     h('button', { class: 'card accent modecard', style: { '--role': 'var(--red)', textAlign: 'start' }, onclick: () => go('create', { mode: 'offline' }) },

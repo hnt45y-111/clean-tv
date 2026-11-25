@@ -4,7 +4,7 @@ import { S, notify, serverNow } from '../store.js';
 import { api, send } from '../net.js';
 import { go, screen, topbar, act, fail, cached, liveCfg } from './common.js';
 import qrcode from '../../vendor/qrcode.mjs';
-import { roleArt, ROLE_COLOR } from '../art.js';
+import { roleArt, roleAvatar, ROLE_COLOR } from '../art.js';
 import { sfx } from '../fx.js';
 
 const MIN = 4, MAX = 20;
@@ -136,7 +136,7 @@ export const lobby = () => {
       h('div', { class: 'tiny dim center' }, base ? base.replace(/^https?:\/\//, '') : '')) : null,
     !offline || !isHost ? h('div', { class: 'card center' }, h('div', { class: 'small dim' }, t('room_code')), h('div', { class: 'code-big' }, R.code),
       !R.auto ? h('div', { class: 'row', style: { justifyContent: 'center' } }, h('button', { class: 'btn sm', onclick: () => copyText(R.code) }, ic('copy', 'sm'), t('copy')), isHost ? h('button', { class: 'btn sm blue', onclick: () => inviteSheet() }, ic('send', 'sm'), t('invite_friends')) : null) : null) : null,
-    !isHost && R.hostInfo ? h('div', { class: 'prow', style: { '--role': 'var(--blue)' } }, avatar({ ...R.hostInfo, online: R.hostInfo.connected }), h('div', { class: 'grow' }, h('div', { class: 'tiny dim' }, t('narrator')), h('div', { class: 'nm' }, R.hostInfo.name)), ic('mic')) : null,
+    !isHost && R.hostInfo ? h('div', { class: 'prow', style: { '--role': 'var(--blue)' } }, avatar({ ...R.hostInfo, avatar: R.hostInfo.avatar || roleAvatar('narrator'), online: R.hostInfo.connected }), h('div', { class: 'grow' }, h('div', { class: 'tiny dim' }, t('narrator')), h('div', { class: 'nm' }, R.hostInfo.name)), ic('mic')) : null,
     cd,
     h('div', { class: 'card row between', style: { alignItems: 'flex-start' } }, h('div', { class: 'col', style: { gap: '4px' } }, h('div', { class: 'row wrap gap6' }, h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.mafia } }, t('role_mafia'), ' ', h('b', { class: 'num' }, st.mafia)),
       st.doctor && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.doctor } }, t('role_doctor')), st.detective && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.detective } }, t('role_detective')), st.sniper && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.sniper } }, t('role_sniper'))),

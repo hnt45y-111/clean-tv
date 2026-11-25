@@ -1,0 +1,284 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>MAFIA GAME – VISUAL IDENTITY GUIDELINES</title><style>@font-face { font-family: Cinzel; font-weight: 700; src: url(../client/fonts/cinzel-latin-700-normal.woff2); }
+@font-face { font-family: Cinzel; font-weight: 900; src: url(../client/fonts/cinzel-latin-900-normal.woff2); }
+@font-face { font-family: ReemKufi; font-weight: 500; src: url(../client/fonts/reem-kufi-arabic-500-normal.woff2); }
+@font-face { font-family: ReemKufi; font-weight: 700; src: url(../client/fonts/reem-kufi-arabic-700-normal.woff2); }
+@font-face { font-family: Tajawal; font-weight: 400; src: url(../client/fonts/tajawal-arabic-400-normal.woff2); unicode-range: U+0600-06FF, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: Tajawal; font-weight: 700; src: url(../client/fonts/tajawal-arabic-700-normal.woff2); unicode-range: U+0600-06FF, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: Tajawal; font-weight: 400; src: url(../client/fonts/tajawal-latin-400-normal.woff2); unicode-range: U+0000-00FF; }
+@font-face { font-family: Tajawal; font-weight: 700; src: url(../client/fonts/tajawal-latin-700-normal.woff2); unicode-range: U+0000-00FF; }
+
+@page { size: 210mm 297mm; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #080A12; color: #DCE5F5; font-family: Tajawal, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+h2, h3, h4 { margin: 0; font-family: ReemKufi, Tajawal, sans-serif; font-weight: 700; }
+p { margin: 0; line-height: 1.7; }
+
+.page { width: 210mm; height: 297mm; position: relative; overflow: hidden; padding: 16mm 14mm 18mm; page-break-after: always; break-after: page;
+  background: radial-gradient(120% 45% at 50% -8%, rgba(217,35,60,.22), transparent 60%), #080A12; }
+.page::after { content: ""; position: absolute; inset: auto 0 0 0; height: 40mm; opacity: .5; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'%3E%3Cpath fill='%2306091a' d='M0 120V78h14V52h18v26h10V38h22v40h12V60h20V30h16v30h14V70h18V44h24v26h12V58h16V24h20v34h14v22h18V50h22v28h12V64h18V40h20v38h14v42z'/%3E%3C/svg%3E") bottom/100% 100% no-repeat; }
+.body { position: relative; z-index: 1; }
+.ph { display: flex; align-items: center; gap: 5mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: .3mm solid rgba(232,174,66,.35); }
+.ph .num { font-family: Cinzel; font-weight: 900; font-size: 22mm; line-height: 1; color: transparent; -webkit-text-stroke: .35mm #E8AE42; }
+.ph .en { font-family: Cinzel; font-weight: 700; font-size: 3.4mm; letter-spacing: .5mm; color: #E8AE42; }
+.ph h2 { font-size: 9mm; color: #fff; }
+.pf { position: absolute; left: 14mm; right: 14mm; bottom: 7mm; display: flex; justify-content: space-between; font-size: 2.8mm; color: rgba(220,229,245,.55); z-index: 2; }
+.pf .n { font-family: Cinzel; font-weight: 700; color: #E8AE42; }
+.lead { font-size: 4.6mm; line-height: 1.8; margin-bottom: 8mm; }
+.note { margin-top: 6mm; font-size: 3.3mm; color: rgba(220,229,245,.7); border-inline-start: .8mm solid #D9233C; padding-inline-start: 3mm; }
+.sub { font-size: 4.6mm; color: #E8AE42; margin: 6mm 0 3mm; }
+.en { font-family: Cinzel; font-size: 2.8mm; letter-spacing: .3mm; color: rgba(220,229,245,.6); }
+.code { direction: ltr; unicode-bidi: isolate; font-family: Tajawal; font-size: 3mm; }
+b { font-weight: 700; }
+
+/* الغلاف */
+.cover { display: flex; flex-direction: column; align-items: center; padding-top: 22mm; background: radial-gradient(90% 55% at 50% 30%, rgba(217,35,60,.35), transparent 65%), #080A12; }
+.cover-logo { width: 112mm; position: relative; z-index: 1; }
+.cover-title { margin-top: 6mm; text-align: center; font-family: Cinzel; font-weight: 900; font-size: 11mm; letter-spacing: 1.2mm; color: #F3C567; z-index: 1; direction: ltr; }
+.cover-title span { display: block; font-size: 4.6mm; letter-spacing: 1.4mm; color: #DCE5F5; margin-top: 2mm; }
+.cover-ar { font-family: ReemKufi; font-weight: 700; font-size: 7mm; margin-top: 3mm; z-index: 1; }
+.cover-strip { display: flex; gap: 3mm; margin-top: 10mm; z-index: 1; }
+.cover-strip img { width: 32mm; }
+.cover-meta { position: absolute; bottom: 12mm; font-size: 3mm; color: rgba(220,229,245,.6); z-index: 2; }
+
+/* المحتويات */
+.toc { list-style: none; padding: 0; margin: 4mm 0 0; columns: 2; column-gap: 10mm; }
+.toc li { display: flex; align-items: center; gap: 4mm; padding: 3.6mm 0; border-bottom: .2mm solid rgba(220,229,245,.12); font-size: 4.4mm; break-inside: avoid; }
+.toc b { font-family: Cinzel; font-weight: 900; color: #E8AE42; font-size: 5mm; width: 10mm; }
+
+/* الفكرة */
+.pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.pillars div { background: rgba(220,229,245,.06); border: .25mm solid rgba(220,229,245,.13); border-radius: 4mm; padding: 4mm; border-top: 1mm solid #D9233C; }
+.pillars h3 { font-size: 4.6mm; margin-bottom: 2mm; color: #fff; } .pillars p { font-size: 3.3mm; color: rgba(220,229,245,.75); }
+.mood { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-top: 8mm; }
+.mood img { width: 100%; height: 62mm; object-fit: cover; object-position: top; border-radius: 3mm; border: .3mm solid rgba(232,174,66,.4); }
+.kw { display: flex; flex-wrap: wrap; gap: 2.5mm; margin-top: 7mm; }
+.kw span { padding: 1.6mm 4mm; border-radius: 10mm; border: .3mm solid rgba(232,174,66,.55); color: #F3C567; font-size: 3.4mm; }
+
+/* الشعار */
+.logo-hero { display: flex; justify-content: center; margin-bottom: 6mm; } .logo-hero img { height: 150mm; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.spec { background: rgba(220,229,245,.06); border-radius: 3mm; padding: 4mm; border: .25mm solid rgba(220,229,245,.12); }
+.spec h4 { font-size: 4.2mm; color: #E8AE42; margin-bottom: 1.5mm; } .spec p { font-size: 3.2mm; color: rgba(220,229,245,.78); }
+.var-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.var-grid figure { margin: 0; grid-column: span 2; } .var-grid figure.half { grid-column: span 1; }
+.vbox { height: 40mm; border-radius: 3mm; display: flex; align-items: center; justify-content: center; border: .25mm solid rgba(220,229,245,.12); overflow: hidden; }
+.var-grid figure.half .vbox { height: 52mm; }
+.vbox.dark { background: #080A12; } .vbox.navy { background: #10182B; } .vbox.crimson { background: linear-gradient(135deg, #D9233C, #7a0f20); } .vbox.light { background: #F2F2EE; }
+.vbox img { max-width: 92%; max-height: 92%; }
+.vbox.clear .cs { outline: .4mm dashed rgba(232,174,66,.8); outline-offset: 0; padding: 9mm; }
+figcaption { font-size: 3.1mm; color: rgba(220,229,245,.7); margin-top: 1.6mm; }
+.specs { width: 100%; border-collapse: collapse; margin-top: 6mm; font-size: 3.3mm; }
+.specs th { text-align: start; color: #E8AE42; font-family: ReemKufi; font-weight: 700; padding: 2mm; border-bottom: .3mm solid rgba(232,174,66,.45); }
+.specs td { padding: 2mm; border-bottom: .2mm solid rgba(220,229,245,.1); }
+
+/* الألوان */
+.sw-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; } .sw-grid.five { grid-template-columns: repeat(5, 1fr); }
+.sw { border-radius: 3mm; overflow: hidden; border: .25mm solid rgba(220,229,245,.15); background: rgba(220,229,245,.04); }
+.sw .chip { height: 22mm; } .sw.big .chip { height: 32mm; }
+.sw .meta { padding: 2.4mm; display: flex; flex-direction: column; gap: .6mm; } .sw .meta b { font-size: 3.6mm; }
+.sw .use { font-size: 2.7mm; color: rgba(220,229,245,.65); line-height: 1.5; margin-top: 1mm; }
+.metal .bar { height: 14mm; border-radius: 3mm; } .metal .stops { display: flex; justify-content: space-between; margin-top: 1.5mm; font-size: 2.9mm; direction: ltr; }
+
+/* الخطوط */
+.type-row { display: grid; grid-template-columns: 45mm 1fr; gap: 5mm; align-items: center; padding: 5mm 0; border-bottom: .2mm solid rgba(220,229,245,.12); }
+.tlabel b { display: block; font-size: 4.6mm; } .tlabel span { font-size: 3mm; color: rgba(220,229,245,.6); }
+.tsample.rk { font-family: ReemKufi; font-weight: 700; font-size: 10mm; } .tsample.tj { font-family: Tajawal; font-size: 5.6mm; }
+.tsample.cz { font-family: Cinzel; font-weight: 900; font-size: 9mm; letter-spacing: 1mm; color: #F3C567; direction: ltr; text-align: end; }
+
+/* الشخصيات */
+.ch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm 4mm; }
+.ch { text-align: center; } .ch img { width: 100%; height: 92mm; object-fit: contain; }
+.cn b { display: block; font-size: 4.4mm; margin-top: 1.5mm; } .cn span { font-family: Cinzel; font-size: 2.9mm; color: rgba(220,229,245,.6); }
+.chars { width: 100%; border-collapse: collapse; font-size: 3mm; }
+.chars td { padding: 1.6mm 1.8mm; border-bottom: .2mm solid rgba(220,229,245,.1); vertical-align: middle; }
+.chars .av { width: 13mm; height: 13mm; border-radius: 50%; object-fit: cover; border: .4mm solid rgba(232,174,66,.6); display: block; }
+.chars .dot { display: inline-block; width: 4mm; height: 4mm; border-radius: 50%; vertical-align: middle; margin-inline-end: 1.5mm; }
+.chars .desc { color: rgba(220,229,245,.75); line-height: 1.5; }
+
+/* الأيقونات */
+.card-icons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3mm; }
+.card-icons div { text-align: center; font-size: 3mm; } .card-icons img { width: 100%; height: 16mm; object-fit: cover; object-position: 0 100%; border-radius: 2mm; }
+.card-icons span { display: block; margin-top: 1mm; color: rgba(220,229,245,.7); }
+.ui-icons { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3mm; }
+.ui-icons div { display: flex; flex-direction: column; align-items: center; gap: 1.2mm; padding: 2.5mm 0; border-radius: 2mm; background: rgba(220,229,245,.05); border: .2mm solid rgba(220,229,245,.1); }
+.ui-icons span { font-size: 2.3mm; color: rgba(220,229,245,.55); direction: ltr; }
+
+/* عناصر الواجهة */
+.ui-demo .row { display: flex; flex-wrap: wrap; gap: 3mm; margin-bottom: 5mm; align-items: center; }
+.ui-demo .row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-items: start; }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 12mm; padding: 0 5.5mm; border-radius: 4mm; font-weight: 700; font-size: 3.8mm; color: #fff; }
+.btn.primary { background: linear-gradient(135deg, #e8334d, #D9233C); box-shadow: 0 2mm 6mm -2mm rgba(217,35,60,.8); }
+.btn.gold { background: linear-gradient(135deg, #f2bf5c, #E8AE42); color: #241800; } .btn.blue { background: linear-gradient(135deg, #3b8cf5, #2478E8); }
+.btn.green { background: linear-gradient(135deg, #2ec48b, #21A875); color: #04140d; } .btn.ghost { border: .3mm solid rgba(220,229,245,.2); color: rgba(220,229,245,.7); }
+.pill { padding: 1.2mm 3.5mm; border-radius: 10mm; font-size: 3.2mm; font-weight: 700; color: var(--c); border: .3mm solid color-mix(in srgb, var(--c) 50%, transparent); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.ui-card { position: relative; background: rgba(220,229,245,.07); border: .25mm solid rgba(220,229,245,.13); border-radius: 4.5mm; padding: 4mm; overflow: hidden; }
+.ui-card .accent { position: absolute; top: 0; left: 6mm; right: 6mm; height: .8mm; border-radius: 0 0 1mm 1mm; }
+.ui-card p { font-size: 3mm; color: rgba(220,229,245,.7); margin-top: 1mm; }
+.prow { display: flex; align-items: center; gap: 3mm; padding: 2.4mm; border-radius: 3.5mm; border: .25mm solid rgba(220,229,245,.13); margin-bottom: 2mm; font-size: 3.2mm; }
+.prow img { width: 11mm; height: 11mm; border-radius: 50%; object-fit: cover; } .prow span { display: block; font-size: 2.6mm; color: rgba(220,229,245,.6); }
+.prow.sp { border-color: #E8AE42; box-shadow: 0 0 0 .5mm rgba(232,174,66,.35), 0 0 6mm -1mm #E8AE42; } .prow .timer { margin-inline-start: auto; font-weight: 700; color: #E8AE42; direction: ltr; }
+
+/* البطاقات */
+.card-anatomy { display: grid; grid-template-columns: 58mm 1fr; gap: 6mm; }
+.card-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-top: 6mm; align-items: start; }
+.ca-card img { width: 70mm; }
+.ca-notes div { padding: 2.6mm 0; border-bottom: .2mm solid rgba(220,229,245,.12); font-size: 3.3mm; } .ca-notes b { display: block; color: #E8AE42; font-family: ReemKufi; font-size: 4mm; }
+.ca-notes span { color: rgba(220,229,245,.78); }
+.ca-back { display: flex; flex-direction: column; align-items: flex-start; gap: 3mm; font-size: 3.3mm; color: rgba(220,229,245,.78); }
+.back-face { width: 64mm; aspect-ratio: 64/82; border-radius: 4mm; border: .5mm solid rgba(232,174,66,.6); display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(80% 60% at 50% 40%, rgba(217,35,60,.35), transparent 70%), repeating-linear-gradient(45deg, #140a12 0 3mm, #0c0a14 3mm 6mm); box-shadow: 0 0 6mm -1mm rgba(217,35,60,.5); }
+.back-face img { width: 60%; }
+.print-card { display: flex; flex-direction: column; align-items: flex-start; gap: 3mm; font-size: 3.3mm; color: rgba(220,229,245,.78); }
+.print-card .pc { width: 64mm; height: 82mm; outline: .3mm dashed rgba(232,174,66,.7); } .print-card .pc img { width: 64mm; height: 82mm; object-fit: contain; display: block; }
+
+/* الحركة والمؤثرات */
+.motion { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.motion div, .resp div { background: rgba(220,229,245,.06); border: .25mm solid rgba(220,229,245,.12); border-radius: 3mm; padding: 4mm; }
+.motion h4, .resp h4 { font-size: 4.2mm; color: #E8AE42; margin-bottom: 1.5mm; } .motion p, .resp p { font-size: 3.2mm; color: rgba(220,229,245,.78); }
+.fx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; }
+.fx { border-radius: 3mm; padding: 3.5mm; border: .25mm solid color-mix(in srgb, var(--c) 45%, transparent); background: radial-gradient(90% 80% at 50% 0%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%), rgba(220,229,245,.03); }
+.fx .orb { width: 12mm; height: 12mm; border-radius: 50%; margin-bottom: 2mm; background: radial-gradient(circle at 35% 35%, #fff, var(--c) 45%, transparent 72%); box-shadow: 0 0 6mm var(--c); }
+.fx b { display: block; font-size: 3.8mm; } .fx span { font-size: 2.9mm; color: rgba(220,229,245,.75); line-height: 1.5; }
+
+/* الخلفيات */
+.bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.bgx { position: relative; height: 70mm; border-radius: 3mm; overflow: hidden; border: .25mm solid rgba(220,229,245,.12); }
+.bgx span { position: absolute; top: 3mm; right: 3mm; font-size: 3.1mm; background: rgba(8,10,18,.65); padding: 1mm 2.5mm; border-radius: 2mm; }
+.bgx .sky { position: absolute; inset: auto 0 0 0; height: 34%; opacity: .55; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'%3E%3Cpath fill='%2306091a' d='M0 120V78h14V52h18v26h10V38h22v40h12V60h20V30h16v30h14V70h18V44h24v26h12V58h16V24h20v34h14v22h18V50h22v28h12V64h18V40h20v38h14v42z'/%3E%3C/svg%3E") bottom/100% 100% no-repeat; }
+
+/* الشاشات */
+.shots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5mm 4mm; }
+.shots figure { margin: 0; text-align: center; }
+.phone { border-radius: 5mm; padding: 1.2mm; background: linear-gradient(160deg, #2b3350, #0c1020); box-shadow: 0 2mm 6mm rgba(0,0,0,.5); }
+.phone img { width: 100%; display: block; border-radius: 4mm; aspect-ratio: 390/844; object-fit: cover; object-position: top; }
+.resp { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.devices { display: flex; align-items: flex-end; justify-content: center; gap: 8mm; margin-top: 7mm; }
+.phone.big { width: 45mm; } .tablet { width: 105mm; border-radius: 5mm; padding: 2mm; background: linear-gradient(160deg, #2b3350, #0c1020); }
+.tablet img { width: 100%; display: block; border-radius: 3.5mm; }
+
+/* القواعد */
+.rules { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.rules > div { border-radius: 3mm; padding: 4mm; } .rules .do { background: rgba(33,168,117,.1); border: .3mm solid rgba(33,168,117,.5); }
+.rules .dont { background: rgba(217,35,60,.1); border: .3mm solid rgba(217,35,60,.5); }
+.rules h4 { font-size: 5mm; margin-bottom: 2mm; } .rules .do h4 { color: #5fe0ad; } .rules .dont h4 { color: #ff8a9a; }
+.rules p { font-size: 3.4mm; padding: 1.5mm 0; border-bottom: .2mm solid rgba(220,229,245,.08); }
+.misuse { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 7mm; } .misuse figure { margin: 0; } .misuse .vbox { height: 50mm; }
+.misuse figcaption { color: #ff8a9a; }
+</style></head><body><section class="page cover">
+<div class="cover-glow"></div>
+<img class="cover-logo" src=".pdf-cache/logo_mafia_logo_primary_png_900.png">
+<div class="cover-title">MAFIA GAME<br><span>VISUAL IDENTITY GUIDELINES</span></div>
+<div class="cover-ar">دليل الهوية البصرية</div>
+<div class="cover-strip"><img src=".pdf-cache/_client_assets_characters_cards_sniper_webp_080A12_520.jpg"><img src=".pdf-cache/_client_assets_characters_cards_doctor_webp_080A12_520.jpg"><img src=".pdf-cache/_client_assets_characters_cards_mafia_webp_080A12_520.jpg"><img src=".pdf-cache/_client_assets_characters_cards_detective_webp_080A12_520.jpg"><img src=".pdf-cache/_client_assets_characters_cards_citizen_webp_080A12_520.jpg"></div>
+<div class="cover-meta">الإصدار 1.0 · 2026</div></section><section class="page "><header class="ph"><div class="num">00</div><div><div class="en">CONTENTS</div><h2>المحتويات</h2></div></header><div class="body"><ol class="toc"><li><b>01</b><span>الفكرة والاتجاه البصري</span></li><li><b>02</b><span>الشعار</span></li><li><b>03</b><span>نسخ الشعار وقواعده</span></li><li><b>04</b><span>لوحة الألوان</span></li><li><b>05</b><span>الخطوط</span></li><li><b>06</b><span>مجموعة الشخصيات</span></li><li><b>07</b><span>ألوان الشخصيات وهوياتها</span></li><li><b>08</b><span>نظام الأيقونات</span></li><li><b>09</b><span>لغة عناصر الواجهة</span></li><li><b>10</b><span>نظام البطاقات</span></li><li><b>11</b><span>مبادئ الحركة</span></li><li><b>12</b><span>إرشادات الحركة والمؤثرات</span></li><li><b>13</b><span>الخلفيات والأنماط</span></li><li><b>14</b><span>أمثلة من شاشات اللعبة</span></li><li><b>15</b><span>مبادئ التجاوب</span></li><li><b>16</b><span>قواعد الاستعمال</span></li></ol></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">02</span></footer></section><section class="page "><header class="ph"><div class="num">01</div><div><div class="en">BRAND CONCEPT</div><h2>الفكرة والاتجاه البصري</h2></div></header><div class="body">
+<p class="lead">مافيا لعبة جماعية بطابع <b>أنمي سينمائي</b>: مدينة ليلية تحت قمر أحمر، شخصيات بملامح حادّة وألوان أدوار واضحة، وواجهة <b>إنفوجرافيك</b> نظيفة تشرح اللعب دون ازدحام.</p>
+<div class="pillars">
+ <div><h3>نوار سينمائي</h3><p>ظلام عميق، إضاءة جانبية، ظلال رجال العصابة، وقمر وسماء مدينة في كل مشهد.</p></div>
+ <div><h3>شخصيات أنمي</h3><p>اثنتا عشرة شخصية ثابتة الملامح والأزياء، لكل منها لون وأيقونة لا يتغيران.</p></div>
+ <div><h3>إنفوجرافيك فاخر</h3><p>بطاقات مشطوفة الزوايا، أرقام واضحة، مؤشرات وعدادات، وأيقونات خطّية موحّدة.</p></div>
+</div>
+<div class="mood"><img src=".pdf-cache/_client_assets_characters_portraits_mafia_webp_080A12_420.jpg"><img src=".pdf-cache/_client_assets_characters_portraits_detective_webp_080A12_420.jpg"><img src=".pdf-cache/_client_assets_characters_portraits_witch_webp_080A12_420.jpg"><img src=".pdf-cache/_client_assets_characters_portraits_mayor_webp_080A12_420.jpg"></div>
+<div class="kw"><span>غموض</span><span>فخامة</span><span>توتر</span><span>ليل المدينة</span><span>ذهب وقرمزي</span><span>وضوح</span></div></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">03</span></footer></section><section class="page "><header class="ph"><div class="num">02</div><div><div class="en">LOGO</div><h2>الشعار</h2></div></header><div class="body">
+<div class="logo-hero"><img src=".pdf-cache/logo_mafia_logo_primary_on_dark_png_080A12_1100.jpg"></div>
+<div class="grid3 small-cards">
+ <div class="spec"><h4>الشارة</h4><p>بطاقة ثُمانية مشطوفة الزوايا بإطار ذهبي معدني، تضم شخصية «المافيا» من مجموعة الشخصيات دون تعديل على ملامحها.</p></div>
+ <div class="spec"><h4>الجوهرة</h4><p>معيّن قرمزي بحدّ ذهبي يتوسط أسفل الإطار، رمز الدم والولاء.</p></div>
+ <div class="spec"><h4>الاسم</h4><p>«MAFIA» بخط Cinzel الأسود بتدرّج ذهبي ومسافة حروف واسعة، وتحته «مافيا» بخط ريم كوفي.</p></div>
+</div></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">04</span></footer></section><section class="page "><header class="ph"><div class="num">03</div><div><div class="en">LOGO VARIATIONS & CLEAR SPACE</div><h2>نسخ الشعار وقواعده</h2></div></header><div class="body">
+<div class="var-grid">
+ <figure><div class="vbox dark"><img src=".pdf-cache/logo_mafia_logo_horizontal_png_080A12_1100.jpg" style="width:150mm"></div><figcaption>الأفقي: للترويسات والشاشات العريضة</figcaption></figure>
+ <figure class="half"><div class="vbox dark"><img src=".pdf-cache/logo_mafia_logo_mark_png_080A12_1100.jpg" style="height:62mm"></div><figcaption>الرمز: أيقونة التطبيق والصورة الرمزية</figcaption></figure>
+ <figure class="half"><div class="vbox navy"><img src=".pdf-cache/logo_mafia_logo_wordmark_png_10182B_1100.jpg" style="width:70mm"></div><figcaption>الاسم وحده: عند صغر المساحة</figcaption></figure>
+ <figure class="half"><div class="vbox crimson"><img src=".pdf-cache/logo_mafia_logo_mono_png_700.png" style="width:60mm"></div><figcaption>أحادي اللون (أبيض) فوق القرمزي أو الصور</figcaption></figure>
+ <figure class="half"><div class="vbox dark clear"><div class="cs"><img src=".pdf-cache/logo_mafia_logo_mark_png_080A12_1100.jpg" style="height:40mm"></div></div><figcaption>المساحة الحرّة حول الشعار = ربع عرض الشارة من كل جهة</figcaption></figure>
+</div>
+<table class="specs"><tr><th>النسخة</th><th>أصغر عرض مطبوع</th><th>أصغر عرض على الشاشة</th></tr>
+<tr><td>الأساسي</td><td>30 مم</td><td>120 بكسل</td></tr><tr><td>الأفقي</td><td>45 مم</td><td>180 بكسل</td></tr>
+<tr><td>الرمز</td><td>12 مم</td><td>48 بكسل</td></tr><tr><td>الاسم وحده</td><td>25 مم</td><td>96 بكسل</td></tr></table></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">05</span></footer></section><section class="page "><header class="ph"><div class="num">04</div><div><div class="en">COLOR SYSTEM</div><h2>لوحة الألوان</h2></div></header><div class="body"><h3 class="sub">الأساس الداكن</h3><div class="sw-grid"><div class="sw big"><div class="chip" style="background:#080A12"></div><div class="meta"><b>أسود منتصف الليل</b><span class="en">Midnight Black</span><span class="code">HEX #080A12</span><span class="code">RGB 8, 10, 18</span><span class="use">الخلفية الأساسية لكل الشاشات والمطبوعات</span></div></div><div class="sw big"><div class="chip" style="background:#10182B"></div><div class="meta"><b>كحلي عميق</b><span class="en">Deep Navy</span><span class="code">HEX #10182B</span><span class="code">RGB 16, 24, 43</span><span class="use">الأسطح الثانوية واللوحات المنبثقة</span></div></div><div class="sw big"><div class="chip" style="background:#172240"></div><div class="meta"><b>فولاذ الليل</b><span class="en">Night Steel</span><span class="code">HEX #172240</span><span class="code">RGB 23, 34, 64</span><span class="use">خلفية الصور الرمزية والعناصر المرتفعة</span></div></div><div class="sw big"><div class="chip" style="background:#DCE5F5"></div><div class="meta"><b>فضي فاخر</b><span class="en">Premium Silver</span><span class="code">HEX #DCE5F5</span><span class="code">RGB 220, 229, 245</span><span class="use">النصوص والتفاصيل، وهوية الراوي</span></div></div></div><h3 class="sub">ألوان الأدوار</h3><div class="sw-grid five"><div class="sw "><div class="chip" style="background:#D9233C"></div><div class="meta"><b>قرمزي المافيا</b><span class="en">Mafia Crimson</span><span class="code">HEX #D9233C</span><span class="code">RGB 217, 35, 60</span><span class="use">المافيا وطبيب المافيا، الخطر، الزر الرئيسي</span></div></div><div class="sw "><div class="chip" style="background:#2478E8"></div><div class="meta"><b>أزرق المحقق</b><span class="en">Detective Blue</span><span class="code">HEX #2478E8</span><span class="code">RGB 36, 120, 232</span><span class="use">المحقق والحارس، التحقيق، الإجراءات الثانوية</span></div></div><div class="sw "><div class="chip" style="background:#21A875"></div><div class="meta"><b>زمرّدي الطبيب</b><span class="en">Doctor Emerald</span><span class="code">HEX #21A875</span><span class="code">RGB 33, 168, 117</span><span class="use">طبيب المدينة، النجاة، التأكيد والنجاح</span></div></div><div class="sw "><div class="chip" style="background:#A45BE7"></div><div class="meta"><b>بنفسجي القناص</b><span class="en">Sniper Violet</span><span class="code">HEX #A45BE7</span><span class="code">RGB 164, 91, 231</span><span class="use">القناص والساحرة، الأدوار السرية، الليل</span></div></div><div class="sw "><div class="chip" style="background:#E8AE42"></div><div class="meta"><b>ذهبي المواطن</b><span class="en">Citizen Gold</span><span class="code">HEX #E8AE42</span><span class="code">RGB 232, 174, 66</span><span class="use">المواطن والمواطن سوبر والمفاوض والعمدة، التصويت، الجوائز</span></div></div></div><h3 class="sub">الذهب المعدني (الشعار والجوائز)</h3><div class="metal"><div class="bar" style="background:linear-gradient(90deg,#FFF4D6,#F3C567,#B9801C,#F7D98A,#9A6512)"></div><div class="stops"><span>#FFF4D6</span><span>#F3C567</span><span>#B9801C</span><span>#F7D98A</span><span>#9A6512</span></div></div><p class="note">النِّسب: 70% أساس داكن · 20% فضي للنصوص · 10% لون الدور. لون الدور يُستخدم للإبراز فقط، ولا يُستخدم خلفيةً لمساحات كبيرة.</p></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">06</span></footer></section><section class="page "><header class="ph"><div class="num">05</div><div><div class="en">TYPOGRAPHY</div><h2>الخطوط</h2></div></header><div class="body">
+<div class="type-row"><div class="tlabel"><b>ريم كوفي</b><span>Reem Kufi · العناوين العربية</span></div><div class="tsample rk">الليل يحلّ على المدينة</div></div>
+<div class="type-row"><div class="tlabel"><b>تجوّل</b><span>Tajawal · النصوص والأزرار</span></div><div class="tsample tj">اختر ضحية الليلة واتفق مع زملائك قبل الفجر.</div></div>
+<div class="type-row"><div class="tlabel"><b>Cinzel</b><span>العلامة والعناوين الإنجليزية</span></div><div class="tsample cz">MAFIA · THE NIGHT FALLS</div></div>
+<table class="specs"><tr><th>المستوى</th><th>الخط والوزن</th><th>الحجم على الشاشة</th><th>الحجم المطبوع</th></tr>
+<tr><td>عنوان كبير</td><td>ريم كوفي 700</td><td>28 بكسل</td><td>24 نقطة</td></tr>
+<tr><td>عنوان قسم</td><td>ريم كوفي 700</td><td>20 بكسل</td><td>16 نقطة</td></tr>
+<tr><td>نص أساسي</td><td>تجوّل 400–500</td><td>16 بكسل</td><td>10 نقاط</td></tr>
+<tr><td>زر</td><td>تجوّل 700</td><td>16–18 بكسل</td><td>11 نقطة</td></tr>
+<tr><td>ملاحظة</td><td>تجوّل 400</td><td>13 بكسل</td><td>8 نقاط</td></tr>
+<tr><td>علامة إنجليزية</td><td>Cinzel 900، تباعد 14%</td><td>حسب الشعار</td><td>حسب الشعار</td></tr></table>
+<p class="note">العربية هي لغة الواجهة دائماً، واتجاه الكتابة من اليمين إلى اليسار. الأرقام والمؤقتات ورقم اللاعب تُكتب بالأرقام الغربية وباتجاه يسار-يمين داخل السطر العربي.</p></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">07</span></footer></section><section class="page "><header class="ph"><div class="num">06</div><div><div class="en">CHARACTER COLLECTION</div><h2>مجموعة الشخصيات (1)</h2></div></header><div class="body"><div class="ch-grid"><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_mafia_webp_080A12_520.jpg"><div class="cn"><b style="color:#D9233C">المافيا</b><span>Mafia</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_doctor_webp_080A12_520.jpg"><div class="cn"><b style="color:#21A875">طبيب المدينة</b><span>City Doctor</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_mafia_doctor_webp_080A12_520.jpg"><div class="cn"><b style="color:#D9233C">طبيب المافيا</b><span>Mafia Doctor</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_detective_webp_080A12_520.jpg"><div class="cn"><b style="color:#2478E8">المحقق</b><span>Detective</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_sniper_webp_080A12_520.jpg"><div class="cn"><b style="color:#A45BE7">القناص</b><span>Sniper</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_citizen_webp_080A12_520.jpg"><div class="cn"><b style="color:#E8AE42">المواطن</b><span>Citizen</span></div></div></div></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">08</span></footer></section><section class="page "><header class="ph"><div class="num">06</div><div><div class="en">CHARACTER COLLECTION</div><h2>مجموعة الشخصيات (2)</h2></div></header><div class="body"><div class="ch-grid"><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_super_citizen_webp_080A12_520.jpg"><div class="cn"><b style="color:#E8AE42">المواطن سوبر</b><span>Super Citizen</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_narrator_webp_080A12_520.jpg"><div class="cn"><b style="color:#DCE5F5">الراوي</b><span>Narrator</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_negotiator_webp_080A12_520.jpg"><div class="cn"><b style="color:#E8AE42">المفاوض</b><span>Negotiator</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_bodyguard_webp_080A12_520.jpg"><div class="cn"><b style="color:#2478E8">الحارس</b><span>Bodyguard</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_witch_webp_080A12_520.jpg"><div class="cn"><b style="color:#A45BE7">الساحرة</b><span>Witch</span></div></div><div class="ch"><img src=".pdf-cache/_client_assets_characters_cards_mayor_webp_080A12_520.jpg"><div class="cn"><b style="color:#E8AE42">العمدة</b><span>Mayor</span></div></div></div></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">09</span></footer></section><section class="page "><header class="ph"><div class="num">07</div><div><div class="en">CHARACTER IDENTITIES</div><h2>ألوان الشخصيات وهوياتها</h2></div></header><div class="body"><table class="chars"><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_mafia_webp_080A12_160.jpg"></td><td><b>المافيا</b><br><span class="en">Mafia</span></td><td><span class="dot" style="background:#D9233C"></span><span class="code">#D9233C</span></td><td>قبعة</td><td class="desc">بدلة سوداء بثلاث قطع وربطة عنق حمراء ومنديل جيب أحمر، جالس على أريكة جلدية، وخلفه قمر دموي وظلال رجال العصابة.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_doctor_webp_080A12_160.jpg"></td><td><b>طبيب المدينة</b><br><span class="en">City Doctor</span></td><td><span class="dot" style="background:#21A875"></span><span class="code">#21A875</span></td><td>صليب طبي</td><td class="desc">معطف أبيض وسماعة طبية ونظارات، ذراعان متقاطعتان، وخلفه خط نبض قلب وصليب أخضر.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_mafia_doctor_webp_080A12_160.jpg"></td><td><b>طبيب المافيا</b><br><span class="en">Mafia Doctor</span></td><td><span class="dot" style="background:#D9233C"></span><span class="code">#D9233C</span></td><td>حقنة</td><td class="desc">كمامة سوداء ومعطف داكن طويل وحقنة في يده، في أجواء المدينة الحمراء.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_detective_webp_080A12_160.jpg"></td><td><b>المحقق</b><br><span class="en">Detective</span></td><td><span class="dot" style="background:#2478E8"></span><span class="code">#2478E8</span></td><td>عدسة مكبّرة</td><td class="desc">قبعة فيدورا ومعطف أزرق داكن وعدسة مكبّرة، تحت سماء المدينة الليلية الزرقاء.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_sniper_webp_080A12_160.jpg"></td><td><b>القناص</b><br><span class="en">Sniper</span></td><td><span class="dot" style="background:#A45BE7"></span><span class="code">#A45BE7</span></td><td>منظار تصويب</td><td class="desc">قلنسوة بنفسجية وبندقية بمنظار، يصوّب نحو الأمام، وخلفه قمر بنفسجي.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_citizen_webp_080A12_160.jpg"></td><td><b>المواطن</b><br><span class="en">Citizen</span></td><td><span class="dot" style="background:#E8AE42"></span><span class="code">#E8AE42</span></td><td>أشخاص</td><td class="desc">سترة سوداء فوق كنزة فاتحة بقلنسوة، ذراعان متقاطعتان، ومدينة ذهبية في الخلفية.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_super_citizen_webp_080A12_160.jpg"></td><td><b>المواطن سوبر</b><br><span class="en">Super Citizen</span></td><td><span class="dot" style="background:#E8AE42"></span><span class="code">#E8AE42</span></td><td>نجمة</td><td class="desc">زيّ داكن بنجمة حمراء ذهبية على الصدر ورداء أحمر، بإضاءة ذهبية قوية.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_narrator_webp_080A12_160.jpg"></td><td><b>الراوي</b><br><span class="en">Narrator</span></td><td><span class="dot" style="background:#DCE5F5"></span><span class="code">#DCE5F5</span></td><td>تاج</td><td class="desc">بدلة سهرة وربطة فراشة ولحية مهذّبة، يحمل بطاقة بتاج ذهبي، في مدينة فضية تحت المطر.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_negotiator_webp_080A12_160.jpg"></td><td><b>المفاوض</b><br><span class="en">Negotiator</span></td><td><span class="dot" style="background:#E8AE42"></span><span class="code">#E8AE42</span></td><td>مصافحة</td><td class="desc">قميص أسود وربطة خمرية وساعة ذهبية، يتأمل ويده على ذقنه، بين الذهبي والأحمر.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_bodyguard_webp_080A12_160.jpg"></td><td><b>الحارس</b><br><span class="en">Bodyguard</span></td><td><span class="dot" style="background:#2478E8"></span><span class="code">#2478E8</span></td><td>درع</td><td class="desc">نظارة شمسية وسماعة أذن وبدلة سوداء، يقبض يده على صدره، في المدينة الزرقاء.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_witch_webp_080A12_160.jpg"></td><td><b>الساحرة</b><br><span class="en">Witch</span></td><td><span class="dot" style="background:#A45BE7"></span><span class="code">#A45BE7</span></td><td>قارورة</td><td class="desc">عباءة بنفسجية بقلنسوة وشعر أسود طويل، تحمل قارورة جرعة متوهجة.</td></tr><tr><td><img class="av" src=".pdf-cache/_client_assets_characters_avatars_mayor_webp_080A12_160.jpg"></td><td><b>العمدة</b><br><span class="en">Mayor</span></td><td><span class="dot" style="background:#E8AE42"></span><span class="code">#E8AE42</span></td><td>مبنى بأعمدة</td><td class="desc">شعر رمادي ولحية، قلادة ذهبية رسمية وربطة حمراء، أمام برج الساعة الذهبي.</td></tr></table><p class="note">ملامح كل شخصية وزيّها ولونها ثابتة في كل الشاشات والمطبوعات، ولا تُعاد رسمتها ولا يُغيَّر لونها.</p></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">10</span></footer></section><section class="page "><header class="ph"><div class="num">08</div><div><div class="en">ICONOGRAPHY</div><h2>نظام الأيقونات</h2></div></header><div class="body">
+<h3 class="sub">أيقونات البطاقات (من مجموعة الشخصيات)</h3>
+<div class="card-icons"><div><img src=".pdf-cache/_client_assets_characters_cards_mafia_webp_080A12_520.jpg" style="object-position:0 100%"><span>قبعة</span></div><div><img src=".pdf-cache/_client_assets_characters_cards_doctor_webp_080A12_520.jpg" style="object-position:0 100%"><span>صليب طبي</span></div><div><img src=".pdf-cache/_client_assets_characters_cards_mafia_doctor_webp_080A12_520.jpg" style="object-position:0 100%"><span>حقنة</span></div><div><img src=".pdf-cache/_client_assets_characters_cards_detective_webp_080A12_520.jpg" style="object-position:0 100%"><span>عدسة مكبّرة</span></div><div><img src=".pdf-cache/_client_assets_characters_cards_sniper_webp_080A12_520.jpg" style="object-position:0 100%"><span>منظار تصويب</span></div><div><img src=".pdf-cache/_client_assets_characters_cards_citizen_webp_080A12_520.jpg" style="object-position:0 100%"><span>أشخاص</span></div></div>
+<h3 class="sub">أيقونات الواجهة</h3>
+<div class="ui-icons"><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><span>moon</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><span>sun</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M8 9V5l4 3 4-3v4M9 14l2 2 4-4"/></svg><span>vote</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg><span>mic</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M9 9v2a3 3 0 005 2M15 10V6a3 3 0 00-5.7-1.3M5 11a7 7 0 0011 5.7M12 18v3"/></svg><span>micoff</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a8 8 0 00-5 14v3h10v-3a8 8 0 00-5-14z"/><circle cx="9" cy="11.5" r="1.6"/><circle cx="15" cy="11.5" r="1.6"/></svg><span>skull</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><span>shield</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg><span>target</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg><span>search</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg><span>med</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.4c2.2.7 3.5 2.6 3.5 5.6"/></svg><span>users</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v6a4 4 0 01-8 0z"/><path d="M8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3M12 14v4M8 21h8M10 18h4"/></svg><span>trophy</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><span>star</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg><span>crown</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg><span>qr</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a15 15 0 0120 0M5 12.5a10.5 10.5 0 0114 0M8.5 16a5.5 5.5 0 017 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><span>wifi</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>clock</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>eye</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg><span>flag</span></div><div><svg viewBox="0 0 24 24" style="width:9mm;height:9mm" fill="none" stroke="#DCE5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span>gear</span></div></div>
+<table class="specs"><tr><th>القاعدة</th><th>القيمة</th></tr><tr><td>الشبكة</td><td>24 × 24 وحدة</td></tr><tr><td>سماكة الخط</td><td>1.8 وحدة، أطراف وزوايا مستديرة</td></tr>
+<tr><td>اللون</td><td>فضي، أو لون الدور عند الإبراز</td></tr><tr><td>الحجم</td><td>16 / 22 / 30 بكسل (صغير / عادي / كبير)</td></tr></table></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">11</span></footer></section><section class="page "><header class="ph"><div class="num">09</div><div><div class="en">UI COMPONENTS</div><h2>لغة عناصر الواجهة</h2></div></header><div class="body">
+<div class="ui-demo">
+ <div class="row"><span class="btn primary">ابدأ الليل</span><span class="btn gold">تأكيد التصويت</span><span class="btn blue">المتحدث التالي</span><span class="btn green">أنا جاهز</span><span class="btn ghost">إلغاء</span></div>
+ <div class="row"><span class="pill" style="--c:#D9233C">المافيا</span><span class="pill" style="--c:#21A875">طبيب المدينة</span><span class="pill" style="--c:#2478E8">المحقق</span><span class="pill" style="--c:#A45BE7">القناص</span><span class="pill" style="--c:#E8AE42">المواطن</span></div>
+ <div class="row two"><div class="ui-card"><div class="accent" style="background:#D9233C"></div><b>بطاقة معلومات</b><p>سطح كحلي شفاف، حدّ فضي خافت، وشريط علوي بلون الدور.</p></div>
+  <div class="ui-card"><div class="prow sp"><img src=".pdf-cache/_client_assets_characters_avatars_citizen_webp_080A12_520.jpg"><div><b>سالم</b><span>يتحدث الآن</span></div><div class="timer">1:42</div></div><div class="prow"><img src=".pdf-cache/_client_assets_characters_avatars_narrator_webp_080A12_520.jpg"><div><b>الراوي</b><span>متصل</span></div></div></div></div>
+</div>
+<table class="specs"><tr><th>العنصر</th><th>الشكل</th><th>المقاس على الشاشة</th></tr>
+<tr><td>الزر الرئيسي</td><td>تدرّج قرمزي، زوايا 16، توهّج سفلي</td><td>ارتفاع 50–58 بكسل</td></tr>
+<tr><td>البطاقة</td><td>زوايا 18، حدّ 1 بكسل فضي 12% شفافية</td><td>هامش داخلي 14 بكسل</td></tr>
+<tr><td>شريحة الدور</td><td>كبسولة بلون الدور 14% وحدّ 50%</td><td>ارتفاع 24 بكسل</td></tr>
+<tr><td>صف اللاعب</td><td>زوايا 14، صورة دائرية 46 بكسل</td><td>المتحدث: حدّ ذهبي ونبض</td></tr>
+<tr><td>هامش الشاشة</td><td>—</td><td>16 بكسل + المنطقة الآمنة</td></tr></table></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">12</span></footer></section><section class="page "><header class="ph"><div class="num">10</div><div><div class="en">CARD SYSTEM</div><h2>نظام البطاقات</h2></div></header><div class="body">
+<div class="card-anatomy">
+ <div class="ca-card"><img src=".pdf-cache/_client_assets_characters_cards_detective_webp_080A12_520.jpg" style="width:58mm"></div>
+ <div class="ca-notes">
+  <div><b>1 · الإطار</b><span>ثماني مشطوف الزوايا، حدّ متوهّج بلون الدور.</span></div>
+  <div><b>2 · نافذة الرسم</b><span>الشخصية بنصف جسد، والمدينة الليلية خلفها.</span></div>
+  <div><b>3 · شريط الاسم</b><span>شريط داكن بحواف مدبّبة، والاسم بالعربية بخط عريض أبيض.</span></div>
+  <div><b>4 · شارة الأيقونة</b><span>سداسي بلون الدور يحمل أيقونة الشخصية.</span></div>
+  <div><b>5 · النسبة</b><span>العرض إلى الارتفاع 64 : 82، وتطبع البطاقة بمقاس 64 × 82 مم.</span></div>
+ </div>
+ </div>
+<div class="card-row2"><div class="print-card"><div class="pc"><img src=".pdf-cache/_client_assets_characters_cards_mafia_webp_080A12_520.jpg"></div><span>الوجه الأمامي بالمقاس الفعلي المطبوع: 64 × 82 مم</span></div>
+<div class="ca-back"><div class="back-face"><img src=".pdf-cache/logo_mafia_logo_mark_png_080A12_1100.jpg"></div><span>الوجه الخلفي (64 × 82 مم): شعار الرمز فوق خطوط مائلة داكنة وتوهّج قرمزي وحدّ ذهبي.</span></div></div></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">13</span></footer></section><section class="page "><header class="ph"><div class="num">11</div><div><div class="en">MOTION PRINCIPLES</div><h2>مبادئ الحركة</h2></div></header><div class="body">
+<div class="motion">
+ <div><h4>سريعة وواضحة</h4><p>الحركة تشرح ما حدث ولا تؤخر اللاعب. لمسة الزر 120 مللي ثانية، ودخول الشاشة 300–420.</p></div>
+ <div><h4>سينمائية عند اللحظات الكبرى</h4><p>حلول الليل وطلوع النهار وكشف الدور وإعلان النتيجة تأخذ وقتاً أطول (0.8–1.7 ثانية) لأنها لحظات درامية.</p></div>
+ <div><h4>انطلاق سريع وهبوط ناعم</h4><p>كل الحركات تبدأ بسرعة وتنتهي بهدوء، بلا ارتداد مبالغ فيه.</p></div>
+ <div><h4>احترام الجهاز واللاعب</h4><p>عند «تقليل الحركة» تختفي الحركات الزخرفية وتبقى المعلومة. والأجهزة الضعيفة تستخدم الوضع المخفّف.</p></div>
+</div>
+<table class="specs"><tr><th>الحدث</th><th>المدة</th><th>الطابع</th></tr>
+<tr><td>لمس زر أو بطاقة</td><td>120 مللي ثانية</td><td>انضغاط خفيف 3%</td></tr><tr><td>دخول شاشة</td><td>300–420 مللي ثانية</td><td>صعود 14 بكسل مع ظهور متتابع</td></tr>
+<tr><td>قلب بطاقة الدور</td><td>800 مللي ثانية</td><td>دوران ثلاثي الأبعاد حول المحور العمودي</td></tr><tr><td>حلول الليل / النهار</td><td>1.7 ثانية</td><td>إظلام أو إضاءة كاملة مع صعود القمر أو الشمس</td></tr>
+<tr><td>إعلان النتيجة</td><td>600–900 مللي ثانية</td><td>امتلاء أعمدة الأصوات ثم ظهور البطاقة</td></tr></table></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">14</span></footer></section><section class="page "><header class="ph"><div class="num">12</div><div><div class="en">ANIMATION & VFX GUIDELINES</div><h2>إرشادات الحركة والمؤثرات</h2></div></header><div class="body"><div class="fx-grid"><div class="fx" style="--c:#D9233C"><div class="orb"></div><b>كشف المافيا</b><span>دخان قرمزي من الأسفل وومضة حمراء على الإطار</span></div><div class="fx" style="--c:#21A875"><div class="orb"></div><b>كشف الطبيب</b><span>نبض قلب أخضر يعبر البطاقة</span></div><div class="fx" style="--c:#2478E8"><div class="orb"></div><b>التحقيق</b><span>مسح ضوئي أزرق بعدسة دائرية</span></div><div class="fx" style="--c:#A45BE7"><div class="orb"></div><b>كشف القناص</b><span>دائرة تصويب تنغلق على الوجه</span></div><div class="fx" style="--c:#E8AE42"><div class="orb"></div><b>كشف المفاوض</b><span>لمعة ذهبية قطرية</span></div><div class="fx" style="--c:#A45BE7"><div class="orb"></div><b>حلول الليل</b><span>قمر يصعد وجزيئات غبار بنفسجي</span></div><div class="fx" style="--c:#E8AE42"><div class="orb"></div><b>طلوع النهار</b><span>شمس وأشعة ذهبية تمسح الظلام</span></div><div class="fx" style="--c:#E8AE42"><div class="orb"></div><b>نتيجة التصويت</b><span>أعمدة تمتلئ ثم بطاقة المُخرج</span></div><div class="fx" style="--c:#D9233C"><div class="orb"></div><b>الإقصاء</b><span>تحوّل البطاقة للرمادي وشقّ أحمر</span></div><div class="fx" style="--c:#E8AE42"><div class="orb"></div><b>الفوز</b><span>تاج وجزيئات ذهبية متصاعدة</span></div><div class="fx" style="--c:#D9233C"><div class="orb"></div><b>الخسارة</b><span>إظلام بطيء وجمرات حمراء</span></div></div><p class="note">قواعد المؤثرات: الجزيئات خفيفة ومحدودة العدد، والتوهّج بلون الدور فقط ولا يغطي النص، والدخان عند الحواف لا فوق الوجوه. لا يتزامن أكثر من مؤثر كبير واحد على الشاشة.</p></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">15</span></footer></section><section class="page "><header class="ph"><div class="num">13</div><div><div class="en">BACKGROUNDS & PATTERNS</div><h2>الخلفيات والأنماط</h2></div></header><div class="body">
+<div class="bg-grid">
+ <div class="bgx" style="background:radial-gradient(120% 60% at 50% -10%,rgba(217,35,60,.35),transparent 60%),linear-gradient(180deg,#0b1124,#080A12 60%)"><div class="sky"></div><span>الافتراضية: وهج قرمزي من الأعلى</span></div>
+ <div class="bgx" style="background:radial-gradient(100% 60% at 50% -10%,rgba(164,91,231,.4),transparent 60%),linear-gradient(180deg,#05070f,#070a16 70%)"><div class="sky"></div><span>الليل: وهج بنفسجي وظلام أعمق</span></div>
+ <div class="bgx" style="background:radial-gradient(110% 60% at 50% -10%,rgba(232,174,66,.35),transparent 60%),linear-gradient(180deg,#121a36,#080A12 60%)"><div class="sky"></div><span>النهار: وهج ذهبي</span></div>
+ <div class="bgx" style="background:repeating-linear-gradient(45deg,#140a12 0 3mm,#0c0a14 3mm 6mm)"><span>نمط ظهر البطاقة: خطوط مائلة 3 مم</span></div>
+</div>
+<p class="note">أفق المدينة (ناطحات سحاب صامتة) يثبت في أسفل كل الشاشات بنسبة 34% من الارتفاع وشفافية 55%. الوهج يأتي من الأعلى دائماً كأنه ضوء القمر.</p></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">16</span></footer></section><section class="page "><header class="ph"><div class="num">14</div><div><div class="en">APPLICATION SCREENS</div><h2>أمثلة من شاشات اللعبة</h2></div></header><div class="body"><div class="shots"><figure><div class="phone"><img src=".pdf-cache/screens_s1_png_080A12_560.jpg"></div><figcaption>الدخول</figcaption></figure><figure><div class="phone"><img src=".pdf-cache/screens_s2_png_080A12_560.jpg"></div><figcaption>الراوي: الرئيسية</figcaption></figure><figure><div class="phone"><img src=".pdf-cache/screens_s3_png_080A12_560.jpg"></div><figcaption>باركود الشبكة</figcaption></figure><figure><div class="phone"><img src=".pdf-cache/screens_s4_png_080A12_560.jpg"></div><figcaption>بطاقة الدور</figcaption></figure><figure><div class="phone"><img src=".pdf-cache/screens_s5_png_080A12_560.jpg"></div><figcaption>الراوي: الليل</figcaption></figure><figure><div class="phone"><img src=".pdf-cache/screens_s6_png_080A12_560.jpg"></div><figcaption>اللاعب: الليل</figcaption></figure><figure><div class="phone"><img src=".pdf-cache/screens_s7_png_080A12_560.jpg"></div><figcaption>تسجيل التصويت</figcaption></figure><figure><div class="phone"><img src=".pdf-cache/screens_s8_png_080A12_560.jpg"></div><figcaption>نهاية المباراة</figcaption></figure></div></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">17</span></footer></section><section class="page "><header class="ph"><div class="num">15</div><div><div class="en">RESPONSIVE PRINCIPLES</div><h2>مبادئ التجاوب</h2></div></header><div class="body">
+<div class="resp">
+ <div><h4>الهاتف أولاً</h4><p>كل شاشة تُصمَّم لعرض 360–430 بكسل بعمود واحد. الأزرار الرئيسية أسفل الشاشة في متناول الإبهام، وارتفاعها 50 بكسل على الأقل.</p></div>
+ <div><h4>المناطق الآمنة</h4><p>تُحترم حواف النوتش وشريط الإيماءات في آيفون وأندرويد. لا نص ولا زر في آخر 16 بكسل من الحواف.</p></div>
+ <div><h4>التابلت والحاسوب</h4><p>المحتوى بعرض أقصى 540 بكسل في المنتصف، وتبقى الخلفية السينمائية على كامل الشاشة.</p></div>
+ <div><h4>اللمس</h4><p>أصغر هدف لمس 42 × 42 بكسل، وكل ضغطة تعطي استجابة فورية (انضغاط واهتزاز اختياري).</p></div>
+</div>
+<div class="devices"><div class="phone big"><img src=".pdf-cache/screens_s4_png_080A12_900.jpg"></div><div class="tablet"><img src=".pdf-cache/screens_tablet_png_080A12_900.jpg"></div></div></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">18</span></footer></section><section class="page "><header class="ph"><div class="num">16</div><div><div class="en">BRAND USAGE RULES</div><h2>قواعد الاستعمال</h2></div></header><div class="body"><div class="rules"><div class="do"><h4>✓ افعل</h4><p>استخدم الشعار على الخلفيات الداكنة أو فوق صور الشخصيات المعتمة</p><p>احتفظ بلون كل دور كما هو في كل مكان</p><p>استخدم البطاقات كاملة بإطارها واسمها عند كشف الدور</p><p>اترك المساحة الحرّة حول الشعار</p><p>اكتب الواجهة بالعربية دائماً</p></div><div class="dont"><h4>✕ لا تفعل</h4><p>لا تمطّ الشعار ولا تغيّر نسبه</p><p>لا تضع الشعار الملوّن على خلفية فاتحة</p><p>لا تعِد رسم الشخصيات ولا تغيّر ملامحها أو أزياءها</p><p>لا تستخدم لون دور لشخصية أخرى</p><p>لا تكدّس أكثر من مؤثر كبير في الوقت نفسه</p></div></div>
+<div class="misuse"><figure><div class="vbox light"><img src=".pdf-cache/logo_mafia_logo_primary_png_F2F2EE_1100.jpg" style="height:38mm"></div><figcaption>✕ خلفية فاتحة</figcaption></figure>
+<figure><div class="vbox dark"><img src=".pdf-cache/logo_mafia_logo_primary_png_080A12_1100.jpg" style="height:38mm;width:50mm;object-fit:fill"></div><figcaption>✕ شعار ممطوط</figcaption></figure>
+<figure><div class="vbox dark"><img src=".pdf-cache/logo_mafia_logo_primary_png_080A12_1100.jpg" style="height:38mm;filter:hue-rotate(150deg)"></div><figcaption>✕ ألوان مغيّرة</figcaption></figure></div></div>
+<footer class="pf"><span>MAFIA · دليل الهوية البصرية</span><span class="n">19</span></footer></section></body></html>

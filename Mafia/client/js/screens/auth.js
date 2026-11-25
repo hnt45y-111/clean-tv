@@ -3,7 +3,7 @@ import { t, err } from '../i18n.js';
 import { S, saveToken, notify } from '../store.js';
 import { api, connect } from '../net.js';
 import { go, screen } from './common.js';
-import { logoArt } from '../art.js';
+import { logoFull } from '../art.js';
 
 async function done(r) { saveToken(r.token); S.user = r.user; connect(); go('home'); }
 function form(fields, submitLabel, onSubmit, extra) {
@@ -15,7 +15,7 @@ function form(fields, submitLabel, onSubmit, extra) {
     fields.map((f) => h('div', { class: 'field' }, h('label', { for: 'f_' + f.name }, f.label), inputs[f.name])), msg, btn, extra);
   return el;
 }
-const hero = (sub) => h('div', { class: 'hero' }, logoArt(), h('div', { class: 'logo' }, 'مافيا'), h('div', { class: 'dim' }, sub));
+const hero = (sub) => h('div', { class: 'hero' }, logoFull(), h('div', { class: 'dim' }, sub));
 
 function googleBtn() {
   if (!S.cfg.googleClientId) return null;

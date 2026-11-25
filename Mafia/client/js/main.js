@@ -3,7 +3,7 @@ import { applyLang, t } from './i18n.js';
 import { h, ic, toast, raw } from './dom.js';
 import { api, connect, send, dropSession } from './net.js';
 import { sfx, buzz, cinematic } from './fx.js';
-import { logoArt, ROLE_COLOR } from './art.js';
+import { logoFull, ROLE_COLOR } from './art.js';
 import { go } from './screens/common.js';
 import * as Auth from './screens/auth.js';
 import * as Home from './screens/home.js';
@@ -114,7 +114,7 @@ window.addEventListener('hashchange', () => { readHash(); notify(); });
 // ---- الإقلاع + الشاشة الافتتاحية (1) ----
 async function boot() {
   applyLang(); document.body.classList.toggle('lite', !!prefs.lite); readHash();
-  const splash = h('div', { class: 'splash' }, h('div', { class: 'box' }, logoArt(), h('div', { class: 'logo' }, 'مافيا'), h('div', { class: 'dim' }, t('tagline')), h('div', { class: 'spinner' })));
+  const splash = h('div', { class: 'splash' }, h('div', { class: 'box' }, logoFull(), h('div', { class: 'dim' }, t('tagline')), h('div', { class: 'spinner' })));
   document.body.append(splash);
   const t0 = Date.now();
   try { S.cfg = await api('/api/config'); } catch { /* الخادم غير متاح بعد */ }

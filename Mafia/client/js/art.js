@@ -27,12 +27,13 @@ const EXTRA = {
     <circle cx="51" cy="60" r="3" fill="#0a0f24"/><circle cx="69" cy="60" r="3" fill="#0a0f24"/><path d="M52 71c5 4 11 4 16 0" stroke="#0a0f24" stroke-width="2.5" fill="none" stroke-linecap="round"/>
     <path d="M44 98l16 10 16-10" fill="none" stroke="#dbe4f6" stroke-width="3.5" stroke-linejoin="round"/><circle cx="60" cy="118" r="3" fill="${c}"/><circle cx="60" cy="130" r="3" fill="${c}"/>`,
 };
-let uid = 0;
-export function roleArt(role, cls = '') {
-  const c = ROLE_COLOR[role] || '#DCE5F5'; const n = ++uid; // معرّفات تدرّج فريدة لكل رسم كي لا تتداخل
-  const body = (BUST(c) + (EXTRA[role] || EXTRA.citizen)(c)).replaceAll('"gb"', `"gb${n}"`).replaceAll('url(#gb)', `url(#gb${n})`).replaceAll('"gl"', `"gl${n}"`).replaceAll('url(#gl)', `url(#gl${n})`);
-  return raw(`<svg class="${cls}" viewBox="0 0 120 140" aria-hidden="true">${body}</svg>`);
-}
-export const logoArt = () => raw(`<svg viewBox="0 0 160 160" aria-hidden="true"><defs><radialGradient id="lg" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#D9233C" stop-opacity=".6"/><stop offset="1" stop-color="#D9233C" stop-opacity="0"/></radialGradient></defs>
-<circle cx="80" cy="80" r="76" fill="url(#lg)"/><path d="M20 128c0-38 26-62 60-62s60 24 60 62z" fill="#0b1020" stroke="#DCE5F5" stroke-opacity=".5" stroke-width="2.5"/>
-<path d="M32 68h96l-12-16c-10-13-22-19-36-19s-26 6-36 19z" fill="#D9233C"/><rect x="26" y="64" width="108" height="11" rx="5.5" fill="#9d1228"/><circle cx="80" cy="102" r="20" fill="#DCE5F5"/><path d="M66 120h28l-14 22z" fill="#E8AE42"/></svg>`);
+// صور الشخصيات من لوحة الهوية (assets/characters) — نفس الرسم لكل دور في كل الشاشات
+export const CHAR_IMG = (role, kind = 'portraits') => `assets/characters/${kind}/${role}.webp`;
+const img = (src, cls, alt = '') => { const i = document.createElement('img'); i.src = src; i.alt = alt; i.className = cls; i.decoding = 'async'; i.draggable = false; return i; };
+/** صورة الشخصية بلا شريط الاسم */
+export const roleArt = (role, cls = '') => img(CHAR_IMG(role, 'portraits'), 'char-art ' + cls);
+/** البطاقة الكاملة كما في لوحة الهوية (بالإطار والاسم) */
+export const roleCard = (role, cls = '') => img(CHAR_IMG(role, 'cards'), 'char-card ' + cls);
+export const roleAvatar = (role) => CHAR_IMG(role, 'avatars');
+export const logoArt = () => img('assets/brand/mafia-logo-mark.webp', 'logo-mark', 'MAFIA');
+export const logoFull = () => img('assets/brand/mafia-logo-primary.webp', 'logo-full', 'MAFIA');

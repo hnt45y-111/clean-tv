@@ -3,7 +3,7 @@ import { t } from '../i18n.js';
 import { S, notify, serverNow } from '../store.js';
 import { send, game } from '../net.js';
 import { go, screen, fail, act } from './common.js';
-import { roleArt, ROLE_COLOR, ROLE_ICON } from '../art.js';
+import { roleArt, roleCard, roleAvatar, ROLE_COLOR, ROLE_ICON } from '../art.js';
 import { sfx, buzz } from '../fx.js';
 import { reportSheet, settingsSheet } from './rooms.js';
 
@@ -94,9 +94,10 @@ function roleReveal(R, m, members) {
   const mates = (me.mates || []).map((id) => m.players.find((p) => p.id === id)).filter(Boolean);
   const card = h('div', { class: 'flip deal' + (f.v ? ' on instant' : ''), role: 'button', tabindex: 0, onclick: (e) => { if (f.v) return; f.v = true; sfx('flip'); buzz(40); e.currentTarget.classList.add('on'); e.currentTarget.classList.remove('instant'); setTimeout(() => notify(), 900); } },
     h('div', { class: 'in' }, h('div', { class: 'face back' }, h('div', { class: 'dim' }, t('tap_to_reveal'))),
-      h('div', { class: 'face front' }, roleArt(me.role, 'art'), h('h1', {}, t('role_' + me.role)), h('div', { class: 'small dim' }, t('role_desc_' + me.role)), h('span', { class: 'chip role' }, t('team_' + me.team)))));
+      h('div', { class: 'face front card-face' }, roleCard(me.role), h('span', { class: 'chip role team-chip' }, t('team_' + me.team)))));
   return h('div', { class: 'col', style: { flex: 1, justifyContent: 'center', gap: '16px' } },
     h('div', { class: 'center' }, h('h2', {}, t('your_role')), h('div', { class: 'small dim' }, f.v ? t('keep_secret') : t('dealing_hint'))), card,
+    f.v ? h('p', { class: 'center small dim reveal', style: { margin: '0 12px' } }, t('role_desc_' + me.role)) : null,
     f.v && mates.length ? h('div', { class: 'card accent reveal', style: { '--role': ROLE_COLOR.mafia } }, h('div', { class: 'small dim' }, t('your_mates')), h('div', { class: 'row wrap' }, mates.map((p) => h('div', { class: 'row gap6' }, pAvatar(members, p, 'sm'), h('b', {}, p.name))))) : null,
     f.v ? (acked === roundKey() + ':sent' ? h('div', { class: 'center dim' }, h('div', { class: 'spinner', style: { margin: '0 auto 8px' } }), t('wait_narrator_start')) : h('button', { class: 'btn primary lg block', onclick: async () => { acked = roundKey() + ':sent'; await send({ t: 'g', cmd: 'ack' }); notify(); } }, ic('check'), t('got_it'))) : null);
 }
@@ -277,7 +278,7 @@ function revealSheet(p, m) {
     const s1 = () => [h('div', { class: 'center col', style: { alignItems: 'center', gap: '12px', padding: '20px 0' } }, ic('users', 'lg'), h('h2', {}, t('nd_hand_to', { name: p.name })), h('p', { class: 'dim small' }, t('nd_hand_hint'))),
       h('button', { class: 'btn blue lg block', onclick: () => { sfx('flip'); a.set(...s2()); } }, t('nd_i_am', { name: p.name })), h('button', { class: 'btn block', onclick: a.close }, t('cancel'))];
     const s2 = () => { const mates = p.role === 'mafia' ? m.players.filter((x) => x.role === 'mafia' && x.id !== p.id) : [];
-      return [h('div', { class: 'card center col', style: { '--role': ROLE_COLOR[p.role], alignItems: 'center', gap: '8px', borderColor: ROLE_COLOR[p.role] } }, roleArt(p.role, 'art'), h('h1', { style: { color: ROLE_COLOR[p.role] } }, t('role_' + p.role)),
+      return [h('div', { class: 'card center col', style: { '--role': ROLE_COLOR[p.role], alignItems: 'center', gap: '8px', borderColor: ROLE_COLOR[p.role] } }, roleCard(p.role, 'sheet-card'),
         h('div', { class: 'small dim' }, t('role_desc_' + p.role)), mates.length ? h('div', { class: 'small' }, t('your_mates'), ': ', mates.map((x) => x.name).join('، ')) : null),
         h('button', { class: 'btn primary lg block', onclick: async () => { await act(null, { t: 'g', cmd: 'reveal', id: p.id }); a.close(); } }, t('nd_hide_return'))]; };
     return s1();
