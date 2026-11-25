@@ -3,6 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 export JCP="${JCP:-$(mktemp -d)}"
-javac -d "$JCP" ../app/src/main/java/com/mafia/game/core/*.java DevMain.java
+javac -d "$JCP" ../app/src/main/java/com/mafia/game/core/*.java DevMain.java RulesTest.java
+java -cp "$JCP" RulesTest   # قواعد الأدوار
 ( cd ../../server && [ -d node_modules ] || npm ci --silent )
 node --test --test-reporter=spec local.test.mjs

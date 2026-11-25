@@ -4,14 +4,17 @@ import { S, notify, serverNow } from '../store.js';
 import { api, send } from '../net.js';
 import { go, screen, topbar, act, fail, cached, liveCfg } from './common.js';
 import qrcode from '../../vendor/qrcode.mjs';
-import { roleArt, roleAvatar, ROLE_COLOR } from '../art.js';
+import { roleArt, roleAvatar, ROLE_COLOR, ROLE_ICON, EXTRA_ROLES } from '../art.js';
 import { sfx } from '../fx.js';
 
 const MIN = 4, MAX = 20;
 const maxMafia = (n) => Math.max(1, Math.floor((n - 1) / 2));
 const suggest = (n) => Math.min(maxMafia(n), Math.max(1, Math.round(n / 4)));
 export const defaultDraft = (mode) => ({ players: 8, mafia: 2, doctor: true, detective: true, sniper: true, talkSeconds: 120, voteSeconds: 60, nightSeconds: 45, rounds: 1,
-  visibility: mode === 'offline' ? 'private' : 'private', narratorMute: true, muteDead: true, muteNight: true, revealRoleOnDeath: true });
+  visibility: mode === 'offline' ? 'private' : 'private', narratorMute: true, muteDead: true, muteNight: true, revealRoleOnDeath: true,
+  mafiaDoctor: false, superCitizen: false, negotiator: false, bodyguard: false, witch: false, mayor: false });
+const extraCount = (d) => EXTRA_ROLES.reduce((n, [k]) => n + +!!d[k], 0);
+const mafiaTeam = (d) => d.mafia + +!!d.mafiaDoctor;
 let draft = null;
 
 const stepper = (val, set, { min, max, step = 1, fmt = (v) => v }) => h('div', { class: 'stepper' },
@@ -21,15 +24,15 @@ const line = (label, ctl, hint) => h('div', { class: 'setrow' }, h('div', { clas
 const secFmt = (s) => (s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s`);
 
 export function validateDraft(d) {
-  const specials = d.mafia + +d.doctor + +d.detective + +d.sniper;
+  const specials = d.mafia + +d.doctor + +d.detective + +d.sniper + extraCount(d);
   if (d.players < MIN) return 'players_range';
-  if (d.mafia * 2 >= d.players) return 'mafia_too_many';
+  if (mafiaTeam(d) * 2 >= d.players) return 'mafia_too_many';
   if (specials > d.players) return 'roles_exceed_players';
   return null;
 }
 export function rolePreview(d) {
-  const cit = Math.max(0, d.players - d.mafia - +d.doctor - +d.detective - +d.sniper);
-  const parts = [['mafia', d.mafia], ['doctor', +d.doctor], ['detective', +d.detective], ['sniper', +d.sniper], ['citizen', cit]].filter(([, n]) => n > 0);
+  const cit = Math.max(0, d.players - d.mafia - +d.doctor - +d.detective - +d.sniper - extraCount(d));
+  const parts = [['mafia', d.mafia], ...EXTRA_ROLES.filter(([k]) => d[k]).map(([, r]) => [r, 1]), ['doctor', +d.doctor], ['detective', +d.detective], ['sniper', +d.sniper], ['citizen', cit]].filter(([, n]) => n > 0);
   return h('div', { class: 'card' }, h('div', { class: 'small dim' }, t('role_split')),
     h('div', { style: { display: 'flex', height: '14px', borderRadius: '7px', overflow: 'hidden', margin: '8px 0' } }, parts.map(([r, n]) => h('div', { style: { flex: n, background: ROLE_COLOR[r] } }))),
     h('div', { class: 'row wrap gap6' }, parts.map(([r, n]) => h('span', { class: 'chip role', style: { '--role': ROLE_COLOR[r] } }, t('role_' + r), ' ', h('b', { class: 'num' }, n)))));
@@ -45,6 +48,9 @@ export function settingsForm(d, { mode, rerender }) {
       line(t('mafia_count'), stepper(d.mafia, (v) => upd('mafia', v), { min: 1, max: maxMafia(d.players) }), t('mafia_hint')),
       line(t('role_doctor'), sw(d.doctor, (v) => upd('doctor', v))), line(t('role_detective'), sw(d.detective, (v) => upd('detective', v))), line(t('role_sniper'), sw(d.sniper, (v) => upd('sniper', v))),
       h('div', { class: 'tiny dim' }, t('rules_note'))),
+    S.cfg.local ? h('div', { class: 'card' }, h('h3', {}, t('extra_roles')), h('div', { class: 'tiny dim' }, t('extra_roles_hint')),
+      EXTRA_ROLES.map(([k, r]) => h('div', { class: 'setrow' }, h('img', { src: roleAvatar(r), alt: '', style: { width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${ROLE_COLOR[r]}`, flex: 'none' } }),
+        h('div', { class: 'grow' }, h('div', { style: { color: ROLE_COLOR[r], fontWeight: 700 } }, t('role_' + r)), h('div', { class: 'tiny dim' }, t('role_desc_' + r))), sw(!!d[k], (v) => upd(k, v))))) : null,
     rolePreview(d), err && h('div', { class: 'banner red' }, t('err.' + err)),
     h('div', { class: 'card' }, h('h3', {}, t('set_timing')),
       line(t('talk_time'), stepper(d.talkSeconds, (v) => upd('talkSeconds', v), { min: 15, max: 600, step: 15, fmt: secFmt }), mode === 'online' ? t('talk_default_online') : null),
@@ -139,7 +145,8 @@ export const lobby = () => {
     !isHost && R.hostInfo ? h('div', { class: 'prow', style: { '--role': 'var(--blue)' } }, avatar({ ...R.hostInfo, avatar: R.hostInfo.avatar || roleAvatar('narrator'), online: R.hostInfo.connected }), h('div', { class: 'grow' }, h('div', { class: 'tiny dim' }, t('narrator')), h('div', { class: 'nm' }, R.hostInfo.name)), ic('mic')) : null,
     cd,
     h('div', { class: 'card row between', style: { alignItems: 'flex-start' } }, h('div', { class: 'col', style: { gap: '4px' } }, h('div', { class: 'row wrap gap6' }, h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.mafia } }, t('role_mafia'), ' ', h('b', { class: 'num' }, st.mafia)),
-      st.doctor && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.doctor } }, t('role_doctor')), st.detective && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.detective } }, t('role_detective')), st.sniper && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.sniper } }, t('role_sniper'))),
+      st.doctor && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.doctor } }, t('role_doctor')), st.detective && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.detective } }, t('role_detective')), st.sniper && h('span', { class: 'chip role', style: { '--role': ROLE_COLOR.sniper } }, t('role_sniper')),
+      EXTRA_ROLES.filter(([k]) => st[k]).map(([, r]) => h('span', { class: 'chip role', style: { '--role': ROLE_COLOR[r] } }, t('role_' + r)))),
       h('div', { class: 'tiny dim' }, `${t('talk_time')} ${secLabel(st.talkSeconds)} · ${t('vote_time')} ${secLabel(st.voteSeconds)} · ${t('rounds')} ${st.rounds}`)),
       isHost ? h('button', { class: 'iconbtn', onclick: () => settingsSheet(), 'aria-label': t('edit') }, ic('edit')) : null),
     isHost && S.cfg.local ? h('div', { class: 'col' }, h('div', { class: 'row between' }, h('h3', {}, t('nd_guests')), h('button', { class: 'btn sm', onclick: () => guestSheet() }, ic('plus', 'sm'), t('nd_add_guest'))),

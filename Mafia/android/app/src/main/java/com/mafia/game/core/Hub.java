@@ -186,7 +186,7 @@ public final class Hub {
         int count = room.size();
         if (count < Settings.MIN_PLAYERS) throw bad("not_enough_players");
         Map<String, Object> st = room.settings.toMap(); st.put("players", (long) count);
-        if (room.settings.mafia * 2 >= count) st.put("mafia", (long) Settings.suggestMafia(count));
+        if (room.settings.mafiaTeam() * 2 >= count) st.put("mafia", (long) Math.max(1, Settings.suggestMafia(count) - (room.settings.mafiaDoctor ? 1 : 0)));
         Settings.Result v = Settings.validate(st); if (!v.ok) throw bad(v.errors.get(0));
         room.activeSettings = v.settings; room.round++; room.status = "playing"; room.left = new HashSet<>();
         List<String[]> ps = new ArrayList<>(); for (Member m : room.members.values()) ps.add(new String[] { String.valueOf(m.id), m.name });
@@ -234,7 +234,7 @@ public final class Hub {
             case "closeVote": m.closeVote(); break;
             case "eliminate": m.eliminate(sid(p.get("id"))); break;
             case "endMatch": m.endMatch(); break;
-            case "record": m.recordNight(p.get("kind") == null ? null : String.valueOf(p.get("kind")), Json.truthy(p.get("target")) ? sid(p.get("target")) : null); break;
+            case "record": m.recordNight(p.get("kind") == null ? null : String.valueOf(p.get("kind")), Json.truthy(p.get("target")) ? sid(p.get("target")) : null, p.get("choice") == null ? null : String.valueOf(p.get("choice"))); break;
             case "voteResult": m.recordVote(Json.truthy(p.get("target")) ? sid(p.get("target")) : null); break;
             case "reveal": m.ackRole(sid(p.get("id"))); break; // الراوي عرض الدور على هاتفه
             default: throw bad("bad_cmd");

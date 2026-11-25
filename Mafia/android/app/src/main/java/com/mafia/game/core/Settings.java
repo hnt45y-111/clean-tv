@@ -14,13 +14,17 @@ public final class Settings {
     public int talkSeconds = 120, voteSeconds = 60, nightSeconds = 45, rounds = 1;
     public String visibility = "private";
     public boolean narratorMute = true, muteDead = true, muteNight = true, revealRoleOnDeath = true;
+    /** أدوار إضافية اختيارية يفعّلها الراوي (معطّلة افتراضياً) */
+    public boolean mafiaDoctor = false, superCitizen = false, negotiator = false, bodyguard = false, witch = false, mayor = false;
+    public static final String[] EXTRA = { "mafiaDoctor", "superCitizen", "negotiator", "bodyguard", "witch", "mayor" };
 
     public Settings copy() { return fromMap(toMap()); }
 
     public Map<String, Object> toMap() {
         return Json.obj("players", (long) players, "mafia", (long) mafia, "doctor", doctor, "detective", detective, "sniper", sniper,
                 "talkSeconds", (long) talkSeconds, "voteSeconds", (long) voteSeconds, "nightSeconds", (long) nightSeconds, "rounds", (long) rounds,
-                "visibility", visibility, "narratorMute", narratorMute, "muteDead", muteDead, "muteNight", muteNight, "revealRoleOnDeath", revealRoleOnDeath);
+                "visibility", visibility, "narratorMute", narratorMute, "muteDead", muteDead, "muteNight", muteNight, "revealRoleOnDeath", revealRoleOnDeath,
+                "mafiaDoctor", mafiaDoctor, "superCitizen", superCitizen, "negotiator", negotiator, "bodyguard", bodyguard, "witch", witch, "mayor", mayor);
     }
     public static Settings fromMap(Map<String, Object> m) { return validate(m).settings; }
 
@@ -51,17 +55,26 @@ public final class Settings {
         s.visibility = "public".equals(m.get("visibility")) ? "public" : "private";
         s.narratorMute = b(m, "narratorMute", true); s.muteDead = b(m, "muteDead", true);
         s.muteNight = b(m, "muteNight", true); s.revealRoleOnDeath = b(m, "revealRoleOnDeath", true);
+        s.mafiaDoctor = b(m, "mafiaDoctor", false); s.superCitizen = b(m, "superCitizen", false); s.negotiator = b(m, "negotiator", false);
+        s.bodyguard = b(m, "bodyguard", false); s.witch = b(m, "witch", false); s.mayor = b(m, "mayor", false);
         List<String> e = new ArrayList<>();
         if (s.players < MIN_PLAYERS || s.players > MAX_PLAYERS) e.add("players_range");
         if (s.mafia < 1) e.add("mafia_min");
-        if (s.mafia * 2 >= s.players) e.add("mafia_too_many");
-        int specials = s.mafia + (s.doctor ? 1 : 0) + (s.detective ? 1 : 0) + (s.sniper ? 1 : 0);
+        if (s.mafiaTeam() * 2 >= s.players) e.add("mafia_too_many");
+        int specials = s.specials();
         if (specials > s.players) e.add("roles_exceed_players");
         if (s.talkSeconds < 15 || s.talkSeconds > 600) e.add("talk_range");
         if (s.voteSeconds < 10 || s.voteSeconds > 300) e.add("vote_range");
         if (s.nightSeconds < 10 || s.nightSeconds > 300) e.add("night_range");
         if (s.rounds < 1 || s.rounds > MAX_ROUNDS) e.add("rounds_range");
         return new Result(e, s);
+    }
+
+    /** فريق المافيا عند البدء (المفاوض يبدأ مع المدينة) */
+    public int mafiaTeam() { return mafia + (mafiaDoctor ? 1 : 0); }
+    public int specials() {
+        return mafia + (doctor ? 1 : 0) + (detective ? 1 : 0) + (sniper ? 1 : 0) + (mafiaDoctor ? 1 : 0) + (superCitizen ? 1 : 0)
+                + (negotiator ? 1 : 0) + (bodyguard ? 1 : 0) + (witch ? 1 : 0) + (mayor ? 1 : 0);
     }
 
     public static int maxMafia(int players) { return Math.max(1, (players - 1) / 2); }
@@ -73,6 +86,12 @@ public final class Settings {
         if (doctor) l.add("doctor");
         if (detective) l.add("detective");
         if (sniper) l.add("sniper");
+        if (mafiaDoctor) l.add("mafia_doctor");
+        if (superCitizen) l.add("super_citizen");
+        if (negotiator) l.add("negotiator");
+        if (bodyguard) l.add("bodyguard");
+        if (witch) l.add("witch");
+        if (mayor) l.add("mayor");
         if (l.size() > count) throw new GameError("roles_exceed_players");
         while (l.size() < count) l.add("citizen");
         return l;
@@ -84,5 +103,6 @@ public final class Settings {
         return a;
     }
 
-    public static String team(String role) { return "mafia".equals(role) ? "mafia" : "town"; }
+    /** الفريق الأصلي للدور (المفاوض يبدأ مع المدينة وقد يتحول) */
+    public static String team(String role) { return "mafia".equals(role) || "mafia_doctor".equals(role) ? "mafia" : "town"; }
 }

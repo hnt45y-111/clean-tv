@@ -83,6 +83,7 @@ function passiveView(R, m, members) {
     out ? h('div', { class: 'card center reveal' }, h('div', { class: 'small dim' }, t('was_eliminated')), h('div', { class: 'bold' }, out.name, out.role ? [' ', roleChip(out.role)] : null)) : null,
     h('button', { class: 'card center', style: { '--role': ROLE_COLOR[me.role], minHeight: '150px' }, onclick: toggle },
       peek ? h('div', { class: 'col', style: { alignItems: 'center', gap: '6px' } }, roleArt(me.role, 'art'), h('h2', { style: { color: ROLE_COLOR[me.role] } }, t('role_' + me.role)),
+        me.converted ? h('div', { class: 'chip role', style: { '--role': 'var(--red)' } }, t('nd_converted')) : null,
         mates.length ? h('div', { class: 'small' }, t('your_mates'), ': ', mates.map((p) => p.name).join('، ')) : null)
         : h('div', { class: 'col', style: { alignItems: 'center', gap: '6px' } }, ic('eye', 'lg'), h('b', {}, t('nd_peek')), h('div', { class: 'tiny dim' }, t('nd_peek_hint')))),
     h('p', { class: 'center tiny dim' }, t('nd_offline_ok')));
@@ -226,7 +227,10 @@ export const narrator = () => {
         h('button', { class: 'btn primary lg block', onclick: async (e) => { if (pend.length && !(await confirmBox(t('end_night'), t('end_night_pending', { n: pend.length }), t('end_night')))) return; g('resolveNight')(e); } }, ic('sun'), t('end_night'))]; break; }
     case 'dawn': { const dead = (N.lastNight?.deaths || []).map((d) => m.players.find((p) => p.id === d.id)); 
       panel = [h('div', { class: 'card accent reveal center', style: { '--role': 'var(--gold)' } }, h('h3', {}, t('dawn_title')), dead.length ? dead.map((p) => h('div', {}, h('b', {}, p.name), ' ', roleChip(p.role), ' ', h('span', { class: 'tiny dim' }, t('cause_' + N.lastNight.deaths.find((d) => d.id === p.id).cause)))) : h('div', {}, t('quiet_night')),
-        N.lastNight?.saved ? h('div', { class: 'small', style: { color: 'var(--green)' } }, ic('med', 'sm'), ' ', t('doctor_saved')) : null),
+        N.lastNight?.saved ? h('div', { class: 'small', style: { color: 'var(--green)' } }, ic('med', 'sm'), ' ', t('doctor_saved')) : null,
+        ...[['guarded', 'ln_guarded', 'shield'], ['witchSaved', 'ln_witch_saved', 'flask'], ['shielded', 'ln_shielded', 'star'], ['sniperBlocked', 'ln_sniper_blocked', 'syringe']]
+          .filter(([k]) => N.lastNight?.[k]).map(([k, key, icn]) => h('div', { class: 'small', style: { color: 'var(--green)' } }, ic(icn, 'sm'), ' ', t(key, { name: m.players.find((p) => p.id === N.lastNight[k])?.name }))),
+        N.lastNight?.negotiator ? h('div', { class: 'small', style: { color: N.lastNight.negotiator === 'mafia' ? 'var(--red)' : 'var(--gold)' } }, ic('handshake', 'sm'), ' ', t(N.lastNight.negotiator === 'mafia' ? 'ln_neg_mafia' : 'ln_neg_town')) : null),
         h('button', { class: 'btn gold lg block', onclick: g('beginDay') }, ic('sun'), t('begin_day'))]; break; }
     case 'day': { const tm = m.timer;
       panel = [h('div', { class: 'card accent', style: { '--role': 'var(--gold)' } }, h('div', { class: 'row between' }, h('h3', {}, t('day_n', { n: m.day })), m.speaker ? h('span', { class: 'chip role', style: { '--role': 'var(--gold)' } }, ic('mic', 'sm'), m.players.find((p) => p.id === m.speaker)?.name) : h('span', { class: 'chip' }, t('no_speaker'))),
@@ -284,28 +288,53 @@ function revealSheet(p, m) {
     return s1();
   });
 }
-const ND_STEPS = { mafia: ['kill', 'nd_step_mafia', 'nd_hint_mafia'], doctor: ['save', 'nd_step_doctor', 'nd_hint_doctor'], detective: ['investigate', 'nd_step_detective', 'nd_hint_detective'], sniper: ['shoot', 'nd_step_sniper', 'nd_hint_sniper'] };
+// خطوات الليل للراوي بترتيب النداء (الترتيب يأتي من الخادم في n.roles)
+const ND_STEPS = { negotiator: ['negotiate', 'nd_step_negotiator', 'nd_hint_negotiator'], mafia: ['kill', 'nd_step_mafia', 'nd_hint_mafia'],
+  mafia_doctor: ['mdsave', 'nd_step_mafia_doctor', 'nd_hint_mafia_doctor'], bodyguard: ['guard', 'nd_step_bodyguard', 'nd_hint_bodyguard'],
+  doctor: ['save', 'nd_step_doctor', 'nd_hint_doctor'], detective: ['investigate', 'nd_step_detective', 'nd_hint_detective'],
+  witch: ['witch', 'nd_step_witch', 'nd_hint_witch'], sniper: ['shoot', 'nd_step_sniper', 'nd_hint_sniper'] };
 function ndNight(m, N, g) {
   const n = N.night || { roles: [], pending: [], done: {} }; const alive = m.players.filter((p) => p.alive);
   const holder = (r) => alive.find((p) => p.role === r);
-  const chosen = { mafia: n.kill, doctor: n.save, detective: n.investigate, sniper: n.shoot };
-  const ok = { mafia: (p) => p.role !== 'mafia', doctor: (p) => p.id !== n.cannotSave, detective: (p) => p.id !== holder('detective')?.id, sniper: (p) => p.id !== holder('sniper')?.id };
-  const cards = n.roles.map((r, i) => { const [kind, title, hint] = ND_STEPS[r]; const done = r in n.done; const cur = chosen[r];
+  const isMafiaTeam = (p) => p.team === 'mafia';
+  const rec = (kind, extra) => (e) => { sfx('tick'); act(e.currentTarget, { t: 'g', cmd: 'record', kind, ...extra }); };
+  const chip = (label, on, color, onclick, extraStyle = {}) => h('button', { class: 'chip role', style: { '--role': on ? color : 'var(--silver)', padding: '8px 12px', fontSize: '14px', ...(on ? { background: 'color-mix(in srgb, ' + color + ' 30%, transparent)' } : {}), ...extraStyle }, onclick }, label);
+  const pick = (r, kind, cur, filter) => h('div', { class: 'row wrap gap6' }, alive.filter(filter).map((p) => chip(p.name, cur === p.id, ROLE_COLOR[r], rec(kind, { target: p.id }))));
+  const nameOf = (id) => m.players.find((p) => p.id === id)?.name;
+  const bodies = {
+    negotiator: () => h('div', { class: 'row wrap gap6' }, chip(t('nd_neg_town'), n.neg === 'town', 'var(--gold)', rec('negotiate', { choice: 'town' })), chip(t('nd_neg_mafia'), n.neg === 'mafia', 'var(--red)', rec('negotiate', { choice: 'mafia' }))),
+    mafia: () => pick('mafia', 'kill', n.kill, (p) => !isMafiaTeam(p)),
+    mafia_doctor: () => pick('mafia_doctor', 'mdsave', n.mdSave, isMafiaTeam),
+    bodyguard: () => pick('bodyguard', 'guard', n.guard, (p) => p.id !== holder('bodyguard')?.id),
+    doctor: () => pick('doctor', 'save', n.save, (p) => p.id !== n.cannotSave),
+    detective: () => h('div', { class: 'col', style: { gap: '8px' } }, pick('detective', 'investigate', n.investigate, (p) => p.id !== holder('detective')?.id),
+      n.investigate ? h('div', { class: 'banner reveal', style: n.investigateIsMafia ? {} : { background: 'rgba(33,168,117,.14)', borderColor: 'rgba(33,168,117,.5)', color: '#5fe0ad' } },
+        n.investigateIsMafia ? '👍 ' + t('nd_detective_yes') : '👎 ' + t('nd_detective_no')) : null),
+    witch: () => { const w = holder('witch'); const lifeDone = 'witch_life' in n.done; const killDone = 'witch_kill' in n.done;
+      return h('div', { class: 'col', style: { gap: '10px' } },
+        h('div', { class: 'small' }, n.kill ? t('nd_witch_victim', { name: nameOf(n.kill) }) : t('nd_witch_no_victim')),
+        h('div', { class: 'col', style: { gap: '6px' } }, h('b', { class: 'small' }, t('nd_witch_life')), n.witchLifeUsed ? h('span', { class: 'tiny dim' }, t('nd_used'))
+          : h('div', { class: 'row wrap gap6' }, chip(t('nd_witch_life_use'), lifeDone && n.witchLife === true, 'var(--green)', rec('witch_life', { choice: 'use' })), chip(t('nd_witch_skip'), lifeDone && n.witchLife === false, 'var(--purple)', rec('witch_life', { choice: 'skip' })))),
+        h('div', { class: 'col', style: { gap: '6px' } }, h('b', { class: 'small' }, t('nd_witch_kill')), n.witchDeathUsed ? h('span', { class: 'tiny dim' }, t('nd_used'))
+          : h('div', { class: 'row wrap gap6' }, alive.filter((p) => p.id !== w?.id).map((p) => chip(p.name, n.witchKill === p.id, ROLE_COLOR.witch, rec('witch_kill', { target: p.id }))),
+            chip(t('nd_witch_nokill'), killDone && !n.witchKill, 'var(--purple)', rec('witch_kill', { target: null }))))); },
+    sniper: () => h('div', { class: 'row wrap gap6' }, alive.filter((p) => p.id !== holder('sniper')?.id).map((p) => chip(p.name, n.shoot === p.id, ROLE_COLOR.sniper, rec('shoot', { target: p.id }))),
+      chip(t('nd_no_shot'), 'sniper' in n.done && !n.shoot, 'var(--purple)', rec('shoot', { target: null }))),
+  };
+  const cards = n.roles.map((r, i) => { const [, title, hint] = ND_STEPS[r]; const done = !n.pending.includes(r);
     return h('div', { class: 'card col accent', style: { '--role': ROLE_COLOR[r], gap: '8px' } },
-      h('div', { class: 'row between' }, h('h3', {}, `${i + 1}. `, t(title)), done ? h('span', { class: 'chip', style: { color: 'var(--green)' } }, ic('check', 'sm'), t('nd_recorded')) : h('span', { class: 'chip' }, t('waiting'))),
-      h('div', { class: 'tiny dim' }, t(hint)),
-      h('div', { class: 'row wrap gap6' }, alive.filter(ok[r]).map((p) => h('button', { class: 'chip role', style: { '--role': cur === p.id ? ROLE_COLOR[r] : 'var(--silver)', padding: '8px 12px', fontSize: '14px', ...(cur === p.id ? { background: 'color-mix(in srgb, ' + ROLE_COLOR[r] + ' 30%, transparent)' } : {}) },
-        onclick: (e) => { sfx('tick'); act(e.currentTarget, { t: 'g', cmd: 'record', kind, target: p.id }); } }, p.name)),
-        r === 'sniper' ? h('button', { class: 'chip', style: done && !cur ? { borderColor: 'var(--purple)', color: 'var(--purple)' } : {}, onclick: (e) => act(e.currentTarget, { t: 'g', cmd: 'record', kind: 'shoot', target: null }) }, t('nd_no_shot')) : null),
-      r === 'detective' && n.investigate ? h('div', { class: 'banner reveal', style: n.investigateIsMafia ? {} : { background: 'rgba(33,168,117,.14)', borderColor: 'rgba(33,168,117,.5)', color: '#5fe0ad' } },
-        n.investigateIsMafia ? '👍 ' + t('nd_detective_yes') : '👎 ' + t('nd_detective_no')) : null);
+      h('div', { class: 'row between' }, h('div', { class: 'row', style: { gap: '8px' } }, h('img', { src: roleAvatar(r), alt: '', style: { width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${ROLE_COLOR[r]}` } }), h('h3', {}, `${i + 1}. `, t(title))),
+        done ? h('span', { class: 'chip', style: { color: 'var(--green)' } }, ic('check', 'sm'), t('nd_recorded')) : h('span', { class: 'chip' }, t('waiting'))),
+      h('div', { class: 'tiny dim' }, t(hint)), bodies[r]());
   });
   return [h('div', { class: 'card accent center', style: { '--role': 'var(--purple)' } }, h('h3', {}, t('night_n', { n: m.nights })), h('p', { class: 'small dim' }, t('nd_night_narrator'))), ...cards,
     h('button', { class: 'btn primary lg block', onclick: async (e) => { const pend = n.pending.length; if (pend && !(await confirmBox(t('end_night'), t('nd_pending_roles', { n: pend }), t('end_night')))) return; g('resolveNight')(e); } }, ic('sun'), t('end_night'))];
 }
 /** التصويت باليد: الراوي يسجّل من خرج */
 function voteSheet(m) {
+  const mayor = m.players.find((p) => p.alive && p.role === 'mayor');
   sheet((a) => [h('h2', {}, t('nd_vote_title')), h('p', { class: 'small dim' }, t('nd_vote_hint')),
+    mayor ? h('div', { class: 'banner' }, ic('columns', 'sm'), t('nd_mayor_vote'), ' (', mayor.name, ')') : null,
     h('div', { class: 'col' }, m.players.filter((p) => p.alive).map((p) => h('button', { class: 'prow', onclick: async () => { if (await confirmBox(t('nd_vote_confirm', { name: p.name }), null, t('nd_eliminate'))) { a.close(); act(null, { t: 'g', cmd: 'voteResult', target: p.id }); } } },
       h('b', { class: 'grow', style: { textAlign: 'start' } }, p.name), p.role ? roleChip(p.role) : null))),
     h('button', { class: 'btn block', onclick: async () => { a.close(); act(null, { t: 'g', cmd: 'voteResult', target: null }); } }, t('nd_nobody'))]);

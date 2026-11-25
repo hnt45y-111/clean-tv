@@ -1,9 +1,14 @@
 // رسوم الشخصيات والشعار: SVG أصلية بأسلوب هندسي موحّد (ظل + أضلاع حادة + لمسة لون الدور).
 import { raw } from './dom.js';
 
-export const ROLE_COLOR = { mafia: '#D9233C', doctor: '#21A875', detective: '#2478E8', sniper: '#A45BE7', citizen: '#E8AE42' };
-export const ROLE_ICON = { mafia: 'skull', doctor: 'med', detective: 'search', sniper: 'target', citizen: 'shield' };
-export const TEAM_OF = { mafia: 'mafia', doctor: 'town', detective: 'town', sniper: 'town', citizen: 'town' };
+export const ROLE_COLOR = { mafia: '#D9233C', doctor: '#21A875', detective: '#2478E8', sniper: '#A45BE7', citizen: '#E8AE42',
+  mafia_doctor: '#D9233C', super_citizen: '#E8AE42', negotiator: '#E8AE42', bodyguard: '#2478E8', witch: '#A45BE7', mayor: '#E8AE42', narrator: '#DCE5F5' };
+// نفس أيقونات بطاقات الشخصيات
+export const ROLE_ICON = { mafia: 'hat', doctor: 'med', detective: 'search', sniper: 'target', citizen: 'users',
+  mafia_doctor: 'syringe', super_citizen: 'star', negotiator: 'handshake', bodyguard: 'shield', witch: 'flask', mayor: 'columns', narrator: 'crown' };
+export const TEAM_OF = { mafia: 'mafia', doctor: 'town', detective: 'town', sniper: 'town', citizen: 'town', mafia_doctor: 'mafia', super_citizen: 'town', negotiator: 'town', bodyguard: 'town', witch: 'town', mayor: 'town' };
+/** الأدوار الإضافية الاختيارية: مفتاح الإعداد ← الدور */
+export const EXTRA_ROLES = [['mafiaDoctor', 'mafia_doctor'], ['superCitizen', 'super_citizen'], ['negotiator', 'negotiator'], ['bodyguard', 'bodyguard'], ['witch', 'witch'], ['mayor', 'mayor']];
 
 const BUST = (c) => `<defs><linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2450"/><stop offset="1" stop-color="#0a0f24"/></linearGradient>
 <radialGradient id="gl" cx=".5" cy=".3" r=".7"><stop offset="0" stop-color="${c}" stop-opacity=".45"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient></defs>

@@ -20,8 +20,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const errs = [];
 
   const N = await page('الراوي', HOST + '/'); await shot(N, 'L01-host-login'); await login(N, 'أبو علي'); await shot(N, 'L02-host-home');
   await N.p.click('text=إنشاء غرفة'); await sleep(300);
-  for (let i = 0; i < 3; i++) await N.p.click('.setrow:has-text("العدد الإجمالي للاعبين") button:first-child');
+  const EXTRAS = !!process.env.EXTRAS; // الأدوار الإضافية الستة بدل الطبيب والمحقق والقناص
+  if (!EXTRAS) for (let i = 0; i < 3; i++) await N.p.click('.setrow:has-text("العدد الإجمالي للاعبين") button:first-child');
   await N.p.click('.setrow:has-text("عدد المافيا") button:first-child');
+  if (EXTRAS) {
+    for (const r of ['طبيب المدينة', 'المحقق', 'القناص']) await N.p.locator(`.setrow:has(> .grow > div:text-is("${r}")) .switch`).first().click();
+    for (const r of ['طبيب المافيا', 'المواطن سوبر', 'المفاوض', 'الحارس', 'الساحرة', 'العمدة']) await N.p.locator(`.setrow:has-text("${r}") .switch`).first().click();
+    await sleep(200); await shot(N, 'X01-extra-roles-settings'); await N.p.evaluate(() => document.querySelector('.screen').scrollTo(0, 900)); await sleep(200); await shot(N, 'X02-extra-roles-settings2');
+  }
   await N.p.click('text=إنشاء الغرفة'); await sleep(900); await shot(N, 'L03-lobby-wifi-qr');
   await N.p.click('text=التالي: باركود الغرفة'); await sleep(400); await shot(N, 'L04-lobby-room-qr');
   const qrLink = await N.p.evaluate(() => [...document.querySelectorAll('.tiny.dim.center')].map((e) => e.textContent).join('|'));
@@ -34,6 +40,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const errs = [];
   await sleep(1200); console.log('members', (await st(N)).n); await shot(N, 'L06-lobby-full'); await shot(P[0], 'L07-player-lobby');
   // لاعب بلا هاتف يضيفه الراوي بالاسم
   await N.p.click('text=إضافة لاعب بالاسم'); await N.p.fill('#guestname', 'جدّو'); await N.p.click('.sheet .btn.blue'); await sleep(400);
+  if (EXTRAS) for (const g of ['سارة', 'حسن']) { await N.p.fill('#guestname', g); await N.p.click('.sheet .btn.blue'); await sleep(400); }
   await N.p.click('.sheet button:has-text("إغلاق")'); await sleep(300); await shot(N, 'L06b-lobby-guest');
   await N.p.click('text=بدء اللعبة'); await sleep(1200);
   for (const u of P) await u.p.click('.flip'); await sleep(1000); await shot(P[0], 'L08-role');
@@ -46,12 +53,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const errs = [];
   for (let it = 0; it < 60; it++) {
     const s = await st(N); if (!s || s.phase === 'ended') break; const ph = s.phase;
     try {
-      if (ph === 'roles') await N.p.click('text=ابدأ الليل');
+      if (ph === 'roles') { await N.p.click('text=ابدأ الليل'); await sleep(300); if (await N.p.locator('.sheet').count()) await N.p.locator('.sheet .btn.blue').click(); }
       else if (ph === 'night') {
         await sleep(1700);
         const cards = N.p.locator('.card.col.accent'); const n = await cards.count();
-        for (let i = 0; i < n; i++) { await cards.nth(i).locator('button.chip.role').first().click(); await sleep(350); }
-        if (it < 3) { await shot(N, 'L09a-narrator-night'); await shot(P[0], 'L09b-player-night'); }
+        for (let i = 0; i < n; i++) { await cards.nth(i).locator('button.chip.role').first().click(); await sleep(350);
+          if (await cards.nth(i).locator('text=جرعة الموت').count()) { const c = cards.nth(i).locator('button.chip.role:has-text("لا أحد")'); if (await c.count()) { await c.click(); await sleep(300); } } }
+        if (it < 3) { await shot(N, 'L09a-narrator-night'); await shot(P[0], 'L09b-player-night'); if (EXTRAS) { await N.p.evaluate(() => document.querySelector('.screen').scrollTo(0, 99999)); await sleep(200); await shot(N, 'X03-narrator-night-bottom'); await N.p.evaluate(() => document.querySelector('.screen').scrollTo(0, 0)); } }
         await N.p.click('text=إنهاء الليل وإعلان النتيجة'); await sleep(300);
         if (await N.p.locator('.sheet').count()) await N.p.locator('.sheet .btn.primary').click();
       } else if (ph === 'dawn') await N.p.click('text=ابدأ النهار');
