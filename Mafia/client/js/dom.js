@@ -36,7 +36,12 @@ const P = {
   mask: '<path d="M3 8c3-2 6-2 9-1 3-1 6-1 9 1 0 6-3 10-9 10S3 14 3 8z"/><circle cx="8.5" cy="10.5" r="1.4"/><circle cx="15.5" cy="10.5" r="1.4"/>', med: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/>',
   eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>', bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
   vib: '<rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8"/>', sound: '<path d="M4 9v6h4l5 4V5L8 9zM17 8a5 5 0 010 8"/>', globe2: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
-  door: '<path d="M6 21V4a1 1 0 011-1h10a1 1 0 011 1v17M4 21h16M14 12h.01"/>', send: '<path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/>', gift: '<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M3 13h18M12 9C9 9 7 7 8.5 5.5S12 6 12 9c0-3 2-4.5 3.5-3S15 9 12 9z"/>',
+  door: '<path d="M6 21V4a1 1 0 011-1h10a1 1 0 011 1v17M4 21h16M14 12h.01"/>', send: '<path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/>', hat: '<path d="M3 16c3 1.6 15 1.6 18 0"/><path d="M6 15.4l1.6-7.2C8 6.6 9.6 5.6 12 6.6c2.4-1 4 0 4.4 1.6l1.6 7.2"/><path d="M7 12.5c3 1 7 1 10 0"/>',
+  syringe: '<path d="M18 3l3 3M16.5 4.5l3 3M19 6l-9.5 9.5-3-3L16 3M8 14l-4 4M3 21l2-2M10.5 9.5l1.5 1.5M8.5 11.5l1.5 1.5"/>',
+  flask: '<path d="M9 3h6M10 3v6L4.5 18.5A1.6 1.6 0 006 21h12a1.6 1.6 0 001.5-2.5L14 9V3"/><path d="M7 15h10"/>',
+  handshake: '<path d="M2 11l4-4 4 2 3-2 4 1 5 3"/><path d="M2 11l6 6c1 1 2 1 3 0l1-1 1 1c1 1 2 1 3 0l5-5"/><path d="M10 9l3 3"/>',
+  columns: '<path d="M3 9l9-5 9 5M4 9h16M5 20h14M3 22h18M6 9v11M10 9v11M14 9v11M18 9v11"/>',
+ gift: '<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M3 13h18M12 9C9 9 7 7 8.5 5.5S12 6 12 9c0-3 2-4.5 3.5-3S15 9 12 9z"/>',
 };
 export const ic = (name, cls = '') => raw(`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[name] || ''}</svg>`);
 

@@ -1,0 +1,167 @@
+@font-face { font-family: Cinzel; font-weight: 700; src: url(../client/fonts/cinzel-latin-700-normal.woff2); }
+@font-face { font-family: Cinzel; font-weight: 900; src: url(../client/fonts/cinzel-latin-900-normal.woff2); }
+@font-face { font-family: ReemKufi; font-weight: 500; src: url(../client/fonts/reem-kufi-arabic-500-normal.woff2); }
+@font-face { font-family: ReemKufi; font-weight: 700; src: url(../client/fonts/reem-kufi-arabic-700-normal.woff2); }
+@font-face { font-family: Tajawal; font-weight: 400; src: url(../client/fonts/tajawal-arabic-400-normal.woff2); unicode-range: U+0600-06FF, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: Tajawal; font-weight: 700; src: url(../client/fonts/tajawal-arabic-700-normal.woff2); unicode-range: U+0600-06FF, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: Tajawal; font-weight: 400; src: url(../client/fonts/tajawal-latin-400-normal.woff2); unicode-range: U+0000-00FF; }
+@font-face { font-family: Tajawal; font-weight: 700; src: url(../client/fonts/tajawal-latin-700-normal.woff2); unicode-range: U+0000-00FF; }
+
+@page { size: 210mm 297mm; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #080A12; color: #DCE5F5; font-family: Tajawal, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+h2, h3, h4 { margin: 0; font-family: ReemKufi, Tajawal, sans-serif; font-weight: 700; }
+p { margin: 0; line-height: 1.7; }
+
+.page { width: 210mm; height: 297mm; position: relative; overflow: hidden; padding: 16mm 14mm 18mm; page-break-after: always; break-after: page;
+  background: radial-gradient(120% 45% at 50% -8%, rgba(217,35,60,.22), transparent 60%), #080A12; }
+.page::after { content: ""; position: absolute; inset: auto 0 0 0; height: 40mm; opacity: .5; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'%3E%3Cpath fill='%2306091a' d='M0 120V78h14V52h18v26h10V38h22v40h12V60h20V30h16v30h14V70h18V44h24v26h12V58h16V24h20v34h14v22h18V50h22v28h12V64h18V40h20v38h14v42z'/%3E%3C/svg%3E") bottom/100% 100% no-repeat; }
+.body { position: relative; z-index: 1; }
+.ph { display: flex; align-items: center; gap: 5mm; margin-bottom: 8mm; padding-bottom: 4mm; border-bottom: .3mm solid rgba(232,174,66,.35); }
+.ph .num { font-family: Cinzel; font-weight: 900; font-size: 22mm; line-height: 1; color: transparent; -webkit-text-stroke: .35mm #E8AE42; }
+.ph .en { font-family: Cinzel; font-weight: 700; font-size: 3.4mm; letter-spacing: .5mm; color: #E8AE42; }
+.ph h2 { font-size: 9mm; color: #fff; }
+.pf { position: absolute; left: 14mm; right: 14mm; bottom: 7mm; display: flex; justify-content: space-between; font-size: 2.8mm; color: rgba(220,229,245,.55); z-index: 2; }
+.pf .n { font-family: Cinzel; font-weight: 700; color: #E8AE42; }
+.lead { font-size: 4.6mm; line-height: 1.8; margin-bottom: 8mm; }
+.note { margin-top: 6mm; font-size: 3.3mm; color: rgba(220,229,245,.7); border-inline-start: .8mm solid #D9233C; padding-inline-start: 3mm; }
+.sub { font-size: 4.6mm; color: #E8AE42; margin: 6mm 0 3mm; }
+.en { font-family: Cinzel; font-size: 2.8mm; letter-spacing: .3mm; color: rgba(220,229,245,.6); }
+.code { direction: ltr; unicode-bidi: isolate; font-family: Tajawal; font-size: 3mm; }
+b { font-weight: 700; }
+
+/* الغلاف */
+.cover { display: flex; flex-direction: column; align-items: center; padding-top: 22mm; background: radial-gradient(90% 55% at 50% 30%, rgba(217,35,60,.35), transparent 65%), #080A12; }
+.cover-logo { width: 112mm; position: relative; z-index: 1; }
+.cover-title { margin-top: 6mm; text-align: center; font-family: Cinzel; font-weight: 900; font-size: 11mm; letter-spacing: 1.2mm; color: #F3C567; z-index: 1; direction: ltr; }
+.cover-title span { display: block; font-size: 4.6mm; letter-spacing: 1.4mm; color: #DCE5F5; margin-top: 2mm; }
+.cover-ar { font-family: ReemKufi; font-weight: 700; font-size: 7mm; margin-top: 3mm; z-index: 1; }
+.cover-strip { display: flex; gap: 3mm; margin-top: 10mm; z-index: 1; }
+.cover-strip img { width: 32mm; }
+.cover-meta { position: absolute; bottom: 12mm; font-size: 3mm; color: rgba(220,229,245,.6); z-index: 2; }
+
+/* المحتويات */
+.toc { list-style: none; padding: 0; margin: 4mm 0 0; columns: 2; column-gap: 10mm; }
+.toc li { display: flex; align-items: center; gap: 4mm; padding: 3.6mm 0; border-bottom: .2mm solid rgba(220,229,245,.12); font-size: 4.4mm; break-inside: avoid; }
+.toc b { font-family: Cinzel; font-weight: 900; color: #E8AE42; font-size: 5mm; width: 10mm; }
+
+/* الفكرة */
+.pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.pillars div { background: rgba(220,229,245,.06); border: .25mm solid rgba(220,229,245,.13); border-radius: 4mm; padding: 4mm; border-top: 1mm solid #D9233C; }
+.pillars h3 { font-size: 4.6mm; margin-bottom: 2mm; color: #fff; } .pillars p { font-size: 3.3mm; color: rgba(220,229,245,.75); }
+.mood { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-top: 8mm; }
+.mood img { width: 100%; height: 62mm; object-fit: cover; object-position: top; border-radius: 3mm; border: .3mm solid rgba(232,174,66,.4); }
+.kw { display: flex; flex-wrap: wrap; gap: 2.5mm; margin-top: 7mm; }
+.kw span { padding: 1.6mm 4mm; border-radius: 10mm; border: .3mm solid rgba(232,174,66,.55); color: #F3C567; font-size: 3.4mm; }
+
+/* الشعار */
+.logo-hero { display: flex; justify-content: center; margin-bottom: 6mm; } .logo-hero img { height: 150mm; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.spec { background: rgba(220,229,245,.06); border-radius: 3mm; padding: 4mm; border: .25mm solid rgba(220,229,245,.12); }
+.spec h4 { font-size: 4.2mm; color: #E8AE42; margin-bottom: 1.5mm; } .spec p { font-size: 3.2mm; color: rgba(220,229,245,.78); }
+.var-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.var-grid figure { margin: 0; grid-column: span 2; } .var-grid figure.half { grid-column: span 1; }
+.vbox { height: 40mm; border-radius: 3mm; display: flex; align-items: center; justify-content: center; border: .25mm solid rgba(220,229,245,.12); overflow: hidden; }
+.var-grid figure.half .vbox { height: 52mm; }
+.vbox.dark { background: #080A12; } .vbox.navy { background: #10182B; } .vbox.crimson { background: linear-gradient(135deg, #D9233C, #7a0f20); } .vbox.light { background: #F2F2EE; }
+.vbox img { max-width: 92%; max-height: 92%; }
+.vbox.clear .cs { outline: .4mm dashed rgba(232,174,66,.8); outline-offset: 0; padding: 9mm; }
+figcaption { font-size: 3.1mm; color: rgba(220,229,245,.7); margin-top: 1.6mm; }
+.specs { width: 100%; border-collapse: collapse; margin-top: 6mm; font-size: 3.3mm; }
+.specs th { text-align: start; color: #E8AE42; font-family: ReemKufi; font-weight: 700; padding: 2mm; border-bottom: .3mm solid rgba(232,174,66,.45); }
+.specs td { padding: 2mm; border-bottom: .2mm solid rgba(220,229,245,.1); }
+
+/* الألوان */
+.sw-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; } .sw-grid.five { grid-template-columns: repeat(5, 1fr); }
+.sw { border-radius: 3mm; overflow: hidden; border: .25mm solid rgba(220,229,245,.15); background: rgba(220,229,245,.04); }
+.sw .chip { height: 22mm; } .sw.big .chip { height: 32mm; }
+.sw .meta { padding: 2.4mm; display: flex; flex-direction: column; gap: .6mm; } .sw .meta b { font-size: 3.6mm; }
+.sw .use { font-size: 2.7mm; color: rgba(220,229,245,.65); line-height: 1.5; margin-top: 1mm; }
+.metal .bar { height: 14mm; border-radius: 3mm; } .metal .stops { display: flex; justify-content: space-between; margin-top: 1.5mm; font-size: 2.9mm; direction: ltr; }
+
+/* الخطوط */
+.type-row { display: grid; grid-template-columns: 45mm 1fr; gap: 5mm; align-items: center; padding: 5mm 0; border-bottom: .2mm solid rgba(220,229,245,.12); }
+.tlabel b { display: block; font-size: 4.6mm; } .tlabel span { font-size: 3mm; color: rgba(220,229,245,.6); }
+.tsample.rk { font-family: ReemKufi; font-weight: 700; font-size: 10mm; } .tsample.tj { font-family: Tajawal; font-size: 5.6mm; }
+.tsample.cz { font-family: Cinzel; font-weight: 900; font-size: 9mm; letter-spacing: 1mm; color: #F3C567; direction: ltr; text-align: end; }
+
+/* الشخصيات */
+.ch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm 4mm; }
+.ch { text-align: center; } .ch img { width: 100%; height: 92mm; object-fit: contain; }
+.cn b { display: block; font-size: 4.4mm; margin-top: 1.5mm; } .cn span { font-family: Cinzel; font-size: 2.9mm; color: rgba(220,229,245,.6); }
+.chars { width: 100%; border-collapse: collapse; font-size: 3mm; }
+.chars td { padding: 1.6mm 1.8mm; border-bottom: .2mm solid rgba(220,229,245,.1); vertical-align: middle; }
+.chars .av { width: 13mm; height: 13mm; border-radius: 50%; object-fit: cover; border: .4mm solid rgba(232,174,66,.6); display: block; }
+.chars .dot { display: inline-block; width: 4mm; height: 4mm; border-radius: 50%; vertical-align: middle; margin-inline-end: 1.5mm; }
+.chars .desc { color: rgba(220,229,245,.75); line-height: 1.5; }
+
+/* الأيقونات */
+.card-icons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3mm; }
+.card-icons div { text-align: center; font-size: 3mm; } .card-icons img { width: 100%; height: 16mm; object-fit: cover; object-position: 0 100%; border-radius: 2mm; }
+.card-icons span { display: block; margin-top: 1mm; color: rgba(220,229,245,.7); }
+.ui-icons { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3mm; }
+.ui-icons div { display: flex; flex-direction: column; align-items: center; gap: 1.2mm; padding: 2.5mm 0; border-radius: 2mm; background: rgba(220,229,245,.05); border: .2mm solid rgba(220,229,245,.1); }
+.ui-icons span { font-size: 2.3mm; color: rgba(220,229,245,.55); direction: ltr; }
+
+/* عناصر الواجهة */
+.ui-demo .row { display: flex; flex-wrap: wrap; gap: 3mm; margin-bottom: 5mm; align-items: center; }
+.ui-demo .row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-items: start; }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 12mm; padding: 0 5.5mm; border-radius: 4mm; font-weight: 700; font-size: 3.8mm; color: #fff; }
+.btn.primary { background: linear-gradient(135deg, #e8334d, #D9233C); box-shadow: 0 2mm 6mm -2mm rgba(217,35,60,.8); }
+.btn.gold { background: linear-gradient(135deg, #f2bf5c, #E8AE42); color: #241800; } .btn.blue { background: linear-gradient(135deg, #3b8cf5, #2478E8); }
+.btn.green { background: linear-gradient(135deg, #2ec48b, #21A875); color: #04140d; } .btn.ghost { border: .3mm solid rgba(220,229,245,.2); color: rgba(220,229,245,.7); }
+.pill { padding: 1.2mm 3.5mm; border-radius: 10mm; font-size: 3.2mm; font-weight: 700; color: var(--c); border: .3mm solid color-mix(in srgb, var(--c) 50%, transparent); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.ui-card { position: relative; background: rgba(220,229,245,.07); border: .25mm solid rgba(220,229,245,.13); border-radius: 4.5mm; padding: 4mm; overflow: hidden; }
+.ui-card .accent { position: absolute; top: 0; left: 6mm; right: 6mm; height: .8mm; border-radius: 0 0 1mm 1mm; }
+.ui-card p { font-size: 3mm; color: rgba(220,229,245,.7); margin-top: 1mm; }
+.prow { display: flex; align-items: center; gap: 3mm; padding: 2.4mm; border-radius: 3.5mm; border: .25mm solid rgba(220,229,245,.13); margin-bottom: 2mm; font-size: 3.2mm; }
+.prow img { width: 11mm; height: 11mm; border-radius: 50%; object-fit: cover; } .prow span { display: block; font-size: 2.6mm; color: rgba(220,229,245,.6); }
+.prow.sp { border-color: #E8AE42; box-shadow: 0 0 0 .5mm rgba(232,174,66,.35), 0 0 6mm -1mm #E8AE42; } .prow .timer { margin-inline-start: auto; font-weight: 700; color: #E8AE42; direction: ltr; }
+
+/* البطاقات */
+.card-anatomy { display: grid; grid-template-columns: 58mm 1fr; gap: 6mm; }
+.card-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-top: 6mm; align-items: start; }
+.ca-card img { width: 70mm; }
+.ca-notes div { padding: 2.6mm 0; border-bottom: .2mm solid rgba(220,229,245,.12); font-size: 3.3mm; } .ca-notes b { display: block; color: #E8AE42; font-family: ReemKufi; font-size: 4mm; }
+.ca-notes span { color: rgba(220,229,245,.78); }
+.ca-back { display: flex; flex-direction: column; align-items: flex-start; gap: 3mm; font-size: 3.3mm; color: rgba(220,229,245,.78); }
+.back-face { width: 64mm; aspect-ratio: 64/82; border-radius: 4mm; border: .5mm solid rgba(232,174,66,.6); display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(80% 60% at 50% 40%, rgba(217,35,60,.35), transparent 70%), repeating-linear-gradient(45deg, #140a12 0 3mm, #0c0a14 3mm 6mm); box-shadow: 0 0 6mm -1mm rgba(217,35,60,.5); }
+.back-face img { width: 60%; }
+.print-card { display: flex; flex-direction: column; align-items: flex-start; gap: 3mm; font-size: 3.3mm; color: rgba(220,229,245,.78); }
+.print-card .pc { width: 64mm; height: 82mm; outline: .3mm dashed rgba(232,174,66,.7); } .print-card .pc img { width: 64mm; height: 82mm; object-fit: contain; display: block; }
+
+/* الحركة والمؤثرات */
+.motion { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.motion div, .resp div { background: rgba(220,229,245,.06); border: .25mm solid rgba(220,229,245,.12); border-radius: 3mm; padding: 4mm; }
+.motion h4, .resp h4 { font-size: 4.2mm; color: #E8AE42; margin-bottom: 1.5mm; } .motion p, .resp p { font-size: 3.2mm; color: rgba(220,229,245,.78); }
+.fx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; }
+.fx { border-radius: 3mm; padding: 3.5mm; border: .25mm solid color-mix(in srgb, var(--c) 45%, transparent); background: radial-gradient(90% 80% at 50% 0%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%), rgba(220,229,245,.03); }
+.fx .orb { width: 12mm; height: 12mm; border-radius: 50%; margin-bottom: 2mm; background: radial-gradient(circle at 35% 35%, #fff, var(--c) 45%, transparent 72%); box-shadow: 0 0 6mm var(--c); }
+.fx b { display: block; font-size: 3.8mm; } .fx span { font-size: 2.9mm; color: rgba(220,229,245,.75); line-height: 1.5; }
+
+/* الخلفيات */
+.bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.bgx { position: relative; height: 70mm; border-radius: 3mm; overflow: hidden; border: .25mm solid rgba(220,229,245,.12); }
+.bgx span { position: absolute; top: 3mm; right: 3mm; font-size: 3.1mm; background: rgba(8,10,18,.65); padding: 1mm 2.5mm; border-radius: 2mm; }
+.bgx .sky { position: absolute; inset: auto 0 0 0; height: 34%; opacity: .55; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'%3E%3Cpath fill='%2306091a' d='M0 120V78h14V52h18v26h10V38h22v40h12V60h20V30h16v30h14V70h18V44h24v26h12V58h16V24h20v34h14v22h18V50h22v28h12V64h18V40h20v38h14v42z'/%3E%3C/svg%3E") bottom/100% 100% no-repeat; }
+
+/* الشاشات */
+.shots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5mm 4mm; }
+.shots figure { margin: 0; text-align: center; }
+.phone { border-radius: 5mm; padding: 1.2mm; background: linear-gradient(160deg, #2b3350, #0c1020); box-shadow: 0 2mm 6mm rgba(0,0,0,.5); }
+.phone img { width: 100%; display: block; border-radius: 4mm; aspect-ratio: 390/844; object-fit: cover; object-position: top; }
+.resp { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.devices { display: flex; align-items: flex-end; justify-content: center; gap: 8mm; margin-top: 7mm; }
+.phone.big { width: 45mm; } .tablet { width: 105mm; border-radius: 5mm; padding: 2mm; background: linear-gradient(160deg, #2b3350, #0c1020); }
+.tablet img { width: 100%; display: block; border-radius: 3.5mm; }
+
+/* القواعد */
+.rules { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.rules > div { border-radius: 3mm; padding: 4mm; } .rules .do { background: rgba(33,168,117,.1); border: .3mm solid rgba(33,168,117,.5); }
+.rules .dont { background: rgba(217,35,60,.1); border: .3mm solid rgba(217,35,60,.5); }
+.rules h4 { font-size: 5mm; margin-bottom: 2mm; } .rules .do h4 { color: #5fe0ad; } .rules .dont h4 { color: #ff8a9a; }
+.rules p { font-size: 3.4mm; padding: 1.5mm 0; border-bottom: .2mm solid rgba(220,229,245,.08); }
+.misuse { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 7mm; } .misuse figure { margin: 0; } .misuse .vbox { height: 50mm; }
+.misuse figcaption { color: #ff8a9a; }

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px;box-sizing:border-box;background:radial-gradient(120% 60% at 50% -10%,rgba(217,35,60,.25),transparent 60%),#090D1B;color:#DCE5F5;font-family:system-ui,sans-serif}
+h1{margin:0 0 6px;text-align:center;font-size:48px;text-shadow:0 0 30px rgba(217,35,60,.7)} p{margin:0;color:rgba(220,229,245,.68);line-height:1.7;font-size:15px}
+.card{border:1px solid rgba(220,229,245,.13);background:rgba(220,229,245,.06);border-radius:18px;padding:16px}
+button{width:100%;font-size:18px;font-weight:700;padding:16px;border:0;border-radius:16px;color:#fff;background:linear-gradient(135deg,#e8334d,#D9233C)}
+button.alt{background:rgba(220,229,245,.1);border:1px solid rgba(220,229,245,.15)} button.green{background:linear-gradient(135deg,#2ec48b,#21A875);color:#04140d}
+input{width:100%;box-sizing:border-box;direction:ltr;text-align:left;font-size:15px;padding:14px;border-radius:14px;border:1px solid rgba(220,229,245,.15);background:rgba(0,0,0,.3);color:#DCE5F5;outline:none;margin:10px 0}
+.err{color:#ff8a9a;text-align:center;min-height:20px} .hide{display:none}
+</style></head><body>
+<img src="web/assets/brand/mafia-logo-primary.webp" alt="MAFIA" style="width:min(64vw,240px);display:block;margin:0 auto 4px;filter:drop-shadow(0 10px 30px rgba(217,35,60,.4))">
+<div class="err" id="e"></div>
+<div id="home">
+  <div class="card" style="margin-bottom:12px"><p><b>أنا الراوي:</b> هاتفك يصير غرفة اللعب ويفتح نقطة اتصال، بلا إنترنت.</p></div>
+  <button id="host">أنا الراوي — أنشئ غرفة</button>
+  <div style="height:12px"></div>
+  <button class="alt" id="player">أنا لاعب</button>
+</div>
+<div id="hosting" class="hide">
+  <div class="card" style="margin-bottom:12px"><p>غرفتك تعمل الآن على هذا الهاتف.</p></div>
+  <button class="green" id="back">العودة إلى الغرفة</button>
+  <div style="height:12px"></div>
+  <button class="alt" id="stop">إيقاف الغرفة</button>
+</div>
+<div id="join" class="hide">
+  <div class="card"><p>١) امسح <b>باركود الشبكة</b> من هاتف الراوي بكاميرا هاتفك.<br>٢) امسح <b>باركود الغرفة</b>، فتفتح اللعبة.<br>لا تحتاج هذا التطبيق، يكفي المتصفح. وإن لم تُفتح الصفحة فأطفئ بيانات الهاتف.</p>
+  <input id="link" type="url" placeholder="أو الصق رابط الغرفة هنا"></div>
+  <div style="height:10px"></div>
+  <button id="go">دخول</button>
+  <div style="height:10px"></div>
+  <button class="alt" id="cancel">رجوع</button>
+</div>
+<script>
+var $=function(i){return document.getElementById(i)};
+var m=location.hash.match(/err=([^&]*)/); if(m) $('e').textContent=decodeURIComponent(m[1]);
+function show(id){['home','hosting','join'].forEach(function(x){$(x).classList.toggle('hide',x!==id)})}
+try{ if(Android.isHosting()) show('hosting'); }catch(x){}
+$('host').onclick=function(){ $('e').textContent=''; Android.host(); };
+$('player').onclick=function(){ show('join'); };
+$('cancel').onclick=function(){ show('home'); };
+$('back').onclick=function(){ Android.openHostRoom(); };
+$('stop').onclick=function(){ Android.stopHost(); };
+$('go').onclick=function(){ var v=$('link').value.trim(); if(!/^https?:\/\//.test(v)){ $('e').textContent='الصق رابط الغرفة كاملاً (يبدأ بـ http)'; return; } Android.join(v); };
+</script></body></html>
