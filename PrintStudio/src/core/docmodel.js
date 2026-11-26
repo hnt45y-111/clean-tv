@@ -14,6 +14,7 @@ function dirOf(s, fallback = 'rtl') { const r = arabicRatio(s); return r < 0 ? f
 function fixLine(text, dir) {
   let t = text.replace(/[‎‏‪-‮]/g, '').replace(/\s+/g, ' ').trim();
   if (dir === 'rtl') {
+    t = t.replace(/(?<=[\u0600-\u06FF]),(?=\s|$)/g, '،');
     // "1. نص" يخرج أحياناً ".نص.1" : نقطة في الأول ورقم في الآخر
     let m = t.match(/^[.\-)]\s*(.+?)\s*[.\-)](\d{1,3})$/);
     if (m && arabicRatio(m[1]) > 0.4) return `${m[2]}. ${m[1]}`;

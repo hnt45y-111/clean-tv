@@ -8,7 +8,10 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test tests/*.test.js",
-    "dist": "electron-builder --win nsis"
+    "dist": "node tools/vendor.js && electron-builder --win nsis",
+    "vendor": "node tools/vendor.js",
+    "postinstall": "node tools/vendor.js",
+    "e2e": "node tests/e2e/scan-export.js && node tests/e2e/ocr-flows.js && node tests/e2e/ids-settings-pdf-archive-print.js"
   },
   "build": {
     "appId": "com.printstudio.app",
@@ -16,7 +19,10 @@
     "files": [
       "src/**/*",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "node_modules/**/*",
+      "!node_modules/electron/**",
+      "!node_modules/electron-builder/**"
     ],
     "extraResources": [
       {
@@ -30,8 +36,16 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "language": "1025"
-    }
+      "language": "1025",
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "Print Studio"
+    },
+    "asarUnpack": [
+      "node_modules/sharp/**",
+      "node_modules/@img/**",
+      "node_modules/tesseract.js-core/**"
+    ]
   },
   "dependencies": {
     "@fontsource/noto-sans-arabic": "^5.3.0",

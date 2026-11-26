@@ -1,0 +1,36 @@
+name: Build Print Studio (Windows)
+on:
+  push:
+    paths:
+      - 'PrintStudio/**'
+      - '.github/workflows/printstudio.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: PrintStudio } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Install dependencies
+        run: npm install --ignore-scripts && node tools/vendor.js
+      - name: Engine tests (OCR, tables, DOCX/XLSX/PDF, IDs, WIA parsing, security)
+        run: npm test
+  installer:
+    needs: test
+    runs-on: windows-latest
+    defaults: { run: { working-directory: PrintStudio } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - name: Build NSIS installer
+        run: npx electron-builder --win nsis --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PrintStudio-Setup
+          path: PrintStudio/dist/*.exe
