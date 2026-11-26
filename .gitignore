@@ -14,3 +14,9 @@ CleanTV/app/src/main/assets/logos/
 Mafia/server/node_modules/
 Mafia/server/data/
 Mafia/brand/.pdf-cache/
+
+# Print Studio
+PrintStudio/node_modules/
+PrintStudio/dist/
+PrintStudio/src/renderer/vendor/
+PrintStudio/assets/tessdata/
