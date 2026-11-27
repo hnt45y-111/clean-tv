@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Writes index.html (the download site). Release tags come from the command line:  build_site.py build-N studio-N auto-N remote-N mobile-N"""
+"""Writes index.html (the download site). Release tags come from the command line:  build_site.py build-N studio-N auto-N remote-N mobile-N tawasul-N"""
 import sys
-b, s, a, r, mo = (sys.argv[1:6] + ['build-0', 'studio-0', 'auto-0', 'remote-0', 'mobile-0'])[:5]
+b, s, a, r, mo, tw = (sys.argv[1:7] + ['build-0', 'studio-0', 'auto-0', 'remote-0', 'mobile-0', 'tawasul-0'])[:6]
 BASE = 'https://github.com/hnt45y-111/clean-tv/releases/download/'
-L = dict(tv=BASE + b + '/app-debug.apk', studio=BASE + s + '/moamal-studio.apk', auto=BASE + a + '/msm-auto.apk', remote=BASE + r + '/hawai-remote.apk', mobile=BASE + mo + '/qanawati-mobile.apk')
+L = dict(tv=BASE + b + '/app-debug.apk', studio=BASE + s + '/moamal-studio.apk', auto=BASE + a + '/msm-auto.apk', remote=BASE + r + '/hawai-remote.apk', mobile=BASE + mo + '/qanawati-mobile.apk', tawasul=BASE + tw + '/tawasul.apk')
 MK = open('tools/brand/mark_cls.txt').read()
 def mark(cls='mk', extra=''): return '<svg class="%s" viewBox="0 0 100 100" aria-hidden="true"%s>%s</svg>' % (cls, extra, MK)
 DL = '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>'
@@ -26,6 +26,9 @@ APPS = [
  dict(id='mobile', tag='للموبايل · جديد', name='قنواتي موبايل', img='mobile-main.jpg', more=['mobile-vod.jpg', 'mobile-lock.jpg'], alt='قنواتي موبايل', phone=True, link=L['mobile'], tagv=mo, btn='تحميل قنواتي موبايل',
       text='قنواتي والأفلام والمسلسلات بموبايلك، بنفس هوية قنواتي على التلفزيون: أسود وأحمر وكبسولات. تفعّله مرة وحدة بكود من مدير الشاشة.',
       feats=['يفتح بكود تفعيل مرة وحدة (مدى الحياة ومربوط بموبايلك): تدز رمز جهازك لمدير الشاشة ويرجّعلك الكود', 'قنوات مجانية رسمية بأقسامها وشعاراتها، وتضيف قنواتك من حساب IPTV أو قائمة M3U', 'أفلام ومسلسلات من حسابك أو قائمتك بغلافات وتصنيفات وبحث', 'الربط الذكي: تلصق رابط المزوّد والتطبيق يتعرف على نوعه ويضيفه', 'مفضلة وآخر مشاهدة، وإكمال الفيلم من حيث وقفت', 'وضع الهدوء الليلي: الصوت ينزل والترجمة تكبر بعد ساعتك', 'ترحيب باسمك بحركة عند كل فتح']),
+ dict(id='tawasul', tag='للموبايل والشاشة · جديد', name='تواصل', img='tawasul-main.jpg', more=['tawasul-home.jpg'], alt='تطبيق تواصل', phone=True, link=L['tawasul'], tagv=tw, btn='تحميل تواصل',
+      text='رسائل وصور وملفات ورسائل صوتية بين موبايلك وشاشتك وأهلك، بنفس ألوان مدير الشاشة. كل شي ينحذف بعد ٢٤ ساعة.',
+      feats=['تضيف أي شخص أو شاشة برمزه، وتراسله من أي شبكة', 'على الشاشة: الرسالة تنفتح مباشرة، وتردّ بالكيبورد أو بالكلام أو برسالة صوتية', 'صور وملفات يفتحها اللي يستلمها بضغطة', 'الرسائل والملفات تنحذف بعد ٢٤ ساعة، والأشخاص يبقون']),
  dict(id='remote', tag='ريموت التحكم · جديد', name='هوائي', img='remote-main.jpg', alt='تطبيق هوائي', phone=True, link=L['remote'], tagv=r, btn='تحميل هوائي',
       text='ريموت كامل بموبايلك: يلگى التلفزيون وحده، ويتحكم بكل شي بدون ما تدور الريموت.',
       feats=['لوحة لمس وأسهم وOK ورجوع والرئيسية', 'الصوت والكتم والتشغيل والإعدادات والتالي والسابق', 'فتح أي تطبيق وكتابة النص والبحث', 'تشغيل قنواتي وشريط النتائج من الموبايل', 'تغيير الثيم والخلفيات وإرسال صورك', 'القرآن والأذان والتنبيهات ووضع الأطفال']),

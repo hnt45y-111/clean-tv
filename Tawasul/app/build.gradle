@@ -1,0 +1,32 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.cleantv.tawasul'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.cleantv.tawasul'
+        minSdk 24
+        targetSdk 34
+        versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
+        versionName '1.0'
+    }
+    signingConfigs {
+        fixed {
+            storeFile file('tawasul.keystore')
+            storePassword 'cleantv123'
+            keyAlias 'cleantv'
+            keyPassword 'cleantv123'
+        }
+    }
+    buildTypes { debug { signingConfig signingConfigs.fixed } }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // the client and the fonts are the TV launcher's own files: copied in at build time, never duplicated in the repository
+    sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('shared-assets').get().asFile
+}
+tasks.register('copyShared', Copy) {
+    from('../../CleanTV/app/src/main/assets') { include 'tw-core.js', 'fonts/**' }
+    into layout.buildDirectory.dir('shared-assets')
+}
+tasks.matching { it.name == 'preBuild' }.configureEach { dependsOn 'copyShared' }
