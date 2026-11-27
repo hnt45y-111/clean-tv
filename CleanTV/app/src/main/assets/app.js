@@ -628,12 +628,16 @@
   var LIVE_APP = { pkg: LIVE_PKG, label: 'قنواتي', color: '#D9822B', icon: 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z' fill='#EFE7D4'/><path d='M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z' fill='#EFE7D4'/><rect x='8' y='34' width='84' height='58' rx='12' fill='#EFE7D4'/><rect x='15' y='41' width='70' height='44' rx='5' fill='#B5681F'/><path d='M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><path d='M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><path d='M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06' stroke='#EFE7D4' stroke-width='2.6' fill='none'/><circle cx='50' cy='63' r='2.2' fill='#D9822B'/><rect x='20' y='92' width='8' height='4' fill='#EFE7D4'/><rect x='72' y='92' width='8' height='4' fill='#EFE7D4'/></svg>") };
   var VOD_PKG = '__vod';
   var VOD_APP = { pkg: VOD_PKG, label: 'الأفلام والمسلسلات', color: '#B5681F', icon: 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='20' width='80' height='60' rx='10' fill='#EFE7D4'/><rect x='17' y='27' width='66' height='46' rx='4' fill='#15181B'/><path d='M43 38 L63 50 L43 62 Z' fill='#D9822B'/><rect x='10' y='20' width='80' height='6' fill='#B8BDC2'/></svg>") };
+  /* «تواصل»: messages with the phone app, beside قنواتي */
+  var CHAT_PKG = '__chat';
+  var CHAT_APP = { pkg: CHAT_PKG, label: 'تواصل', color: '#8A6A35', icon: 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M18 20 H82 A10 10 0 0 1 92 30 V60 A10 10 0 0 1 82 70 H46 L26 86 V70 H18 A10 10 0 0 1 8 60 V30 A10 10 0 0 1 18 20 Z' fill='#EFE7D4'/><circle cx='30' cy='45' r='5.5' fill='#8A6A35'/><circle cx='50' cy='45' r='5.5' fill='#8A6A35'/><circle cx='70' cy='45' r='5.5' fill='#8A6A35'/></svg>") };
   function sortApps(list) {
     var ord = order || DEFAULT_ORDER;
     if (!list.some(function (a) { return a.pkg === LIVE_PKG; })) list.push(LIVE_APP);
     VOD_APP.label = String((settings && settings.vodName) || '').trim() || 'الأفلام والمسلسلات';
     if (!list.some(function (a) { return a.pkg === VOD_PKG; })) list.push(VOD_APP);
-    function rank(p) { var i = ord.indexOf(p); return i < 0 ? (p === LIVE_PKG ? -1 : p === VOD_PKG ? -1 : 999) : i; }
+    if (!list.some(function (a) { return a.pkg === CHAT_PKG; })) list.push(CHAT_APP);
+    function rank(p) { var i = ord.indexOf(p); return i < 0 ? (p === LIVE_PKG ? -1 : p === VOD_PKG ? -1 : p === CHAT_PKG ? -1 : 999) : i; }
     return list.sort(function (a, b) { return rank(a.pkg) - rank(b.pkg) || a.label.localeCompare(b.label, 'ar'); });
   }
   var DEMO_FALLBACK = [['يوتيوب', '#e50914'], ['نتفلكس', '#b20710'], ['شاهد', '#1fb36a'], ['المتجر', '#01875f'], ['ديزني', '#113ccf'], ['سبوتيفاي', '#1db954'], ['الملفات', '#5b6b8c'], ['الإعدادات', '#607d8b'], ['كودي', '#17b2e7'], ['VLC', '#ff8800']];
@@ -692,6 +696,7 @@
   function launchApp2(pkg) {
     if (pkg === LIVE_PKG) { if (window.Live) window.Live.open(); return; }
     if (pkg === VOD_PKG) { if (window.Vod) window.Vod.open(); return; }
+    if (pkg === CHAT_PKG) { if (window.Chat) window.Chat.open(); return; }
     if (!kidsBeforeLaunch()) return;
     pushRecent(pkg);
     var la = apps.filter(function (a) { return a.pkg === pkg; })[0]; logWatch('app', la ? appName(la) : pkg);
@@ -712,7 +717,7 @@
       if (customIcons[a.pkg]) inner = '<div class="tile"><img class="custom" src="' + esc(customIcons[a.pkg]) + '" alt=""></div>';
       else if (a.banner && !(iconShape && a.icon)) inner = '<div class="tile"><img class="banner" src="' + a.banner + '" alt=""></div>';
       else inner = '<div class="tile ic" style="background:' + shade(a.color, .62) + '">' + (a.icon ? '<img src="' + a.icon + '" alt="">' : '') + '</div>';
-      var isNew = !isHidden && mode === 'normal' && ((a.pkg === LIVE_PKG && window.Live && window.Live.hasNew && window.Live.hasNew()) || (a.pkg === VOD_PKG && window.Vod && window.Vod.hasNew && window.Vod.hasNew()));
+      var isNew = !isHidden && mode === 'normal' && ((a.pkg === LIVE_PKG && window.Live && window.Live.hasNew && window.Live.hasNew()) || (a.pkg === VOD_PKG && window.Vod && window.Vod.hasNew && window.Vod.hasNew()) || (a.pkg === CHAT_PKG && window.Chat && window.Chat.unread() > 0));
       return '<div class="item app' + (isHidden ? ' hidden-app' : '') + '" data-kind="app" data-pkg="' + esc(a.pkg) + '">' + inner + (isNew ? '<i class="new-pulse" title="محتوى جديد"></i>' : '') + '<span class="badge">' + (mode === 'kidsel' ? 'غير مسموح' : 'مخفي') + '</span><div class="name">' + esc(appName(a)) + '</div></div>';
     }).join('') || '<div class="item empty-card" data-kind="none">جاري تحميل التطبيقات…</div>';
     $('apps-hint').textContent = mode === 'move' ? 'وضع الترتيب: OK على التطبيق، حرّكه بالأسهم، وOK للتثبيت' : mode === 'hide' ? 'وضع الإخفاء: OK على التطبيق حتى تخفيه أو ترجعه'
@@ -1098,7 +1103,7 @@
     var pill = t[2] || id === 'sleep' && tvSleepLabel() !== 'مؤقت النوم';
     return '<div class="item glass' + (pill ? ' tvb' : '') + (id === 'saver' ? ' saverb' : '') + '" data-kind="top" data-id="' + id + '">' + (ICONS[ic] || ICONS.settings) + '<span class="lbl">' + lbl + '</span></div>';
   }
-  window.__twTop = function () { try { renderTopbar(); if (typeof nav !== 'undefined') nav.refresh(); } catch (e) {} };
+  window.__twTop = function () { try { renderTopbar(); if (typeof renderApps === 'function') renderApps(); if (typeof nav !== 'undefined') nav.refresh(); } catch (e) {} };
   function renderTopbar() {
     var l = topToolList(), tb = $('topbar'), pl = inputsPlace();
     var shape = settings.topShape || 'circle', gap = settings.topGap || 30;
