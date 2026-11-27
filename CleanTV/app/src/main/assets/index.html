@@ -1306,6 +1306,27 @@
   body[data-theme="glass"] #liveModal .lv-ch, body[data-theme="appletv"] #liveModal .lv-ch { background: rgba(255,255,255,.08) !important; border: 1px solid rgba(255,255,255,.2) !important; border-radius: 30px !important; -webkit-backdrop-filter: blur(16px) !important; backdrop-filter: blur(16px) !important; } body[data-theme="glass"] #liveModal .lv-art, body[data-theme="appletv"] #liveModal .lv-art { border-radius: 24px !important; }
   body[data-theme="neon"] #liveModal .lv-ch { background: #02020a !important; border: 2px solid var(--rz) !important; box-shadow: 0 0 14px var(--rz) !important; border-radius: 10px !important; } body[data-theme="neon"] #liveModal .lv-cat.on { box-shadow: 0 0 14px var(--rz) !important; } body[data-theme="neon"] #lvHead .lv-t { text-shadow: 0 0 18px var(--rz) !important; }
   body[data-theme="minimal"] #liveModal .lv-ch { background: none !important; border: 0 !important; border-bottom: 1px solid #333 !important; border-radius: 0 !important; }
+
+  /* ===== «تواصل» on the screen (chat.js): friends and conversation, reached with the remote ===== */
+  #chatModal { background: #0B0C10 !important; direction: rtl; font-family: var(--font); color: #F3EEE4; z-index: 72; }
+  #chMain { position: absolute; top: 0; right: 0; bottom: 0; left: 0; padding: 34px 50px; display: -webkit-flex; display: flex; }
+  .ch-side { width: 560px; margin-left: 36px; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; overflow: hidden; }
+  .ch-me { padding: 18px 24px; margin-bottom: 14px; border-radius: 26px; background: linear-gradient(135deg, rgba(214,180,122,.2), #12141A 75%); border: 2px solid #2A2E3A; } .ch-me small { display: block; color: #A3A5B1; font-size: 22px; } .ch-me b { font: 800 46px/1.3 var(--kufi); letter-spacing: 4px; color: #F0DDB2; direction: ltr; display: block; text-align: right; }
+  .ch-row { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; padding: 16px 20px; margin-bottom: 10px; border-radius: 24px; background: #12141A; border: 2px solid transparent; font-size: 28px; font-weight: 600; transition: transform .2s, background .2s; } .ch-row.add { color: #D6B47A; } .ch-row.on { background: #1A1D26; }
+  .ch-row .av { width: 64px; height: 64px; border-radius: 20px; background: #D6B47A; color: #0B0C10; font: 800 30px/64px var(--kufi); text-align: center; font-style: normal; margin-left: 16px; -webkit-flex: none; flex: none; } .ch-row .tx { -webkit-flex: 1; flex: 1; min-width: 0; } .ch-row .tx b { display: block; font-weight: 700; } .ch-row .tx small { display: block; color: #A3A5B1; font-size: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ch-row em { min-width: 36px; height: 36px; padding: 0 10px; border-radius: 18px; background: #D6B47A; color: #0B0C10; font: 700 22px/36px var(--font); text-align: center; font-style: normal; }
+  .ch-f { border-color: #D6B47A !important; background: #242018 !important; transform: scale(1.02); box-shadow: 0 0 0 4px rgba(214,180,122,.35); }
+  .ch-conv { -webkit-flex: 1; flex: 1; min-width: 0; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; position: relative; }
+  .ch-head { padding: 6px 10px 14px; border-bottom: 2px solid #23262F; } .ch-head b { font: 800 42px var(--kufi); } .ch-head small { color: #A3A5B1; font-size: 24px; margin-right: 18px; direction: ltr; display: inline-block; }
+  #chMsgs { -webkit-flex: 1; flex: 1; overflow: hidden; padding: 14px 6px; position: relative; }
+  .ch-m { max-width: 72%; margin: 10px 0; padding: 14px 20px; border-radius: 26px; background: #1A1D26; border: 2px solid #23262F; font-size: 30px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; margin-left: auto; margin-right: 0; } .ch-m.me { margin-right: auto; margin-left: 0; background: #2A2417; border-color: rgba(214,180,122,.4); }
+  .ch-m img { display: block; max-width: 100%; max-height: 360px; border-radius: 16px; } .ch-m b { font-weight: 600; } .ch-m small { display: block; color: #A3A5B1; font-size: 22px; } .ch-m .mt { margin-top: 6px; font-size: 20px; }
+  .ch-note, .ch-empty { text-align: center; color: #A3A5B1; font-size: 24px; padding: 20px; } .ch-empty { padding: 90px 20px; font-size: 30px; }
+  #chBar { display: -webkit-flex; display: flex; padding-top: 12px; border-top: 2px solid #23262F; } .ch-b { -webkit-flex: 1; flex: 1; margin: 0 6px; padding: 18px 8px; border-radius: 24px; background: #1A1D26; border: 2px solid #23262F; font-size: 26px; font-weight: 700; text-align: center; } .ch-b.rec { background: #5a1414; border-color: #EF5B5B; }
+  .ch-status { position: absolute; left: 20px; bottom: 100px; padding: 14px 26px; border-radius: 24px; background: #1A1D26; border: 2px solid #D6B47A; font-size: 28px; }
+  .ch-opts { padding: 10px; } .ch-opts h3 { font: 800 40px var(--kufi); margin: 0 0 20px; }
+  .ch-welcome { margin: auto; text-align: center; max-width: 900px; } .ch-welcome .code { font: 800 110px/1.2 var(--kufi); letter-spacing: 10px; color: #F0DDB2; direction: ltr; } .ch-welcome p { color: #A3A5B1; font-size: 32px; line-height: 1.8; }
+  #chIn { display: none; position: absolute; left: 50%; bottom: 150px; width: 1100px; margin-left: -550px; padding: 26px 36px; border-radius: 40px; border: 4px solid #D6B47A; background: #12141A; color: #fff; font: 600 38px var(--font); z-index: 9; } #chIn.on { display: block; }
+  #chView { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,.94); z-index: 10; text-align: center; } #chView.on { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; } #chView img { max-width: 94%; max-height: 94%; }
 </style>
 <style id="userCss"></style>
 </head>
@@ -1432,6 +1453,7 @@
   </div></div>
 
   <div id="pairBox"><div class="p-t">ربط الموبايل بمدير الشاشات</div><div class="p-code" id="pairCode"></div><div class="p-s" id="pairSub"></div><div id="pairQr"></div></div>
+  <div class="modal" id="chatModal"><div id="chMain"></div><input id="chIn" type="text" autocomplete="off" maxlength="2000"><div id="chView"></div></div>
   <div class="modal" id="homeModal"><div id="hmMain"></div></div>
   <div class="modal" id="vodModal"><div id="vdHead"><div class="vd-t" id="vdTitle"></div><div id="vdSub"></div><div id="vdCount"></div></div><div id="vdTabs"></div><input id="vdSearch" type="text" placeholder="ابحث عن فيلم أو مسلسل…" autocomplete="off"><div id="vdSecs"></div><div id="vdGridWrap"><div id="vdGrid"></div></div><div id="vdHint"></div><div id="cinemaFx"></div></div>
   <div class="modal" id="liveModal"><div id="lvHead"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M51.66,32.48 L29.66,8.48 L26.34,11.52 L48.34,35.52 Z" fill="#EFE7D4"/><path d="M51.66,35.52 L73.66,11.52 L70.34,8.48 L48.34,32.48 Z" fill="#EFE7D4"/><rect x="8" y="34" width="84" height="58" rx="12" fill="#EFE7D4"/><rect x="15" y="41" width="70" height="44" rx="5" fill="#15181B"/><path d="M52.37,46.17 A17,17 0 0 1 66.83,60.63 M66.83,65.37 A17,17 0 0 1 52.37,79.83 M47.63,79.83 A17,17 0 0 1 33.17,65.37 M33.17,60.63 A17,17 0 0 1 47.63,46.17" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M51.60,51.61 A11.5,11.5 0 0 1 61.39,61.40 M61.39,64.60 A11.5,11.5 0 0 1 51.60,74.39 M48.40,74.39 A11.5,11.5 0 0 1 38.61,64.60 M38.61,61.40 A11.5,11.5 0 0 1 48.40,51.61" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><path d="M50.84,57.06 A6,6 0 0 1 55.94,62.16 M55.94,63.84 A6,6 0 0 1 50.84,68.94 M49.16,68.94 A6,6 0 0 1 44.06,63.84 M44.06,62.16 A6,6 0 0 1 49.16,57.06" stroke="#EFE7D4" stroke-width="2.6" fill="none"/><circle cx="50" cy="63" r="2.2" fill="#D9822B"/><rect x="20" y="92" width="8" height="4" fill="#EFE7D4"/><rect x="72" y="92" width="8" height="4" fill="#EFE7D4"/></svg><div><div class="lv-t">قنواتي</div><div class="lv-st">بث مباشر مجاني بدون اشتراك · <span id="lvCount"></span></div></div></div><div id="lvViews"></div><div id="lvTools"></div><input id="lvSearch" type="text" placeholder="ابحث عن قناة…" autocomplete="off"><div id="lvCats"></div><div id="lvGridWrap"><div id="lvGrid"></div></div><div id="lvHint">OK تشغيل · فوق القائمة: العرض والأدوات (بحث · مفضلة · عشوائي · ترتيب · تحديث) · داخل القناة: يمين القنوات، يسار المجلدات · رجوع للخروج</div></div>
@@ -1446,6 +1468,8 @@
 <script src="live.js"></script>
 <script src="vod.js"></script>
 <script src="home.js"></script>
+<script src="tw-core.js"></script>
+<script src="chat.js"></script>
 <script src="pray.js"></script>
 <script src="faith.js"></script>
 <script src="app.js"></script>

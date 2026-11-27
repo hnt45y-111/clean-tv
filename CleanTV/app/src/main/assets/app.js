@@ -982,7 +982,7 @@
   }
   function openOsMenu() {
     var rows = [
-      ['قنواتي: البث المباشر المجاني', function () { window.Live.open(); }], ['خلفية الشاشة', function () { openPicker(); }], ['الثيمات والألوان', function () { openThemes(); }], ['إعدادات الواجهة', function () { openSettings(); }],
+      ['قنواتي: البث المباشر المجاني', function () { window.Live.open(); }], ['الرسائل (تواصل)', function () { window.Chat.open(); }], ['خلفية الشاشة', function () { openPicker(); }], ['الثيمات والألوان', function () { openThemes(); }], ['إعدادات الواجهة', function () { openSettings(); }],
       ['تعديل الشاشة', function () { openEdit(); }], ['ترتيب التطبيقات', function () { setMode('move'); nav.goId('row-apps'); }], ['إخفاء التطبيقات', function () { setMode('hide'); nav.goId('row-apps'); }],
       ['تغيير أيقونة تطبيق', function () { setMode('icon'); nav.goId('row-apps'); }], ['وضع الأطفال', function () { toggleKids(); }],
       ['شاشة التوقف', function () { if (!PREVIEW) startSaver(); }], ['الطاقة', function () { openPower(); }], ['إعدادات الجهاز', function () { if (HAS_ANDROID) A.openSettings(); }], ['حذف الواجهة القديمة والتطبيقات غير اللازمة', function () { openAppClean(); }],
@@ -1037,6 +1037,7 @@
 
   // ---------- Icons ----------
   var ICONS = {
+    chat: '<svg viewBox="0 0 24 24"><path d="M5 5h14a2.5 2.5 0 0 1 2.5 2.5v7A2.5 2.5 0 0 1 19 17h-8l-4.5 3.5V17H5a2.5 2.5 0 0 1-2.5-2.5v-7A2.5 2.5 0 0 1 5 5z"/><path d="M7.5 11h.01M12 11h.01M16.5 11h.01"/></svg>',
     settings: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
     wifi: '<svg viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.6a10 10 0 0 1 14 0"/><path d="M8.5 16.3a5 5 0 0 1 7 0"/><circle cx="12" cy="20" r="1"/></svg>',
     edit: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7M17.5 14v7"/></svg>',
@@ -1069,13 +1070,13 @@
   // ---------- Top glass bar ----------
   /* the top bar is customisable: settings.topTools is the user's ordered list, settings.inputsBtn shows «المداخل» in the exact centre */
   var TOP_TOOLS = {
-    saver: ['شاشة التوقف', 'moon', 1], search: ['البحث', 'search'], settings: ['إعدادات الجهاز', 'settings'], wifi: ['الواي فاي', 'wifi'],
+    msgs: ['الرسائل', 'chat'], saver: ['شاشة التوقف', 'moon', 1], search: ['البحث', 'search'], settings: ['إعدادات الجهاز', 'settings'], wifi: ['الواي فاي', 'wifi'],
     net: ['الشبكة', 'net'], bt: ['البلوتوث', 'bt'], mem: ['تنظيف الذاكرة', 'broom'], mute: ['كتم الصوت', 'mute'], sleep: ['مؤقت النوم', 'timer'],
     channels: ['قنواتي', 'picture'], edit: ['تعديل الشاشة', 'edit'], power: ['الطاقة', 'power'], tvpic: ['الصورة', 'picture', 1], tvsound: ['الصوت', 'sound', 1], tvdim: ['تعتيم', 'dim', 1], tvinput: ['المداخل', 'input', 1]
   };
   function topToolList() {
     var l = settings.topTools && settings.topTools.length ? settings.topTools.slice() : null;
-    if (!l) { l = ['channels', 'saver', 'search', 'settings', 'wifi', 'edit', 'power']; if (tvShortcutsOn()) l = ['tvpic', 'tvsound', 'sleep', 'tvdim'].concat(l); }
+    if (!l) { l = ['channels', 'msgs', 'saver', 'search', 'settings', 'wifi', 'edit', 'power']; if (tvShortcutsOn()) l = ['tvpic', 'tvsound', 'sleep', 'tvdim'].concat(l); }
     if (settings.inputsPos === 'list' && inputsOn() && l.indexOf('tvinput') < 0) l.unshift('tvinput');
     return l.filter(function (id) { return TOP_TOOLS[id] && !(id === 'saver' && settings.saverOn === false) && !(id === 'tvinput' && !(IS_TV || PREVIEW || settings.inputsBtn === 'on')); });
   }
@@ -1090,12 +1091,14 @@
   function topItem(id) {
     var t = TOP_TOOLS[id], lbl = t[0], ic = t[1];
     if (id === 'sleep') lbl = tvSleepLabel();
+    if (id === 'msgs' && window.Chat && window.Chat.unread() > 0) lbl = 'الرسائل (' + nf.format(window.Chat.unread()) + ')';
     if (id === 'tvinput') return '<div class="item glass tvb inb" data-kind="top" data-id="tvinput">' + ICONS.input + '<span class="lbl">المداخل</span></div>';
     if (id === 'tvdim' && tvDim) lbl = 'تعتيم ' + nf.format(tvDim) + '٪';
     if (id === 'mute') { var m = false; try { m = HAS_ANDROID && A.isMuted ? A.isMuted() : false; } catch (e) {} lbl = m ? 'شغّل الصوت' : 'كتم الصوت'; ic = m ? 'mute' : 'sound'; }
     var pill = t[2] || id === 'sleep' && tvSleepLabel() !== 'مؤقت النوم';
     return '<div class="item glass' + (pill ? ' tvb' : '') + (id === 'saver' ? ' saverb' : '') + '" data-kind="top" data-id="' + id + '">' + (ICONS[ic] || ICONS.settings) + '<span class="lbl">' + lbl + '</span></div>';
   }
+  window.__twTop = function () { try { renderTopbar(); if (typeof nav !== 'undefined') nav.refresh(); } catch (e) {} };
   function renderTopbar() {
     var l = topToolList(), tb = $('topbar'), pl = inputsPlace();
     var shape = settings.topShape || 'circle', gap = settings.topGap || 30;
@@ -2276,6 +2279,7 @@
     return ((HAS_ANDROID && A.fetchList) ? bridgeAsync('fetchList', u) : getTextAny(u)).then(function (t) { noteNet(Date.now() - t0, String(t || '').indexOf('ERR:') !== 0); return t; });
   };
   window.__closeVod = function () { var m = document.getElementById('vodModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); if (window.Home) window.Home.back(); };
+  window.__closeChat = function () { var m = document.getElementById('chatModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); };
   window.__closeLive = function () { var m = document.getElementById('liveModal'); if (m) m.classList.remove('on'); layer = 'main'; if (typeof nav !== 'undefined') nav.refresh(); if (window.Home) window.Home.back(); };
   var nav = (function () {
     var rowEls = qa('#content .row');
@@ -2381,6 +2385,7 @@
         else if (id === 'wifi') { if (HAS_ANDROID) A.openWifi(); }
         else if (id === 'edit') openEdit();
         else if (id === 'channels') { if (window.Live) window.Live.open(); }
+        else if (id === 'msgs') { if (window.Chat) window.Chat.open(); }
         else if (id === 'power') openPower();
         else if (id === 'saver') { if (!PREVIEW) startSaver(); }
         else if (id === 'bt') { if (HAS_ANDROID && A.openBluetooth) A.openBluetooth(); }
@@ -2449,6 +2454,7 @@
     if (saverOn) { stopSaver(); return; }
     if ($('pairBox').classList.contains('on')) { window.hidePair(); return; }
     clickSound(); if (k === 'ok') pressFx();
+    if (layer === 'chat') return window.Chat.key(k);
     if (layer === 'home') return window.Home.key(k);
     if (layer === 'live') return window.Live.key(k);
     if (layer === 'vod') return window.Vod.key(k);
@@ -2493,7 +2499,7 @@
   /* the remote's INPUT / SOURCE button opens the source picker from the home screen (before, it only worked once «المداخل» was opened by hand) */
   window.__tvInput = function () {
     if (!HAS_ANDROID || !IS_TV) return;
-    if (layer !== 'main') { if (layer === 'live' || layer === 'vod' || layer === 'home') return; closeModal(); }
+    if (layer !== 'main') { if (layer === 'live' || layer === 'vod' || layer === 'home' || layer === 'chat') return; closeModal(); }
     tvAction('tvinput');
   };
   window.remoteKey = function (k) { handleKey(k); };

@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
@@ -53,6 +54,14 @@ import java.util.Map;
 public class MainActivity extends Activity {
 
     private WebView web;
+    static volatile MainActivity instance;
+    private String twOpenCode = "";
+    private android.media.MediaRecorder twRec;
+    private java.io.File twRecFile;
+    private android.speech.SpeechRecognizer twSr;
+    private static final int PICK_FILE = 42, REQ_MIC = 43;
+    /** «تواصل»: new messages arrived while the page is showing: it fetches them. */
+    static void drainSoon() { final MainActivity m = instance; if (m != null) m.runOnUiThread(new Runnable() { @Override public void run() { m.callJs("window.__twDrain && window.__twDrain()"); } }); }
     static volatile MainActivity self;
     static volatile boolean foreground = false;
 
@@ -172,6 +181,8 @@ public class MainActivity extends Activity {
         });
         web.setWebChromeClient(new WebChromeClient());
         web.addJavascriptInterface(new Bridge(), "Android");
+        instance = this;
+        Tawasul.start(this);
         setContentView(web);
         web.loadUrl(pageUrl());
         web.requestFocus();
@@ -199,6 +210,7 @@ public class MainActivity extends Activity {
     }
 
     private void handleIntent(Intent i) {
+        if (i != null && i.getStringExtra("tw_open") != null) twOpenCode = i.getStringExtra("tw_open");
         if (i != null && i.getStringExtra("lockPkg") != null && web != null) {
             final String lp = i.getStringExtra("lockPkg");
             web.postDelayed(() -> web.evaluateJavascript("window.onLockedApp && window.onLockedApp(" + org.json.JSONObject.quote(lp) + ")", null), 700);
@@ -260,6 +272,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (self == this) self = null;
+        if (instance == this) instance = null;
         try { unregisterReceiver(pkgReceiver); } catch (Throwable ignored) { }
         try { unregisterReceiver(installReceiver); } catch (Throwable ignored) { }
         super.onDestroy();
@@ -281,12 +294,45 @@ public class MainActivity extends Activity {
             web.requestFocus();
             web.evaluateJavascript("window.onAppResume && window.onAppResume()", null);
             web.evaluateJavascript("window.Live && Live.refresh && Live.refresh()", null);
+            web.evaluateJavascript("window.__twDrain && window.__twDrain()", null);
+            if (twOpenCode.length() > 0) {
+                final String tc = twOpenCode; twOpenCode = "";
+                web.postDelayed(new Runnable() { @Override public void run() { callJs("window.__twOpen && window.__twOpen(" + org.json.JSONObject.quote(tc) + ")"); } }, 700);
+            }
             String pw = Media.prefs(this).getString("pendingWall", null);
             if (pw != null) {
                 Media.prefs(this).edit().remove("pendingWall").apply();
                 web.evaluateJavascript("window.remoteCmd && window.remoteCmd({type:'image',pin:true,path:" + org.json.JSONObject.quote(pw) + "})", null);
             }
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (req == REQ_MIC) callJs("window.__twMic && window.__twMic(" + (res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED) + ")");
+    }
+
+    private void twPicked(int resultCode, Intent data) {
+        if (resultCode != RESULT_OK || data == null || data.getData() == null) { callJs("window.__twPicked && window.__twPicked('','','')"); return; }
+        final Uri uri = data.getData();
+        new Thread(new Runnable() {
+            @Override public void run() {
+                String name = "file", mime = getContentResolver().getType(uri) == null ? "application/octet-stream" : getContentResolver().getType(uri), b64 = "";
+                try {
+                    android.database.Cursor c = getContentResolver().query(uri, null, null, null, null);
+                    if (c != null) { try { if (c.moveToFirst()) { int k = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (k >= 0) name = c.getString(k); } } finally { c.close(); } }
+                    java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                    java.io.InputStream in = getContentResolver().openInputStream(uri);
+                    byte[] buf = new byte[16384]; int n; long tot = 0;
+                    while (in != null && (n = in.read(buf)) > 0) { tot += n; if (tot > 12L * 1024 * 1024) { out = null; break; } out.write(buf, 0, n); }
+                    if (in != null) in.close();
+                    if (out != null) b64 = android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP);
+                } catch (Throwable ignored) { }
+                final String fn = name, fm = mime, fb = b64;
+                callJs("window.__twPicked && window.__twPicked(" + org.json.JSONObject.quote(fn) + "," + org.json.JSONObject.quote(fm) + "," + org.json.JSONObject.quote(fb) + ")");
+            }
+        }).start();
     }
 
     @Override
@@ -301,6 +347,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_FILE) { twPicked(resultCode, data); return; }
         if (requestCode != PICK_IMAGE) return;
         if (resultCode != RESULT_OK || data == null || data.getData() == null) {
             callJs("window.onImagePicked && window.onImagePicked('')");
@@ -463,6 +510,85 @@ public class MainActivity extends Activity {
     }
 
     public class Bridge {
+        /* ---- «تواصل» ---- */
+        @JavascriptInterface public void twCreds(String code, String token) { Media.prefs(MainActivity.this).edit().putString("tw_code", code).putString("tw_token", token).apply(); Tawasul.start(MainActivity.this); }
+        @JavascriptInterface public String twTake() { SharedPreferences sp = Media.prefs(MainActivity.this); String q = sp.getString("tw_q", "[]"); sp.edit().putString("tw_q", "[]").apply(); return q; }
+        @JavascriptInterface public void twAuto(boolean on) { Media.prefs(MainActivity.this).edit().putBoolean("tw_auto", on).apply(); }
+        @JavascriptInterface public boolean twAutoOn() { return Media.prefs(MainActivity.this).getBoolean("tw_auto", true); }
+        @JavascriptInterface public void twOpenUrl(String url, String mime) {
+            try { Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url)); if (mime != null && mime.length() > 0) i.setDataAndType(Uri.parse(url), mime); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); }
+            catch (Throwable t) { callJs("window.toastMsg && toastMsg('ما لقيت تطبيق يفتح هذا الملف')"); }
+        }
+        @JavascriptInterface public void twPick() {
+            runOnUiThread(new Runnable() { @Override public void run() {
+                try { Intent i = new Intent(Intent.ACTION_GET_CONTENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE); startActivityForResult(Intent.createChooser(i, null), PICK_FILE); }
+                catch (Throwable t) { callJs("window.toastMsg && toastMsg('الشاشة ما فيها تطبيق لاختيار الملفات')"); callJs("window.__twPicked && window.__twPicked('','','')"); }
+            } });
+        }
+        private boolean twMic() {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) return true;
+            runOnUiThread(new Runnable() { @Override public void run() { try { requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC); } catch (Throwable ignored) { } } });
+            return false;
+        }
+        /** Starts a voice note from the microphone (the remote's, if the system routes it). false = asked for the permission first. */
+        @JavascriptInterface public boolean twRecStart() {
+            if (!twMic()) return false;
+            try {
+                twRecFile = new java.io.File(getCacheDir(), "tw-voice.m4a");
+                twRec = new android.media.MediaRecorder();
+                twRec.setAudioSource(android.media.MediaRecorder.AudioSource.MIC);
+                twRec.setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4);
+                twRec.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC);
+                twRec.setAudioEncodingBitRate(48000); twRec.setAudioSamplingRate(32000);
+                twRec.setOutputFile(twRecFile.getAbsolutePath());
+                twRec.prepare(); twRec.start();
+                return true;
+            } catch (Throwable t) { try { if (twRec != null) twRec.release(); } catch (Throwable ignored) { } twRec = null; return false; }
+        }
+        /** Stops and returns the voice note as base64 (m4a), or "" if nothing was recorded. */
+        @JavascriptInterface public String twRecStop() {
+            if (twRec == null) return "";
+            String out = "";
+            try {
+                twRec.stop(); twRec.release(); twRec = null;
+                java.io.FileInputStream in = new java.io.FileInputStream(twRecFile); java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                byte[] b = new byte[16384]; int n; while ((n = in.read(b)) > 0) bo.write(b, 0, n); in.close();
+                out = android.util.Base64.encodeToString(bo.toByteArray(), android.util.Base64.NO_WRAP);
+            } catch (Throwable t) { try { if (twRec != null) twRec.release(); } catch (Throwable ignored) { } twRec = null; }
+            try { if (twRecFile != null) twRecFile.delete(); } catch (Throwable ignored) { }
+            return out;
+        }
+        @JavascriptInterface public void twRecCancel() { twRecStop(); }
+        /** Speech to text through the system's recognizer (needs the Google speech service on the screen). The answer comes to window.__twStt(text, error). */
+        @JavascriptInterface public void twListen() {
+            if (!twMic()) { callJs("window.__twStt && window.__twStt('','perm')"); return; }
+            runOnUiThread(new Runnable() { @Override public void run() {
+                try {
+                    if (!android.speech.SpeechRecognizer.isRecognitionAvailable(MainActivity.this)) { callJs("window.__twStt && window.__twStt('','none')"); return; }
+                    if (twSr != null) { try { twSr.destroy(); } catch (Throwable ignored) { } }
+                    twSr = android.speech.SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
+                    twSr.setRecognitionListener(new android.speech.RecognitionListener() {
+                        public void onReadyForSpeech(Bundle b) { callJs("window.__twStt && window.__twStt('','ready')"); }
+                        public void onBeginningOfSpeech() { }
+                        public void onRmsChanged(float v) { }
+                        public void onBufferReceived(byte[] b) { }
+                        public void onEndOfSpeech() { }
+                        public void onError(int e) { callJs("window.__twStt && window.__twStt('','err" + e + "')"); }
+                        public void onPartialResults(Bundle b) { }
+                        public void onEvent(int t, Bundle b) { }
+                        public void onResults(Bundle b) {
+                            java.util.ArrayList<String> l = b.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION);
+                            callJs("window.__twStt && window.__twStt(" + org.json.JSONObject.quote(l != null && l.size() > 0 ? l.get(0) : "") + ",'')");
+                        }
+                    });
+                    Intent r = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    r.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                    r.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, "ar");
+                    twSr.startListening(r);
+                } catch (Throwable t) { callJs("window.__twStt && window.__twStt('','none')"); }
+            } });
+        }
+        @JavascriptInterface public void twListenStop() { runOnUiThread(new Runnable() { @Override public void run() { try { if (twSr != null) twSr.stopListening(); } catch (Throwable ignored) { } } }); }
 
         @JavascriptInterface
         public void getAppsAsync(final String cbId) {
