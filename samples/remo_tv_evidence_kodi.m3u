@@ -1,0 +1,8 @@
+#EXTM3U
+# نسخة للتشغيل في Kodi (أو مشغّل يدعم الترويسات بعد علامة |)
+# الترويستان داخل الرابط: Cookie و remo (كما يرسلهما تطبيق Remo TV)
+# غير مجرّبة من طرفنا، تُختبر قبل العرض
+#EXTINF:-1,Remo TV - لوحة mydroon - بث 7756
+http://sts.mydroon.com:8080/live/9127491274/QDXDbuLzFDYaYbD/7756.m3u8|Cookie=remoTV-Faster&remo=stream-of-REMO&User-Agent=Mozilla/5.0%20(Windows%20NT%2010.0;%20Win64;%20x64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/139.0.0.0%20Safari/537.36
+#EXTINF:-1,Remo TV - لوحة sharkiptvpro - بث 569491
+http://sharkiptvpro.xyz/live/gs72cd991v3/bd75veo92b3/569491.m3u8|Cookie=remoTV-Faster&remo=stream-of-REMO&User-Agent=Mozilla/5.0%20(Windows%20NT%2010.0;%20Win64;%20x64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/139.0.0.0%20Safari/537.36
