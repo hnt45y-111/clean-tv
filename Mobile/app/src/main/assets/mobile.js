@@ -512,14 +512,8 @@
   }
 
   /* ================================================================ 2.0: themes, customisation, pages, detail, folders */
-  var THEMES = [
-    { id: 'cinema', n: 'سينمائي (الأساسي)', rz: '#FA0023', g: 'linear-gradient(135deg,#FA0023,#2a0006 70%,#000)', hero: 'tall', nav: 'pill', top: 'outline', fx: 'glow' },
-    { id: 'royal', n: 'ذهبي ملكي', rz: '#D6B47A', g: 'linear-gradient(135deg,#D6B47A,#3a2a0e 70%,#07060a)', hero: 'frame', nav: 'bar', top: 'badge', fx: 'gold' },
-    { id: 'karbala', n: 'كربلائي', rz: '#C4001D', g: 'linear-gradient(135deg,#7a0010,#1a0004 70%,#0c0305)', hero: 'side', nav: 'dock', top: 'fill', fx: 'embers' },
-    { id: 'alawi', n: 'علوي أخضر', rz: '#12B76A', g: 'linear-gradient(135deg,#12B76A,#04301a 70%,#020a06)', hero: 'split', nav: 'pill', top: 'badge', fx: 'aurora' },
-    { id: 'apple', n: 'زجاجي', rz: '#0A84FF', g: 'linear-gradient(135deg,#0A84FF,#102a52 70%,#0b0b10)', hero: 'glass', nav: 'glass', top: 'none', fx: 'depth' },
-    { id: 'neon', n: 'نيون', rz: '#00E5FF', g: 'linear-gradient(135deg,#00E5FF,#B14AFF 55%,#02020a)', hero: 'neon', nav: 'neonbar', top: 'neon', fx: 'scan' }
-  ];
+  /* the ten identities (brands.js) */
+  var THEMES = Brand.list.map(function (b) { return { id: b.id, n: b.n + ' · ' + b.name, rz: b.p, g: 'linear-gradient(90deg,' + b.p + ' 50%,' + b.a + ' 50%)', hero: b.hero, nav: b.nav, top: b.top, fx: b.fx }; });
   var ACC = ['#FA0023', '#FF6A00', '#D6B47A', '#12B76A', '#00E5FF', '#0A84FF', '#B14AFF', '#FF3EA5'];
   var AVS = ['🦁', '🐯', '🦊', '🐼', '🦅', '🐺', '🌙', '⭐'];
   var NAVD = {
@@ -534,19 +528,18 @@
   };
   function U() {
     var u = S.ui = S.ui || {};
-    if (!u.theme) u.theme = 'cinema'; if (!u.nav || !u.nav.length) u.nav = ['home', 'search', 'live', 'lib', 'prof'];
+    if (!u.theme) u.theme = Brand.DEFAULT; if (!u.nav || !u.nav.length) u.nav = ['home', 'search', 'live', 'lib', 'prof'];
     if (!u.size) u.size = 'm'; if (!u.rows) u.rows = { v: [], l: [], hid: [] }; if (!u.folders) u.folders = [];
     return u;
   }
-  function themeOf() { var id = U().theme; for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i]; return THEMES[0]; }
+  function themeOf() { var id = U().theme; for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i]; for (var j = 0; j < THEMES.length; j++) if (THEMES[j].id === Brand.DEFAULT) return THEMES[j]; return THEMES[0]; }
   function saveUi() { save(); }
   function applyTheme() {
     var t = themeOf(), u = U(), b = document.body;
-    b.setAttribute('data-th', t.id); b.setAttribute('data-hero', t.hero); b.setAttribute('data-nav', t.nav); b.setAttribute('data-top', t.top); b.setAttribute('data-fx', t.fx);
+    Brand.apply(t.id, 'mobile');
     b.setAttribute('data-size', u.size); b.setAttribute('data-anim', u.anim === 'off' ? 'off' : 'on'); b.setAttribute('data-bg', u.bg || 'theme');
-    try { if (localStorage.getItem('icTheme') !== t.id) { localStorage.setItem('icTheme', t.id); A.setIcon(t.id); } } catch (e) {}
-    var rz = u.accent || t.rz, st2 = b.style; st2.setProperty('--rz', rz);
-    var rgb = rz.replace('#', ''); st2.setProperty('--rzrgb', parseInt(rgb.slice(0, 2), 16) + ',' + parseInt(rgb.slice(2, 4), 16) + ',' + parseInt(rgb.slice(4, 6), 16));
+    var st2 = b.style;
+    if (u.accent) { var rgb = u.accent.replace('#', ''); st2.setProperty('--rz', u.accent); st2.setProperty('--rzrgb', parseInt(rgb.slice(0, 2), 16) + ',' + parseInt(rgb.slice(2, 4), 16) + ',' + parseInt(rgb.slice(4, 6), 16)); st2.setProperty('--on', Brand.on(u.accent)); } else { st2.removeProperty('--rz'); st2.removeProperty('--rzrgb'); st2.removeProperty('--on'); }
     if (u.bg === 'img' && u.bgimg) st2.setProperty('--bgimg', 'url("' + String(u.bgimg).replace(/"/g, '') + '")'); else st2.removeProperty('--bgimg');
   }
   function renderHeader() {

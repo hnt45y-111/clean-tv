@@ -7,14 +7,21 @@ android {
         minSdk 26
         targetSdk 34
         versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
-        versionName '5.0'
+        versionName '17.0'
     }
     signingConfigs {
         fixed { storeFile file('auto.keystore'); storePassword 'msmauto1'; keyAlias 'auto'; keyPassword 'msmauto1' }
     }
     buildTypes { debug { signingConfig signingConfigs.fixed } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    // the identity engine is the TV launcher's own file: copied in at build time, never duplicated in the repository
+    sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('shared-assets').get().asFile
 }
+tasks.register('copyShared', Copy) {
+    from('../../CleanTV/app/src/main/assets') { include 'brands.js' }
+    into layout.buildDirectory.dir('shared-assets')
+}
+tasks.matching { it.name == 'preBuild' }.configureEach { dependsOn 'copyShared' }
 dependencies {
     implementation 'androidx.car.app:app:1.4.0'
 }

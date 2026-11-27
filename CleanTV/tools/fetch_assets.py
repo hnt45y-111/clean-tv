@@ -32,6 +32,19 @@ fonts = {
   'PlexArabic-SemiBold.ttf': 'ofl/ibmplexsansarabic/IBMPlexSansArabic-SemiBold.ttf',
   'PlexArabic-Bold.ttf': 'ofl/ibmplexsansarabic/IBMPlexSansArabic-Bold.ttf',
   'PlexMono-Medium.ttf': 'ofl/ibmplexmono/IBMPlexMono-Medium.ttf',
+  # the ten identities (brands.js)
+  'Cairo.ttf': 'ofl/cairo/Cairo%5Bslnt,wght%5D.ttf',
+  'Readex.ttf': 'ofl/readexpro/ReadexPro%5BHEXP,wght%5D.ttf',
+  'ArefRuqaa-Bold.ttf': 'ofl/arefruqaa/ArefRuqaa-Bold.ttf',
+  'NotoNaskh.ttf': 'ofl/notonaskharabic/NotoNaskhArabic%5Bwght%5D.ttf',
+  'Scheherazade-Bold.ttf': 'ofl/scheherazadenew/ScheherazadeNew-Bold.ttf',
+  'Changa.ttf': 'ofl/changa/Changa%5Bwght%5D.ttf',
+  'Lalezar.ttf': 'ofl/lalezar/Lalezar-Regular.ttf',
+  'Almarai-Regular.ttf': 'ofl/almarai/Almarai-Regular.ttf',
+  'Almarai-Bold.ttf': 'ofl/almarai/Almarai-Bold.ttf',
+  'NotoKufi.ttf': 'ofl/notokufiarabic/NotoKufiArabic%5Bwght%5D.ttf',
+  'Markazi.ttf': 'ofl/markazitext/MarkaziText%5Bwght%5D.ttf',
+  'Mada.ttf': 'ofl/mada/Mada%5Bwght%5D.ttf',
 }
 kufi = get('https://raw.githubusercontent.com/google/fonts/main/ofl/reemkufi/ReemKufi%5Bwght%5D.ttf') or \
        get('https://raw.githubusercontent.com/google/fonts/main/ofl/reemkufi/ReemKufi-Regular.ttf')

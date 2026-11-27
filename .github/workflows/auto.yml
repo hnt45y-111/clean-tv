@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'AutoApp/**'
+      - 'CleanTV/app/src/main/assets/brands.js'
       - '.github/workflows/auto.yml'
   workflow_dispatch:
 permissions:

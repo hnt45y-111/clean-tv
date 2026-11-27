@@ -7,7 +7,7 @@ android {
         minSdk 24
         targetSdk 34
         versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
-        versionName '2.0'
+        versionName '17.0'
     }
     signingConfigs {
         fixed {
@@ -30,7 +30,7 @@ android {
     sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('shared-assets').get().asFile
 }
 tasks.register('copyShared', Copy) {
-    from('../../CleanTV/app/src/main/assets') { include 'channels.js', 'logos/**', 'fonts/**' }
+    from('../../CleanTV/app/src/main/assets') { include 'channels.js', 'brands.js', 'logos/**', 'fonts/**' }
     from('../../Studio/app/src/main/assets') { include 'smart.js' }
     into layout.buildDirectory.dir('shared-assets')
 }
