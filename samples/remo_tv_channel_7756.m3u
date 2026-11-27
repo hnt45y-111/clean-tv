@@ -1,0 +1,6 @@
+#EXTM3U
+# دليل رصد - تطبيق Remo TV (com.remo.player) - التُقط بتاريخ 2026-11-27 الساعة 10:00:33 بتوقيت العراق
+# المصدر: PCAPdroid على هاتف الفحص، طلب HTTP رقم 2
+# الترويسات التي يرسلها التطبيق: Cookie: remoTV-Faster ، remo: stream-of-REMO
+#EXTINF:-1,Remo TV - stream 7756
+http://sts.mydroon.com:8080/live/9127491274/QDXDbuLzFDYaYbD/7756.m3u8
