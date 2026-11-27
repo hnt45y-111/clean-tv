@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
 
     if (route === "inbox") {
       const wait = Math.max(0, Math.min(25, Number(b.wait || 0)));
-      const since = b.since ? new Date(String(b.since)).toISOString() : new Date(Date.now() - 24 * HOUR * 1000).toISOString();
+      const since = b.since ? new Date(Date.parse(String(b.since)) + 1).toISOString() : new Date(Date.now() - 24 * HOUR * 1000).toISOString();
       const end = Date.now() + wait * 1000;
       let rows: any[] = [];
       for (;;) {

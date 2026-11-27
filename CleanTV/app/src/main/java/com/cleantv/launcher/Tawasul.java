@@ -113,10 +113,23 @@ final class Tawasul {
         SharedPreferences p = sp(app);
         JSONArray q = new JSONArray(p.getString("tw_q", "[]"));
         String last = p.getString("tw_since", ""), from = "";
+        // a message already handled is never handled twice (it would ring and pull the launcher to the front again)
+        JSONArray seen = new JSONArray(p.getString("tw_seen", "[]"));
+        java.util.HashSet<String> have = new java.util.HashSet<String>();
+        for (int i = 0; i < seen.length(); i++) have.add(seen.optString(i));
+        JSONArray fresh = new JSONArray();
         for (int i = 0; i < msgs.length(); i++) {
             JSONObject m = msgs.getJSONObject(i);
-            q.put(m); last = m.optString("ts", last); from = m.optString("from", from);
+            last = m.optString("ts", last);
+            String id = m.optString("id", "");
+            if (id.length() > 0 && !have.add(id)) continue;
+            if (id.length() > 0) seen.put(id);
+            fresh.put(m); q.put(m); from = m.optString("from", from);
         }
+        while (seen.length() > 300) seen.remove(0);
+        p.edit().putString("tw_seen", seen.toString()).putString("tw_since", last).apply();
+        if (fresh.length() == 0) return;
+        msgs = fresh;
         while (q.length() > 200) q.remove(0);
         p.edit().putString("tw_q", q.toString()).putString("tw_since", last).apply();
         try { Ringtone r = RingtoneManager.getRingtone(app, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)); if (r != null) r.play(); } catch (Throwable ignored) { }
