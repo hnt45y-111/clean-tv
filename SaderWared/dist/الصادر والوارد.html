@@ -81,6 +81,7 @@ td .ed{width:100%;min-width:80px;border:2px solid var(--blue);border-radius:4px;
 tfoot td{position:sticky;bottom:0;z-index:2;background:#d9f7dc;border-top:3px dashed var(--ink);border-bottom:none;font-weight:bold}
 tfoot .auto{color:var(--auto)}
 tfoot input{width:100%;border:2px solid var(--ink);border-radius:5px;padding:4px 6px;background:#fff;font-size:14px;outline:none}
+tfoot input.regin{background:#f0fff2;color:var(--auto);font-weight:bold}
 tfoot input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2b8cff44}
 tfoot .savebtn{border:2px solid var(--ink);background:var(--green);border-radius:6px;font-weight:bold;padding:3px 8px;box-shadow:2px 2px 0 var(--ink)}
 .empty td{padding:30px;font-size:16px;font-weight:bold;color:#666;background:#fff !important}
@@ -554,7 +555,7 @@ function renderEntry(hidden){
   const sec = S.sec, y = S.year[sec], ns = nextSeq(sec, y), d = entryDraft[sec];
   tf.innerHTML = `<tr>
     <td class="auto">${ns}</td>
-    <td class="auto">${today()}</td>
+    <td><input id="e_reg" class="regin" style="width:110px" value="${esc(d.reg || today())}" title="تاريخ التسجيل — يظهر تلقائياً ويمكن تعديله"></td>
     <td><input id="e_dept" list="depts" placeholder="اسم الدائرة" value="${esc(d.dept || "")}"></td>
     <td><input id="e_date" placeholder="2026/11/25" style="width:110px" value="${esc(d.date || "")}"></td>
     <td><input id="e_no" style="width:90px" value="${esc(d.no ?? suggestNo(sec, y))}"></td>
@@ -562,7 +563,7 @@ function renderEntry(hidden){
     <td><button class="savebtn" id="e_save" title="حفظ (Enter)">✔ حفظ</button></td>
     <td class="auto">${folderOf(ns)}</td>
     <td class="auto">${inFolder(ns)}</td></tr>`;
-  const ids = ["e_dept","e_date","e_no","e_title"];
+  const ids = ["e_reg","e_dept","e_date","e_no","e_title"];
   ids.forEach((id, i) => {
     const el = $("#" + id);
     el.addEventListener("input", () => { entryDraft[sec][id.slice(2)] = el.value; });
@@ -573,12 +574,12 @@ function renderEntry(hidden){
       }
     });
   });
-  $("#e_date").addEventListener("blur", e => { e.target.value = normDate(e.target.value); entryDraft[sec].date = e.target.value; });
+  for (const id of ["e_reg","e_date"]) $("#" + id).addEventListener("blur", e => { e.target.value = normDate(e.target.value); entryDraft[sec][id.slice(2)] = e.target.value; });
   $("#e_save").onclick = saveEntry;
 }
 async function saveEntry(){
   const sec = S.sec, y = S.year[sec];
-  const rec = { dept: $("#e_dept").value.trim(), date: normDate($("#e_date").value), no: normDigits($("#e_no").value).trim(), title: $("#e_title").value.trim() };
+  const rec = { reg: normDate($("#e_reg").value), dept: $("#e_dept").value.trim(), date: normDate($("#e_date").value), no: normDigits($("#e_no").value).trim(), title: $("#e_title").value.trim() };
   if (!rec.dept && !rec.title) { toast("اكتب اسم الدائرة أو عنوان الكتاب", "err"); $("#e_dept").focus(); return; }
   if (!(await addRecord(sec, y, rec))) return;
   entryDraft[sec] = {};
@@ -589,7 +590,7 @@ async function addRecord(sec, y, rec){
   if (rec.no && recs(sec, y).some(r => normDigits(r.no) === rec.no)
       && !(await confirmBox(`⚠️ رقم الكتاب <b>${esc(rec.no)}</b> موجود مسبقاً بـ ${SEC[sec].name} ${y}.<br>تريد تضيفه مرة ثانية؟`, "نعم أضفه", true))) return false;
   const seq = nextSeq(sec, y);
-  recs(sec, y).push({ seq, reg: today(), dept: rec.dept, date: rec.date, no: rec.no, title: rec.title });
+  recs(sec, y).push({ seq, reg: rec.reg || today(), dept: rec.dept, date: rec.date, no: rec.no, title: rec.title });
   S.lastAdded = `${sec}|${y}|${seq}`;
   save();
   toast(`تم! ${SEC[sec].name} ${seq} 💥`);
@@ -636,7 +637,7 @@ async function addDialog(){
   let picked = null;
   const ov = modal(`<div class="dlg"><h2 class="${sec === "in" ? "" : "red"}">➕ إضافة ${SEC[sec].name} ${y}</h2>
     <div class="note">📁 اختر ملف الكتاب (PDF أو صورة) وراح يتسمّى تلقائياً <b id="d_fname">${SEC[sec].name} ${esc(suggestNo(sec, y))}</b> بمجلد ${SEC[sec].full} ويرتبط بهذا السجل.</div>
-    <div class="row"><div class="f"><label>التسلسل</label><div class="ro">${ns}</div></div><div class="f"><label>التاريخ</label><div class="ro">${today()}</div></div>
+    <div class="row"><div class="f"><label>التسلسل</label><div class="ro">${ns}</div></div><div class="f"><label>التاريخ (قابل للتعديل)</label><input id="d_reg" value="${today()}"></div>
       <div class="f"><label>الاضبارة</label><div class="ro">${folderOf(ns)}</div></div><div class="f"><label>تسلسل بالاضبارة</label><div class="ro">${inFolder(ns)}</div></div></div>
     <div class="row"><div class="f"><label>اسم الدائرة</label><input id="d_dept" list="depts"></div><div class="f"><label>تاريخ الكتاب</label><input id="d_date" placeholder="2026/11/25"></div>
       <div class="f"><label>رقم الكتاب</label><input id="d_no" value="${esc(suggestNo(sec, y))}"></div></div>
@@ -645,11 +646,11 @@ async function addDialog(){
     <div class="acts"><button class="btn g" id="d_save">💾 حفظ</button><button class="btn" data-close>إلغاء</button></div></div>`);
   const no = ov.querySelector("#d_no");
   no.addEventListener("input", () => ov.querySelector("#d_fname").textContent = `${SEC[sec].name} ${normDigits(no.value).trim()}`);
-  ov.querySelector("#d_date").addEventListener("blur", e => e.target.value = normDate(e.target.value));
+  for (const id of ["#d_reg","#d_date"]) ov.querySelector(id).addEventListener("blur", e => e.target.value = normDate(e.target.value));
   ov.querySelector("#d_pick").onclick = async () => { const p = await pickBookFile(sec); if (p) { picked = p; ov.querySelector("#d_file").textContent = "✔ " + p.file.name; } };
   ov.querySelector("#d_dept").focus();
   ov.querySelector("#d_save").onclick = async () => {
-    const rec = { dept: ov.querySelector("#d_dept").value.trim(), date: normDate(ov.querySelector("#d_date").value), no: normDigits(no.value).trim(), title: ov.querySelector("#d_title").value.trim() };
+    const rec = { reg: normDate(ov.querySelector("#d_reg").value), dept: ov.querySelector("#d_dept").value.trim(), date: normDate(ov.querySelector("#d_date").value), no: normDigits(no.value).trim(), title: ov.querySelector("#d_title").value.trim() };
     if (!rec.dept && !rec.title) return toast("اكتب اسم الدائرة أو عنوان الكتاب", "err");
     if (picked && !rec.no) return toast("اكتب رقم الكتاب حتى يتسمّى الملف", "err");
     if (!(await addRecord(sec, y, rec))) return;
