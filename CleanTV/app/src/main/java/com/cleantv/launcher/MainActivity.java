@@ -514,6 +514,14 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void twCreds(String code, String token) { Media.prefs(MainActivity.this).edit().putString("tw_code", code).putString("tw_token", token).apply(); Tawasul.keepAlive(MainActivity.this); }
         @JavascriptInterface public boolean twAlertsOk() { return Overlay.allowed(MainActivity.this); }
         @JavascriptInterface public String twTake() { SharedPreferences sp = Media.prefs(MainActivity.this); String q = sp.getString("tw_q", "[]"); sp.edit().putString("tw_q", "[]").apply(); return q; }
+        /** what the relay said besides messages (marks, pins, deleted ids, typing) since the page last asked; "" if nothing new */
+        @JavascriptInterface public String twTakeSync() { SharedPreferences sp = Media.prefs(MainActivity.this); if (!sp.getBoolean("tw_sync_new", false)) return ""; sp.edit().putBoolean("tw_sync_new", false).apply(); return sp.getString("tw_sync", ""); }
+        /** quiet hours, muted people, the list of contacts and the screenshot permission: the page's numbers for the background service */
+        @JavascriptInterface public void twPrefs(String json) { Media.prefs(MainActivity.this).edit().putString("tw_np", json == null ? "{}" : json).apply(); }
+        @JavascriptInterface public void twOpenLink(String url) {
+            try { Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url)); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); }
+            catch (Throwable t) { callJs("window.toastMsg && toastMsg('ما لقيت تطبيق يفتح هذا الرابط')"); }
+        }
         @JavascriptInterface public void twAuto(boolean on) { Media.prefs(MainActivity.this).edit().putBoolean("tw_auto", on).apply(); }
         @JavascriptInterface public boolean twAutoOn() { return Media.prefs(MainActivity.this).getBoolean("tw_auto", true); }
         @JavascriptInterface public void twOpenUrl(String url, String mime) {

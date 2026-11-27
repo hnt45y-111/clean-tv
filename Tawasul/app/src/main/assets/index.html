@@ -82,21 +82,39 @@ input,textarea{font:inherit;color:inherit}
 .wel{margin:auto;padding:28px;text-align:center;max-width:420px}.wel .logo{width:84px;height:84px;margin:0 auto 18px;border-radius:26px;background:var(--panel2);border:1px solid var(--line2);display:grid;place-items:center;font-size:38px}
 .wel h1{font:800 34px var(--fd);margin:0 0 6px}.wel p{color:var(--mute);margin:0 0 22px}
 .wel input{width:100%;padding:14px 18px;border-radius:16px;background:var(--panel2);border:1px solid var(--line);outline:none;margin-bottom:12px;text-align:center;font-size:17px}
+
+.av img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}.av{overflow:hidden}
+.av.sm{width:40px;height:40px;border-radius:14px;font-size:17px;margin-left:10px}.av.lg{width:96px;height:96px;border-radius:30px;font-size:40px;margin:0 auto 12px}
+.m .rep{border-right:3px solid var(--ac);background:rgba(128,128,128,.14);border-radius:8px;padding:3px 8px;margin-bottom:5px;font-size:13px;color:var(--mute);max-height:44px;overflow:hidden}
+.m .rep b{display:block;font-weight:600;color:var(--ac2);font-size:12px}
+.m .lk{color:var(--sig);text-decoration:underline;word-break:break-all}
+.tk{letter-spacing:-3px}.tk.rd{color:var(--sig)}
+.m .pn{font-size:11px;color:var(--ac2);margin-bottom:2px}
+.rbar{display:none;align-items:center;padding:6px 14px;background:var(--bg2);border-top:1px solid var(--line);font-size:13px;color:var(--mute)}.rbar.on{display:flex}.rbar span{flex:1;border-right:3px solid var(--ac);padding-right:8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.rbar button{width:32px;height:32px;font-size:16px}
+#sheetIn .rowt{display:flex;align-items:center;gap:10px;margin:6px 0}.rowt input[type=time]{flex:1;padding:10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);font:600 16px var(--fb);direction:ltr}
+#sheetIn .qr{background:#fff;border-radius:16px;padding:8px;margin:6px auto 10px;display:block;width:240px;max-width:100%}#sheetIn .qr svg{display:block;width:100%;height:auto}
+#sheetIn textarea{width:100%;min-height:90px;padding:12px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);outline:none;margin-bottom:8px;direction:ltr;font:500 13px monospace}
+#sheetIn .hint{color:var(--mute);font-size:13px;margin:0 4px 8px}
+.cb.hold{touch-action:none;-webkit-user-select:none;user-select:none}
+.recbar small{margin-right:10px;color:var(--mute);font-weight:500}
+.ct .av img,.top .av img{border-radius:inherit}
 </style>
 </head>
 <body>
-<section class="view" id="vWel"><div class="wel"><div class="logo">💬</div><h1>تواصل</h1><p>رسائل وصور وملفات ورسائل صوتية بينك وبين شاشتك وأهلك. كل شي يرجع ينحذف بعد ٢٤ ساعة.</p><input id="wName" maxlength="30" placeholder="اسمك (يشوفه اللي تراسله)"><button class="btn pri" id="wGo" style="width:100%">ابدأ</button></div></section>
+<section class="view" id="vWel"><div class="wel"><div class="logo">💬</div><h1>تواصل</h1><p>رسائل وصور وملفات ورسائل صوتية بينك وبين شاشتك وأهلك. الرسائل تنحذف بعد ٢٤ ساعة، وتكدر تغيّر المدة لكل محادثة.</p><input id="wName" maxlength="30" placeholder="اسمك (يشوفه اللي تراسله)"><button class="btn pri" id="wGo" style="width:100%">ابدأ</button><button class="btn" id="wRestore" style="width:100%;margin-top:10px">عندي حساب سابق — استعادة</button></div></section>
 
 <section class="view" id="vHome">
   <div class="top"><h1>تواصل<small id="hSub">المحادثات</small></h1><button class="ib" id="bSet" aria-label="الإعدادات">⚙</button></div>
-  <div class="scroll"><div class="me"><small>رمزك (أعطيه لمن يريد يراسلك، أو اكتبه بالشاشة)</small><div class="code" id="myCode"></div><div class="row2"><button class="btn" id="bCopy">نسخ</button><button class="btn" id="bShare">مشاركة</button></div></div><div id="list"></div></div>
+  <div class="scroll"><div class="me"><small>رمزك (أعطيه لمن يريد يراسلك، أو اكتبه بالشاشة)</small><div class="code" id="myCode"></div><div class="row2"><button class="btn" id="bCopy">نسخ</button><button class="btn" id="bShare">مشاركة</button><button class="btn" id="bQr">QR</button></div></div><div id="list"></div></div>
   <button class="fab" id="bAdd">＋ إضافة شخص أو شاشة</button>
 </section>
 
 <section class="view" id="vChat">
-  <div class="top"><button class="ib" id="bBack" aria-label="رجوع" style="margin-left:10px">→</button><h1 id="cName">—<small id="cSub"></small></h1><button class="ib" id="bCm" aria-label="خيارات">⋮</button></div>
+  <div class="top"><button class="ib" id="bBack" aria-label="رجوع" style="margin-left:10px">→</button><div class="av sm" id="cAv"></div><h1 id="cName">—<small id="cSub"></small></h1><button class="ib" id="bCm" aria-label="خيارات">⋮</button></div>
   <div id="msgs"></div>
-  <div class="comp" id="comp"><button class="cb" id="bAtt" aria-label="إرفاق">＋</button><textarea id="tx" rows="1" placeholder="اكتب رسالة…"></textarea><div class="recbar"><span id="recT">٠:٠٠</span>&nbsp;· تسجيل…</div><button class="cb" id="bMic" aria-label="صوت">🎤</button><button class="cb go" id="bSend" aria-label="إرسال" style="display:none">➤</button></div>
+  <div class="rbar" id="rBar"><span id="rbT"></span><button id="rbX" aria-label="إلغاء الرد">✕</button></div>
+  <div class="comp" id="comp"><button class="cb" id="bAtt" aria-label="إرفاق">＋</button><textarea id="tx" rows="1" placeholder="اكتب رسالة…"></textarea><div class="recbar"><span id="recT">٠:٠٠</span>&nbsp;· تسجيل…<small id="recH">اترك للإرسال · اسحب للأعلى للإلغاء</small></div><button class="cb hold" id="bMic" aria-label="صوت">🎤</button><button class="cb go" id="bSend" aria-label="إرسال" style="display:none">➤</button></div>
 </section>
 
 <div id="sheet"><div id="sheetIn"></div></div>
@@ -104,7 +122,9 @@ input,textarea{font:inherit;color:inherit}
 <div id="toast"></div>
 <input type="file" id="fImg" accept="image/*" style="display:none">
 <input type="file" id="fAny" style="display:none">
+<input type="file" id="fAv" accept="image/*" style="display:none">
 <script src="brands.js"></script>
+<script src="qr.js"></script>
 <script src="tw-core.js"></script>
 <script src="app.js"></script>
 </body>

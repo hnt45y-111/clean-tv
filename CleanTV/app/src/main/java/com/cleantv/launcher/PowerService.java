@@ -29,6 +29,28 @@ public class PowerService extends AccessibilityService {
         }
     };
 
+    interface ShotCb { void done(android.graphics.Bitmap b); }
+
+    /** A picture of what the screen shows right now (Android 11 or newer; the service must be allowed to take screenshots). null if it cannot. */
+    @android.annotation.TargetApi(30)
+    void takeShot(final ShotCb cb) {
+        if (android.os.Build.VERSION.SDK_INT < 30) { cb.done(null); return; }
+        try {
+            takeScreenshot(android.view.Display.DEFAULT_DISPLAY, getMainExecutor(), new AccessibilityService.TakeScreenshotCallback() {
+                @Override public void onSuccess(AccessibilityService.ScreenshotResult r) {
+                    android.graphics.Bitmap out = null;
+                    try {
+                        android.graphics.Bitmap hw = android.graphics.Bitmap.wrapHardwareBuffer(r.getHardwareBuffer(), r.getColorSpace());
+                        if (hw != null) out = hw.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
+                        r.getHardwareBuffer().close();
+                    } catch (Throwable ignored) { }
+                    cb.done(out);
+                }
+                @Override public void onFailure(int code) { cb.done(null); }
+            });
+        } catch (Throwable t) { cb.done(null); }
+    }
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();

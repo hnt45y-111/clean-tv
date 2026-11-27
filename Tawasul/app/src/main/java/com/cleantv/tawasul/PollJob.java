@@ -79,6 +79,7 @@ public class PollJob extends JobService {
 
     /** One notification per app: a newer message replaces the older one (the same id), so the push and the 15 minute check never double up. */
     static void show(Context c, String from, String fromName, String kind, String body, String fileName, int count) {
+        if (silenced(c, from)) return;
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(new NotificationChannel(CH, "الرسائل", NotificationManager.IMPORTANCE_HIGH));
@@ -90,5 +91,26 @@ public class PollJob extends JobService {
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, CH) : new Notification.Builder(c);
         b.setSmallIcon(android.R.drawable.stat_notify_chat).setContentTitle(who).setContentText(text).setContentIntent(pi).setAutoCancel(true);
         nm.notify(7, b.build());
+    }
+
+    /** Quiet hours or a muted person: no notification (the message is still stored and shown when the app opens). The page keeps these numbers in the "np" preference. */
+    static boolean silenced(Context c, String from) {
+        try {
+            JSONObject np = new JSONObject(MainActivity.prefs(c).getString("np", "{}"));
+            org.json.JSONArray mu = np.optJSONArray("muted");
+            if (mu != null && from != null) for (int i = 0; i < mu.length(); i++) if (from.equals(mu.optString(i))) return true;
+            JSONObject q = np.optJSONObject("quiet");
+            if (q != null && q.optBoolean("on")) {
+                int f = minutes(q.optString("from", "23:00")), t = minutes(q.optString("to", "07:00"));
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                int now = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE);
+                if (f == t) return false;
+                return f < t ? (now >= f && now < t) : (now >= f || now < t);
+            }
+        } catch (Throwable ignored) { }
+        return false;
+    }
+    private static int minutes(String hhmm) {
+        try { String[] p = hhmm.split(":"); return Integer.parseInt(p[0].trim()) * 60 + Integer.parseInt(p[1].trim()); } catch (Throwable t) { return 0; }
     }
 }
