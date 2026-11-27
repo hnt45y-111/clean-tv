@@ -13,6 +13,7 @@ public class BootReceiver extends BroadcastReceiver {
     /** Starts the launcher at 4 s and again at 12 s (the system launcher may come up after the first try). Skips the second if the user is already inside it. */
     static void bringFront(final Context ctx) {
         final Context c = ctx.getApplicationContext();
+        Tawasul.keepAlive(c); // the messages listener comes up with the system, whether or not the launcher is brought to the front
         if (Media.prefs(c).getBoolean("noBootOpen", false)) return;
         Handler h = new Handler(Looper.getMainLooper());
         int[] delays = {4000, 12000};

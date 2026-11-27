@@ -1,7 +1,12 @@
 package com.cleantv.launcher;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.content.SharedPreferences;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -23,6 +28,40 @@ final class Tawasul {
     private static volatile boolean run;
 
     static SharedPreferences sp(Context c) { return Media.prefs(c); }
+
+    /** Keeps the process (and so the long poll) alive with a foreground service; if the system refuses, the plain thread still runs. */
+    static void keepAlive(Context ctx) {
+        final Context app = ctx.getApplicationContext();
+        try {
+            Intent i = new Intent(app, TawasulService.class);
+            if (Build.VERSION.SDK_INT >= 26) app.startForegroundService(i); else app.startService(i);
+        } catch (Throwable t) { start(app); }
+    }
+
+    static String preview(JSONObject m) {
+        String kind = m.optString("kind", "text");
+        if ("image".equals(kind)) return "📷 صورة";
+        if ("audio".equals(kind)) return "🎤 رسالة صوتية";
+        if ("file".equals(kind)) return "📎 " + m.optString("name", "ملف");
+        String t = m.optString("text", ""); return t.length() > 80 ? t.substring(0, 80) + "…" : t;
+    }
+
+    /** A message arrived while another app is on screen: a card above it, and a notification in the panel (both tap-free: the launcher opens the chat itself if it is allowed to). */
+    private static void alert(Context app, JSONObject last, int count) {
+        String who = last.optString("fromName", "").length() > 0 ? last.optString("fromName") : "رسالة جديدة";
+        String sub = (count > 1 ? count + " رسائل · " : "") + preview(last);
+        try { Overlay.showBanner(app, "💬 " + who, sub, 9000); } catch (Throwable ignored) { }
+        try {
+            NotificationManager nm = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm == null) return;
+            if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(new NotificationChannel("tw_msgs", "الرسائل", NotificationManager.IMPORTANCE_HIGH));
+            Intent i = new Intent(app, MainActivity.class).putExtra("tw_open", last.optString("from", "")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            PendingIntent pi = PendingIntent.getActivity(app, 5, i, PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
+            Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(app, "tw_msgs") : new Notification.Builder(app);
+            b.setSmallIcon(android.R.drawable.stat_notify_chat).setContentTitle(who).setContentText(sub).setContentIntent(pi).setAutoCancel(true);
+            nm.notify(31, b.build());
+        } catch (Throwable ignored) { }
+    }
 
     static synchronized void start(final Context ctx) {
         if (thread != null && thread.isAlive()) return;
@@ -83,7 +122,10 @@ final class Tawasul {
         try { Ringtone r = RingtoneManager.getRingtone(app, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)); if (r != null) r.play(); } catch (Throwable ignored) { }
         if (MainActivity.foreground) {
             MainActivity.drainSoon();
-        } else if (p.getBoolean("tw_auto", true)) {
+        } else {
+            alert(app, msgs.getJSONObject(msgs.length() - 1), msgs.length());
+        }
+        if (!MainActivity.foreground && p.getBoolean("tw_auto", true)) {
             // an accessibility service may start an activity from the background where an ordinary app may not
             Context ctx = PowerService.instance != null ? PowerService.instance : app;
             Intent i = new Intent(app, MainActivity.class).putExtra("tw_open", from)

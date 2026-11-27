@@ -67,7 +67,8 @@
     var C = '';
     if (st.f === 'opts') {
       var auto = false; try { auto = A.twAutoOn ? A.twAutoOn() : true; } catch (e) {}
-      var o = [['فتح الرسائل مباشرة عند وصولها: ' + (auto ? 'شغّال' : 'متوقف')], ['اسم شاشتك عند الآخرين: ' + (TW.S.name || '—')], ['حذف الشخص المحدد ومحادثته'], ['حذف حسابي من السيرفر (يحتاج OK مرتين)']];
+      var alertsOk = true; try { alertsOk = A.twAlertsOk ? A.twAlertsOk() : true; } catch (e) {}
+      var o = [['فتح الرسائل مباشرة عند وصولها: ' + (auto ? 'شغّال' : 'متوقف')], ['اسم شاشتك عند الآخرين: ' + (TW.S.name || '—')], ['حذف الشخص المحدد ومحادثته'], ['حذف حسابي من السيرفر (يحتاج OK مرتين)'], ['السماح بظهور الرسائل فوق التطبيقات: ' + (alertsOk ? 'مسموح ✓' : 'غير مسموح — اضغط OK للسماح')]];
       C = '<div class="ch-opts"><h3>خيارات «تواصل»</h3>' + o.map(function (x, i) { return '<div class="ch-row add' + (i === st.oi ? ' ch-f' : '') + '">' + esc(x[0]) + '</div>'; }).join('') + '</div>';
     } else if (st.cur) {
       var l = TW.convo(st.cur);
@@ -194,12 +195,13 @@
       draw(); return;
     }
     if (st.f === 'opts') {
-      if (k === 'ArrowDown') st.oi = Math.min(3, st.oi + 1); else if (k === 'ArrowUp') st.oi = Math.max(0, st.oi - 1);
+      if (k === 'ArrowDown') st.oi = Math.min(4, st.oi + 1); else if (k === 'ArrowUp') st.oi = Math.max(0, st.oi - 1);
       else if (k === 'ArrowRight') { st.f = 'list'; }
       else if (k === 'ok') {
         if (st.oi === 0) { var a = true; try { a = A.twAutoOn(); A.twAuto(!a); } catch (e) {} }
         else if (st.oi === 1) { startInput('name', 'اسم شاشتك عند الآخرين', TW.S.name); return; }
         else if (st.oi === 2) { if (st.cur) { TW.removeContact(st.cur); st.cur = ''; st.f = 'list'; toast('انحذف'); } else toast('اختر شخص من القائمة أول'); }
+        else if (st.oi === 4) { try { A.openOverlaySettings(); } catch (e) { toast('يحتاج الشاشة نفسها'); } }
         else if (st.oi === 3) { if (st.sure) { TW.leave(function () { toast('انحذف حسابك'); st.cur = ''; st.f = 'list'; boot(function () { draw(); }); }); st.sure = false; } else { st.sure = true; toast('اضغط OK مرة ثانية للتأكيد'); setTimeout(function () { st.sure = false; }, 5000); } }
       }
       draw(); return;

@@ -182,7 +182,7 @@ public class MainActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient());
         web.addJavascriptInterface(new Bridge(), "Android");
         instance = this;
-        Tawasul.start(this);
+        Tawasul.keepAlive(this);
         setContentView(web);
         web.loadUrl(pageUrl());
         web.requestFocus();
@@ -511,7 +511,8 @@ public class MainActivity extends Activity {
 
     public class Bridge {
         /* ---- «تواصل» ---- */
-        @JavascriptInterface public void twCreds(String code, String token) { Media.prefs(MainActivity.this).edit().putString("tw_code", code).putString("tw_token", token).apply(); Tawasul.start(MainActivity.this); }
+        @JavascriptInterface public void twCreds(String code, String token) { Media.prefs(MainActivity.this).edit().putString("tw_code", code).putString("tw_token", token).apply(); Tawasul.keepAlive(MainActivity.this); }
+        @JavascriptInterface public boolean twAlertsOk() { return Overlay.allowed(MainActivity.this); }
         @JavascriptInterface public String twTake() { SharedPreferences sp = Media.prefs(MainActivity.this); String q = sp.getString("tw_q", "[]"); sp.edit().putString("tw_q", "[]").apply(); return q; }
         @JavascriptInterface public void twAuto(boolean on) { Media.prefs(MainActivity.this).edit().putBoolean("tw_auto", on).apply(); }
         @JavascriptInterface public boolean twAutoOn() { return Media.prefs(MainActivity.this).getBoolean("tw_auto", true); }
