@@ -27,6 +27,9 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+        <service android:name=".PushService" android:exported="false">
+            <intent-filter><action android:name="com.google.firebase.MESSAGING_EVENT" /></intent-filter>
+        </service>
         <service android:name=".PollJob" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE" />
         <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>

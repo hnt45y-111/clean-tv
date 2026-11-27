@@ -1,4 +1,7 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'com.google.gms.google-services'
+}
 android {
     namespace 'com.cleantv.tawasul'
     compileSdk 34
@@ -30,3 +33,7 @@ tasks.register('copyShared', Copy) {
     into layout.buildDirectory.dir('shared-assets')
 }
 tasks.matching { it.name == 'preBuild' }.configureEach { dependsOn 'copyShared' }
+dependencies {
+    // instant notifications: Firebase Cloud Messaging only (no analytics)
+    implementation 'com.google.firebase:firebase-messaging:24.1.0'
+}

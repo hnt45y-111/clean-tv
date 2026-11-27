@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "837686846390",
+    "project_id": "tawasul-8a478",
+    "storage_bucket": "tawasul-8a478.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837686846390:android:c910938d34459675511717",
+        "android_client_info": {
+          "package_name": "com.cleantv.tawasul"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDi_w6KEgXB6_nVh4cDoPVWcsXwKlnFV84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

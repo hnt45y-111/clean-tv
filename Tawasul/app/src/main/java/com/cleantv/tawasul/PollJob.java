@@ -73,15 +73,19 @@ public class PollJob extends JobService {
     }
 
     static void notify(Context c, JSONArray msgs) throws Exception {
+        JSONObject m = msgs.getJSONObject(msgs.length() - 1);
+        show(c, m.optString("from", ""), m.optString("fromName", ""), m.optString("kind", "text"), m.optString("text", ""), m.optString("name", ""), msgs.length());
+    }
+
+    /** One notification per app: a newer message replaces the older one (the same id), so the push and the 15 minute check never double up. */
+    static void show(Context c, String from, String fromName, String kind, String body, String fileName, int count) {
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(new NotificationChannel(CH, "الرسائل", NotificationManager.IMPORTANCE_HIGH));
-        JSONObject m = msgs.getJSONObject(msgs.length() - 1);
-        String who = m.optString("fromName", "").length() > 0 ? m.optString("fromName") : "رسالة جديدة";
-        String kind = m.optString("kind", "text"), text;
-        if ("image".equals(kind)) text = "📷 صورة"; else if ("audio".equals(kind)) text = "🎤 رسالة صوتية"; else if ("file".equals(kind)) text = "📎 " + m.optString("name", "ملف"); else text = m.optString("text", "");
-        if (msgs.length() > 1) text = msgs.length() + " رسائل جديدة · " + text;
-        Intent i = new Intent(c, MainActivity.class).putExtra("open", m.optString("from", "")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        String who = fromName != null && fromName.length() > 0 ? fromName : "رسالة جديدة", text;
+        if ("image".equals(kind)) text = "📷 صورة"; else if ("audio".equals(kind)) text = "🎤 رسالة صوتية"; else if ("file".equals(kind)) text = "📎 " + (fileName == null || fileName.length() == 0 ? "ملف" : fileName); else text = body == null ? "" : body;
+        if (count > 1) text = count + " رسائل جديدة · " + text;
+        Intent i = new Intent(c, MainActivity.class).putExtra("open", from == null ? "" : from).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(c, 0, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, CH) : new Notification.Builder(c);
         b.setSmallIcon(android.R.drawable.stat_notify_chat).setContentTitle(who).setContentText(text).setContentIntent(pi).setAutoCancel(true);
