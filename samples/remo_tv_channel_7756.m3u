@@ -4,3 +4,7 @@
 # الترويسات التي يرسلها التطبيق: Cookie: remoTV-Faster ، remo: stream-of-REMO
 #EXTINF:-1,Remo TV - stream 7756
 http://sts.mydroon.com:8080/live/9127491274/QDXDbuLzFDYaYbD/7756.m3u8
+#EXTINF:-1,Remo TV - stream 569491 (لوحة ثانية: sharkiptvpro.xyz) [اسم القناة: يُستكمل]
+http://sharkiptvpro.xyz/live/gs72cd991v3/bd75veo92b3/569491.m3u8
+#EXTINF:-1,Remo TV - stream 569491 (نفس البث عبر www)
+http://www.sharkiptvpro.xyz/live/gs72cd991v3/bd75veo92b3/569491.m3u8
