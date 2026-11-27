@@ -57,9 +57,9 @@ h1.in{background:var(--blue)}h1.out{background:var(--red)}
 
 /* ---------- الجدول ---------- */
 .tablebox{flex:1;min-height:0;background:#fff;border:4px solid var(--ink);border-radius:12px;box-shadow:6px 6px 0 var(--ink);overflow:auto;position:relative}
-table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
-thead th{position:sticky;top:0;z-index:3;background:var(--ink);color:var(--yellow);padding:6px 6px;font-size:14px;white-space:nowrap}
-td{padding:2px 6px;border-bottom:2px solid #e2e2e2;border-left:1px solid #eee;text-align:center;height:28px;white-space:nowrap}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:15px}
+thead th{position:sticky;top:0;z-index:3;background:var(--ink);color:var(--yellow);padding:8px 6px;font-size:15px;white-space:nowrap}
+td{padding:2px 6px;border-bottom:2px solid #e2e2e2;border-left:1px solid #eee;text-align:center;height:var(--rowh,36px);white-space:nowrap}
 tbody tr:nth-child(even) td{background:var(--row)}
 tbody tr:hover td{background:#e8f3ff}
 td.t{text-align:right;white-space:normal;min-width:220px}
@@ -75,12 +75,20 @@ td .mark{background:var(--hl);border-radius:3px;padding:0 2px}
 tr:hover .del{display:inline-block}
 tr.flash td{animation:flash 1.4s ease}
 @keyframes flash{0%{background:var(--yellow);transform:translateX(-30px)}25%{transform:translateX(0)}100%{}}
-td .ed{width:100%;min-width:80px;border:2px solid var(--blue);border-radius:4px;padding:3px 5px;font-size:14px;text-align:inherit}
+td .ed{width:100%;min-width:80px;border:2px solid var(--blue);border-radius:4px;padding:4px 6px;font-size:15px;text-align:inherit}
+.combo{position:relative;display:block}
+.combo input{padding-left:30px !important}
+.cbtn{position:absolute;left:3px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:13px;padding:5px 7px;cursor:pointer;color:var(--ink)}
+.cdrop{position:fixed;z-index:200;background:#fff;border:3px solid var(--ink);border-radius:10px;box-shadow:4px 4px 0 var(--ink);overflow:auto;animation:pop .12s;direction:rtl}
+.cdrop div{padding:9px 12px;border-bottom:1px solid #eee;cursor:pointer;font-size:15px;display:flex;justify-content:space-between;gap:10px;text-align:right}
+.cdrop div.act,.cdrop div:hover{background:var(--yellow)}
+.cdrop small{color:#888}
+.cdrop .none{color:#888;cursor:default}
 
 /* صف الإدخال السريع */
-tfoot td{position:sticky;bottom:0;z-index:2;background:#d9f7dc;border-top:3px dashed var(--ink);border-bottom:none;font-weight:bold}
+tfoot td{height:auto;padding:6px;position:sticky;bottom:0;z-index:2;background:#d9f7dc;border-top:3px dashed var(--ink);border-bottom:none;font-weight:bold}
 tfoot .auto{color:var(--auto)}
-tfoot input{width:100%;border:2px solid var(--ink);border-radius:5px;padding:4px 6px;background:#fff;font-size:14px;outline:none}
+tfoot input{width:100%;border:2px solid var(--ink);border-radius:5px;padding:6px 7px;background:#fff;font-size:15px;outline:none}
 tfoot input.regin{background:#f0fff2;color:var(--auto);font-weight:bold}
 tfoot input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2b8cff44}
 tfoot .savebtn{border:2px solid var(--ink);background:var(--green);border-radius:6px;font-weight:bold;padding:3px 8px;box-shadow:2px 2px 0 var(--ink)}
@@ -175,7 +183,6 @@ tfoot .savebtn{border:2px solid var(--ink);background:var(--green);border-radius
   </div>
 </main>
 
-<datalist id="depts"></datalist>
 <input type="file" id="xlsInput" accept=".xlsx,.xls,.csv" hidden>
 <input type="file" id="jsonInput" accept=".json" hidden>
 <input type="file" id="anyFile" hidden>
@@ -484,8 +491,6 @@ function renderTop(){
   $("#filter").innerHTML = `<option value="cur">🎚 السنة الحالية (${y})</option><option value="all">🌐 بحث شامل: كل السنوات</option>`
     + ys.map(v => `<option value="y:${v}">📅 ${SEC[sec].name} ${v}</option>`).join("");
   $("#filter").value = [...$("#filter").options].some(o => o.value === fv) ? fv : "cur";
-  const opts = new Set(); for (const yy of ys) for (const r of recs(sec, yy)) if (r.dept) opts.add(r.dept);
-  $("#depts").innerHTML = [...opts].sort().map(d => `<option value="${esc(d)}">`).join("");
 }
 
 function searchResults(){
@@ -518,6 +523,7 @@ function rowHtml(sec, y, r, terms, showYear, isLast){
 }
 
 function render(keepScroll){
+  closeCombo();
   const box = $("#tablebox"), st = box.scrollTop;
   renderSide(); renderTop();
   const sec = S.sec, y = S.year[sec], list = recs(sec, y);
@@ -539,6 +545,7 @@ function render(keepScroll){
   $("#stat").innerHTML = `<span>📚 ${list.length} كتاب</span><span>🗂 الاضبارة الحالية: ${list.length ? folderOf(list.at(-1).seq) : 1}</span><span>⏭ التالي: ${ns} (اضبارة ${folderOf(ns)} / ${inFolder(ns)})</span>`
     + (searching ? `<span class="res">🔎 ${count} نتيجة</span>` : "");
   renderEntry(searching);
+  fitRows();
   if (keepScroll) box.scrollTop = st;
   else if (!searching) box.scrollTop = box.scrollHeight;
   else box.scrollTop = 0;
@@ -553,22 +560,24 @@ function renderEntry(hidden){
   const sec = S.sec, y = S.year[sec], ns = nextSeq(sec, y), d = entryDraft[sec];
   tf.innerHTML = `<tr>
     <td class="auto">${ns}</td>
-    <td><input id="e_reg" class="regin" style="width:110px" value="${esc(d.reg || today())}" title="تاريخ التسجيل — يظهر تلقائياً ويمكن تعديله"></td>
-    <td><input id="e_dept" list="depts" placeholder="اسم الدائرة" value="${esc(d.dept || "")}"></td>
-    <td><input id="e_date" placeholder="2026/11/25" style="width:110px" value="${esc(d.date || "")}"></td>
-    <td><input id="e_no" style="width:90px" value="${esc(d.no ?? suggestNo(sec, y))}"></td>
-    <td><input id="e_title" placeholder="عنوان الكتاب" value="${esc(d.title || "")}"></td>
+    <td><input id="e_reg" enterkeyhint="enter" class="regin" style="width:110px" value="${esc(d.reg || today())}" title="تاريخ التسجيل — يظهر تلقائياً ويمكن تعديله"></td>
+    <td><input id="e_dept" enterkeyhint="enter" placeholder="اسم الدائرة" value="${esc(d.dept || "")}"></td>
+    <td><input id="e_date" enterkeyhint="enter" placeholder="2026/11/25" style="width:110px" value="${esc(d.date || "")}"></td>
+    <td><input id="e_no" enterkeyhint="enter" style="width:90px" value="${esc(d.no ?? suggestNo(sec, y))}"></td>
+    <td><input id="e_title" enterkeyhint="enter" placeholder="عنوان الكتاب" value="${esc(d.title || "")}"></td>
     <td><button class="savebtn" id="e_save" title="حفظ (Enter)">✔ حفظ</button></td>
     <td class="auto">${folderOf(ns)}</td>
     <td class="auto">${inFolder(ns)}</td></tr>`;
+  attachCombo($("#e_dept"), "dept");
+  attachCombo($("#e_title"), "title");
   const ids = ["e_reg","e_dept","e_date","e_no","e_title"];
   ids.forEach((id, i) => {
     const el = $("#" + id);
     el.addEventListener("input", () => { entryDraft[sec][id.slice(2)] = el.value; });
     el.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
+      if (isEnter(e)) {
         e.preventDefault();
-        if (e.ctrlKey || i === ids.length - 1) saveEntry(); else $("#" + ids[i + 1]).focus();
+        if (e.ctrlKey || i === ids.length - 1) saveEntry(); else { const nx = $("#" + ids[i + 1]); nx.focus(); nx.select(); }
       }
     });
   });
@@ -595,28 +604,40 @@ async function addRecord(sec, y, rec){
   return seq;
 }
 
-/* ---------- التعديل بنقرة واحدة ---------- */
-$("#tbody").addEventListener("click", e => {
-  const td = e.target.closest("td[data-f]"); if (!td || td.querySelector("input")) return;
+/* ---------- التعديل بنقرة واحدة (Enter يحفظ وينتقل للخانة اللي بعدها) ---------- */
+const EDIT_ORDER = ["reg","dept","date","no","title"];
+function startEdit(td){
+  if (!td || td.querySelector("input")) return;
   const tr = td.parentElement, y = tr.dataset.y, seq = +tr.dataset.seq, f = td.dataset.f;
   const r = recs(S.sec, y).find(x => x.seq === seq); if (!r) return;
   const old = r[f] ?? "";
-  td.innerHTML = `<input class="ed" value="${esc(old)}" ${f === "dept" ? 'list="depts"' : ""}>`;
-  const inp = td.querySelector("input"); inp.focus(); inp.select();
+  td.innerHTML = `<input class="ed" enterkeyhint="enter" value="${esc(old)}">`;
+  const inp = td.querySelector("input");
+  if (f === "dept" || f === "title") attachCombo(inp, f);
+  inp.focus(); inp.select();
   let done = false;
-  const finish = ok => {
+  const finish = (ok, next) => {
     if (done) return; done = true;
     if (ok) {
       let v = inp.value.trim();
       if (f === "date" || f === "reg") v = normDate(v);
       if (f === "no") v = normDigits(v);
-      if (v !== old) { r[f] = v; save(); toast("تم التعديل ✏️", "info"); }
+      if (v !== old) { r[f] = v; save(); toast("تم الحفظ ✏️", "info"); }
     }
     render(true);
+    if (next) {
+      const nf = EDIT_ORDER[EDIT_ORDER.indexOf(f) + 1];
+      const tr2 = document.querySelector(`#tbody tr[data-y="${y}"][data-seq="${seq}"]`);
+      if (nf && tr2) startEdit(tr2.querySelector(`td[data-f="${nf}"]`));
+    }
   };
-  inp.addEventListener("keydown", ev => { if (ev.key === "Enter") finish(true); if (ev.key === "Escape") { ev.stopPropagation(); finish(false); } });
-  inp.addEventListener("blur", () => finish(true));
-});
+  inp.addEventListener("keydown", ev => {
+    if (isEnter(ev)) { ev.preventDefault(); finish(true, true); }
+    if (ev.key === "Escape") { ev.stopPropagation(); finish(false); }
+  });
+  inp.addEventListener("blur", () => setTimeout(() => { if (inp.isConnected && document.activeElement !== inp) finish(true); }, 200));
+}
+$("#tbody").addEventListener("click", e => startEdit(e.target.closest("td[data-f]")));
 $("#tbody").addEventListener("click", async e => {
   const tr = e.target.closest("tr[data-seq]"); if (!tr) return;
   const y = tr.dataset.y, seq = +tr.dataset.seq;
@@ -637,7 +658,7 @@ async function addDialog(){
     <div class="note">📁 اختر ملف الكتاب (PDF أو صورة) وراح يتسمّى تلقائياً <b id="d_fname">${SEC[sec].name} ${esc(suggestNo(sec, y))}</b> بمجلد ${SEC[sec].full} ويرتبط بهذا السجل.</div>
     <div class="row"><div class="f"><label>التسلسل</label><div class="ro">${ns}</div></div><div class="f"><label>التاريخ</label><input id="d_reg" value="${today()}"></div>
       <div class="f"><label>الاضبارة</label><div class="ro">${folderOf(ns)}</div></div><div class="f"><label>تسلسل بالاضبارة</label><div class="ro">${inFolder(ns)}</div></div></div>
-    <div class="row"><div class="f"><label>اسم الدائرة</label><input id="d_dept" list="depts"></div><div class="f"><label>تاريخ الكتاب</label><input id="d_date" placeholder="2026/11/25"></div>
+    <div class="row"><div class="f"><label>اسم الدائرة</label><input id="d_dept"></div><div class="f"><label>تاريخ الكتاب</label><input id="d_date" placeholder="2026/11/25"></div>
       <div class="f"><label>رقم الكتاب</label><input id="d_no" value="${esc(suggestNo(sec, y))}"></div></div>
     <div class="row"><div class="f"><label>عنوان الكتاب</label><input id="d_title"></div></div>
     <div class="row"><div class="f"><label>ملف الكتاب (اختياري)</label><div class="filebox"><button class="btn b" id="d_pick">📎 اختيار ملف</button><span id="d_file">لم يُختر ملف</span></div></div></div>
@@ -646,6 +667,8 @@ async function addDialog(){
   no.addEventListener("input", () => ov.querySelector("#d_fname").textContent = `${SEC[sec].name} ${normDigits(no.value).trim()}`);
   for (const id of ["#d_reg","#d_date"]) ov.querySelector(id).addEventListener("blur", e => e.target.value = normDate(e.target.value));
   ov.querySelector("#d_pick").onclick = async () => { const p = await pickBookFile(sec); if (p) { picked = p; ov.querySelector("#d_file").textContent = "✔ " + p.file.name; } };
+  attachCombo(ov.querySelector("#d_dept"), "dept");
+  attachCombo(ov.querySelector("#d_title"), "title");
   ov.querySelector("#d_dept").focus();
   ov.querySelector("#d_save").onclick = async () => {
     const rec = { reg: normDate(ov.querySelector("#d_reg").value), dept: ov.querySelector("#d_dept").value.trim(), date: normDate(ov.querySelector("#d_date").value), no: normDigits(no.value).trim(), title: ov.querySelector("#d_title").value.trim() };
@@ -698,6 +721,84 @@ $("#years").addEventListener("dblclick", async e => {
     delete DB.sections[S.sec].years[y]; S.year[S.sec] = yearsOf(S.sec).at(-1); save(); saveUI(); render();
   };
 });
+
+/* =====================================================================
+   الاقتراحات: كل اسم دائرة وكل عنوان ينكتب ينحفظ ويطلع كخيار بعدين
+   ▼ يعرض الكل — والكتابة تعرض اللي يبدي بنفس الحروف
+   ===================================================================== */
+const isEnter = e => e.key === "Enter" || e.keyCode === 13;
+function suggest(field, sec = S.sec){
+  const c = new Map();
+  for (const y of yearsOf(sec)) for (const r of recs(sec, y)) { const v = String(r[field] || "").trim(); if (v) c.set(v, (c.get(v) || 0) + 1); }
+  return [...c.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ar"));
+}
+let comboDrop = null;
+function closeCombo(){ if (comboDrop) { comboDrop.remove(); comboDrop = null; } }
+function attachCombo(inp, field){
+  const wrap = document.createElement("span"); wrap.className = "combo";
+  inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+  const btn = document.createElement("button"); btn.type = "button"; btn.className = "cbtn"; btn.textContent = "▼"; btn.tabIndex = -1; btn.title = "عرض كل الخيارات";
+  wrap.appendChild(btn);
+  inp.setAttribute("autocomplete", "off");
+  const show = all => {
+    closeCombo();
+    const q = norm(inp.value);
+    let items = suggest(field);
+    if (!all) {
+      if (!q) return;
+      const a = [], b = [], c = [];
+      for (const it of items) {
+        const n = norm(it[0]); if (n === q) continue;
+        if (n.startsWith(q)) a.push(it); else if (n.split(" ").some(w => w.startsWith(q))) b.push(it); else if (n.includes(q)) c.push(it);
+      }
+      items = [...a, ...b, ...c];
+      if (!items.length) return;
+    }
+    const d = document.createElement("div"); d.className = "cdrop"; d.inp = inp; d.act = -1; d.items = items;
+    d.innerHTML = items.length ? items.slice(0, 100).map(([v, n], i) => `<div data-i="${i}"><span>${esc(v)}</span><small>${n}</small></div>`).join("")
+      : `<div class="none">ماكو شي محفوظ بعد — اللي تكتبه راح ينحفظ هنا</div>`;
+    document.body.appendChild(d); comboDrop = d;
+    const r = wrap.getBoundingClientRect();
+    d.style.width = Math.max(r.width, 240) + "px";
+    d.style.right = Math.max(4, innerWidth - r.right) + "px";
+    const below = innerHeight - r.bottom - 10, above = r.top - 10;
+    if (below < Math.min(280, d.scrollHeight) && above > below) { d.style.bottom = (innerHeight - r.top + 4) + "px"; d.style.maxHeight = Math.min(300, above) + "px"; }
+    else { d.style.top = (r.bottom + 4) + "px"; d.style.maxHeight = Math.min(300, below) + "px"; }
+    d.addEventListener("mousedown", e => e.preventDefault());
+    d.addEventListener("click", e => { const it = e.target.closest("[data-i]"); if (it) pick(+it.dataset.i); });
+  };
+  const pick = i => {
+    if (!comboDrop) return;
+    inp.value = comboDrop.items[i][0];
+    closeCombo();
+    inp._sup = true; inp.dispatchEvent(new Event("input"));
+    inp.focus();
+  };
+  btn.addEventListener("mousedown", e => e.preventDefault());
+  btn.addEventListener("click", e => { e.stopPropagation(); if (comboDrop && comboDrop.inp === inp) closeCombo(); else { inp.focus(); show(true); } });
+  inp.addEventListener("input", () => { if (inp._sup) { inp._sup = false; return; } show(false); });
+  inp.addEventListener("keydown", e => {
+    const d = comboDrop && comboDrop.inp === inp ? comboDrop : null;
+    if (!d) { if (e.key === "ArrowDown" && e.altKey) { e.preventDefault(); show(true); } return; }
+    const els = d.querySelectorAll("[data-i]");
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && els.length) {
+      e.preventDefault();
+      d.act = (d.act + (e.key === "ArrowDown" ? 1 : -1) + els.length) % els.length;
+      els.forEach((x, i) => x.classList.toggle("act", i === d.act));
+      els[d.act].scrollIntoView({block:"nearest"});
+    } else if (isEnter(e) && d.act >= 0) { e.preventDefault(); e.stopImmediatePropagation(); pick(d.act); }
+    else if (e.key === "Escape") { e.stopPropagation(); e.stopImmediatePropagation(); closeCombo(); }
+    else if (isEnter(e) || e.key === "Tab") closeCombo();
+  });
+  inp.addEventListener("blur", () => setTimeout(() => { if (document.activeElement !== inp && comboDrop && comboDrop.inp === inp) closeCombo(); }, 150));
+}
+function fitRows(){
+  const box = $("#tablebox");
+  const h = Math.floor((box.clientHeight - ($("#thead").offsetHeight || 40) - ($("#tfoot").offsetHeight || 50) - 4) / 20);
+  document.documentElement.style.setProperty("--rowh", Math.max(32, Math.min(60, h)) + "px");
+}
+window.addEventListener("resize", () => { closeCombo(); fitRows(); });
+$("#tablebox").addEventListener("scroll", () => { if (comboDrop && !comboDrop.matches(":hover")) closeCombo(); });
 
 /* =====================================================================
    Excel
