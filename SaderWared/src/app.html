@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الصادر والوارد</title>
+<style>
+:root{
+  --ink:#111;--paper:#fff7d6;--dot:#f0d98a;--yellow:#ffd93b;--blue:#2b8cff;--red:#ff4d4d;
+  --green:#5fd068;--orange:#ff9f2e;--sky:#7fc4ff;--row:#fffbea;--auto:#14803a;--hl:#ffd93b;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,"Liberation Sans",Arimo,sans-serif}
+html,body{height:100%}
+body{background:var(--paper);background-image:radial-gradient(var(--dot) 1.6px,transparent 1.8px);background-size:16px 16px;color:var(--ink);display:flex;overflow:hidden;font-size:14px}
+button{cursor:pointer;color:var(--ink)}
+input,select{font-size:14px;color:var(--ink)}
+
+/* ---------- الشريط الجانبي ---------- */
+.side{width:220px;flex:none;background:var(--yellow);border-left:5px solid var(--ink);padding:16px 14px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.logo{background:#fff;border:4px solid var(--ink);border-radius:12px;box-shadow:5px 5px 0 var(--ink);padding:10px;text-align:center;font-weight:bold;font-size:20px;transform:rotate(-2deg);margin-bottom:6px;line-height:1.3}
+.sec-tab{background:#fff;border:4px solid var(--ink);border-radius:12px;box-shadow:4px 4px 0 var(--ink);padding:11px;font-size:20px;font-weight:bold;text-align:center;transition:transform .12s,box-shadow .12s,background .2s}
+.sec-tab:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.sec-tab:active,.btn:active,.y:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.sec-tab.in.on{background:var(--blue);color:#fff}.sec-tab.out.on{background:var(--red);color:#fff}
+.panel{background:#fff;border:3px solid var(--ink);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:7px;box-shadow:3px 3px 0 var(--ink)}
+.panel h4{font-size:13px}
+.panel .small{font-size:12px;line-height:1.6;word-break:break-word}
+.panel .ok{color:var(--auto);font-weight:bold}.panel .bad{color:#c62828;font-weight:bold}
+.sbtn{border:3px solid var(--ink);border-radius:8px;background:#fff;padding:6px 8px;font-weight:bold;font-size:13px;box-shadow:2px 2px 0 var(--ink);transition:transform .1s,box-shadow .1s}
+.sbtn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.sbtn.y1{background:var(--yellow)}.sbtn.g1{background:var(--green)}.sbtn.s1{background:var(--sky)}
+.keys{font-size:12px;line-height:1.9}
+.keys b{display:inline-block;background:#fff;border:2px solid var(--ink);border-radius:5px;padding:0 5px;font-size:11px;margin-left:4px}
+
+/* ---------- المحتوى ---------- */
+.main{flex:1;min-width:0;padding:14px 20px 14px;display:flex;flex-direction:column;gap:10px}
+.top{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+h1{font-size:30px;color:#fff;border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink);padding:2px 18px;border-radius:10px;transform:rotate(-1.5deg);white-space:nowrap}
+h1.in{background:var(--blue)}h1.out{background:var(--red)}
+.years{display:flex;gap:7px;flex-wrap:wrap;align-items:flex-end}
+.y{background:#fff;border:3px solid var(--ink);border-radius:10px 10px 0 0;padding:6px 14px;font-weight:bold;font-size:15px;transition:transform .12s,box-shadow .12s,background .2s}
+.y.on{background:var(--yellow);box-shadow:3px 3px 0 var(--ink)}
+.y.add{background:var(--green)}
+.bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.filter{background:#fff;border:3px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 var(--ink);padding:8px 10px;font-weight:bold;font-size:14px}
+.searchwrap{flex:1;min-width:240px;position:relative}
+.search{width:100%;background:#fff;border:4px solid var(--ink);border-radius:12px;padding:8px 38px 8px 34px;font-size:15px;box-shadow:4px 4px 0 var(--ink);outline:none}
+.search:focus{border-color:var(--blue)}
+.searchwrap .ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px}
+.searchwrap .clr{position:absolute;left:10px;top:50%;transform:translateY(-50%);border:none;background:none;font-size:18px;font-weight:bold;display:none}
+.btn{border:4px solid var(--ink);border-radius:12px;box-shadow:4px 4px 0 var(--ink);padding:8px 14px;font-weight:bold;font-size:14px;white-space:nowrap;transition:transform .12s,box-shadow .12s;background:#fff;position:relative}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.g{background:var(--green)}.b{background:var(--sky)}.o{background:var(--orange)}.p{background:var(--yellow)}
+.stat{display:flex;gap:9px;font-size:13px;font-weight:bold;flex-wrap:wrap}
+.stat span{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:2px 12px}
+.stat span.res{background:var(--yellow)}
+
+/* ---------- الجدول ---------- */
+.tablebox{flex:1;min-height:0;background:#fff;border:4px solid var(--ink);border-radius:12px;box-shadow:6px 6px 0 var(--ink);overflow:auto;position:relative}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+thead th{position:sticky;top:0;z-index:3;background:var(--ink);color:var(--yellow);padding:6px 6px;font-size:14px;white-space:nowrap}
+td{padding:2px 6px;border-bottom:2px solid #e2e2e2;border-left:1px solid #eee;text-align:center;height:28px;white-space:nowrap}
+tbody tr:nth-child(even) td{background:var(--row)}
+tbody tr:hover td{background:#e8f3ff}
+td.t{text-align:right;white-space:normal;min-width:220px}
+td.dept{white-space:normal;min-width:120px}
+td[data-f]{cursor:text}
+td .mark{background:var(--hl);border-radius:3px;padding:0 2px}
+.ic{display:inline-block;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:8px;padding:0 9px;font-weight:bold;box-shadow:2px 2px 0 var(--ink);font-size:13px;line-height:17px;transition:transform .1s,box-shadow .1s}
+.ic:hover{transform:scale(1.12) rotate(-4deg)}
+.ic:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.ic.none{background:#eee;color:#555;box-shadow:none;border-style:dashed}
+.seqcell{position:relative}
+.del{display:none;position:absolute;left:2px;top:50%;transform:translateY(-50%);border:2px solid var(--ink);background:#fff;border-radius:6px;font-size:11px;padding:0 3px}
+tr:hover .del{display:inline-block}
+tr.flash td{animation:flash 1.4s ease}
+@keyframes flash{0%{background:var(--yellow);transform:translateX(-30px)}25%{transform:translateX(0)}100%{}}
+td .ed{width:100%;min-width:80px;border:2px solid var(--blue);border-radius:4px;padding:3px 5px;font-size:14px;text-align:inherit}
+
+/* صف الإدخال السريع */
+tfoot td{position:sticky;bottom:0;z-index:2;background:#d9f7dc;border-top:3px dashed var(--ink);border-bottom:none;font-weight:bold}
+tfoot .auto{color:var(--auto)}
+tfoot input{width:100%;border:2px solid var(--ink);border-radius:5px;padding:4px 6px;background:#fff;font-size:14px;outline:none}
+tfoot input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2b8cff44}
+tfoot .savebtn{border:2px solid var(--ink);background:var(--green);border-radius:6px;font-weight:bold;padding:3px 8px;box-shadow:2px 2px 0 var(--ink)}
+.empty td{padding:30px;font-size:16px;font-weight:bold;color:#666;background:#fff !important}
+.year-col{font-weight:bold;color:var(--blue)}
+
+/* ---------- النوافذ ---------- */
+.ov{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:50;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.dlg{width:min(780px,94vw);max-height:92vh;overflow:auto;background:#fff;border:5px solid var(--ink);border-radius:16px;padding:22px;box-shadow:10px 10px 0 var(--yellow),10px 10px 0 3px var(--ink);animation:pop .22s cubic-bezier(.3,1.6,.6,1)}
+@keyframes pop{from{transform:scale(.7) rotate(-3deg);opacity:0}}
+.dlg h2{display:inline-block;background:var(--blue);color:#fff;border:4px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:3px 16px;border-radius:10px;margin-bottom:16px;font-size:22px;transform:rotate(-1deg)}
+.dlg h2.red{background:var(--red)}.dlg h2.yel{background:var(--yellow);color:var(--ink)}
+.row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}.f{flex:1;min-width:140px}
+.f label{display:block;font-size:13px;font-weight:bold;margin-bottom:4px}
+.f input,.f select,.f .ro{width:100%;background:#fff;border:3px solid var(--ink);border-radius:8px;padding:8px 10px;font-size:15px;outline:none}
+.f input:focus{border-color:var(--blue)}
+.f .ro{background:#c9f4cf;color:var(--auto);font-weight:bold}
+.note{background:#fff3a8;border:3px solid var(--ink);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.8;margin-bottom:14px}
+.acts{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.filebox{border:3px dashed var(--ink);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fafafa}
+.viewer{width:min(1100px,96vw);height:92vh;display:flex;flex-direction:column;padding:14px}
+.viewer .vb{flex:1;min-height:0;border:3px solid var(--ink);border-radius:10px;overflow:auto;background:#555;display:flex;align-items:center;justify-content:center}
+.viewer iframe{width:100%;height:100%;border:none;background:#fff}
+.viewer img{max-width:100%;max-height:100%}
+.vhead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.vhead h2{margin:0}
+.menu{position:absolute;top:calc(100% + 8px);left:0;background:#fff;border:3px solid var(--ink);border-radius:10px;box-shadow:4px 4px 0 var(--ink);z-index:20;display:flex;flex-direction:column;min-width:220px;overflow:hidden;animation:pop .15s}
+.menu button{border:none;border-bottom:2px solid #eee;background:#fff;padding:10px;text-align:right;font-weight:bold;font-size:14px}
+.menu button:hover{background:var(--yellow)}
+
+/* ---------- التنبيه الكوميكسي ---------- */
+.toast{position:fixed;top:14px;left:50%;z-index:99;transform:translateX(-50%);pointer-events:none;animation:boom .9s cubic-bezier(.3,1.6,.6,1) forwards}
+.toast .burst{position:relative;padding:26px 44px;font-weight:bold;font-size:20px;text-align:center;white-space:nowrap}
+.toast .burst::before{content:"";position:absolute;inset:0;background:var(--yellow);clip-path:polygon(50% 0,58% 18%,75% 5%,72% 26%,95% 18%,83% 38%,100% 50%,83% 62%,95% 82%,72% 74%,75% 95%,58% 82%,50% 100%,42% 82%,25% 95%,28% 74%,5% 82%,17% 62%,0 50%,17% 38%,5% 18%,28% 26%,25% 5%,42% 18%);filter:drop-shadow(3px 3px 0 var(--ink));z-index:-1}
+.toast.err .burst::before{background:var(--red)}.toast.err{color:#fff}
+.toast.info .burst::before{background:var(--sky)}
+@keyframes boom{0%{transform:translateX(-50%) scale(.2) rotate(-12deg);opacity:0}100%{transform:translateX(-50%) scale(1) rotate(-3deg);opacity:1}}
+.toast.out{animation:bye .3s forwards}
+@keyframes bye{to{transform:translateX(-50%) scale(.4);opacity:0}}
+</style>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo">💥 الصادر<br>والوارد</div>
+  <button class="sec-tab in" data-sec="in">📥 الوارد</button>
+  <button class="sec-tab out" data-sec="out">📤 الصادر</button>
+
+  <div class="panel" id="folderPanel"></div>
+
+  <div class="panel">
+    <h4>💾 النسخ الاحتياطي</h4>
+    <button class="sbtn y1" id="bkBtn">حفظ نسخة احتياطية</button>
+    <button class="sbtn" id="rsBtn">استرجاع نسخة</button>
+    <div class="small" id="bkInfo"></div>
+  </div>
+
+  <div class="panel keys">
+    <h4>⌨️ اختصارات</h4>
+    <div><b>Ctrl+F</b> البحث</div>
+    <div><b>F2</b> نافذة الإضافة</div>
+    <div><b>Ctrl+Enter</b> حفظ الصف الأخضر</div>
+    <div><b>Alt+1</b> الوارد &nbsp; <b>Alt+2</b> الصادر</div>
+    <div><b>Esc</b> إغلاق / مسح البحث</div>
+    <div>✏️ نقرتين على أي خانة لتعديلها</div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <h1 id="title"></h1>
+    <div class="years" id="years"></div>
+  </div>
+  <div class="bar">
+    <select class="filter" id="filter" title="مجال البحث"></select>
+    <div class="searchwrap">
+      <span class="ico">🔍</span>
+      <input class="search" id="search" placeholder="ابحث برقم الكتاب أو العنوان أو اسم الدائرة أو التاريخ أو أي شي...">
+      <button class="clr" id="clr" title="مسح">✕</button>
+    </div>
+    <button class="btn p" id="addBtn">➕ إضافة (نافذة)</button>
+    <button class="btn g" id="impBtn">⬇ استيراد Excel</button>
+    <div style="position:relative"><button class="btn o" id="expBtn">⬆ تصدير Excel</button></div>
+  </div>
+  <div class="stat" id="stat"></div>
+  <div class="tablebox" id="tablebox">
+    <table>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot id="tfoot"></tfoot>
+    </table>
+  </div>
+</main>
+
+<datalist id="depts"></datalist>
+<input type="file" id="xlsInput" accept=".xlsx,.xls,.csv" hidden>
+<input type="file" id="jsonInput" accept=".json" hidden>
+<input type="file" id="anyFile" hidden>
+<input type="file" id="dirInput" webkitdirectory hidden>
+
+<script>/*XLSX_LIB*/</script>
+<script>
+"use strict";
+/* =====================================================================
+   البيانات
+   DB = { sections:{ in:{years:{ "2026":[rec,...] }}, out:{...} } }
+   rec = { seq, reg, dept, date, no, title }
+   الاضبارة وتسلسلها يُحسبان من التسلسل (كل 100 كتاب اضبارة)
+   ===================================================================== */
+const PER_FOLDER = 100;
+const SEC = { in:{name:"وارد", full:"الوارد", icon:"📥"}, out:{name:"صادر", full:"الصادر", icon:"📤"} };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const folderOf = seq => Math.ceil(seq / PER_FOLDER);
+const inFolder = seq => ((seq - 1) % PER_FOLDER) + 1;
+const thisYear = () => String(new Date().getFullYear());
+const pad = n => String(n).padStart(2, "0");
+const today = () => { const d = new Date(); return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`; };
+
+function normDigits(s){
+  return String(s ?? "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+}
+// توحيد النص للبحث والمطابقة (الهمزات، التاء المربوطة، الياء، الأرقام)
+function norm(s){
+  return normDigits(s).toLowerCase().replace(/[ـً-ْ]/g, "")
+    .replace(/[أإآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/ؤ/g, "و").replace(/ئ/g, "ي")
+    .replace(/\s+/g, " ").trim();
+}
+const fileKey = s => norm(s).replace(/[\s_\-]+/g, "");
+function normDate(v){
+  if (v instanceof Date && !isNaN(v)) return `${v.getFullYear()}/${pad(v.getMonth()+1)}/${pad(v.getDate())}`;
+  let s = normDigits(String(v ?? "")).trim();
+  if (!s) return "";
+  let m = s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/);
+  if (m) return `${m[1]}/${pad(m[2])}/${pad(m[3])}`;
+  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+  if (m) return `${m[3]}/${pad(m[2])}/${pad(m[1])}`;
+  return s;
+}
+
+let DB = null;
+const S = { sec:"in", year:{in:thisYear(), out:thisYear()}, q:"", filter:"cur", lastAdded:null };
+
+/* ---------- التخزين (IndexedDB + نسخة في localStorage) ---------- */
+let _db;
+function idb(){
+  if (_db) return Promise.resolve(_db);
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("sader-wared", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("kv");
+    r.onsuccess = () => { _db = r.result; res(_db); };
+    r.onerror = () => rej(r.error);
+  });
+}
+async function kvGet(k){ const d = await idb(); return new Promise((res, rej) => { const q = d.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+async function kvSet(k, v){ const d = await idb(); return new Promise((res, rej) => { const t = d.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); }
+
+let saveT;
+function save(){
+  clearTimeout(saveT);
+  saveT = setTimeout(flushSave, 150);
+}
+function flushSave(){
+  clearTimeout(saveT);
+  try { localStorage.setItem("sw-data", JSON.stringify(DB)); } catch(e){}
+  kvSet("data", DB).catch(() => toast("⚠️ تعذّر الحفظ!", "err"));
+}
+window.addEventListener("beforeunload", flushSave);
+
+async function load(){
+  let d = null;
+  try { d = await kvGet("data"); } catch(e){}
+  if (!d) { try { d = JSON.parse(localStorage.getItem("sw-data")); } catch(e){} }
+  DB = d && d.sections ? d : { sections:{ in:{years:{}}, out:{years:{}} } };
+  for (const s of ["in","out"]) {
+    DB.sections[s] ??= {years:{}};
+    if (!Object.keys(DB.sections[s].years).length) DB.sections[s].years[thisYear()] = [];
+  }
+  try { const ui = JSON.parse(localStorage.getItem("sw-ui") || "{}"); if (ui.sec) S.sec = ui.sec; if (ui.year) Object.assign(S.year, ui.year); } catch(e){}
+  for (const s of ["in","out"]) if (!DB.sections[s].years[S.year[s]]) S.year[s] = yearsOf(s).at(-1);
+  try { navigator.storage?.persist?.(); } catch(e){}
+}
+function saveUI(){ try { localStorage.setItem("sw-ui", JSON.stringify({sec:S.sec, year:S.year})); } catch(e){} }
+
+const yearsOf = sec => Object.keys(DB.sections[sec].years).sort();
+const recs = (sec = S.sec, year = S.year[S.sec]) => DB.sections[sec].years[year] ||= [];
+const nextSeq = (sec, year) => { const r = recs(sec, year); return r.length ? r[r.length - 1].seq + 1 : 1; };
+function suggestNo(sec, year){
+  const r = recs(sec, year), last = r[r.length - 1];
+  if (last && /^\d+$/.test(normDigits(last.no))) return String(+normDigits(last.no) + 1);
+  return String(nextSeq(sec, year));
+}
+
+/* =====================================================================
+   مجلدات الكتب: يربط البرنامج رقم الكتاب 150 بالملف «وارد 150» تلقائياً
+   يبحث في المجلد الرئيسي وفي المجلدات الفرعية المسمّاة بالسنة (مثل 2026)
+   ===================================================================== */
+const FS = { in:{dir:null, perm:false, files:new Map(), yearDirs:{}, fallback:false}, out:{dir:null, perm:false, files:new Map(), yearDirs:{}, fallback:false} };
+const hasFSA = "showDirectoryPicker" in window;
+
+function yearFromName(n){ const m = normDigits(n).match(/(19|20)\d{2}/); return m ? m[0] : null; }
+
+async function indexDir(sec){
+  const f = FS[sec];
+  if (!f.dir || !f.perm) return;
+  const map = new Map(), yd = {};
+  try {
+    for await (const [name, h] of f.dir.entries()) {
+      if (h.kind === "file") map.set("|" + fileKey(name.replace(/\.[^.]+$/, "")), h);
+      else { const y = yearFromName(name); if (y) { yd[y] = h; for await (const [n2, h2] of h.entries()) if (h2.kind === "file") map.set(y + "|" + fileKey(n2.replace(/\.[^.]+$/, "")), h2); } }
+    }
+    f.files = map; f.yearDirs = yd;
+  } catch(e){ f.perm = false; }
+}
+function findFile(sec, year, no){
+  if (no === "" || no == null) return null;
+  const k = fileKey(SEC[sec].name + no), m = FS[sec].files;
+  return m.get(year + "|" + k) || m.get("|" + k) || null;
+}
+async function initDirs(){
+  if (!hasFSA) return;
+  for (const s of ["in","out"]) {
+    try {
+      const h = await kvGet("dir-" + s);
+      if (h) { FS[s].dir = h; FS[s].perm = (await h.queryPermission({mode:"readwrite"})) === "granted"; if (FS[s].perm) await indexDir(s); }
+    } catch(e){}
+  }
+}
+async function ensurePerm(sec){
+  const f = FS[sec];
+  if (f.fallback) return true;
+  if (!f.dir) return false;
+  if (f.perm) return true;
+  try { f.perm = (await f.dir.requestPermission({mode:"readwrite"})) === "granted"; } catch(e){ f.perm = false; }
+  if (f.perm) { await indexDir(sec); render(); }
+  return f.perm;
+}
+async function pickDir(sec){
+  if (!hasFSA) { $("#dirInput").dataset.sec = sec; $("#dirInput").click(); return; }
+  try {
+    const h = await window.showDirectoryPicker({id:"dir-" + sec, mode:"readwrite"});
+    FS[sec].dir = h; FS[sec].perm = true; FS[sec].fallback = false;
+    await kvSet("dir-" + sec, h);
+    await indexDir(sec);
+    toast(`تم ربط مجلد ${SEC[sec].full}! 📁`);
+    render();
+  } catch(e){ if (e.name !== "AbortError") toast("تعذّر فتح المجلد", "err"); }
+}
+// للمتصفحات اللي ما تدعم اختيار المجلد (قراءة فقط)
+$("#dirInput").addEventListener("change", e => {
+  const sec = e.target.dataset.sec, map = new Map();
+  for (const file of e.target.files) {
+    const parts = file.webkitRelativePath.split("/");
+    const y = parts.length > 2 ? yearFromName(parts[parts.length - 2]) || "" : "";
+    map.set(y + "|" + fileKey(file.name.replace(/\.[^.]+$/, "")), file);
+  }
+  Object.assign(FS[sec], {files:map, fallback:true, perm:true, dir:null, fbName: e.target.files[0]?.webkitRelativePath.split("/")[0] || ""});
+  e.target.value = "";
+  toast(`تم ربط مجلد ${SEC[sec].full}! 📁`); render();
+});
+let lastScan = 0;
+window.addEventListener("focus", async () => {
+  if (Date.now() - lastScan < 3000) return; lastScan = Date.now();
+  for (const s of ["in","out"]) await indexDir(s);
+  render(true);
+});
+
+/* ---------- عارض الكتب ---------- */
+let viewUrl = null;
+async function openBook(sec, year, seq){
+  const r = recs(sec, year).find(x => x.seq === seq); if (!r) return;
+  if (!FS[sec].dir && !FS[sec].fallback) { toast(`حدّد مجلد ${SEC[sec].full} أولاً`, "info"); return pickDir(sec); }
+  if (!(await ensurePerm(sec))) return toast("لازم تسمح بالوصول للمجلد", "err");
+  let h = findFile(sec, year, r.no);
+  if (!h) { await indexDir(sec); h = findFile(sec, year, r.no); }
+  if (!h) { render(); return attachFor(sec, year, seq); }
+  const file = h.getFile ? await h.getFile() : h;
+  if (viewUrl) URL.revokeObjectURL(viewUrl);
+  viewUrl = URL.createObjectURL(file);
+  const isImg = /^image\//.test(file.type) || /\.(png|jpe?g|gif|bmp|webp)$/i.test(file.name);
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+  const body = isImg ? `<img src="${viewUrl}">` : isPdf ? `<iframe src="${viewUrl}"></iframe>`
+    : `<div style="color:#fff;font-size:18px;text-align:center;line-height:2">هذا النوع من الملفات ما ينعرض داخل البرنامج<br><a style="color:var(--yellow)" href="${viewUrl}" download="${esc(file.name)}">⬇ تنزيل / فتح الملف</a></div>`;
+  const ov = modal(`<div class="dlg viewer"><div class="vhead"><h2 class="${sec === "in" ? "" : "red"}">${SEC[sec].icon} ${esc(SEC[sec].name)} ${esc(r.no)}</h2>
+    <div style="flex:1;font-weight:bold">${esc(r.title)} — ${esc(r.dept)}</div>
+    <a class="btn b" href="${viewUrl}" target="_blank" style="text-decoration:none">↗ فتح بنافذة جديدة</a>
+    <button class="btn" data-close>✕ إغلاق</button></div><div class="vb">${body}</div></div>`);
+}
+
+/* ---------- ربط ملف بكتاب (اختيار الملف ثم تسميته تلقائياً) ---------- */
+async function pickBookFile(sec){
+  // يرجع {file, handle} أو null
+  if ("showOpenFilePicker" in window) {
+    try {
+      const opts = {multiple:false};
+      if (FS[sec].dir) opts.startIn = FS[sec].dir;
+      const [h] = await window.showOpenFilePicker(opts);
+      return {file: await h.getFile(), handle: h};
+    } catch(e){ return null; }
+  }
+  return new Promise(res => {
+    const inp = $("#anyFile"); inp.value = "";
+    inp.onchange = () => res(inp.files[0] ? {file: inp.files[0], handle: null} : null);
+    inp.click();
+  });
+}
+async function storeBookFile(sec, year, no, picked){
+  const f = FS[sec];
+  const ext = (picked.file.name.match(/\.[^.]+$/) || [""])[0];
+  const newName = `${SEC[sec].name} ${no}${ext}`;
+  if (f.fallback || !f.dir) { toast(`سمِّ الملف يدوياً: ${newName}`, "info"); return false; }
+  if (!(await ensurePerm(sec))) return false;
+  const target = f.yearDirs[year] || f.dir;
+  let exists = false;
+  try { await target.getFileHandle(newName); exists = true; } catch(e){}
+  if (exists && !(await confirmBox(`يوجد ملف باسم «${newName}» مسبقاً. تستبدله؟`, "استبدال", true))) return false;
+  try {
+    // إذا الملف أصلاً داخل مجلد الكتب: نعيد تسميته بدل النسخ
+    let inside = null;
+    if (picked.handle && picked.handle.move) { try { inside = await f.dir.resolve(picked.handle); } catch(e){} }
+    if (inside && !exists) await picked.handle.move(newName);
+    else {
+      const out = await (await target.getFileHandle(newName, {create:true})).createWritable();
+      await out.write(picked.file); await out.close();
+    }
+  } catch(e){ toast("تعذّر حفظ الملف بالمجلد", "err"); return false; }
+  await indexDir(sec);
+  return true;
+}
+async function attachFor(sec, year, seq){
+  const r = recs(sec, year).find(x => x.seq === seq); if (!r) return;
+  if (!FS[sec].dir && !FS[sec].fallback) { toast(`حدّد مجلد ${SEC[sec].full} أولاً`, "info"); return pickDir(sec); }
+  if (!(await confirmBox(`ماكو ملف باسم «${SEC[sec].name} ${r.no}» بمجلد ${SEC[sec].full}.<br>تريد تختار ملف الكتاب ويتسمّى تلقائياً؟`, "📎 اختيار الملف"))) return;
+  const p = await pickBookFile(sec); if (!p) return;
+  if (await storeBookFile(sec, year, r.no, p)) { toast("تم ربط الكتاب! 📎"); render(true); }
+}
+
+/* =====================================================================
+   العرض
+   ===================================================================== */
+function hlText(text, terms){
+  const s = String(text ?? "");
+  if (!terms.length) return esc(s);
+  // تظليل حسب النص الموحّد مع الحفاظ على النص الأصلي
+  const map = []; let n = "";
+  for (let i = 0; i < s.length; i++) { const c = norm(s[i]) || (s[i] === " " ? " " : ""); for (const ch of c) { n += ch; map.push(i); } }
+  const marks = new Array(s.length).fill(false);
+  for (const t of terms) { let p = n.indexOf(t); while (p !== -1) { for (let k = p; k < p + t.length; k++) marks[map[k]] = true; p = n.indexOf(t, p + 1); } }
+  let out = "", on = false;
+  for (let i = 0; i < s.length; i++) { if (marks[i] && !on) { out += '<span class="mark">'; on = true; } if (!marks[i] && on) { out += "</span>"; on = false; } out += esc(s[i]); }
+  return out + (on ? "</span>" : "");
+}
+
+function renderSide(){
+  document.querySelectorAll(".sec-tab").forEach(b => b.classList.toggle("on", b.dataset.sec === S.sec));
+  const f = FS[S.sec], nm = SEC[S.sec].full;
+  let st;
+  if (f.fallback) st = `<span class="ok">✔ ${esc(f.fbName || "مرتبط")}</span><br><span>(قراءة فقط بهذا المتصفح)</span>`;
+  else if (!f.dir) st = `<span class="bad">✖ غير محدد</span>`;
+  else if (!f.perm) st = `<span class="bad">🔒 ${esc(f.dir.name)}</span><br>يحتاج سماح`;
+  else st = `<span class="ok">✔ ${esc(f.dir.name)}</span><br>${f.files.size} ملف`;
+  $("#folderPanel").innerHTML = `<h4>📁 مجلد ${nm}</h4><div class="small">${st}</div>
+    ${f.dir && !f.perm ? `<button class="sbtn g1" id="permBtn">🔓 السماح بالوصول</button>` : ""}
+    <button class="sbtn s1" id="dirBtn">${f.dir || f.fallback ? "تغيير المجلد" : "تحديد المجلد"}</button>
+    ${f.perm && !f.fallback ? `<button class="sbtn" id="rescan">🔄 تحديث الملفات</button>` : ""}
+    <div class="small" style="color:#555">الملفات تتسمّى: «${SEC[S.sec].name} 150»<br>ويمكن تخلي مجلد فرعي لكل سنة (مثل 2026)</div>`;
+  $("#dirBtn").onclick = () => pickDir(S.sec);
+  if ($("#permBtn")) $("#permBtn").onclick = () => ensurePerm(S.sec);
+  if ($("#rescan")) $("#rescan").onclick = async () => { await indexDir(S.sec); render(true); toast("تم التحديث 🔄", "info"); };
+  let last = ""; try { last = localStorage.getItem("sw-lastbackup") || ""; } catch(e){}
+  $("#bkInfo").innerHTML = last ? `آخر نسخة: ${esc(last)}` : `<span class="bad">ما سويت نسخة احتياطية بعد</span>`;
+}
+
+function renderTop(){
+  const sec = S.sec, ys = yearsOf(sec), y = S.year[sec];
+  $("#title").className = sec; $("#title").textContent = `${SEC[sec].name} ${y}`;
+  $("#years").innerHTML = ys.map(v => `<button class="y ${v === y ? "on" : ""}" data-y="${v}" title="نقرتين لإعادة التسمية أو الحذف">${SEC[sec].name} ${v}</button>`).join("")
+    + `<button class="y add" id="addYear">＋ سنة</button>`;
+  const fv = S.filter;
+  $("#filter").innerHTML = `<option value="cur">🎚 السنة الحالية (${y})</option><option value="all">🌐 بحث شامل: كل السنوات</option>`
+    + ys.map(v => `<option value="y:${v}">📅 ${SEC[sec].name} ${v}</option>`).join("");
+  $("#filter").value = [...$("#filter").options].some(o => o.value === fv) ? fv : "cur";
+  const opts = new Set(); for (const yy of ys) for (const r of recs(sec, yy)) if (r.dept) opts.add(r.dept);
+  $("#depts").innerHTML = [...opts].sort().map(d => `<option value="${esc(d)}">`).join("");
+}
+
+function searchResults(){
+  const sec = S.sec, terms = norm(S.q).split(" ").filter(Boolean);
+  let ys = S.filter === "all" ? yearsOf(sec) : S.filter.startsWith("y:") ? [S.filter.slice(2)] : [S.year[sec]];
+  const out = [];
+  for (const y of ys) for (const r of recs(sec, y)) {
+    const hay = norm([r.seq, r.reg, r.dept, r.date, r.no, r.title, `${SEC[sec].name} ${r.no}`, "اضباره " + folderOf(r.seq)].join(" | "));
+    if (terms.every(t => hay.includes(t))) out.push([y, r]);
+  }
+  return {out, terms, multi: ys.length > 1 || ys[0] !== S.year[sec]};
+}
+
+function rowHtml(sec, y, r, terms, showYear, isLast){
+  const f = findFile(sec, y, r.no);
+  const linked = FS[sec].dir || FS[sec].fallback;
+  const book = f ? `<button class="ic" data-open title="فتح الكتاب">📄</button>`
+    : `<button class="ic none" data-attach title="${linked ? "ماكو ملف بهذا الرقم — اضغط لربط ملف" : "حدد مجلد الكتب أولاً"}">📎</button>`;
+  return `<tr data-y="${y}" data-seq="${r.seq}" class="${S.lastAdded === `${sec}|${y}|${r.seq}` ? "flash" : ""}">
+    ${showYear ? `<td class="year-col">${y}</td>` : ""}
+    <td class="seqcell">${hlText(r.seq, terms)}${isLast ? `<button class="del" data-del title="حذف آخر كتاب">🗑</button>` : ""}</td>
+    <td data-f="reg">${hlText(r.reg, terms)}</td>
+    <td data-f="dept" class="dept">${hlText(r.dept, terms)}</td>
+    <td data-f="date">${hlText(r.date, terms)}</td>
+    <td data-f="no"><b>${hlText(r.no, terms)}</b></td>
+    <td data-f="title" class="t">${hlText(r.title, terms)}</td>
+    <td>${book}</td>
+    <td>${folderOf(r.seq)}</td>
+    <td>${inFolder(r.seq)}</td></tr>`;
+}
+
+function render(keepScroll){
+  const box = $("#tablebox"), st = box.scrollTop;
+  renderSide(); renderTop();
+  const sec = S.sec, y = S.year[sec], list = recs(sec, y);
+  const searching = S.q.trim() !== "";
+  $("#clr").style.display = searching ? "block" : "none";
+  let html = "", showYear = false, count = 0;
+  if (searching) {
+    const {out, terms, multi} = searchResults();
+    showYear = multi; count = out.length;
+    html = out.map(([yy, r]) => rowHtml(sec, yy, r, terms, showYear, false)).join("")
+      || `<tr class="empty"><td colspan="10">🤔 ماكو نتائج… جرّب كلمة ثانية أو اختار «بحث شامل»</td></tr>`;
+  } else {
+    html = list.map((r, i) => rowHtml(sec, y, r, [], false, i === list.length - 1)).join("")
+      || `<tr class="empty"><td colspan="9">✨ ${SEC[sec].name} ${y} فارغ — ابدأ بكتابة أول كتاب بالصف الأخضر 👇 أو استورد من Excel</td></tr>`;
+  }
+  $("#thead").innerHTML = `<tr>${showYear ? "<th>السنة</th>" : ""}<th>التسلسل</th><th>التاريخ</th><th>اسم الدائرة</th><th>تاريخ الكتاب</th><th>رقم الكتاب</th><th>عنوان الكتاب</th><th>الكتاب</th><th>الاضبارة</th><th>تسلسل بالاضبارة</th></tr>`;
+  $("#tbody").innerHTML = html;
+  const ns = nextSeq(sec, y);
+  $("#stat").innerHTML = `<span>📚 ${list.length} كتاب</span><span>🗂 الاضبارة الحالية: ${list.length ? folderOf(list.at(-1).seq) : 1}</span><span>⏭ التالي: ${ns} (اضبارة ${folderOf(ns)} / ${inFolder(ns)})</span>`
+    + (searching ? `<span class="res">🔎 ${count} نتيجة</span>` : "");
+  renderEntry(searching);
+  if (keepScroll) box.scrollTop = st;
+  else if (!searching) box.scrollTop = box.scrollHeight;
+  else box.scrollTop = 0;
+  S.lastAdded = null;
+}
+
+/* ---------- صف الإدخال السريع (مثل Excel) ---------- */
+const entryDraft = {in:{}, out:{}};
+function renderEntry(hidden){
+  const tf = $("#tfoot");
+  if (hidden) { tf.innerHTML = ""; return; }
+  const sec = S.sec, y = S.year[sec], ns = nextSeq(sec, y), d = entryDraft[sec];
+  tf.innerHTML = `<tr>
+    <td class="auto">${ns}</td>
+    <td class="auto">${today()}</td>
+    <td><input id="e_dept" list="depts" placeholder="اسم الدائرة" value="${esc(d.dept || "")}"></td>
+    <td><input id="e_date" placeholder="2026/11/25" style="width:110px" value="${esc(d.date || "")}"></td>
+    <td><input id="e_no" style="width:90px" value="${esc(d.no ?? suggestNo(sec, y))}"></td>
+    <td><input id="e_title" placeholder="عنوان الكتاب" value="${esc(d.title || "")}"></td>
+    <td><button class="savebtn" id="e_save" title="حفظ (Enter)">✔ حفظ</button></td>
+    <td class="auto">${folderOf(ns)}</td>
+    <td class="auto">${inFolder(ns)}</td></tr>`;
+  const ids = ["e_dept","e_date","e_no","e_title"];
+  ids.forEach((id, i) => {
+    const el = $("#" + id);
+    el.addEventListener("input", () => { entryDraft[sec][id.slice(2)] = el.value; });
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (e.ctrlKey || i === ids.length - 1) saveEntry(); else $("#" + ids[i + 1]).focus();
+      }
+    });
+  });
+  $("#e_date").addEventListener("blur", e => { e.target.value = normDate(e.target.value); entryDraft[sec].date = e.target.value; });
+  $("#e_save").onclick = saveEntry;
+}
+async function saveEntry(){
+  const sec = S.sec, y = S.year[sec];
+  const rec = { dept: $("#e_dept").value.trim(), date: normDate($("#e_date").value), no: normDigits($("#e_no").value).trim(), title: $("#e_title").value.trim() };
+  if (!rec.dept && !rec.title) { toast("اكتب اسم الدائرة أو عنوان الكتاب", "err"); $("#e_dept").focus(); return; }
+  if (!(await addRecord(sec, y, rec))) return;
+  entryDraft[sec] = {};
+  render();
+  $("#e_dept").focus();
+}
+async function addRecord(sec, y, rec){
+  if (rec.no && recs(sec, y).some(r => normDigits(r.no) === rec.no)
+      && !(await confirmBox(`⚠️ رقم الكتاب <b>${esc(rec.no)}</b> موجود مسبقاً بـ ${SEC[sec].name} ${y}.<br>تريد تضيفه مرة ثانية؟`, "نعم أضفه", true))) return false;
+  const seq = nextSeq(sec, y);
+  recs(sec, y).push({ seq, reg: today(), dept: rec.dept, date: rec.date, no: rec.no, title: rec.title });
+  S.lastAdded = `${sec}|${y}|${seq}`;
+  save();
+  toast(`تم! ${SEC[sec].name} ${seq} 💥`);
+  return seq;
+}
+
+/* ---------- التعديل بالنقر المزدوج ---------- */
+$("#tbody").addEventListener("dblclick", e => {
+  const td = e.target.closest("td[data-f]"); if (!td || td.querySelector("input")) return;
+  const tr = td.parentElement, y = tr.dataset.y, seq = +tr.dataset.seq, f = td.dataset.f;
+  const r = recs(S.sec, y).find(x => x.seq === seq); if (!r) return;
+  const old = r[f] ?? "";
+  td.innerHTML = `<input class="ed" value="${esc(old)}" ${f === "dept" ? 'list="depts"' : ""}>`;
+  const inp = td.querySelector("input"); inp.focus(); inp.select();
+  let done = false;
+  const finish = ok => {
+    if (done) return; done = true;
+    if (ok) {
+      let v = inp.value.trim();
+      if (f === "date" || f === "reg") v = normDate(v);
+      if (f === "no") v = normDigits(v);
+      if (v !== old) { r[f] = v; save(); toast("تم التعديل ✏️", "info"); }
+    }
+    render(true);
+  };
+  inp.addEventListener("keydown", ev => { if (ev.key === "Enter") finish(true); if (ev.key === "Escape") { ev.stopPropagation(); finish(false); } });
+  inp.addEventListener("blur", () => finish(true));
+});
+$("#tbody").addEventListener("click", async e => {
+  const tr = e.target.closest("tr[data-seq]"); if (!tr) return;
+  const y = tr.dataset.y, seq = +tr.dataset.seq;
+  if (e.target.closest("[data-open]")) openBook(S.sec, y, seq);
+  else if (e.target.closest("[data-attach]")) attachFor(S.sec, y, seq);
+  else if (e.target.closest("[data-del]")) {
+    if (await confirmBox(`تحذف الكتاب رقم التسلسل <b>${seq}</b> من ${SEC[S.sec].name} ${y}؟<br>(ملف الكتاب بالمجلد ما ينحذف)`, "🗑 حذف", true)) {
+      const list = recs(S.sec, y); if (list.at(-1)?.seq === seq) list.pop(); save(); render(); toast("تم الحذف", "info");
+    }
+  }
+});
+
+/* ---------- نافذة الإضافة ---------- */
+async function addDialog(){
+  const sec = S.sec, y = S.year[sec], ns = nextSeq(sec, y);
+  let picked = null;
+  const ov = modal(`<div class="dlg"><h2 class="${sec === "in" ? "" : "red"}">➕ إضافة ${SEC[sec].name} ${y}</h2>
+    <div class="note">📁 اختر ملف الكتاب (PDF أو صورة) وراح يتسمّى تلقائياً <b id="d_fname">${SEC[sec].name} ${esc(suggestNo(sec, y))}</b> بمجلد ${SEC[sec].full} ويرتبط بهذا السجل.</div>
+    <div class="row"><div class="f"><label>التسلسل</label><div class="ro">${ns}</div></div><div class="f"><label>التاريخ</label><div class="ro">${today()}</div></div>
+      <div class="f"><label>الاضبارة</label><div class="ro">${folderOf(ns)}</div></div><div class="f"><label>تسلسل بالاضبارة</label><div class="ro">${inFolder(ns)}</div></div></div>
+    <div class="row"><div class="f"><label>اسم الدائرة</label><input id="d_dept" list="depts"></div><div class="f"><label>تاريخ الكتاب</label><input id="d_date" placeholder="2026/11/25"></div>
+      <div class="f"><label>رقم الكتاب</label><input id="d_no" value="${esc(suggestNo(sec, y))}"></div></div>
+    <div class="row"><div class="f"><label>عنوان الكتاب</label><input id="d_title"></div></div>
+    <div class="row"><div class="f"><label>ملف الكتاب (اختياري)</label><div class="filebox"><button class="btn b" id="d_pick">📎 اختيار ملف</button><span id="d_file">لم يُختر ملف</span></div></div></div>
+    <div class="acts"><button class="btn g" id="d_save">💾 حفظ</button><button class="btn" data-close>إلغاء</button></div></div>`);
+  const no = ov.querySelector("#d_no");
+  no.addEventListener("input", () => ov.querySelector("#d_fname").textContent = `${SEC[sec].name} ${normDigits(no.value).trim()}`);
+  ov.querySelector("#d_date").addEventListener("blur", e => e.target.value = normDate(e.target.value));
+  ov.querySelector("#d_pick").onclick = async () => { const p = await pickBookFile(sec); if (p) { picked = p; ov.querySelector("#d_file").textContent = "✔ " + p.file.name; } };
+  ov.querySelector("#d_dept").focus();
+  ov.querySelector("#d_save").onclick = async () => {
+    const rec = { dept: ov.querySelector("#d_dept").value.trim(), date: normDate(ov.querySelector("#d_date").value), no: normDigits(no.value).trim(), title: ov.querySelector("#d_title").value.trim() };
+    if (!rec.dept && !rec.title) return toast("اكتب اسم الدائرة أو عنوان الكتاب", "err");
+    if (picked && !rec.no) return toast("اكتب رقم الكتاب حتى يتسمّى الملف", "err");
+    if (!(await addRecord(sec, y, rec))) return;
+    closeModal(ov);
+    if (picked) await storeBookFile(sec, y, rec.no, picked);
+    render();
+  };
+}
+
+/* ---------- السنوات ---------- */
+$("#years").addEventListener("click", async e => {
+  const b = e.target.closest(".y"); if (!b) return;
+  if (b.id === "addYear") {
+    const v = await promptBox("＋ سنة جديدة", `اكتب السنة (مثلاً ${+thisYear() + 1} أو ${+thisYear() - 1})`, String(+yearsOf(S.sec).at(-1) + 1 || thisYear()));
+    if (v == null) return;
+    const y = normDigits(v).trim();
+    if (!/^\d{4}$/.test(y)) return toast("السنة لازم تكون 4 أرقام", "err");
+    if (DB.sections[S.sec].years[y]) return toast("هذه السنة موجودة", "err");
+    DB.sections[S.sec].years[y] = []; S.year[S.sec] = y; save(); saveUI(); render();
+    toast(`تمت إضافة ${SEC[S.sec].name} ${y} 🎉`);
+    return;
+  }
+  S.year[S.sec] = b.dataset.y; S.filter = "cur"; saveUI(); render();
+});
+$("#years").addEventListener("dblclick", async e => {
+  const b = e.target.closest(".y[data-y]"); if (!b) return;
+  const y = b.dataset.y, n = recs(S.sec, y).length;
+  const ov = modal(`<div class="dlg" style="width:min(460px,94vw)"><h2 class="yel">📅 ${SEC[S.sec].name} ${y}</h2>
+    <div class="note">فيها ${n} كتاب.</div>
+    <div class="row"><div class="f"><label>تغيير السنة إلى</label><input id="ry" value="${y}"></div></div>
+    <div class="acts"><button class="btn g" id="ren">✔ حفظ</button><button class="btn" style="background:var(--red);color:#fff" id="dely">🗑 حذف السنة</button><button class="btn" data-close>إلغاء</button></div></div>`);
+  ov.querySelector("#ren").onclick = () => {
+    const ny = normDigits(ov.querySelector("#ry").value).trim();
+    if (ny === y) return closeModal(ov);
+    if (!/^\d{4}$/.test(ny)) return toast("السنة لازم تكون 4 أرقام", "err");
+    if (DB.sections[S.sec].years[ny]) return toast("هذه السنة موجودة", "err");
+    DB.sections[S.sec].years[ny] = DB.sections[S.sec].years[y]; delete DB.sections[S.sec].years[y];
+    S.year[S.sec] = ny; save(); saveUI(); closeModal(ov); render();
+  };
+  ov.querySelector("#dely").onclick = async () => {
+    if (yearsOf(S.sec).length === 1) return toast("لازم تبقى سنة وحدة على الأقل", "err");
+    closeModal(ov);
+    if (n) {
+      const v = await promptBox("🗑 تأكيد الحذف", `هذا راح يحذف ${n} كتاب نهائياً! للتأكيد اكتب السنة: ${y}`, "");
+      if (normDigits(v ?? "").trim() !== y) return toast("تم الإلغاء", "info");
+    } else if (!(await confirmBox(`تحذف ${SEC[S.sec].name} ${y}؟`, "حذف", true))) return;
+    delete DB.sections[S.sec].years[y]; S.year[S.sec] = yearsOf(S.sec).at(-1); save(); saveUI(); render();
+  };
+});
+
+/* =====================================================================
+   Excel
+   ===================================================================== */
+const COLS = [["seq","التسلسل"],["reg","التاريخ"],["dept","اسم الدائرة"],["date","تاريخ الكتاب"],["no","رقم الكتاب"],["title","عنوان الكتاب"]];
+function headerField(h){
+  const n = norm(h);
+  if (!n) return null;
+  const has = (...ws) => ws.some(w => n.includes(norm(w)));
+  if (has("اضبار")) return null;
+  if (has("تسلسل") || n === "ت" || n === "#" || n === "seq") return "seq";
+  if (has("تاريخ") && has("كتاب")) return "date";
+  if (has("تاريخ")) return "reg";
+  if (has("دائرة", "دائر", "جهة", "مرسل", "وزارة", "مديرية")) return "dept";
+  if (has("رقم")) return "no";
+  if (has("عنوان", "موضوع")) return "title";
+  return null;
+}
+function cellVal(v, field){
+  if (v == null) return "";
+  if (typeof v === "number" && (field === "date" || field === "reg") && v > 20000 && v < 80000) {
+    const d = XLSX.SSF.parse_date_code(v); return `${d.y}/${pad(d.m)}/${pad(d.d)}`;
+  }
+  if (field === "date" || field === "reg") return normDate(v);
+  return normDigits(String(v)).trim();
+}
+$("#impBtn").onclick = () => { $("#xlsInput").value = ""; $("#xlsInput").click(); };
+$("#xlsInput").addEventListener("change", async e => {
+  const file = e.target.files[0]; if (!file) return;
+  let wb;
+  try { wb = XLSX.read(await file.arrayBuffer(), {type:"array"}); } catch(err){ return toast("تعذّر قراءة ملف Excel", "err"); }
+  const sec = S.sec, guess = yearFromName(file.name) || S.year[sec];
+  const ov = modal(`<div class="dlg" style="width:min(560px,94vw)"><h2 class="${sec === "in" ? "" : "red"}">⬇ استيراد ${SEC[sec].full}</h2>
+    <div class="note">📄 ${esc(file.name)}<br>البرنامج يتعرّف على الأعمدة حسب العناوين (التسلسل، التاريخ، اسم الدائرة، تاريخ الكتاب، رقم الكتاب، عنوان الكتاب). الاضبارة وتسلسلها تنحسب تلقائياً.</div>
+    <div class="row"><div class="f"><label>الورقة</label><select id="i_sh">${wb.SheetNames.map(n => `<option>${esc(n)}</option>`).join("")}</select></div>
+      <div class="f"><label>اسم السجل (السنة)</label><div style="display:flex;gap:6px;align-items:center"><b style="font-size:16px">${SEC[sec].name}</b><input id="i_y" value="${esc(guess)}"></div></div></div>
+    <div class="row"><div class="f"><label>إذا السنة بيها كتب مسبقاً</label><select id="i_mode"><option value="append">➕ إضافة بعد آخر كتاب</option><option value="replace">♻️ استبدال الكل</option></select></div></div>
+    <div class="note" id="i_prev" style="background:#eaf2ff"></div>
+    <div class="acts"><button class="btn g" id="i_go">⬇ استيراد</button><button class="btn" data-close>إلغاء</button></div></div>`);
+  const parse = () => {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[ov.querySelector("#i_sh").value], {header:1, raw:true, defval:""});
+    let hi = rows.findIndex(r => r.filter(h => headerField(h)).length >= 2);
+    if (hi < 0) return {err:"ما لگيت عناوين الأعمدة بهذه الورقة"};
+    const map = rows[hi].map(headerField), seen = new Set();
+    map.forEach((f, i) => { if (f && seen.has(f)) map[i] = null; else if (f) seen.add(f); });
+    const out = [];
+    for (const r of rows.slice(hi + 1)) {
+      const o = {}; map.forEach((f, i) => { if (f) o[f] = cellVal(r[i], f); });
+      if (!o.dept && !o.title && !o.no) continue;
+      out.push(o);
+    }
+    return {out, cols: [...seen].map(f => COLS.find(c => c[0] === f)[1])};
+  };
+  const prev = () => { const p = parse(); ov.querySelector("#i_prev").innerHTML = p.err ? `❌ ${p.err}` : `✔ ${p.out.length} كتاب<br>الأعمدة: ${p.cols.join("، ")}`; return p; };
+  ov.querySelector("#i_sh").onchange = prev; prev();
+  ov.querySelector("#i_go").onclick = () => {
+    const p = prev(); if (p.err || !p.out.length) return toast("ماكو بيانات للاستيراد", "err");
+    const y = normDigits(ov.querySelector("#i_y").value).trim();
+    if (!/^\d{4}$/.test(y)) return toast("السنة لازم تكون 4 أرقام", "err");
+    const years = DB.sections[sec].years;
+    if (ov.querySelector("#i_mode").value === "replace" || !years[y]) years[y] = [];
+    const list = years[y], hasSeq = p.out.every(o => /^\d+$/.test(o.seq)) && !list.length;
+    let s = list.length ? list.at(-1).seq : 0;
+    const items = p.out.map(o => ({ seq: hasSeq ? +o.seq : ++s, reg: o.reg || today(), dept: o.dept || "", date: o.date || "", no: o.no || "", title: o.title || "" }));
+    if (hasSeq) {
+      items.sort((a, b) => a.seq - b.seq);
+      // إذا التسلسل بالملف مكرر أو ما يبدي من 1، نعيد ترقيمه
+      if (items.some((it, i) => it.seq !== i + 1)) items.forEach((it, i) => it.seq = i + 1);
+    }
+    list.push(...items);
+    S.year[sec] = y; S.filter = "cur"; S.q = ""; $("#search").value = "";
+    save(); saveUI(); closeModal(ov); render();
+    toast(`تم استيراد ${items.length} كتاب إلى ${SEC[sec].name} ${y}! 🎉`);
+  };
+});
+
+function sheetFor(sec, y){
+  const aoa = [["التسلسل","التاريخ","اسم الدائرة","تاريخ الكتاب","رقم الكتاب","عنوان الكتاب","رقم الاضبارة","تسلسل بالاضبارة"]];
+  for (const r of recs(sec, y)) aoa.push([r.seq, r.reg, r.dept, r.date, /^\d+$/.test(r.no) ? +r.no : r.no, r.title, folderOf(r.seq), inFolder(r.seq)]);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [{wch:8},{wch:12},{wch:24},{wch:12},{wch:12},{wch:45},{wch:11},{wch:14}];
+  return ws;
+}
+function exportXls(which){
+  const sec = S.sec, wb = XLSX.utils.book_new();
+  const ys = which === "all" ? yearsOf(sec) : [S.year[sec]];
+  for (const y of ys) XLSX.utils.book_append_sheet(wb, sheetFor(sec, y), `${SEC[sec].name} ${y}`);
+  wb.Workbook = {Views:[{RTL:true}]};
+  XLSX.writeFile(wb, which === "all" ? `${SEC[sec].full} - كل السنوات.xlsx` : `${SEC[sec].name} ${S.year[sec]}.xlsx`);
+  toast("تم التصدير! ⬆");
+}
+$("#expBtn").onclick = e => {
+  e.stopPropagation();
+  const wrap = e.currentTarget.parentElement;
+  if (wrap.querySelector(".menu")) return wrap.querySelector(".menu").remove();
+  const m = document.createElement("div"); m.className = "menu";
+  m.innerHTML = `<button data-w="cur">📅 ${SEC[S.sec].name} ${S.year[S.sec]} فقط</button><button data-w="all">🌐 كل السنوات (كل سنة بورقة)</button>`;
+  m.onclick = ev => { const b = ev.target.closest("button"); if (b) { m.remove(); exportXls(b.dataset.w); } };
+  wrap.appendChild(m);
+};
+document.addEventListener("click", () => document.querySelectorAll(".menu").forEach(m => m.remove()));
+
+/* =====================================================================
+   النسخ الاحتياطي
+   ===================================================================== */
+$("#bkBtn").onclick = () => {
+  const ov = modal(`<div class="dlg" style="width:min(520px,94vw)"><h2 class="yel">💾 نسخة احتياطية</h2>
+    <div class="note">انصحك تحفظ نسخة على فلاش أو قرص خارجي بشكل دوري.</div>
+    <div class="acts" style="flex-direction:column">
+      <button class="btn p" id="bk1">📄 حفظ ملف البيانات فقط (.json)</button>
+      ${hasFSA ? `<button class="btn b" id="bk2">📦 نسخة كاملة إلى مجلد (البيانات + ملفات الكتب)</button>` : ""}
+      <button class="btn" data-close>إلغاء</button></div></div>`);
+  ov.querySelector("#bk1").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(DB, null, 1)], {type:"application/json"}));
+    a.download = `نسخة الصادر والوارد ${today().replace(/\//g, "-")}.json`; a.click();
+    markBackup(); closeModal(ov);
+  };
+  if (ov.querySelector("#bk2")) ov.querySelector("#bk2").onclick = async () => {
+    let dest; try { dest = await window.showDirectoryPicker({id:"backup", mode:"readwrite"}); } catch(e){ return; }
+    closeModal(ov); toast("جاري النسخ… ⏳", "info");
+    try {
+      const root = await dest.getDirectoryHandle(`نسخة الصادر والوارد ${today().replace(/\//g, "-")}`, {create:true});
+      const w = await (await root.getFileHandle("البيانات.json", {create:true})).createWritable();
+      await w.write(JSON.stringify(DB, null, 1)); await w.close();
+      let n = 0;
+      for (const s of ["in","out"]) {
+        if (!FS[s].dir || !(await ensurePerm(s))) continue;
+        const sd = await root.getDirectoryHandle(SEC[s].full, {create:true});
+        const copy = async (src, dst) => {
+          for await (const [name, h] of src.entries()) {
+            if (h.kind === "file") { const o = await (await dst.getFileHandle(name, {create:true})).createWritable(); await o.write(await h.getFile()); await o.close(); n++; }
+            else await copy(h, await dst.getDirectoryHandle(name, {create:true}));
+          }
+        };
+        await copy(FS[s].dir, sd);
+      }
+      markBackup(); toast(`تم! نسخة كاملة (${n} ملف) 📦`);
+    } catch(e){ toast("صار خطأ أثناء النسخ", "err"); }
+  };
+};
+function markBackup(){ try { localStorage.setItem("sw-lastbackup", today()); } catch(e){} renderSide(); }
+$("#rsBtn").onclick = () => { $("#jsonInput").value = ""; $("#jsonInput").click(); };
+$("#jsonInput").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  let d; try { d = JSON.parse(await f.text()); } catch(err){ return toast("الملف غير صالح", "err"); }
+  if (!d || !d.sections || !d.sections.in || !d.sections.out) return toast("هذا مو ملف نسخة احتياطية للبرنامج", "err");
+  if (!(await confirmBox("الاسترجاع راح يستبدل كل البيانات الحالية بالنسخة المختارة. متأكد؟", "♻️ استرجاع", true))) return;
+  DB = d;
+  for (const s of ["in","out"]) if (!DB.sections[s].years[S.year[s]]) S.year[s] = yearsOf(s).at(-1) || thisYear();
+  for (const s of ["in","out"]) if (!yearsOf(s).length) DB.sections[s].years[thisYear()] = [];
+  save(); saveUI(); render(); toast("تم الاسترجاع ♻️");
+});
+
+/* =====================================================================
+   نوافذ مساعدة + تنبيهات
+   ===================================================================== */
+function modal(html){
+  const ov = document.createElement("div"); ov.className = "ov"; ov.innerHTML = html;
+  ov.addEventListener("mousedown", e => { if (e.target === ov) closeModal(ov); });
+  ov.addEventListener("click", e => { if (e.target.closest("[data-close]")) closeModal(ov); });
+  document.body.appendChild(ov);
+  return ov;
+}
+function closeModal(ov){ if (ov && ov.isConnected) { ov.remove(); ov.dispatchEvent(new Event("closed")); } }
+function confirmBox(msg, ok = "تمام", danger = false){
+  return new Promise(res => {
+    const ov = modal(`<div class="dlg" style="width:min(480px,94vw)"><h2 class="${danger ? "red" : "yel"}">${danger ? "⚠️ انتبه!" : "❓ سؤال"}</h2>
+      <div style="font-size:16px;line-height:1.9;margin-bottom:16px">${msg}</div>
+      <div class="acts"><button class="btn ${danger ? "" : "g"}" style="${danger ? "background:var(--red);color:#fff" : ""}" id="cb_ok">${ok}</button><button class="btn" id="cb_no">إلغاء</button></div></div>`);
+    let v = false;
+    ov.querySelector("#cb_ok").onclick = () => { v = true; closeModal(ov); };
+    ov.querySelector("#cb_no").onclick = () => closeModal(ov);
+    ov.addEventListener("closed", () => res(v));
+    ov.querySelector("#cb_ok").focus();
+  });
+}
+function promptBox(title, label, val){
+  return new Promise(res => {
+    const ov = modal(`<div class="dlg" style="width:min(460px,94vw)"><h2 class="yel">${title}</h2>
+      <div class="row"><div class="f"><label>${label}</label><input id="pb_v" value="${esc(val)}"></div></div>
+      <div class="acts"><button class="btn g" id="pb_ok">✔ تمام</button><button class="btn" data-close>إلغاء</button></div></div>`);
+    let v = null; const inp = ov.querySelector("#pb_v");
+    const ok = () => { v = inp.value; closeModal(ov); };
+    ov.querySelector("#pb_ok").onclick = ok;
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") ok(); });
+    ov.addEventListener("closed", () => res(v));
+    inp.focus(); inp.select();
+  });
+}
+let toastT;
+function toast(msg, kind = ""){
+  document.querySelectorAll(".toast").forEach(t => t.remove());
+  const t = document.createElement("div"); t.className = "toast " + kind;
+  t.innerHTML = `<div class="burst">${esc(msg)}</div>`;
+  document.body.appendChild(t);
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 300); }, 1800);
+}
+
+/* =====================================================================
+   الأحداث العامة
+   ===================================================================== */
+document.querySelectorAll(".sec-tab").forEach(b => b.onclick = () => { S.sec = b.dataset.sec; S.q = ""; $("#search").value = ""; S.filter = "cur"; saveUI(); render(); });
+let qT;
+$("#search").addEventListener("input", e => { clearTimeout(qT); qT = setTimeout(() => { S.q = e.target.value; render(); }, 120); });
+$("#filter").addEventListener("change", e => { S.filter = e.target.value; render(); });
+$("#clr").onclick = () => { $("#search").value = ""; S.q = ""; render(); };
+$("#addBtn").onclick = addDialog;
+document.addEventListener("keydown", e => {
+  const open = document.querySelector(".ov");
+  if (e.key === "Escape") {
+    if (open) return closeModal(open);
+    if (S.q) { $("#search").value = ""; S.q = ""; render(); }
+    return;
+  }
+  if (open) return;
+  if (e.ctrlKey && (e.key === "f" || e.key === "F" || e.code === "KeyF")) { e.preventDefault(); $("#search").focus(); $("#search").select(); }
+  else if (e.key === "F2") { e.preventDefault(); addDialog(); }
+  else if (e.altKey && e.code === "Digit1") { e.preventDefault(); document.querySelector('.sec-tab[data-sec="in"]').click(); }
+  else if (e.altKey && e.code === "Digit2") { e.preventDefault(); document.querySelector('.sec-tab[data-sec="out"]').click(); }
+});
+
+(async () => {
+  await load();
+  await initDirs();
+  render();
+})();
+</script>
+</body>
+</html>
