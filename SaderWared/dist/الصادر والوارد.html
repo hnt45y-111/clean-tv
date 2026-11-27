@@ -146,7 +146,6 @@ tfoot .savebtn{border:2px solid var(--ink);background:var(--green);border-radius
     <div><b>Ctrl+Enter</b> حفظ الصف الأخضر</div>
     <div><b>Alt+1</b> الوارد &nbsp; <b>Alt+2</b> الصادر</div>
     <div><b>Esc</b> إغلاق / مسح البحث</div>
-    <div>✏️ نقرتين على أي خانة لتعديلها</div>
   </div>
 </aside>
 
@@ -468,8 +467,7 @@ function renderSide(){
   $("#folderPanel").innerHTML = `<h4>📁 مجلد ${nm}</h4><div class="small">${st}</div>
     ${f.dir && !f.perm ? `<button class="sbtn g1" id="permBtn">🔓 السماح بالوصول</button>` : ""}
     <button class="sbtn s1" id="dirBtn">${f.dir || f.fallback ? "تغيير المجلد" : "تحديد المجلد"}</button>
-    ${f.perm && !f.fallback ? `<button class="sbtn" id="rescan">🔄 تحديث الملفات</button>` : ""}
-    <div class="small" style="color:#555">الملفات تتسمّى: «${SEC[S.sec].name} 150»<br>ويمكن تخلي مجلد فرعي لكل سنة (مثل 2026)</div>`;
+    ${f.perm && !f.fallback ? `<button class="sbtn" id="rescan">🔄 تحديث الملفات</button>` : ""}`;
   $("#dirBtn").onclick = () => pickDir(S.sec);
   if ($("#permBtn")) $("#permBtn").onclick = () => ensurePerm(S.sec);
   if ($("#rescan")) $("#rescan").onclick = async () => { await indexDir(S.sec); render(true); toast("تم التحديث 🔄", "info"); };
@@ -597,8 +595,8 @@ async function addRecord(sec, y, rec){
   return seq;
 }
 
-/* ---------- التعديل بالنقر المزدوج ---------- */
-$("#tbody").addEventListener("dblclick", e => {
+/* ---------- التعديل بنقرة واحدة ---------- */
+$("#tbody").addEventListener("click", e => {
   const td = e.target.closest("td[data-f]"); if (!td || td.querySelector("input")) return;
   const tr = td.parentElement, y = tr.dataset.y, seq = +tr.dataset.seq, f = td.dataset.f;
   const r = recs(S.sec, y).find(x => x.seq === seq); if (!r) return;
@@ -637,7 +635,7 @@ async function addDialog(){
   let picked = null;
   const ov = modal(`<div class="dlg"><h2 class="${sec === "in" ? "" : "red"}">➕ إضافة ${SEC[sec].name} ${y}</h2>
     <div class="note">📁 اختر ملف الكتاب (PDF أو صورة) وراح يتسمّى تلقائياً <b id="d_fname">${SEC[sec].name} ${esc(suggestNo(sec, y))}</b> بمجلد ${SEC[sec].full} ويرتبط بهذا السجل.</div>
-    <div class="row"><div class="f"><label>التسلسل</label><div class="ro">${ns}</div></div><div class="f"><label>التاريخ (قابل للتعديل)</label><input id="d_reg" value="${today()}"></div>
+    <div class="row"><div class="f"><label>التسلسل</label><div class="ro">${ns}</div></div><div class="f"><label>التاريخ</label><input id="d_reg" value="${today()}"></div>
       <div class="f"><label>الاضبارة</label><div class="ro">${folderOf(ns)}</div></div><div class="f"><label>تسلسل بالاضبارة</label><div class="ro">${inFolder(ns)}</div></div></div>
     <div class="row"><div class="f"><label>اسم الدائرة</label><input id="d_dept" list="depts"></div><div class="f"><label>تاريخ الكتاب</label><input id="d_date" placeholder="2026/11/25"></div>
       <div class="f"><label>رقم الكتاب</label><input id="d_no" value="${esc(suggestNo(sec, y))}"></div></div>
