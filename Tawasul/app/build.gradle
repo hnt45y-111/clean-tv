@@ -29,11 +29,13 @@ android {
     sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('shared-assets').get().asFile
 }
 tasks.register('copyShared', Copy) {
-    from('../../CleanTV/app/src/main/assets') { include 'tw-core.js', 'brands.js', 'fonts/**' }
+    from('../../CleanTV/app/src/main/assets') { include 'tw-core.js', 'qr.js', 'brands.js', 'fonts/**' }
     into layout.buildDirectory.dir('shared-assets')
 }
 tasks.matching { it.name == 'preBuild' }.configureEach { dependsOn 'copyShared' }
 dependencies {
     // instant notifications: Firebase Cloud Messaging only (no analytics)
     implementation 'com.google.firebase:firebase-messaging:24.1.0'
+    // scanning a QR code: Google's code scanner (no camera permission, the camera screen belongs to Google Play services)
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
 }

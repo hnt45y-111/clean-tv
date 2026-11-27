@@ -26,6 +26,10 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import com.google.mlkit.vision.barcode.common.Barcode;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
+
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -78,6 +82,8 @@ public class MainActivity extends Activity {
         web.loadUrl("file:///android_asset/index.html");
         PollJob.schedule(this);
     }
+
+    private void js(String code) { runOnUiThread(() -> { if (web != null) web.evaluateJavascript(code, null); }); }
 
     private void handle(Intent i) {
         if (i == null) return;
@@ -162,6 +168,20 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void share(String t) { Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t); startActivity(Intent.createChooser(i, null)); }
         @JavascriptInterface public void openUrl(String url, String mime) { runOnUiThread(() -> MainActivity.this.openUrl(url, mime)); }
         @JavascriptInterface public void toast(String t) { runOnUiThread(() -> Toast.makeText(MainActivity.this, t, Toast.LENGTH_SHORT).show()); }
+        /** quiet hours, muted people (the page's numbers for the notifications) */
+        @JavascriptInterface public void twPrefs(String json) { prefs(MainActivity.this).edit().putString("np", json == null ? "{}" : json).apply(); }
+        /** Google's code scanner: the answer goes back to window.__twQr(text, error) */
+        @JavascriptInterface public void scanQr() {
+            runOnUiThread(() -> {
+                try {
+                    GmsBarcodeScannerOptions o = new GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build();
+                    GmsBarcodeScanning.getClient(MainActivity.this, o).startScan()
+                            .addOnSuccessListener(bc -> js("window.__twQr&&window.__twQr(" + JSONObject.quote(bc.getRawValue() == null ? "" : bc.getRawValue()) + ",'')"))
+                            .addOnCanceledListener(() -> js("window.__twQr&&window.__twQr('','cancel')"))
+                            .addOnFailureListener(e -> js("window.__twQr&&window.__twQr('','fail')"));
+                } catch (Throwable t) { js("window.__twQr&&window.__twQr('','fail')"); }
+            });
+        }
         @JavascriptInterface public String version() { return "17.0"; }
     }
 }

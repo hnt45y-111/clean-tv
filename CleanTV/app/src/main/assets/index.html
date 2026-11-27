@@ -1325,6 +1325,18 @@
   .ch-status { position: absolute; left: 20px; bottom: 100px; padding: 14px 26px; border-radius: 24px; background: #1A1D26; border: 2px solid #D6B47A; font-size: 28px; }
   .ch-opts { padding: 10px; } .ch-opts h3 { font: 800 40px var(--kufi); margin: 0 0 20px; }
   .ch-welcome { margin: auto; text-align: center; max-width: 900px; } .ch-welcome .code { font: 800 110px/1.2 var(--kufi); letter-spacing: 10px; color: #F0DDB2; direction: ltr; } .ch-welcome p { color: #A3A5B1; font-size: 32px; line-height: 1.8; }
+  /* «تواصل» v2: pinned notes, replies, marks, menus, QR, full screen photos */
+  #twPins { display: none; } #twPins.on { display: block; margin-bottom: 12px; }
+  .tw-pin { background: var(--card-2); border: 2px solid var(--accent-line); border-radius: var(--rc, 16px); padding: 12px 20px; margin-bottom: 8px; } .tw-pin b { color: var(--gold); font-size: 16px; } .tw-pin p { margin: 4px 0 0; font-size: 24px; line-height: 1.5; color: var(--ink); white-space: pre-wrap; }
+  .ch-row .av img, .ch-head .av img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; } .ch-row .av, .ch-head .av { overflow: hidden; }
+  .ch-head .av { display: inline-block; width: 64px; height: 64px; border-radius: 20px; background: #D6B47A; color: #0B0C10; font: 800 30px/64px var(--kufi); text-align: center; font-style: normal; margin-left: 16px; vertical-align: middle; }
+  .ch-rep { border-right: 6px solid #D6B47A; background: rgba(255,255,255,.07); border-radius: 12px; padding: 4px 14px; margin-bottom: 8px; font-size: 22px; color: #A3A5B1; max-height: 70px; overflow: hidden; } .ch-rep b { display: block; color: #F0DDB2; font-size: 20px; }
+  .ch-m u { color: #6E9BFF; } .ch-m .pn { color: #F0DDB2; margin-bottom: 4px; } .tk { letter-spacing: -6px; } .tk.rd { color: #6E9BFF; }
+  .ch-rbar { padding: 10px 20px; margin-top: 8px; border-radius: 20px; background: #1A1D26; border: 2px solid #D6B47A; font-size: 24px; color: #F0DDB2; } .ch-rbar small { color: #A3A5B1; font-size: 20px; display: inline; }
+  .ch-menu { position: absolute; left: 30px; bottom: 120px; width: 620px; padding: 14px; border-radius: 28px; background: #12141A; border: 3px solid #D6B47A; z-index: 8; } .ch-menu .ch-b { display: block; margin: 8px 0; text-align: right; padding: 16px 22px; }
+  .ch-ol { overflow: hidden; } .ch-qrp { text-align: center; padding-top: 10px; } .ch-qrp h3 { font: 800 40px var(--kufi); margin: 0 0 16px; } .ch-qrp p { color: #A3A5B1; font-size: 28px; margin: 14px 0 6px; } .ch-qrp .code { font: 800 64px var(--kufi); letter-spacing: 6px; color: #F0DDB2; direction: ltr; }
+  .ch-qr { display: inline-block; background: #fff; padding: 14px; border-radius: 20px; } .ch-qr svg { display: block; }
+  .ch-vf { position: absolute; left: 0; right: 0; bottom: 24px; font-size: 30px; color: #fff; text-shadow: 0 2px 8px #000; } #chView img { max-width: 96%; max-height: 90%; }
   #chIn { display: none; position: absolute; left: 50%; bottom: 150px; width: 1100px; margin-left: -550px; padding: 26px 36px; border-radius: 40px; border: 4px solid #D6B47A; background: #12141A; color: #fff; font: 600 38px var(--font); z-index: 9; } #chIn.on { display: block; }
   #chView { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,.94); z-index: 10; text-align: center; } #chView.on { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; } #chView img { max-width: 94%; max-height: 94%; }
 </style>
@@ -1365,6 +1377,7 @@
         <div class="acts" id="acts"></div>
       </div>
       <div id="leftcol">
+        <div id="twPins"></div>
         <div id="weather" data-edit="weather"></div>
         <div id="wisdom" data-edit="wisdom">
           <div class="w-kind" id="wKind"></div>
@@ -1469,7 +1482,7 @@
 <script src="vod.js"></script>
 <script src="home.js"></script>
 <script src="brands.js"></script>
-<script src="tw-core.js"></script>
+<script src="qr.js"></script><script src="tw-core.js"></script>
 <script src="chat.js"></script>
 <script src="pray.js"></script>
 <script src="faith.js"></script>
