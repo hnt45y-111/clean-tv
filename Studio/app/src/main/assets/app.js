@@ -82,14 +82,10 @@ const fmtDate = ms => new Date(ms).toLocaleDateString('ar-IQ', { year: 'numeric'
 /* ============================================================ theme */
 const ACCENTS = [['#D9822B', 'نحاسي (الهوية)'], ['#1F6F6B', 'فيروزي'], ['#B8BDC2', 'كروم'], ['#EFE7D4', 'عاجي'], ['#C8402F', 'أحمر البث']];
 function applyTheme() {
-  if (!kv('themeV4', 0)) { const o = kv('theme', null); if (o) { o.ac = ACCENTS[0][0]; kvSet('theme', o); } kvSet('themeV4', 1); }
-  const th = kv('theme', { dark: true, ac: ACCENTS[0][0] });
-  document.body.classList.toggle('light', !th.dark);
-  const R = document.documentElement.style;
-  R.setProperty('--ac', th.ac); R.setProperty('--act', th.ac);
-  /* mixed in JS: older phone WebViews drop color-mix(), which used to wipe the buttons and cards after changing the colour */
-  R.setProperty('--grad', th.ac);
-  try { B.bars(th.dark, th.dark ? '#15181B' : '#EFE7D4'); } catch (e) {}
+  /* the identity decides colours, fonts, shapes and effects (brands.js); the old light switch and accent are no longer used */
+  document.body.classList.remove('light');
+  const br = Brand.init('studio');
+  try { B.bars(!br.light, br.bg); } catch (e) {}
   cmFallback();
 }
 function hexRgb3(h) { h = String(h || '#888888').replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h.slice(0, 6), 16) || 0; return [n >> 16, (n >> 8) & 255, n & 255]; }
@@ -770,9 +766,7 @@ function renderMore() {
       <div class="item tap" data-m="news">${ic('info')}<div class="t"><b>شنو الجديد بالنسخة ${esc(B.version())}</b></div>${ic('left')}</div>
     </div>
     <h2>المظهر</h2><div class="panel">
-      <div class="item tap" data-m="dark" style="padding:0 0 14px;min-height:0">${ic('sun')}<div class="t"><b>الوضع الداكن</b></div><div class="toggle ${th.dark ? 'on' : ''}"></div></div>
-      <div class="sub" style="margin-bottom:10px">لون التطبيق</div>
-      <div class="chips">${ACCENTS.map(([c, n]) => `<button class="sw ${th.ac === c ? 'on' : ''}" data-ac="${c}" style="background:${c}" aria-label="${n}"></button>`).join('')}</div>
+      <div class="item tap" data-m="brand">${ic('sun')}<div class="t"><b>الهوية البصرية</b><small>${esc(Brand.current().n + ' · ' + Brand.current().name)} — تغيّر الألوان والخطوط والأشكال والأيقونات</small></div>${ic('left')}</div>
     </div>
     <h2>الدعم</h2><div class="list">
       <div class="item tap" data-m="contact">${ic('chat')}<div class="t"><b>تواصل معنا أو بلّغ عن مشكلة</b><small>تيليگرام @KMK3993 · إنستغرام @HN_45Y</small></div>${ic('left')}</div>
@@ -785,6 +779,7 @@ function renderMore() {
     if (ac) { const t = kv('theme', { dark: true }); t.ac = ac.dataset.ac; kvSet('theme', t); applyTheme(); renderMore(); return; }
     const m = e.target.closest('[data-m]'); if (!m) return; tap();
     const k = m.dataset.m;
+    if (k === 'brand') { Brand.picker(() => { applyTheme(); renderMore(); }); return; }
     if (k === 'dark') { const t = kv('theme', { dark: true, ac: ACCENTS[0][0] }); t.dark = !t.dark; kvSet('theme', t); applyTheme(); renderMore(); }
     if (k === 'contact') contactSheet();
     if (k === 'how') howTo();

@@ -9,7 +9,7 @@ def mark(cls='mk', extra=''): return '<svg class="%s" viewBox="0 0 100 100" aria
 DL = '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>'
 CK = '<svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
 def li(items): return '<ul>' + ''.join('<li>%s%s</li>' % (CK, t) for t in items) + '</ul>'
-VER = 'v6.0'
+VER = 'v17.0'
 APPS = [
  dict(id='tv', tag='للتلفزيون والبوكس والسيارة', name='واجهة مدير الشاشات', img='tv-home.jpg', alt='الواجهة على التلفزيون', link=L['tv'], tagv=b, btn='تحميل الواجهة',
       text='واجهة كاملة بهوية واحدة: ساعة وتاريخ هجري وميلادي، تطبيقاتك ببلاطات واضحة، وكل شي يتحرك بالريموت.',
@@ -60,7 +60,7 @@ header.top .wrap{display:flex;align-items:center;justify-content:space-between;h
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}.brand .mk{width:44px;height:44px}.brand b{font-size:24px}
 nav a{margin-inline-start:22px;text-decoration:none;color:var(--chrome);font-size:15px}nav a:hover{color:var(--cu2)}
 .btn{display:inline-flex;align-items:center;gap:10px;min-height:50px;padding:0 22px;border-radius:var(--r2);font:600 16px 'IBM Plex Sans Arabic',sans-serif;text-decoration:none;border:2px solid transparent}
-.btn.pri{background:var(--cu);color:var(--ink)}.btn.pri:hover{background:var(--cu2)}
+.btn.pri{background:var(--cu);color:var(--onp,var(--ink))}.btn.pri:hover{background:var(--cu2)}
 .btn.sec{border-color:var(--chrome);color:var(--ivory)}.btn.sec:hover{border-color:var(--cu2);color:var(--cu2)}
 .hero{padding:64px 0 40px}.hero .wrap{display:grid;grid-template-columns:1fr 1.1fr;gap:48px;align-items:center}
 .eyebrow{display:inline-block;font:600 14px 'IBM Plex Sans Arabic';letter-spacing:.02em;color:var(--cu2);border:1px solid var(--cu);border-radius:var(--r3);padding:3px 12px;margin-bottom:18px}
@@ -84,7 +84,7 @@ section{padding:72px 0}
 .shot.phone{max-width:300px;margin:0 auto}
 .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-self:start}.gal .shot.phone{max-width:none;margin:0}
 @media(max-width:640px){.gal{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.tag{display:inline-block;font:600 13px 'IBM Plex Sans Arabic';color:var(--ink);background:var(--cu2);border-radius:var(--r3);padding:2px 10px}
+.tag{display:inline-block;font:600 13px 'IBM Plex Sans Arabic';color:var(--onp,var(--ink));background:var(--cu2);border-radius:var(--r3);padding:2px 10px}
 .app h3{font-size:34px;margin:10px 0 6px}.app p{color:var(--ivory2);margin-bottom:12px;opacity:.9}
 .app ul{list-style:none;display:grid;gap:7px;margin-bottom:20px}.app li{display:flex;gap:10px;font-size:16px;color:var(--ivory2);line-height:1.6}.app li .ic{color:var(--cu);margin-top:4px}
 .act{display:flex;flex-wrap:wrap;gap:14px;align-items:center}.ver{font:500 13px 'IBM Plex Mono',monospace;color:var(--chrome)}
@@ -96,6 +96,26 @@ section{padding:72px 0}
 footer{border-top:1px solid var(--line)}footer .wrap{display:flex;justify-content:space-between;color:var(--chrome);font-size:14px;padding:22px 20px}
 footer .strip{margin:0}
 @media(max-width:900px){.hero .wrap,.app,.story .wrap,.contact{grid-template-columns:1fr}.hl,.steps{grid-template-columns:1fr}h1{font-size:42px}.app:nth-child(even){direction:rtl}nav a.opt{display:none}.story .mk{width:84px;height:84px}}
+
+/* identity layouts (brands.js sets data-hero / data-nav / data-top / data-fx on <body>) */
+#idBtn{margin-inline-start:18px;border:2px solid var(--cu);background:transparent;color:var(--ivory);border-radius:var(--r2);padding:6px 16px;font:600 15px inherit;cursor:pointer}
+body{font-family:var(--fb,'IBM Plex Sans Arabic'),'Tajawal',system-ui,sans-serif}
+h1,h2,h3,.brand b,.st .n{font-family:var(--fd,'Reem Kufi'),'Reem Kufi',sans-serif}
+body[data-hero=wide] .hero .wrap{grid-template-columns:1fr;text-align:center}body[data-hero=wide] .lead{margin-inline:auto}body[data-hero=wide] .cta{justify-content:center}
+body[data-hero=glass] .frame{background:rgba(255,255,255,.06);padding:14px}
+body[data-hero=neon] .frame{box-shadow:0 0 0 2px var(--cu),0 0 46px var(--cu)}
+body[data-hero=frame] .frame{border:6px double var(--cu2);padding:6px}
+body[data-nav=pill] nav a{border-radius:99px;padding:6px 16px;background:rgba(128,128,128,.14);margin-inline-start:8px}
+body[data-nav=bar] header.top{border-bottom:8px solid var(--cu)}
+body[data-nav=dock] header.top{margin:12px auto 0;width:min(1140px,calc(100% - 24px));border-radius:22px;border:1px solid var(--line);top:10px}
+body[data-nav=under] nav a{border-bottom:3px solid var(--cu);padding-bottom:2px}
+body[data-nav=arch] header.top{border-radius:0 0 40px 40px}
+body[data-top=badge] .eyebrow{border-radius:0;background:var(--cu);color:var(--onp,#000)}
+body[data-top=fill] .eyebrow{background:var(--cu2);color:var(--onp,#000);border-color:transparent}
+body[data-top=neon] .eyebrow{box-shadow:0 0 14px var(--cu)}
+body[data-top=none] .eyebrow{display:none}
+body[data-fx=scan]::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 4px);z-index:50}
+body.brand-light .mk .mf{fill:var(--ivory)}body.brand-light .mk .mscr{fill:var(--ink)}
 '''
 HTML = '''<!doctype html>
 <html lang="ar" dir="rtl">
@@ -113,7 +133,7 @@ HTML = '''<!doctype html>
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="#top" aria-label="مدير الشاشات">%(mk)s<b>مدير الشاشات</b></a>
-  <nav><a class="opt" href="#highlights">أفضل الميزات</a><a class="opt" href="#apps">التطبيقات</a><a class="opt" href="#start">البداية</a><a href="#contact">تواصل</a></nav>
+  <nav><a class="opt" href="#highlights">أفضل الميزات</a><a class="opt" href="#apps">التطبيقات</a><a class="opt" href="#start">البداية</a><a href="#contact">تواصل</a><button id="idBtn" type="button">🎨 الهوية</button></nav>
 </div></header>
 <main id="top">
 <section class="hero"><div class="wrap">
@@ -155,10 +175,13 @@ HTML = '''<!doctype html>
   </div>
 </div></section>
 </main>
+<script src="brands.js"></script>
+<script>(function(){try{Brand.fontBase='cdn';Brand.init('site');var x=document.getElementById('idBtn');x.onclick=function(){Brand.picker(function(){});};}catch(e){}})();</script>
 <footer><div class="wrap"><span>مدير الشاشات · الإصدار %(ver)s</span><span>© ٢٠٢٦</span></div><div class="strip"></div></footer>
 </body>
 </html>
 '''
 out = HTML % dict(css=CSS, mk=mark('mk'), mk2=mark('mk'), ver=VER, dl=DL, hl=''.join('<div><h3>%s</h3><p>%s</p></div>' % h for h in HIGH), cards=''.join(card(x) for x in APPS))
 open('index.html', 'w', encoding='utf-8').write(out)
+import shutil; shutil.copy('CleanTV/app/src/main/assets/brands.js', 'brands.js')
 print('site written', len(out) // 1024, 'KB', L)

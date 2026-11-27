@@ -10,7 +10,7 @@ android {
         minSdk 24
         targetSdk 34
         versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
-        versionName '1.0'
+        versionName '17.0'
     }
     signingConfigs {
         fixed {
@@ -29,7 +29,7 @@ android {
     sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('shared-assets').get().asFile
 }
 tasks.register('copyShared', Copy) {
-    from('../../CleanTV/app/src/main/assets') { include 'tw-core.js', 'fonts/**' }
+    from('../../CleanTV/app/src/main/assets') { include 'tw-core.js', 'brands.js', 'fonts/**' }
     into layout.buildDirectory.dir('shared-assets')
 }
 tasks.matching { it.name == 'preBuild' }.configureEach { dependsOn 'copyShared' }

@@ -4,6 +4,7 @@ on:
     paths:
       - 'Mobile/**'
       - 'CleanTV/app/src/main/assets/channels.js'
+      - 'CleanTV/app/src/main/assets/brands.js'
       - 'Studio/app/src/main/assets/smart.js'
       - 'tools/channel_logos.json'
       - '.github/workflows/mobile.yml'

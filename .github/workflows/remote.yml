@@ -4,6 +4,7 @@ on:
     paths:
       - 'Remote/**'
       - 'tools/brand/**'
+      - 'CleanTV/app/src/main/assets/brands.js'
       - '.github/workflows/remote.yml'
   workflow_dispatch:
 permissions:

@@ -1455,7 +1455,7 @@
 
   // ---------- Alarms (adhan + match alerts) ----------
   var SETTINGS_DEFAULT = { adhanMode: 'sound', adhanFocus: 'pause', adhanFile: '', matchAlerts: true, reciter: 0, autoNext: true,
-    theme: 'default', clickSound: false, saverApps: true, saverMin: 10, bgSources: null, bgInterval: 300,
+    theme: 'br:rasheed', clickSound: false, saverApps: true, saverMin: 10, bgSources: null, bgInterval: 300,
     ownerName: '', greetOn: true, quietHour: 23, quietEndHour: 7, quietOn: false, kidsBedtime: false, liveTint: true, netLabel: true };
   var settings = load('settings', {});
   Object.keys(SETTINGS_DEFAULT).forEach(function (k) { if (settings[k] === undefined) settings[k] = SETTINGS_DEFAULT[k]; });
@@ -1470,10 +1470,19 @@
   }
 
   // ---------- Themes ----------
-  var THEMES = [['default', 'الافتراضي (الذهبي الليلي)'], ['appletv', 'Apple TV'], ['royal', 'الذهبي الملكي'], ['karbala', 'الكربلائي (أحمر)'], ['alawi', 'العلوي (أخضر)'],
+  /* the ten identities come first (brands.js); the older themes stay below them */
+  var THEMES = (window.Brand ? Brand.list : []).map(function (b) { return ['br:' + b.id, b.n + ' · ' + b.name + ' — ' + b.tag]; }).concat([['classic', 'الكلاسيكي القديم (الذهبي الليلي)'], ['appletv', 'Apple TV'], ['royal', 'الذهبي الملكي'], ['karbala', 'الكربلائي (أحمر)'], ['alawi', 'العلوي (أخضر)'],
     ['midnight', 'الأزرق الليلي'], ['turquoise', 'الفيروزي'], ['violet', 'البنفسجي'], ['rose', 'الوردي'], ['desert', 'الصحراوي'], ['silver', 'الفضي'],
-    ['glass', 'الزجاجي الشفاف'], ['minimal', 'البسيط'], ['onyx', 'الأسود الفخم'], ['neon', 'النيون']];
-  function themeName(id) { for (var i = 0; i < THEMES.length; i++) if (THEMES[i][0] === id) return THEMES[i][1]; return THEMES[0][1]; }
+    ['glass', 'الزجاجي الشفاف'], ['minimal', 'البسيط'], ['onyx', 'الأسود الفخم'], ['neon', 'النيون']]);
+  /* the old «default» (and a fresh install) is the default identity: سينما الرشيد */
+  function themeId(t) { return !t || t === 'default' ? 'br:' + (window.Brand ? Brand.DEFAULT : 'rasheed') : t; }
+  function paintTheme(th, preview) {
+    var b = window.Brand && Brand.fromTheme(th);
+    if (b) { Brand.apply(b, 'launcher', { preview: preview }); document.body.removeAttribute('data-theme'); return; }
+    if (window.Brand) Brand.clear('launcher');
+    if (th && th !== 'classic') document.body.setAttribute('data-theme', th); else document.body.removeAttribute('data-theme');
+  }
+  function themeName(id) { id = themeId(id); for (var i = 0; i < THEMES.length; i++) if (THEMES[i][0] === id) return THEMES[i][1]; return THEMES[0][1]; }
   // automatic occasion themes (Muharram, Arbaeen, Ramadan, the two Eids, Ghadir)
   function occasionTheme() {
     if (!settings.autoOccasion) return null;
@@ -1488,8 +1497,8 @@
   }
   var occShown = '';
   function applyTheme() {
-    var oc = occasionTheme(), th = oc ? oc[0] : settings.theme;
-    if (th && th !== 'default') document.body.setAttribute('data-theme', th); else document.body.removeAttribute('data-theme');
+    var oc = occasionTheme(), th = oc ? oc[0] : themeId(settings.theme);
+    paintTheme(th);
     if (oc && occShown !== oc[1] && !PREVIEW) { occShown = oc[1]; setTimeout(function () { toast('🌙 ' + oc[1], 5000); }, 3000); }
     applySkin();
   }
@@ -1533,8 +1542,8 @@
     if (typeof renderTopbar === 'function' && document.getElementById('topbar').children.length) { renderTopbar(); if (typeof nav !== 'undefined') nav.refresh(); }
   }
   function openThemes() {
-    var saved = settings.theme;
-    function preview(id) { if (id && id !== 'default') document.body.setAttribute('data-theme', id); else document.body.removeAttribute('data-theme'); }
+    var saved = themeId(settings.theme);
+    function preview(id) { paintTheme(id, true); }
     openList('الثيمات', 'تحرّك بين الثيمات وتشوفها مباشرة · OK للاختيار · رجوع بدون تغيير', function () {
       return THEMES.map(function (t) {
         return { label: t[1], value: saved === t[0] ? '✅ المختار' : '', focus: function () { preview(t[0]); },
@@ -1564,7 +1573,7 @@
     if (!HAS_ANDROID || !A.publishState) return;
     try {
       A.publishState(JSON.stringify({
-        theme: settings.theme, themes: THEMES, bgSources: bgSources(), sources: BG_SOURCES.map(function (x) { return [x[0], x[1]]; }),
+        theme: themeId(settings.theme), themes: THEMES, bgSources: bgSources(), sources: BG_SOURCES.map(function (x) { return [x[0], x[1]]; }),
         bgInterval: settings.bgInterval || 300, intervals: BG_INTERVALS, clickSound: !!settings.clickSound, saverApps: !!settings.saverApps,
         surahs: window.SURAHS || [], reciter: settings.reciter || 0, reciters: (window.RECITERS || []).map(function (r) { return r[0]; }),
         kids: { on: !!kids.on, limit: kids.limit || 0, remaining: kids.on && kids.limit ? kidsRemaining() : null, endAt: kids.on && kids.limit && kids.launchAt ? kids.launchAt + kidsRemaining() * 60000 : 0 },
@@ -1861,7 +1870,7 @@
       var bn = HAS_ANDROID ? A.buildNumber() : 0;
       return [
         { head: true, label: 'الشكل والتفاعل' },
-        { label: 'الثيم', value: themeName(settings.theme), act: function (k) { if (k === 'ok') { closeModal(); openThemes(); return false; } var ids = THEMES.map(function (t) { return t[0]; }); settings.theme = cycle(ids, settings.theme, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
+        { label: 'الثيم', value: themeName(settings.theme), act: function (k) { if (k === 'ok') { closeModal(); openThemes(); return false; } var ids = THEMES.map(function (t) { return t[0]; }); settings.theme = cycle(ids, themeId(settings.theme), k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'صوت النقر عند التنقل', value: settings.clickSound ? 'شغّال' : 'متوقف', act: function () { settings.clickSound = !settings.clickSound; saveSettings(); clickSound(); } },
         { label: 'شكل أيقونات الأعلى', value: (TOP_SHAPES.filter(function (x) { return x[0] === (settings.topShape || 'circle'); })[0] || TOP_SHAPES[0])[1], act: function (k) { settings.topShape = cycle(TOP_SHAPES.map(function (x) { return x[0]; }), settings.topShape || 'circle', k === 'ArrowRight' ? -1 : 1); saveSettings(); } },
         { label: 'المسافة بين أيقونات الأعلى', value: nf.format(settings.topGap || 30), act: function (k) { settings.topGap = cycle([10, 20, 30, 40, 54, 70], settings.topGap || 30, k === 'ArrowRight' ? -1 : 1); saveSettings(); } },

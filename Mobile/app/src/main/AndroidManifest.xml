@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
         android:label="قنواتي"
-        android:icon="@drawable/ic_app_cinema"
+        android:icon="@drawable/ic_app_rasheed"
         android:usesCleartextTraffic="true"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
@@ -27,37 +27,61 @@
                 <data android:mimeType="application/x-mpegurl" /><data android:mimeType="application/vnd.apple.mpegurl" /><data android:mimeType="audio/x-mpegurl" /><data android:mimeType="video/*" />
             </intent-filter>
         </activity>
-        <activity-alias android:name=".IconCinema" android:targetActivity=".MainActivity" android:exported="true" android:enabled="true" android:icon="@drawable/ic_app_cinema" android:label="قنواتي">
+        <activity-alias android:name=".IconDijla" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_dijla" android:label="قنواتي">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".IconRoyal" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_royal" android:label="قنواتي">
+        <activity-alias android:name=".IconSumer" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_sumer" android:label="قنواتي">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".IconKarbala" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_karbala" android:label="قنواتي">
+        <activity-alias android:name=".IconNight" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_night" android:label="قنواتي">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".IconAlawi" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_alawi" android:label="قنواتي">
+        <activity-alias android:name=".IconHibr" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_hibr" android:label="قنواتي">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".IconApple" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_apple" android:label="قنواتي">
+        <activity-alias android:name=".IconZumurrud" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_zumurrud" android:label="قنواتي">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".IconNeon" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_neon" android:label="قنواتي">
+        <activity-alias android:name=".IconIshara" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_ishara" android:label="قنواتي">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconRasheed" android:targetActivity=".MainActivity" android:exported="true" android:enabled="true" android:icon="@drawable/ic_app_rasheed" android:label="قنواتي">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconSadu" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_sadu" android:label="قنواتي">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconKashi" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_kashi" android:label="قنواتي">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconTareeq" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@drawable/ic_app_tareeq" android:label="قنواتي">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -4,6 +4,7 @@ on:
     paths:
       - 'Tawasul/**'
       - 'CleanTV/app/src/main/assets/tw-core.js'
+      - 'CleanTV/app/src/main/assets/brands.js'
       - '.github/workflows/tawasul.yml'
   workflow_dispatch:
 permissions:

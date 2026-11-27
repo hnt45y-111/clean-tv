@@ -7,7 +7,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode(project.hasProperty('buildNum') ? project.property('buildNum').toString().toInteger() : 1)
-        versionName '6.0'
+        versionName '17.0'
     }
     signingConfigs {
         fixed {
@@ -29,7 +29,15 @@ android {
     packagingOptions {
         resources { excludes += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF', 'META-INF/*.kotlin_module'] }
     }
+    // the identity engine is the TV launcher's own file: copied in at build time, never duplicated in the repository
+    sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('shared-assets').get().asFile
 }
+tasks.register('copyShared', Copy) {
+    from('../../CleanTV/app/src/main/assets') { include 'brands.js', 'fonts/**' }
+    into layout.buildDirectory.dir('shared-assets')
+}
+tasks.matching { it.name == 'preBuild' }.configureEach { dependsOn 'copyShared' }
+
 dependencies {
     implementation 'com.github.MuntashirAkon:libadb-android:3.1.1'
     implementation 'com.github.MuntashirAkon:sun-security-android:1.1'

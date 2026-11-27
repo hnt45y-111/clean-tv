@@ -138,10 +138,10 @@
     $('oDel').onclick = function () { closeSheet(); if (confirm('تحذف «' + TW.contactName(cur) + '» ومحادثته؟')) { TW.removeContact(cur); cur = ''; show('vHome'); renderHome(); } };
   };
   $('bSet').onclick = function () {
-    var dark = !document.body.classList.contains('light'), notif = true;
-    openSheet('<h3>الإعدادات</h3><div class="opt" id="oName"><i>👤</i><span>اسمي: <b>' + esc(TW.S.name || '—') + '</b></span></div><div class="opt" id="oTh"><i>🌗</i><span>الوضع الفاتح</span><div class="tg' + (dark ? '' : ' on') + '"></div></div><div class="opt" id="oNt"><i>🔔</i><span>إشعارات الرسائل</span><div class="tg on" id="tgN"></div></div><div class="opt" id="oLv"><i>⚠</i><span>حذف حسابي من السيرفر</span></div>');
+    var notif = true;
+    openSheet('<h3>الإعدادات</h3><div class="opt" id="oName"><i>👤</i><span>اسمي: <b>' + esc(TW.S.name || '—') + '</b></span></div><div class="opt" id="oTh"><i>🎨</i><span>الهوية البصرية: <b>' + esc(Brand.current().name) + '</b></span></div><div class="opt" id="oNt"><i>🔔</i><span>إشعارات الرسائل</span><div class="tg on" id="tgN"></div></div><div class="opt" id="oLv"><i>⚠</i><span>حذف حسابي من السيرفر</span></div>');
     $('oName').onclick = function () { openSheet('<h3>اسمك</h3><input type="text" class="rt" id="nName" maxlength="30" value="' + esc(TW.S.name) + '"><button class="btn pri" id="nGo">حفظ</button>'); $('nGo').onclick = function () { TW.rename($('nName').value); closeSheet(); renderHome(); }; };
-    $('oTh').onclick = function () { document.body.classList.toggle('light'); try { localStorage.setItem('tw.light', document.body.classList.contains('light') ? '1' : '0'); } catch (e) {} $('oTh').querySelector('.tg').classList.toggle('on'); };
+    $('oTh').onclick = function () { closeSheet(); Brand.picker(function () { }); };
     $('oNt').onclick = function () { var t = $('tgN'); t.classList.toggle('on'); try { A.notifOn(t.classList.contains('on')); } catch (e) {} };
     $('oLv').onclick = function () { closeSheet(); if (confirm('يحذف حسابك ورمزك ومحادثاتك. تتأكد؟')) TW.leave(function () { location.reload(); }); };
   };
@@ -179,7 +179,7 @@
   };
 
   /* ---- start ---- */
-  try { if (localStorage.getItem('tw.light') === '1') document.body.classList.add('light'); } catch (e) {}
+  Brand.init('tawasul');
   TW.load();
   TW.on('change', function () { if (view === 'vHome') renderHome(); else if (view === 'vChat') { TW.markRead(cur); renderChat(true); } });
   TW.on('msg', function (from, m) { if (view === 'vChat' && cur === from) TW.markRead(from); else if (document.visibilityState === 'visible') toast('رسالة من ' + TW.contactName(from)); });

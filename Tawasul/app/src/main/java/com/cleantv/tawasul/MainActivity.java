@@ -162,6 +162,6 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void share(String t) { Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t); startActivity(Intent.createChooser(i, null)); }
         @JavascriptInterface public void openUrl(String url, String mime) { runOnUiThread(() -> MainActivity.this.openUrl(url, mime)); }
         @JavascriptInterface public void toast(String t) { runOnUiThread(() -> Toast.makeText(MainActivity.this, t, Toast.LENGTH_SHORT).show()); }
-        @JavascriptInterface public String version() { return "1.0"; }
+        @JavascriptInterface public String version() { return "17.0"; }
     }
 }

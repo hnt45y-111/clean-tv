@@ -27,6 +27,9 @@ jobs:
         timeout-minutes: 6
         continue-on-error: true
         run: command -v convert || sudo timeout 150 apt-get install -y --no-install-recommends imagemagick || (sudo timeout 180 apt-get update && sudo timeout 150 apt-get install -y --no-install-recommends imagemagick)
+      - name: Fonts for the identities
+        working-directory: CleanTV
+        run: python3 tools/fetch_assets.py
       - name: Launcher preview files
         run: python3 tools/launcher_assets.py
       - uses: actions/setup-java@v4
