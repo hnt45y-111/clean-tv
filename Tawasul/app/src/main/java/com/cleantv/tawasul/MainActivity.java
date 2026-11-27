@@ -149,6 +149,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void creds(String code, String token) {
             prefs(MainActivity.this).edit().putString("code", code).putString("token", token).apply();
             PollJob.schedule(MainActivity.this);
+            PushService.sync(MainActivity.this);
             if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
                 runOnUiThread(() -> requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF));
         }
