@@ -1,6 +1,7 @@
 // قراءة PDF وتحويل صفحاته إلى صور داخل الواجهة (pdf.js محلي).
 let lib = null;
 async function L() { if (!lib) { lib = await import('../vendor/pdf.min.mjs'); lib.GlobalWorkerOptions.workerSrc = new URL('../vendor/pdf.worker.min.mjs', import.meta.url).href; } return lib; }
+export async function getLib() { return L(); }
 export async function openPdf(bytes) { const p = await L(); return p.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false }).promise; }
 export async function renderPage(doc, n, scale = 1.5, type = 'image/png', q = 0.9) {
   const page = await doc.getPage(n), vp = page.getViewport({ scale }); const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);

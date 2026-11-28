@@ -8,7 +8,9 @@ import { go } from '../main.js';
 
 export async function mount(root) {
   let sel = null, scanning = false, cropMode = false, crop = null, dragId = null;
-  const redraw = () => draw();
+  let lastSig = '';
+  const sig = () => JSON.stringify([S.pages.map((p) => p.id + ':' + p.v), S.settings, S.scanners && [S.scanners.selectedAvailable, S.scanners.error], S.printers && [S.printers.selectedAvailable, S.printers.error], scanning, sel, cropMode]);
+  const redraw = () => { if (sig() === lastSig) return; draw(); };
   await refreshPages(); if (S.pages.length) sel = S.pages[0].id;
 
   const devInfo = () => {
@@ -18,6 +20,7 @@ export async function mount(root) {
   const colorName = { color: 'ألوان كاملة', gray: 'تدرّج رمادي', bw: 'أبيض وأسود' };
 
   async function draw() {
+    lastSig = sig();
     const st = S.settings, d = devInfo(), pages = S.pages;
     const hist = await call('history', 6).catch(() => []);
     root.innerHTML = `<div class="dash-wrap"><div class="dash-bg" id="bg"></div><div class="dash-scrim" id="scrim"></div><div class="dash-in">
@@ -34,6 +37,7 @@ export async function mount(root) {
     </div></div>`;
     applyBackground($('#bg', root), $('#scrim', root), st.background, (f) => fileUrl(f, st.background.file.length));
     if (pages.length) afterWorkspace();
+    $$('[data-set]', root).forEach((x) => (x.onchange = () => setSetting({ [x.dataset.set]: isNaN(+x.value) ? x.value : +x.value })));
   }
 
   function hero(d, hist) {
@@ -41,7 +45,12 @@ export async function mount(root) {
     return `<div class="hero"><div class="col" style="gap:16px">
         <div><span class="pill warn" style="margin-bottom:8px">PRINT STUDIO</span><h1>حوّل أوراقك إلى <em>مستندات رقمية</em> قابلة للتحرير</h1>
         <p class="sub" style="font-size:16px">امسح صفحة أو عدة صفحات، ثم احفظها PDF أو Word أو صورة — أو حوّلها إلى Word وExcel قابلين للتعديل.</p></div>
-        <div class="row"><button class="btn btn-start" data-act="start">${icon('scan')} ابدأ السكانر</button></div>
+        <div class="row"><button class="btn btn-start" data-act="start">${icon('scan')} ابدأ السكانر</button><button class="btn lg ghost" data-act="copy" title="مسح الورقة وطباعتها مباشرة">${icon('printer')} نسخ سريع</button></div>
+        <div class="card halftone" style="padding:12px"><div class="row" style="gap:12px">
+          <label class="f">دقة المسح<select data-set="scan.dpi">${[75, 100, 150, 200, 300, 600, 1200].map((d) => `<option ${d === st.scan.dpi ? 'selected' : ''}>${d}</option>`).join('')}</select></label>
+          <label class="f">اللون<select data-set="scan.color">${Object.entries(colorName).map(([k, v]) => `<option value="${k}" ${k === st.scan.color ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+          <label class="f">حجم الورقة<select data-set="scan.paper">${['A4', 'A5', 'Letter', 'Legal'].map((d) => `<option ${d === st.scan.paper ? 'selected' : ''}>${d}</option>`).join('')}</select></label>
+          <label class="f">الاتجاه<select data-set="scan.orientation"><option value="portrait" ${st.scan.orientation === 'portrait' ? 'selected' : ''}>طولي</option><option value="landscape" ${st.scan.orientation === 'landscape' ? 'selected' : ''}>عرضي</option></select></label></div></div>
         ${!st.scanner.id ? `<div class="pill warn">لم يُحدَّد سكانر بعد — اضغط «اختيار السكانر»</div>` : d.scErr ? `<div class="pill bad">${esc(d.scErr)}</div>` : ''}
       </div><div>${scannerArt}</div></div>
       <div class="info-cards">
@@ -95,7 +104,6 @@ export async function mount(root) {
       el.ondragleave = () => el.classList.remove('drop');
       el.ondrop = async (e) => { e.preventDefault(); const to = el.dataset.id; if (!dragId || dragId === to) return; const order = S.pages.map((p) => p.id); order.splice(order.indexOf(dragId), 1); order.splice(order.indexOf(to), 0, dragId); await run(null, async () => { S.pages = await call('pagesReorder', order); emit(); }); };
     });
-    $$('[data-set]', root).forEach((s) => (s.onchange = () => setSetting({ [s.dataset.set]: isNaN(+s.value) ? s.value : +s.value })));
     const b = $('#bri', root), c = $('#con', root); if (b) { b.oninput = () => ($('#bv', root).textContent = b.value); c.oninput = () => ($('#cv', root).textContent = c.value); }
     if (cropMode) initCrop();
   }
@@ -146,6 +154,13 @@ export async function mount(root) {
   actions(root, {
     start: (b) => run(b, () => doScan()), another: (b) => run(b, () => doScan()), rescan: (b) => run(b, () => doScan(sel)),
     'scanner-pick': pickScanner,
+    copy: (b) => run(b, async () => {
+      if (!S.settings.scanner.id) { await pickScanner(); if (!S.settings.scanner.id) return; }
+      if (!S.settings.printer.name) throw new Error('اختر طابعة أولاً من: إدارة الطابعات');
+      const m = modal(`<h2>${icon('printer')} نسخ سريع</h2><label class="f">عدد النسخ<input type="number" id="cn" min="1" max="99" value="1"></label><p class="sub">ضع الورقة على السكانر ثم اضغط «ابدأ النسخ». الطابعة: ${esc(S.settings.printer.name)}</p><div class="foot"><button class="btn green" id="cg">ابدأ النسخ</button><button class="btn ghost" id="cx">إلغاء</button></div>`);
+      $('#cx', m).onclick = () => m.close();
+      $('#cg', m).onclick = (ev) => run(ev.currentTarget, async () => { const n = +$('#cn', m).value || 1; m.close(); const lo = loading('جارٍ المسح ثم الطباعة…'); try { await call('copyQuick', { copies: n }); toast('أُرسل النسخ إلى الطابعة', 'ok'); } finally { lo.close(); } });
+    }),
     export: () => openExportDialog({ ids: S.pages.map((p) => p.id) }),
     ocr: () => { sessionStorage.setItem('ocr-from-pages', '1'); go('ocr'); },
     import: (b) => run(b, importFiles),

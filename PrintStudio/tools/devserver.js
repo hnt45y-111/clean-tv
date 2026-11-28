@@ -19,7 +19,7 @@ async function start({ port = 5179, dataDir } = {}) {
   const api = buildApi(core, ui);
   const R = path.join(__dirname, '..', 'src', 'renderer');
   const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg', '.pdf': 'application/pdf' };
-  const shim = `window.PS_URL_BASE='/file/';window.ps={call:async(n,...a)=>{const r=await fetch('/rpc',{method:'POST',body:JSON.stringify({n,a},(k,v)=>v instanceof ArrayBuffer?{__b:btoa(String.fromCharCode(...new Uint8Array(v)))}:v)});const j=await r.json();if(j.e)throw new Error(j.e);return j.r&&j.r.__b!==undefined?Uint8Array.from(atob(j.r.__b),c=>c.charCodeAt(0)).buffer:j.r},on:()=>()=>{}};`;
+  const shim = `window.PS_URL_BASE='/file/';window.ps={call:async(n,...a)=>{const r=await fetch('/rpc',{method:'POST',body:JSON.stringify({n,a},(k,v)=>v instanceof ArrayBuffer?{__b:(()=>{const u=new Uint8Array(v);let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)})()}:v)});const j=await r.json();if(j.e)throw new Error(j.e);return j.r&&j.r.__b!==undefined?Uint8Array.from(atob(j.r.__b),c=>c.charCodeAt(0)).buffer:j.r},on:()=>()=>{}};`;
   const server = http.createServer(async (req, res) => {
     try {
       const u = new URL(req.url, 'http://x');

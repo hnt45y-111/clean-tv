@@ -12,6 +12,7 @@ const DEFAULTS = {
   general: { language: 'ar', theme: 'dark', animations: true, startOnBoot: false, openLastPage: false },
   background: { mode: 'default', preset: '', file: '', brightness: 100, opacity: 100 },
   archive: { dir: '' },
+  print: { dpi: 300, orientation: 'auto', color: true, fit: 'contain' },
 };
 const ENUM = {
   'scan.color': ['color', 'gray', 'bw'], 'scan.paper': ['A4', 'A5', 'Letter', 'Legal'],
@@ -21,11 +22,11 @@ const ENUM = {
   'pdf.pageSize': ['A4', 'A3', 'A5', 'Letter', 'Legal', 'fit'], 'pdf.orientation': ['portrait', 'landscape'],
   'word.pageSize': ['A4', 'A3', 'A5', 'Letter', 'Legal'], 'word.orientation': ['portrait', 'landscape'],
   'general.theme': ['dark', 'darker'], 'general.language': ['ar'],
-  'background.mode': ['default', 'preset', 'image'],
+  'background.mode': ['default', 'preset', 'image'], 'print.orientation': ['auto', 'portrait', 'landscape'], 'print.fit': ['contain', 'fill', 'actual'],
 };
 const RANGE = {
   'scan.dpi': [75, 1200], 'image.dpi': [72, 1200], 'image.quality': [10, 100], 'pdf.quality': [10, 100],
-  'word.fontSize': [6, 72], 'background.brightness': [20, 150], 'background.opacity': [10, 100],
+  'word.fontSize': [6, 72], 'print.dpi': [0, 1200], 'background.brightness': [20, 150], 'background.opacity': [10, 100],
 };
 const clone = (o) => JSON.parse(JSON.stringify(o));
 

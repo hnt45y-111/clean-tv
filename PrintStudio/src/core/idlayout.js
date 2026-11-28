@@ -11,7 +11,7 @@ const PRESETS = { 'CR80': [85.6, 54], 'بطاقة 90×60': [90, 60], 'صورة 3
  * ترتيب تلقائي. identities: [{id, front?, back?}] ← تُرسَل الأوجه المتوفرة.
  * يعيد عناصر {key, identity, side, x, y, w, h} بالملّيمتر مرتبة شبكياً ومتمركزة.
  */
-function autoArrange(identities, { paper = 'A4', orientation = 'portrait', cardW = 85.6, cardH = 54, gap = 5, margin = 10, pairMode = 'side' } = {}) {
+function autoArrange(identities, { paper = 'A4', orientation = 'portrait', cardW = 85.6, cardH = 54, gap = 5, margin = 10, pairMode = 'side', frontSide = 'right' } = {}) {
   const P = sizeMm(paper, orientation);
   const units = identities.map((idn) => {
     const sides = ['front', 'back'].filter((s) => idn[s]);
@@ -29,7 +29,7 @@ function autoArrange(identities, { paper = 'A4', orientation = 'portrait', cardW
     const rw = row.reduce((a, q) => a + q.uw + gap, -gap); x = margin + Math.max(0, (usable - rw) / 2); rowH = Math.max(...row.map((q) => q.uh));
     for (const u of row) {
       u.sides.forEach((side, i) => {
-        const dx = u.both && pairMode === 'side' ? i * (cardW + gap) : 0, dy = u.both && pairMode === 'stack' ? i * (cardH + gap) : 0;
+        const idx = frontSide === 'right' && side === 'front' ? 1 : frontSide === 'right' ? 0 : i; const dx = u.both && pairMode === 'side' ? idx * (cardW + gap) : 0, dy = u.both && pairMode === 'stack' ? i * (cardH + gap) : 0;
         items.push({ key: `${u.idn.id}:${side}`, identity: u.idn.id, side, x: round(x + dx), y: round(y + dy), w: cardW, h: cardH, rot: 0 });
       });
       x += u.uw + gap;

@@ -27,3 +27,10 @@ test('winhw: scan يمرّر المعاملات ويعيد الملفات', asyn
   let seen; const h = new WinHW({ platform: 'win32', run: async (s, a) => { seen = a; return JSON.stringify({ files: ['C:\\t\\p.png'] }); } });
   const f = await h.scan({ id: 'X', dpi: 600, outBase: 'C:\\t\\p' }); assert.deepEqual(f, ['C:\\t\\p.png']); assert.equal(seen.dpi, 600);
 });
+
+test('winhw: استخراج JSON رغم BOM وأسطر قبله', async () => {
+  const { extractJson } = require('../src/core/winhw');
+  assert.equal(extractJson('\uFEFF[{"a":1}]'), '[{"a":1}]'); assert.equal(extractJson('WARNING: x\r\n{"a":1}\r\n'), '{"a":1}'); assert.equal(extractJson(''), ''); assert.equal(extractJson('نص بلا json'), '');
+  const h = new WinHW({ platform: 'win32', run: async () => '\uFEFF[{"name":"Brother DCP-T310","status":3,"errorState":2}]' }); assert.equal((await h.listPrinters())[0].name, 'Brother DCP-T310');
+  const c = new WinHW({ platform: 'win32', run: async () => '\uFEFF{"name":"Canon G3020","class":"Image"}' }); assert.equal((await c.connectedDevices()).length, 1);
+});

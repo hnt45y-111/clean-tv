@@ -24,3 +24,12 @@ test('main: IPC موثوق فقط + بروتوكولات آمنة', async () => 
   assert.equal((await protos.psapp({ url: 'psapp://app/..%2f..%2fpackage.json' })).status, 404); assert.equal((await protos.psapp({ url: 'psapp://app/../../package.json' })).status, 404);
   const b64 = (p) => Buffer.from(p).toString('base64url'); assert.equal((await protos.psfile({ url: 'psfile://f/' + b64('/etc/passwd') })).status, 403);
 });
+
+test('printing: اتجاه تلقائي لكل صفحة + نطاقات الصفحات', () => {
+  const Module = require('module'); const orig = Module._load; Module._load = function (r, ...a) { return r === 'electron' ? { BrowserWindow: class {} } : orig.call(this, r, ...a); };
+  let P; try { P = require('../src/main/printing.js'); } finally { Module._load = orig; }
+  const pages = [{ w: 800, h: 1100 }, { w: 800, h: 1100 }, { w: 1200, h: 800 }, { w: 800, h: 1100 }];
+  const g = P.groupByOrientation(pages, 'auto'); assert.deepEqual(g.map((x) => [x.landscape, x.pages.length]), [[false, 2], [true, 1], [false, 1]]);
+  assert.deepEqual(P.groupByOrientation(pages, 'landscape').map((x) => x.landscape), [true]); assert.equal(P.groupByOrientation(pages, 'portrait')[0].pages.length, 4);
+  assert.deepEqual([...P.rangeSet('1-2,4', 4)], [0, 1, 3]); assert.equal(P.rangeSet('', 4), null); assert.throws(() => P.rangeSet('x', 4), /غير صالح/); assert.throws(() => P.rangeSet('9', 4), /غير صالح/);
+});

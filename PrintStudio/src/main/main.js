@@ -53,7 +53,8 @@ app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((_wc, _p, cb) => cb(false));
   const data = path.join(app.getPath('userData'), 'data');
   const tess = app.isPackaged ? path.join(process.resourcesPath, 'tessdata') : path.join(__dirname, '..', '..', 'assets', 'tessdata');
-  core = await new App({ dataDir: data, docsDir: app.getPath('documents'), ocrLangPath: tess }).init();
+  const testHw = !app.isPackaged && process.env.PS_TEST_HW ? require(process.env.PS_TEST_HW) : undefined; // خطاف اختبار (لا يعمل في النسخة المثبّتة)
+  core = await new App({ dataDir: data, docsDir: app.getPath('documents'), ocrLangPath: tess, hw: testHw }).init();
   api = buildApi(core, ui);
 
   const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' };

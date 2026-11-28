@@ -14,7 +14,7 @@ export async function mount(root) {
   }
   function list() {
     $('#al', root).innerHTML = rows.length ? `<table class="t"><thead><tr><th>الاسم</th><th>النوع</th><th>الصفحات</th><th>الحجم</th><th>المصدر</th><th>التاريخ</th><th></th></tr></thead><tbody>${rows.map((r) => `<tr><td><b>${esc(r.name)}</b></td><td><span class="pill">${esc(r.type)}</span></td><td>${r.pages || '—'}</td><td>${fmtSize(r.size)}</td><td>${esc(SRC[r.source] || SRC[r.source] || 'ملف')}</td><td>${fmtDate(r.created)}</td>
-      <td style="white-space:nowrap"><button class="btn sm ghost" data-act="pv" data-id="${r.id}" title="معاينة">${icon('eye')}</button> <button class="btn sm ghost" data-act="open" data-id="${r.id}" title="فتح">${icon('open')}</button> <button class="btn sm ghost" data-act="dir" data-id="${r.id}" title="فتح المجلد">${icon('folder')}</button> ${['pdf', 'jpg', 'png'].includes(r.type) ? `<button class="btn sm ghost" data-act="reprint" data-id="${r.id}" title="إعادة الطباعة">${icon('printer')}</button>` : ''} <button class="btn sm red" data-act="del" data-id="${r.id}" title="حذف من الأرشيف">${icon('trash')}</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">لا توجد ملفات مطابقة. تُضاف الملفات إلى الأرشيف تلقائياً عند التصدير.</div>';
+      <td style="white-space:nowrap"><button class="btn sm ghost" data-act="pv" data-id="${r.id}" title="معاينة">${icon('eye')}</button> <button class="btn sm ghost" data-act="open" data-id="${r.id}" title="فتح">${icon('open')}</button> <button class="btn sm ghost" data-act="dir" data-id="${r.id}" title="فتح المجلد">${icon('folder')}</button> ${r.type === 'pdf' ? `<button class="btn sm ghost" data-act="read" data-id="${r.id}" title="قراءة في القارئ">${icon('pdf')}</button>` : ''} ${['pdf', 'jpg', 'png'].includes(r.type) ? `<button class="btn sm ghost" data-act="reprint" data-id="${r.id}" title="إعادة الطباعة">${icon('printer')}</button>` : ''} <button class="btn sm red" data-act="del" data-id="${r.id}" title="حذف من الأرشيف">${icon('trash')}</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">لا توجد ملفات مطابقة. تُضاف الملفات إلى الأرشيف تلقائياً عند التصدير.</div>';
   }
   root.innerHTML = `<div class="page-h"><span class="tag">🗂</span><h1>الأرشيف</h1><span class="grow"></span><span class="pill" id="cnt"></span></div>
     <div class="card" style="margin-bottom:14px"><div class="row"><label class="f grow">بحث (اسم الملف أو محتواه)<input type="text" id="fq" placeholder="اكتب للبحث…"></label>
@@ -25,6 +25,7 @@ export async function mount(root) {
   const cnt = () => { $('#cnt', root).textContent = rows.length + ' ملف'; };
   actions(root, {
     open: (b) => run(b, () => call('archiveOpen', +b.dataset.id)), dir: (b) => run(b, () => call('archiveReveal', +b.dataset.id)),
+    read: (b) => run(b, async () => { const r = await call('archiveGet', +b.dataset.id); sessionStorage.setItem('reader-preload', r.path); go('reader'); }),
     reprint: (b) => run(b, async () => { const r = await call('archiveGet', +b.dataset.id); sessionStorage.setItem('print-preload', r.path); go('print'); }),
     del: async (b) => { if (await confirmBox('إزالة هذا الملف من الأرشيف؟ (يُحذف السجل ونسخة الأرشيف)', 'إزالة', true)) { await call('archiveDelete', +b.dataset.id, true); await load(); cnt(); toast('أُزيل من الأرشيف', 'ok'); } },
     pv: (b) => run(b, async () => {

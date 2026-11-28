@@ -22,7 +22,7 @@ async function prepImage(file, { quality = 85, maxPx = 0 } = {}) {
 /** pageSize: 'A4'|... أو 'fit' (حجم الصورة عند dpi). الصورة تُوضع وسط الصفحة بنسبتها. */
 async function imagesToPdf(files, { pageSize = 'A4', orientation = 'portrait', quality = 85, dpi = 300, marginMm = 0, searchable = null } = {}) {
   const doc = await PDFDocument.create(); doc.setCreator('Print Studio'); doc.setProducer('Print Studio');
-  let font = null;
+  let font = null, latin = null;
   for (let i = 0; i < files.length; i++) {
     const { buf, kind } = await prepImage(files[i], { quality });
     const img = kind === 'png' ? await doc.embedPng(buf) : await doc.embedJpg(buf);
@@ -36,15 +36,24 @@ async function imagesToPdf(files, { pageSize = 'A4', orientation = 'portrait', q
     page.drawImage(img, { x, y, width: w, height: h });
     const layer = searchable && searchable[i];
     if (layer && layer.lines && layer.lines.length) {
-      if (!font) font = await embedArabicFont(doc);
+      if (!font) { font = await embedArabicFont(doc); latin = await doc.embedFont(StandardFonts.Helvetica); }
       for (const ln of layer.lines) {
-        const txt = String(ln.text || '').replace(/[‎‏‪-‮]/g, '').replace(/[^\S\n]+/g, ' ').trim();
+        const txt = String(ln.text || '').replace(/[\u200E\u200F\u202A-\u202E]/g, '').replace(/\s+/g, ' ').trim();
         if (!txt) continue;
-        const lx = x + (ln.bbox.x0 / layer.width) * w, lh = ((ln.bbox.y1 - ln.bbox.y0) / layer.height) * h;
-        const ly = y + h - (ln.bbox.y1 / layer.height) * h;
-        const safe = [...txt].filter((ch) => { try { return font.getCharacterSet().includes(ch.codePointAt(0)); } catch { return true; } }).join('');
-        if (!safe.trim()) continue;
-        try { page.drawText(safe, { x: lx, y: ly, size: Math.max(4, lh * 0.8), font, opacity: 0, color: rgb(0, 0, 0) }); } catch {}
+        const lx0 = x + (ln.bbox.x0 / layer.width) * w, lx1 = x + (ln.bbox.x1 / layer.width) * w, lh = ((ln.bbox.y1 - ln.bbox.y0) / layer.height) * h;
+        const ly = y + h - (ln.bbox.y1 / layer.height) * h, size = Math.max(4, lh * 0.8);
+        const ar = (txt.match(/[\u0600-\u06FF]/g) || []).length > (txt.match(/[A-Za-z]/g) || []).length;
+        // كل كلمة بالخط المناسب: العربية بخط Noto، واللاتينية/الأرقام بـ Helvetica (الخط العربي المضمّن لا يحوي اللاتينية)
+        let cx = ar ? lx1 : lx0;
+        for (const tok of txt.split(' ')) {
+          const isAr = /[\u0600-\u06FF]/.test(tok); const f = isAr ? font : latin;
+          const safe = [...tok].filter((ch) => { try { return isAr ? font.getCharacterSet().includes(ch.codePointAt(0)) : ch.codePointAt(0) < 256; } catch { return false; } }).join('');
+          if (!safe) continue;
+          let tw = 0; try { tw = f.widthOfTextAtSize(safe, size); } catch { continue; }
+          const px = ar ? cx - tw : cx;
+          try { page.drawText(safe, { x: px, y: ly, size, font: f, opacity: 0, color: rgb(0, 0, 0) }); } catch {}
+          cx = ar ? px - size * 0.3 : cx + tw + size * 0.3;
+        }
       }
     }
   }
@@ -128,4 +137,27 @@ async function addWatermark(buf, { text = 'سري', opacity = 0.18, angle = 45, 
   return Buffer.from(await d.save({ useObjectStreams: true }));
 }
 
-module.exports = { imagesToPdf, parseRanges, pageCount, merge, pick, split, rotate, optimize, addPageNumbers, addWatermark };
+/** تعليقات على PDF: قلم/تظليل/نص. الإحداثيات نسبية (0..1) من أعلى اليسار. */
+async function annotate(buf, items) {
+  const d = await load(buf); const embedded = new Map();
+  for (const it of items) {
+    const p = d.getPage(it.page); if (!p) throw new Error('صفحة غير موجودة: ' + (it.page + 1));
+    if (p.getRotation().angle % 360) throw new Error('الصفحة ' + (it.page + 1) + ' مدوّرة؛ أعد تدويرها إلى 0° قبل إضافة التعليقات');
+    const { width: W, height: H } = p.getSize(); const col = (c) => { const m = /^#?([0-9a-f]{6})$/i.exec(c || '#ff0000'); const n = parseInt(m ? m[1] : 'ff0000', 16); return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255); };
+    if (it.type === 'ink' && it.points && it.points.length > 1) {
+      for (let i = 1; i < it.points.length; i++) p.drawLine({ start: { x: it.points[i - 1][0] * W, y: H - it.points[i - 1][1] * H }, end: { x: it.points[i][0] * W, y: H - it.points[i][1] * H }, thickness: Math.max(0.5, (it.width || 0.003) * W), color: col(it.color), lineCap: 1 });
+    } else if (it.type === 'highlight' && it.rect) {
+      p.drawRectangle({ x: it.rect.x * W, y: H - (it.rect.y + it.rect.h) * H, width: it.rect.w * W, height: it.rect.h * H, color: col(it.color || '#ffe600'), opacity: it.opacity ?? 0.35 });
+    } else if (it.type === 'text' && it.text) {
+      const esc = String(it.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').slice(0, 300); const fs = 64;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="3000" height="${fs * 2}"><text x="1500" y="${fs * 1.4}" font-size="${fs}" font-family="Noto Sans Arabic, DejaVu Sans, Arial" text-anchor="middle" fill="${(it.color || '#ff0000')}">${esc}</text></svg>`;
+      const png = await sharp(Buffer.from(svg)).trim().png().toBuffer(); const meta = await sharp(png).metadata();
+      const key = png.toString('base64').slice(0, 64) + png.length; if (!embedded.has(key)) embedded.set(key, await d.embedPng(png));
+      const k = ((it.size || 14) / fs), w = meta.width * k, h = meta.height * k;
+      p.drawImage(embedded.get(key), { x: it.x * W, y: H - it.y * H - h, width: w, height: h });
+    }
+  }
+  return Buffer.from(await d.save({ useObjectStreams: true }));
+}
+
+module.exports = { annotate, imagesToPdf, parseRanges, pageCount, merge, pick, split, rotate, optimize, addPageNumbers, addWatermark };

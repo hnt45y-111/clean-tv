@@ -5,6 +5,7 @@ import { printerArt } from './art.js';
 const ROUTES = [
   ['scan', 'الرئيسية — السكانر', 'scan', () => import('./views/scan.js')],
   ['ocr', 'التعرف الذكي على الملفات', 'ocr', () => import('./views/ocr.js')],
+  ['reader', 'قارئ PDF', 'pdf', () => import('./views/reader.js')],
   ['ids', 'سكانر الهويات والباجات', 'id', () => import('./views/ids.js')],
   ['print', 'مركز الطباعة', 'printer', () => import('./views/print.js')],
   ['printers', 'إدارة الطابعات', 'doc', () => import('./views/printers.js')],
@@ -13,6 +14,8 @@ const ROUTES = [
   ['settings', 'الإعدادات', 'gear', () => import('./views/settings.js')],
 ];
 let current = null, cleanup = null;
+window.addEventListener('error', (e) => toast('خطأ غير متوقع: ' + (e.message || ''), 'err'));
+window.addEventListener('unhandledrejection', (e) => { toast('خطأ: ' + ((e.reason && e.reason.message) || e.reason), 'err'); e.preventDefault(); });
 
 function buildNav() {
   $('#nav').innerHTML = `<div class="brand"><svg width="38" height="38" viewBox="0 0 64 64"><rect x="3" y="3" width="58" height="58" rx="14" fill="#1b46c9" stroke="#000" stroke-width="4"/><path d="M16 38h32v10H16zM20 38l4-16h16l4 16" fill="#9fe9ff" stroke="#000" stroke-width="3" stroke-linejoin="round"/><circle cx="22" cy="43" r="2" fill="#22c55e"/></svg><div><b>Print Studio</b><small>مركز الطباعة والسكانر</small></div></div>`
@@ -43,7 +46,7 @@ export async function printerWizard({ first = true } = {}) {
   const m = modal(`<h2>🖨️ ${first ? 'مرحباً بك في Print Studio' : 'اختيار الطابعة'}</h2>
     <p class="sub">${first ? 'تم فحص الطابعات المثبّتة في Windows. اختر الطابعة التي تريد استخدامها، وسيتذكّرها البرنامج في المرات القادمة.' : 'اختر طابعة من الطابعات المثبّتة.'}</p>
     <div id="w-list" class="col" style="max-height:48vh;overflow:auto"><div class="progress ind"><i></i></div></div>
-    <div class="foot"><button class="btn" id="w-add" disabled>إضافة الطابعة</button><button class="btn ghost" id="w-ref">${icon('refresh')} إعادة الفحص</button><button class="btn ghost" id="w-skip">${first ? 'تخطي الآن' : 'إغلاق'}</button></div>`, { cls: 'wiz', dismissible: !first });
+    <div class="foot"><button class="btn" id="w-add" disabled>إضافة الطابعة</button><button class="btn ghost" id="w-ref">${icon('refresh')} إعادة الفحص</button><button class="btn ghost" id="w-skip">${first ? 'تخطي الآن' : 'إغلاق'}</button></div>`, { cls: 'wiz', dismissible: true });
   let sel = null, list = [];
   const draw = (err) => {
     const box = $('#w-list', m);

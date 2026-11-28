@@ -6,7 +6,7 @@ const { PRESETS } = require('../core/idlayout');
 
 function buildApi(app, ui) {
   const granted = new Set();
-  const grant = (list) => { for (const p of list) granted.add(path.resolve(p)); return list; };
+  const grant = (list) => { for (const p of list) granted.add(path.resolve(p)); app.grant(list); return list; };
   const need = (p) => {
     const r = path.resolve(String(p));
     if (!granted.has(r) && !app.isAllowedPath(r)) throw new Error('مسار غير مسموح: ' + path.basename(r));
@@ -32,11 +32,21 @@ function buildApi(app, ui) {
     printerJobs: (name) => app.hw.printerJobs(str(name)),
     printerCancelJob: (name, id) => app.hw.cancelJob(str(name), Number(id)),
     printerQueue: (name) => app.hw.openQueue(str(name)),
+    devicesConnected: () => app.connectedDevices(),
+    settingsOpen: (uri) => app.hw.openSettings(str(uri, 40)),
+    printerAddWizard: () => app.hw.addPrinterWizard(),
     printerProps: (name) => app.hw.openProperties(str(name)),
     // السكانرات
     scanners: () => app.scanners(),
     scannerSelect: (id, name) => app.selectScanner(str(id), str(name || '')),
     scan: (o) => app.scan(o || {}),
+    copyQuick: async (o) => {
+      const printer = (o && o.printer) || app.settings.get('printer.name'); if (!printer) throw new Error('اختر طابعة أولاً');
+      const f = await app.scanToTemp();
+      try { return await ui.print({ printer: str(printer), files: [{ path: f, data: null }], copies: Math.min(99, Math.max(1, +(o && o.copies) || 1)), orientation: 'auto', color: !o || o.color !== false, duplex: 'simplex', paper: 'A4', fit: 'contain', scale: 100, pageRanges: '', dpi: 300 }); }
+      finally { try { fs.unlinkSync(f); } catch {} }
+    },
+    pdfAnnotate: async (o) => { const r = need(o.input); const out = await app.annotatePdf({ input: r, items: o.items, name: str(o.name), dir: await saveDir(o.dir) }); return out; },
     // الصفحات
     pagesList: () => app.listPages(),
     pagesImport: async () => { const f = await ui.pickFiles({ images: true }); if (!f.length) return app.listPages(); return app.importImages(grant(f)); },
@@ -62,6 +72,7 @@ function buildApi(app, ui) {
     cardScan: () => app.scanCard(),
     cardRemove: (id) => app.removeCard(str(id)),
     idsArrange: (ids, opts) => app.arrangeIds(ids, opts || {}),
+    idsPreview: async (o) => app.previewIds({ layout: o.layout, dpi: 110 }),
     idsExport: async (o) => app.exportIds({ name: str(o.name), format: str(o.format, 8), dir: await saveDir(o.dir), layout: o.layout, dpi: Math.min(600, Math.max(72, +o.dpi || 300)) }),
     idPresets: () => PRESETS,
     // الملفات والحوارات
@@ -91,7 +102,7 @@ function buildApi(app, ui) {
     printRun: async (o) => {
       const printer = o.printer || app.settings.get('printer.name'); if (!printer) throw new Error('اختر طابعة أولاً');
       const files = o.files.map((f) => ({ path: f.path ? need(f.path) : null, data: f.data ? buf(f.data) : null }));
-      return ui.print({ printer: str(printer), files, copies: Math.min(999, Math.max(1, +o.copies || 1)), landscape: !!o.landscape, color: o.color !== false, duplex: ['simplex', 'longEdge', 'shortEdge'].includes(o.duplex) ? o.duplex : 'simplex', paper: str(o.paper || 'A4', 12), fit: o.fit || 'contain', scale: Math.min(300, Math.max(10, +o.scale || 100)), pageRanges: o.pageRanges ? str(o.pageRanges, 100) : '' });
+      return ui.print({ printer: str(printer), files, copies: Math.min(999, Math.max(1, +o.copies || 1)), orientation: ['auto', 'portrait', 'landscape'].includes(o.orientation) ? o.orientation : 'auto', dpi: [0, 150, 300, 600, 1200].includes(+o.dpi) ? +o.dpi : 0, color: o.color !== false, duplex: ['simplex', 'longEdge', 'shortEdge'].includes(o.duplex) ? o.duplex : 'simplex', paper: str(o.paper || 'A4', 12), fit: o.fit || 'contain', scale: Math.min(300, Math.max(10, +o.scale || 100)), pageRanges: o.pageRanges ? str(o.pageRanges, 100) : '' });
     },
     startupApply: (v) => { ui.setStartup(!!v); return true; },
     appInfo: () => ({ version: ui.version(), dataDir: app.dataDir }),

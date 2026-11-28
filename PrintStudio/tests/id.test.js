@@ -21,3 +21,9 @@ test('idlayout: PDF/PNG/DOCX (صور عائمة بمواضع مستقلة)', asy
   const dx = await exportLayout(layout, 'docx'); const xml = await (await JSZip.loadAsync(dx.buffer)).file('word/document.xml').async('string');
   assert.equal((xml.match(/<wp:anchor/g) || []).length, 2, 'صورتان عائمتان'); assert.ok(xml.includes('rot="'), 'تدوير');
 });
+
+test('idlayout: الأمامي يمين والخلفي يسار (وعكسه)', () => {
+  const r = autoArrange([{ id: 'a', front: 'f', back: 'b' }], { frontSide: 'right' }); const f = r.items.find((i) => i.side === 'front'), b = r.items.find((i) => i.side === 'back');
+  assert.ok(f.x > b.x, 'الأمامي على اليمين');
+  const l = autoArrange([{ id: 'a', front: 'f', back: 'b' }], { frontSide: 'left' }); assert.ok(l.items.find((i) => i.side === 'front').x < l.items.find((i) => i.side === 'back').x);
+});

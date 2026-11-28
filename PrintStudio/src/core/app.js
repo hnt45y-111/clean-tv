@@ -27,6 +27,7 @@ class App {
     this.pages = []; // جلسة المسح الحالية
     this.cards = []; // صور الهويات الممسوحة (للمحرر)
     this.models = new Map(); // نماذج التعرف الجارية
+    this.granted = new Set(); // ملفات اختارها المستخدم عبر نافذة الاختيار
   }
   async init() {
     for (const d of ['session', 'backgrounds', 'ids', 'tmp']) fs.mkdirSync(path.join(this.dataDir, d), { recursive: true });
@@ -41,8 +42,10 @@ class App {
   allowedRoots() {
     return [this.dataDir, this.settings.get('save.dir'), this.archiveDir()].filter(Boolean).map((r) => path.resolve(r));
   }
+  grant(list) { for (const p of list) this.granted.add(path.resolve(p)); return list; }
   isAllowedPath(p) {
     const r = path.resolve(String(p));
+    if (this.granted.has(r)) return true;
     if (this.allowedRoots().some((root) => r === root || r.startsWith(root + path.sep))) return true;
     return !!this.db.get('SELECT 1 FROM archive WHERE path=? OR source=?', [r, r]);
   }
@@ -60,6 +63,11 @@ class App {
     const list = await this.hw.listPrinters(); const p = list.find((x) => x.name === name);
     if (!p) throw new Error('الطابعة غير موجودة بين طابعات Windows');
     this.settings.set({ 'printer.name': p.name, 'printer.driver': p.driver, firstRunDone: true }); this.log('printer', p.name); return p;
+  }
+  async connectedDevices() {
+    const [dev, pr] = await Promise.all([this.hw.connectedDevices().catch(() => []), this.hw.listPrinters().catch(() => [])]);
+    const norm = (x) => String(x).toLowerCase().replace(/[^a-z0-9]/g, '');
+    return dev.map((d) => ({ ...d, installed: pr.some((p) => { const a = norm(p.name), b = norm(d.name); return a && b && (a.includes(b) || b.includes(a)); }) }));
   }
   // ---------- السكانرات ----------
   async scanners() { const list = await this.hw.listScanners(); const sel = this.settings.get('scanner.id'); return { list, selected: sel, selectedAvailable: list.some((s) => s.id === sel && s.ready) }; }
@@ -92,6 +100,13 @@ class App {
       try { fs.unlinkSync(f); } catch {}
     }
     this.log('scan', `${files.length} صفحة`); return this.listPages();
+  }
+  /** مسح صفحة واحدة إلى ملف مؤقت دون إضافتها للجلسة (للنسخ السريع). */
+  async scanToTemp() {
+    const s = this.settings.get('scan'), id = this.settings.get('scanner.id'); if (!id) throw new Error('لم يتم اختيار سكانر. افتح الإعدادات ← السكانر واختر جهازاً.');
+    const sz = sizeMm(s.paper, s.orientation); const base = this.p('tmp', 'copy-' + uid());
+    const files = await this.hw.scan({ id, dpi: s.dpi, color: s.color, widthIn: sz.w / 25.4, heightIn: sz.h / 25.4, source: 'flatbed', outBase: base });
+    if (!files.length) throw new Error('لم يُرجع السكانر أي صورة'); return files[0];
   }
   async importImages(paths) {
     for (const f of paths) { if (!IMG_EXT.has(path.extname(f).toLowerCase())) throw new Error('نوع صورة غير مدعوم: ' + path.basename(f)); await this._addImage(f); }
@@ -236,6 +251,15 @@ class App {
     return { files: outs, dir: dest, note: r.note || '' };
   }
 
+  async previewIds({ layout, dpi = 110 }) {
+    const items = layout.items.map((it) => { const c = this.cards.find((x) => x.id === it.cardId); if (!c) throw new Error('صورة هوية مفقودة'); return { ...it, file: c.file }; });
+    const r = await idlayout.exportLayout({ ...layout, items }, 'png', { dpi }); return (r.buffers || [r.buffer]).map((b) => b);
+  }
+  async annotatePdf({ input, items, name, dir }) {
+    if (!Array.isArray(items) || !items.length) throw new Error('لا توجد تعليقات لحفظها'); const dest = this.resolveDir(dir);
+    const out = naming.uniquePath(dest, name, 'pdf'); fs.writeFileSync(out, await pdfkit.annotate(fs.readFileSync(input), items));
+    this.archiveAdd(out, { source: 'pdf-tool', pages: 0 }); this.log('pdf-annotate', path.basename(out)); return { files: [out], dir: dest };
+  }
   // ---------- أدوات PDF ----------
   async pdfTool(op, { inputs = [], name, dir, args = {} }) {
     const bufs = inputs.map((f) => { if (!f.toLowerCase().endsWith('.pdf')) throw new Error('الملف ليس PDF: ' + path.basename(f)); return fs.readFileSync(f); });

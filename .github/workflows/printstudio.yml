@@ -6,7 +6,7 @@ on:
       - '.github/workflows/printstudio.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -34,3 +34,10 @@ jobs:
         with:
           name: PrintStudio-Setup
           path: PrintStudio/dist/*.exe
+      - name: Publish installer as a GitHub Release (downloadable without login)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          f=$(ls dist/*.exe | head -1)
+          gh release create "printstudio-build-${{ github.run_number }}" "$f" --repo "${{ github.repository }}" --target "${{ github.sha }}" --prerelease --title "Print Studio — build ${{ github.run_number }}" --notes "مثبّت Windows لتطبيق Print Studio (بناء تلقائي)."

@@ -3,13 +3,34 @@
 // تُنفَّذ سكربتات PowerShell بـ -EncodedCommand والمعاملات عبر متغيّر بيئة JSON (لا تركيب أوامر من مدخلات المستخدم).
 const { execFile } = require('child_process');
 
-const PRE = `$ErrorActionPreference='Stop';[Console]::OutputEncoding=[Text.Encoding]::UTF8;$A=$null;if($env:PS_ARGS){$A=$env:PS_ARGS|ConvertFrom-Json};`;
+const PRE = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';[Console]::OutputEncoding=New-Object System.Text.UTF8Encoding($false);$A=$null;if($env:PS_ARGS){$A=$env:PS_ARGS|ConvertFrom-Json};`;
 
 const SCRIPTS = {
   printersList: `
-$all=@(Get-CimInstance Win32_Printer)
-$out=@($all|ForEach-Object{[pscustomobject]@{name=[string]$_.Name;driver=[string]$_.DriverName;port=[string]$_.PortName;isDefault=[bool]$_.Default;network=[bool]$_.Network;shared=[bool]$_.Shared;offline=[bool]$_.WorkOffline;status=[int]$_.PrinterStatus;errorState=[int]$_.DetectedErrorState;location=[string]$_.Location}})
-ConvertTo-Json -InputObject $out -Compress -Depth 4`,
+$out=@()
+try{
+  $all=@(Get-CimInstance Win32_Printer)
+  $out=@($all|ForEach-Object{[pscustomobject]@{name=[string]$_.Name;driver=[string]$_.DriverName;port=[string]$_.PortName;isDefault=[bool]$_.Default;network=[bool]$_.Network;shared=[bool]$_.Shared;offline=[bool]$_.WorkOffline;status=[int]$_.PrinterStatus;errorState=[int]$_.DetectedErrorState;location=[string]$_.Location}})
+}catch{
+  $def=''
+  try{$def=[string](New-Object -ComObject WScript.Network).EnumPrinterConnections()}catch{}
+  $out=@(Get-Printer|ForEach-Object{[pscustomobject]@{name=[string]$_.Name;driver=[string]$_.DriverName;port=[string]$_.PortName;isDefault=$false;network=($_.Type -eq 'Connection');shared=[bool]$_.Shared;offline=($_.PrinterStatus -eq 'Offline');status=3;errorState=2;location=[string]$_.Location}})
+}
+ConvertTo-Json -InputObject @($out) -Compress -Depth 4`,
+  connectedDevices: `
+$out=@()
+try{
+  $out=@(Get-PnpDevice -PresentOnly -ErrorAction Stop|Where-Object{$_.Class -in @('Printer','Image','PrintQueue') -or $_.FriendlyName -match 'Brother|Canon|HP |Epson|Samsung|Xerox|Ricoh|Kyocera|Lexmark|Pantum|Konica|Sharp'}|Where-Object{$_.Class -ne 'PrintQueue'}|ForEach-Object{[pscustomobject]@{name=[string]$_.FriendlyName;class=[string]$_.Class;status=[string]$_.Status;id=[string]$_.InstanceId;manufacturer=[string]$_.Manufacturer}})
+}catch{}
+ConvertTo-Json -InputObject @($out) -Compress -Depth 4`,
+  openSettings: `
+$u=[string]$A.uri
+if(@('ms-settings:printers','ms-settings:connecteddevices')-notcontains $u){throw 'رابط غير مسموح'}
+Start-Process $u
+ConvertTo-Json -InputObject ([pscustomobject]@{ok=$true}) -Compress`,
+  addPrinterWizard: `
+Start-Process -FilePath rundll32.exe -ArgumentList 'printui.dll,PrintUIEntry /il'
+ConvertTo-Json -InputObject ([pscustomobject]@{ok=$true}) -Compress`,
   printerJobs: `
 $jobs=@(Get-PrintJob -PrinterName $A.name -ErrorAction Stop|ForEach-Object{[pscustomobject]@{id=[int]$_.Id;document=[string]$_.DocumentName;user=[string]$_.UserName;status=[string]$_.JobStatus;pages=[int]$_.TotalPages;size=[long]$_.Size;submitted=[string]$_.SubmittedTime}})
 ConvertTo-Json -InputObject $jobs -Compress -Depth 4`,
@@ -78,6 +99,13 @@ const WIA_ERRORS = {
   '8021000E': 'خطأ في تعريف السكانر', '80210015': 'لم يُعثر على سكانر متصل', '80210016': 'غطاء السكانر مفتوح', '80210017': 'مصباح السكانر مطفأ',
 };
 
+/** يستخرج JSON من مخرجات PowerShell رغم BOM أو أسطر تحذير/تقدّم قبله. */
+function extractJson(raw) {
+  const t = String(raw || '').replace(/^\uFEFF/, '').replace(/#< CLIXML[\s\S]*?<\/Objs>/g, '').trim(); if (!t) return '';
+  const a = t.search(/[\[{]/); if (a < 0) return '';
+  const open = t[a], close = open === '[' ? ']' : '}', b = t.lastIndexOf(close); return b > a ? t.slice(a, b + 1) : '';
+}
+
 function mapWiaError(msg) {
   const s = String(msg || '');
   if (/WIA_UNAVAILABLE/.test(s)) return 'خدمة WIA غير متاحة على هذا الجهاز';
@@ -109,10 +137,13 @@ class WinHW {
   }
   _win() { if (this.platform !== 'win32') { const e = new Error('هذه الميزة تعمل على Windows فقط'); e.unsupported = true; throw e; } }
   async _json(name, args, timeout = 30000) {
-    this._win(); const out = (await this._run(SCRIPTS[name], args, timeout)).trim();
+    this._win(); const out = extractJson(await this._run(SCRIPTS[name], args, timeout));
     return out ? JSON.parse(out) : null;
   }
   async listPrinters() { const r = await this._json('printersList'); return (Array.isArray(r) ? r : r ? [r] : []).map(decodePrinter); }
+  async connectedDevices() { const r = await this._json('connectedDevices', null, 30000); return Array.isArray(r) ? r : r ? [r] : []; }
+  async openSettings(uri) { return this._json('openSettings', { uri }); }
+  async addPrinterWizard() { return this._json('addPrinterWizard'); }
   async printerJobs(name) { const r = await this._json('printerJobs', { name }); return Array.isArray(r) ? r : r ? [r] : []; }
   async cancelJob(name, id) { return this._json('printerCancelJob', { name, id }); }
   async openQueue(name) { return this._json('printUi', { name, mode: '/o' }); }
@@ -127,4 +158,4 @@ class WinHW {
     catch (e) { if (e.unsupported) throw e; throw new Error(mapWiaError(e.message)); }
   }
 }
-module.exports = { WinHW, decodePrinter, mapWiaError, SCRIPTS };
+module.exports = { WinHW, decodePrinter, mapWiaError, extractJson, SCRIPTS };
